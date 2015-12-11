@@ -200,7 +200,7 @@ public class TcrdRegistry extends Controller implements Commons {
                  +"or evidence = 'CURATED')"
                  );
             pstm9 = con.prepareStatement
-                ("select * from goa where protein_id = ?");
+                ("select a.*, uniprot from goa a, protein b where a.protein_id = ? and a.protein_id = b.id");
             pstm10 = con.prepareStatement
                 ("select * from panther_class a, p2pc b "
                  +"where a.id = b.panther_class_id and b.protein_id = ?");
@@ -527,12 +527,13 @@ public class TcrdRegistry extends Controller implements Commons {
             while (rset.next()) {
                 String term = rset.getString("go_term");
                 String id = rset.getString("go_id");
+                String uniprot = rset.getString("uniprot");
                 
                 Keyword go = null;
                 char kind = term.charAt(0);
                 term = term.substring(term.indexOf(':')+1)
                         .replaceAll("/","-");
-                String href = "http://amigo.geneontology.org/amigo/term/"+id;
+                String href = "http://amigo.geneontology.org/amigo/search/annotation?q=*:*&fq=bioentity:\"UniProtKB:"+uniprot+"\"&sfq=document_category:\"annotation\"&fq=regulates_closure:\""+id+"\"";
                 
                 switch (kind) {
                 case 'C': // component
