@@ -205,7 +205,7 @@ public class TcrdRegistry extends Controller implements Commons {
                 ("select * from panther_class a, p2pc b "
                  +"where a.id = b.panther_class_id and b.protein_id = ?");
             pstm11 = con.prepareStatement
-                ("select * from target2pathway where target_id = ?");
+                ("select * from pathway where target_id = ?");
             pstm12 = con.prepareStatement
                 ("select * from xref where protein_id = ?");
             pstm13 = con.prepareStatement
