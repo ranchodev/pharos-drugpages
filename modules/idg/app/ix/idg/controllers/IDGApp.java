@@ -1,52 +1,47 @@
 package ix.idg.controllers;
 
+import akka.actor.ActorRef;
+import akka.actor.Props;
+import akka.actor.UntypedActor;
+import chemaxon.struc.MolAtom;
 import com.avaje.ebean.Expr;
 import com.avaje.ebean.QueryIterator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import ix.core.controllers.EntityFactory;
 import ix.core.controllers.KeywordFactory;
-import ix.core.controllers.PredicateFactory;
 import ix.core.controllers.PayloadFactory;
+import ix.core.controllers.PredicateFactory;
 import ix.core.controllers.search.SearchFactory;
 import ix.core.models.*;
 import ix.core.plugins.IxCache;
-import ix.core.plugins.PayloadPlugin;
 import ix.core.search.SearchOptions;
 import ix.core.search.TextIndexer;
 import ix.idg.models.Disease;
 import ix.idg.models.Ligand;
 import ix.idg.models.Target;
 import ix.ncats.controllers.App;
+import ix.seqaln.SequenceIndexer;
 import ix.utils.Util;
 import org.apache.commons.lang3.StringUtils;
 import play.Logger;
 import play.Play;
-import play.libs.Akka;
 import play.cache.Cached;
 import play.db.ebean.Model;
-import play.mvc.Result;
+import play.libs.Akka;
 import play.mvc.BodyParser;
 import play.mvc.Call;
+import play.mvc.Result;
 import tripod.chem.indexer.StructureIndexer;
-import ix.seqaln.SequenceIndexer;
-
-import akka.actor.ActorRef;
-import akka.actor.ActorSystem;
-import akka.actor.Props;
-import akka.actor.UntypedActor;
-import akka.actor.UntypedActorFactory;
 
 import java.io.*;
 import java.net.URLEncoder;
 import java.util.*;
-import java.util.regex.*;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicLong;
-import chemaxon.struc.MolAtom;
 
 import static ix.core.search.TextIndexer.Facet;
 import static ix.core.search.TextIndexer.SearchResult;
@@ -1249,6 +1244,7 @@ public class IDGApp extends App implements Commons {
 
     static Result _targets (final String q, final int rows, final int page)
         throws Exception {
+
         final String key = "targets/"+Util.sha1(request ());
         Logger.debug("Targets: q="+q+" rows="+rows+" page="+page+" key="+key);
         
@@ -1280,6 +1276,7 @@ public class IDGApp extends App implements Commons {
                         sb.append(csvFromTarget(t)).append("\n");
                     }
                 }
+                response().setHeader("Content-Disposition", "attachment;filename=export.csv");
                 return ok(sb.toString().getBytes()).as("text/csv");
             }
 
