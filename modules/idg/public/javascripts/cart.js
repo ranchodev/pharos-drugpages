@@ -32,6 +32,7 @@ function addEntitiesToShoppingCart(entities, etype, folderName, url) {
         type: "POST",
         data: {'json': JSON.stringify(accs), 'folder': folderName},
         success: function (dat, status, xhr) {
+            console.log(dat);
             $("#sc-count").html(dat.total_entries);
         },
         error: function(x) {

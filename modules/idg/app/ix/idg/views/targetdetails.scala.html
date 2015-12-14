@@ -273,17 +273,31 @@
   <div class="col-md-12">
     <div class="page-header">
       <h1>
-        <table>
+        <table style="width:100%;">
         <tr>
-         <td>
+         <td style="width:10%;">
            <span class="label label-@target.idgTDL.label"
 		 data-toggle="tooltip" data-html="true" data-placement="right"
 		 title="<p align='left'>@target.idgTDL.desc</p>">@target.idgTDL</span>
          </td>
          <td style="padding:5px;"></td>
          <td>@target.name</td>
+            <td style="text-align:right;">
+                <div class="dropdown pull-right">
+                    <button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown">
+                        <i class="fa fa-shopping-cart"></i>&nbsp;<span id="sc-count"></span>
+                    </button>
+                    <ul class="dropdown-menu pull-left">
+                        <li><a href="#" id="sc-add-selected">Add to cart</a></li>
+                        <li><a href="@ix.idg.controllers.routes.DossierApp.view(null)" id="sc-view">View Collections</a></li>
+                        <li><a href="#" id="sc-empty">Empty Collection</a></li>
+                    </ul>
+                </div>
+            </td>
         </tr>
         </table>
+
+
       </h1>
       @if(target.description != null) {
 	<div class="panel panel-default">
@@ -882,6 +896,28 @@
   </div>
 </div>
 
+<div class="modal fade" id="modal-folder" tabindex="-1"
+role="dialog" aria-labelledby="modalLabelFolder" aria-hidden="true">
+    <div class="modal-dialog modal-lg" style="width: 40%; ">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close"
+                data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="modalLabelFolder">Select a dossier</h4>
+            </div>
+            <div class="modal-body">
+                @*<div class="row">*@
+            <div id="combo-container" >
+                <input id='folder-combobox' class="folder-typeahead" type="text">
+                <button type="button" id="button-select-folder" class="btn btn-primary">OK</button>
+            </div>
+                @*</div>*@
+            </div>
+        </div>
+    </div>
+</div>
+
 @modalradar(null)
 
 <head>
@@ -911,7 +947,10 @@
     <script type="text/javascript" src='@routes.Assets.at("javascripts/d3-tip.js")'></script>
     <script type="text/javascript" src='@routes.Assets.at("javascripts/radar-chart.js")'></script>
     <script type="text/javascript" src='@routes.WebJarAssets.at(WebJarAssets.locate("raphael-min.js"))'></script>
-    <script type="text/javascript" src='@routes.WebJarAssets.at(WebJarAssets.locate("morris.min.js"))'></script>    
+    <script type="text/javascript" src='@routes.WebJarAssets.at(WebJarAssets.locate("morris.min.js"))'></script>
+    <script type="text/javascript" src='@routes.Assets.at("javascripts/underscore.js")'></script>
+    <script type="text/javascript" src='@routes.Assets.at("javascripts/underscore.string.js")'></script>
+    <script type="text/javascript" src='@routes.Assets.at("javascripts/cart.js")'></script>
     <link type="text/css" rel="stylesheet" href='@routes.Assets.at("stylesheets/d3-tip.css")' />
     <link type="text/css" rel="stylesheet" href='@routes.Assets.at("stylesheets/radar-chart.css")' />
     <link type="text/css" rel="stylesheet" href='@routes.WebJarAssets.at(WebJarAssets.locate("morris.css"))' />     
@@ -925,7 +964,52 @@ $(function () {
 
 $(document).ready(function () {
 
-  $('.tree').treegrid({
+    /* Cart related methods and vars */
+    $.ajax({
+        url:'@ix.idg.controllers.routes.DossierApp.count',
+        dataType:'text',
+        success:function(d) {
+            $("#sc-count" ).html(d);
+        }
+    });
+
+var folderNames = ['Default'];
+    @for(f <- ix.idg.controllers.DossierApp.getFolderNames()) {
+        @if(!f.equals("")) {
+            folderNames.push ( ' @f ');
+        }
+    }
+
+$("#sc-empty").click(function (e) {
+    $.get('@ix.idg.controllers.routes.DossierApp.emptyCart', function (d) {
+    $("#sc-count" ).html('');
+  });
+});
+
+    $("#folder-combobox").typeahead(
+        {hint:true,minLength:1,highlight:true },
+        {source:substringMatcher(folderNames), name:'dossiers'}
+    );
+    $('#folder-combobox' ).typeahead('val', "Default");
+    $('#folder-combobox').on("typeahead:selected", function (evt, val, d) {
+        if (d == 'MeSH') {}
+        else $('#folder-combobox').typeahead('val', +val.value);
+    });
+
+    $("#button-select-folder" ).on('click', function() {
+        $('#modal-folder').modal('hide');
+        var selectedFolderName = $("#folder-combobox" ).typeahead('val');
+        addEntitiesToShoppingCart(['@IDGApp.getId(target)'], 'ix.idg.models.Target',
+            selectedFolderName, '@ix.idg.controllers.routes.DossierApp.addEntities()');
+    });
+
+    // select all checkboxes in the table
+    $("#sc-add-selected" ).click(function(e) {
+        $('#modal-folder').modal('show');
+    });
+
+/* ***************************************** */
+$('.tree').treegrid({
      expanderExpandedClass: 'fa fa-angle-down',
      expanderCollapsedClass: 'fa fa-angle-right',
      initialState: 'collapsed'
