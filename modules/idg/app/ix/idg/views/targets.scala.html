@@ -2,6 +2,7 @@
 @import ix.idg.controllers.IDGApp
 @import ix.idg.controllers.Commons._
 @import ix.ncats.controllers.App.FacetDecorator
+@import ix.ncats.controllers.App
 
 @(current: Int, rows: Int, total: Int, pages: Array[Int],
 facets: Array[FacetDecorator], targets: List[Target], ctx: String )
@@ -38,9 +39,18 @@ facets: Array[FacetDecorator], targets: List[Target], ctx: String )
     }
 }
 
+@faceturl() = {
+    @defining(App.queryString("facet","q","type")) { uri =>
+        @if(uri.length > 0) {
+            <a class="btn btn-info" href='@HtmlFormat.raw(ix.idg.controllers.routes.IDGApp.targetfacets(ctx) + "&"+uri.substring(1))'>All Facets...</a>
+        } else {
+            <a class="btn btn-info" href='@ix.idg.controllers.routes.IDGApp.targetfacets(ctx)'>All Facets...</a>
+        }
+    }
+}
 @ix.ncats.views.html._content("Targets", "ix.idg.models.Target",
     ix.idg.controllers.routes.IDGApp.targets().url,
-    current, rows, total, pages, facets) {
+    current, rows, total, pages, facets, faceturl()) {
     @targetmenu(ctx)
 } {
     <ol class="breadcrumb">

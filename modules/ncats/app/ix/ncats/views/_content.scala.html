@@ -3,10 +3,15 @@
 
 @(title: String, kind: String,
   resetAction: String, current: Int, rows: Int, total: Int,
-  pages: Array[Int], facets: Array[FacetDecorator])(header: Html)(breadcrumb: Html)(content: Html)(trailer: Html)(carousel: Html)
+  pages: Array[Int], facets: Array[FacetDecorator], furl:Html=HtmlFormat.empty)(header: Html)(breadcrumb: Html)(content: Html)(trailer: Html)(carousel: Html)
 
 @main(title){ @header }{ @breadcrumb }{
 <div class="container-fluid">
+    <div class="row">
+        <div class="col-md-3">
+        @furl
+        </div>
+    </div>
   <div class="row">
     @if(total > 0 && facets.length > 0) {
         <div class="col-md-3">
