@@ -479,6 +479,7 @@ public class IDGApp extends App implements Commons {
         "Antibody Count",
         "Monoclonal Count",
         "Patent Count",
+        "Jensen Score",
 
         PHARMALOGICAL_ACTION,
         UNIPROT_KEYWORD,

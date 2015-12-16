@@ -896,6 +896,9 @@ public class TcrdRegistry extends Controller implements Commons {
                             target.pubmedCount =
                                 ((Number)val.getValue()).intValue();
                         }
+                        else if (type.equalsIgnoreCase("JensenLab PubMed Score")) {
+                            target.jensenScore = ((Number)val.getValue()).doubleValue();
+                        }
                         else if (type.equalsIgnoreCase
                                  ("EBI Total Patent Count (Relevant)")) {
                             target.patentCount =
@@ -1516,7 +1519,7 @@ public class TcrdRegistry extends Controller implements Commons {
             addPanther (target, t.protein);
             addPatent (target, t.protein);
             addGrant (target, t.id);
-            addDrugs (target, t.id);
+//            addDrugs (target, t.id);
             addChembl (target, t.id);
             addDisease (target, t.id);
             addHarmonogram (target, t.protein);

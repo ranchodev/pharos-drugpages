@@ -1,23 +1,12 @@
 package ix.idg.models;
 
-import java.util.List;
-import java.util.EnumSet;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Comparator;
-
-import ix.core.models.Indexable;
-import ix.core.models.Keyword;
-import ix.core.models.Value;
-import ix.core.models.XRef;
-import ix.core.models.Publication;
-import ix.core.models.BeanViews;
-import ix.core.models.EntityModel;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonView;
+import ix.core.models.*;
 import ix.utils.Global;
 
 import javax.persistence.*;
-import com.fasterxml.jackson.annotation.JsonView;
-import com.fasterxml.jackson.annotation.JsonProperty;
+import java.util.*;
 
 @Entity
 @Table(name="ix_idg_target")
@@ -102,6 +91,10 @@ public class Target extends EntityModel {
     @Indexable(sortable=true,name="PubMed Count",
                ranges={0,10,20,30,40,50,100,200})
     public Integer pubmedCount;
+
+    @Indexable(sortable=true,name="Jensen Score",
+               dranges={0, 1, 10, 20, 50, 100, 500})
+    public Double jensenScore;
 
     @Indexable(sortable=true,name="Patent Count",
                ranges={0,10,20,30,40,50,100,200})
