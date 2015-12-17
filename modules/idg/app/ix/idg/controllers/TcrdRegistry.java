@@ -1519,7 +1519,7 @@ public class TcrdRegistry extends Controller implements Commons {
             addPanther (target, t.protein);
             addPatent (target, t.protein);
             addGrant (target, t.id);
-//            addDrugs (target, t.id);
+            addDrugs (target, t.id);
             addChembl (target, t.id);
             addDisease (target, t.id);
             addHarmonogram (target, t.protein);
