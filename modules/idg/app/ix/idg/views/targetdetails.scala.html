@@ -818,7 +818,7 @@
           <div class="panel-heading">
             <h3 class="panel-title"><span data-toggle="tooltip"
 			data-html="true"
-			title="<p align='left'>Number of GeneRIFs annotations from NCBI Gene</p>">Gene RIF (@generifs.size)</span></h3>
+			title="<p align='left'>Number of GeneRIF annotations from NCBI Gene</p>">Gene RIF (@generifs.size)</span></h3>
           </div>
           <div class="panel-body">
             <div class="panel-body">
@@ -827,12 +827,35 @@
                   <th>PMID <i class="fa fa-external-link"></i></th>
                   <th>Text</th>
                 </tr>
-		@for(x <- generifs) {
-		   <tr>
-		     <td><a href="http://www.ncbi.nlm.nih.gov/pubmed/@x.pmid">@x.pmid</a></td>
-		     <td>@x.text</td>
-		   </tr>
-		}
+
+                  @defining(request().getQueryString("view")) { view =>
+                      @view match {
+                          case "full" => {
+                              @for(x <- generifs) {
+                                  <tr>
+                                      <td><a href="http://www.ncbi.nlm.nih.gov/pubmed/@x.pmid">@x.pmid</a></td>
+                                      <td>@x.text</td>
+                                  </tr>
+                              }
+                          }
+                          case _ => {
+                              @for(i <- 0 until Math.min(10, generifs.size())) {
+                                  <tr>
+                                      <td><a href="http://www.ncbi.nlm.nih.gov/pubmed/@generifs(i).pmid">@generifs(i).pmid</a></td>
+                                      <td>generifs(i).text</td>
+                                  </tr>
+                              }
+                              @if(generifs.size() > 10) {
+                                  <tr>
+                                      <td><a href="@request().uri?view=full">More...</a></td>
+                                      <td></td>
+                                  </tr>
+                              }
+                          }
+                      }
+                  }
+
+
   	      </table>
 	    </div>
 	  </div>
