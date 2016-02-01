@@ -842,7 +842,7 @@
                               @for(i <- 0 until Math.min(10, generifs.size())) {
                                   <tr>
                                       <td><a href="http://www.ncbi.nlm.nih.gov/pubmed/@generifs(i).pmid">@generifs(i).pmid</a></td>
-                                      <td>generifs(i).text</td>
+                                      <td>@generifs(i).text</td>
                                   </tr>
                               }
                               @if(generifs.size() > 10) {
