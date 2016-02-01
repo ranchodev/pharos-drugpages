@@ -258,6 +258,44 @@
   </div>
 }
 
+@ligandActivityReport(t: Target) = {
+      @t.idgFamily match {
+          case "Kinase" => {
+              @if(IDGApp.getMinimumLigandActivity(t) >= 7.5) {
+                  with at least one activity < 30 nM
+              } else {
+                  but has no reported activity < 30 nM
+              }
+          }
+          case "IC" | "Ion Channel" => {
+              @if(IDGApp.getMinimumLigandActivity(t) >= 5.0) {
+                  with at least one activity < 10uM
+              } else {
+                  but has no reported activity < 10uM
+              }
+          }
+          case "NR" => {
+              @if(IDGApp.getMinimumLigandActivity(t) >= 7.0) {
+                  with at least one activity < 10uM
+              } else {
+                  but has no reported activity < 10uM
+              }
+          }
+          case "GPCR" | "oGPCR" => {
+              @if(IDGApp.getMinimumLigandActivity(t) >= 7.0) {
+                  with at least one activity < 10uM
+              } else {
+                  but has no reported activity < 10uM
+              }
+          }
+
+          case _ => {
+
+          }
+      }
+
+}
+
 @explainTdl(t: Target) = {
     @t.idgTDL match {
     case TDL.Tdark => {
@@ -265,7 +303,7 @@
         and @t.antibodyCount antibodies
     }
     case TDL.Tclin => {
-        is associated with @IDGApp.getDrugLigands(t).size() approved drugs and passes the cutoffs for Tdark
+        is associated with @IDGApp.getDrugLigands(t).size() approved drugs (@ligandActivityReport(t)) and passes the cutoffs for Tdark
         (Pubmed text mining score of @t.jensenScore, @IDGApp.getGeneRIFs(t).size()
         GeneRIFs and @t.antibodyCount antibodies), is annotated with
         @(IDGApp.getProperties(t, GO_COMPONENT, 0).size()+IDGApp.getProperties(t, GO_FUNCTION, 0).size()+IDGApp.getProperties(t, GO_PROCESS, 0).size())
@@ -278,7 +316,7 @@
         GO terms and has @IDGApp.getOmimPhenotypes(t).size() confirmed OMIM phenotypes.
     }
     case TDL.Tchem => {
-        is associated with @IDGApp.getChemblLigands(t).size() ChEMBL compounds and passes the cutoffs for Tdark
+        is associated with @IDGApp.getChemblLigands(t).size() ChEMBL compounds (@ligandActivityReport(t)) and passes the cutoffs for Tdark
         (Pubmed text mining score of @t.jensenScore, @IDGApp.getGeneRIFs(t).size()
         GeneRIFs and @t.antibodyCount antibodies), is annotated with
         @(IDGApp.getProperties(t, GO_COMPONENT, 0).size()+IDGApp.getProperties(t, GO_FUNCTION, 0).size()+IDGApp.getProperties(t, GO_PROCESS, 0).size())
@@ -286,7 +324,7 @@
     }
 
     case _ => {
-
+       Something went wrong
     }
     }
 }

@@ -959,6 +959,20 @@ public class IDGApp extends App implements Commons {
         return breadcrumb;
     }
 
+    public static Double getMinimumLigandActivity(EntityModel e) {
+        Double ret = -1.0;
+        String[] actNames = {"Ki", "Kd", "EC50", "IC50", "ED50", "A2", "Kb"};
+        for (String actName : actNames) {
+            System.out.println("actName = " + actName);
+            for (Value v : getProperties(e, actName)) {
+                double d = ((VNum) v).getNumval();
+                System.out.println("  d = " + d);
+                if (d > ret) ret = d; // since activity values are -log10 (molar units)
+            }
+        }
+        return ret;
+    }
+
     public static List<Ligand> getChemblLigands(EntityModel e) {
         List<Ligand> ret = new ArrayList<>();
         for (Ligand lig : getLigands(e)) {
