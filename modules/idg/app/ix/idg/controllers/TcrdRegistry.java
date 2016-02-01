@@ -109,6 +109,7 @@ public class TcrdRegistry extends Controller implements Commons {
         Long protein;
         Double novelty;
         Keyword source;
+        DTOParser.DTONode dtoNode;
 
         TcrdTarget () {}
         TcrdTarget (String acc, String family, String tdl,
@@ -184,7 +185,7 @@ public class TcrdRegistry extends Controller implements Commons {
             pstm2 = con.prepareStatement
                     ("select * from chembl_activity where target_id = ?");
             pstm3 = con.prepareStatement
-                ("select * from drugdb_activity where target_id = ?");
+                ("select * from drug_activity where target_id = ?");
             pstm4 = con.prepareStatement
                 ("select * from generif where protein_id = ?");
             pstm5 = con.prepareStatement
@@ -228,7 +229,8 @@ public class TcrdRegistry extends Controller implements Commons {
                 ("select * from target2grant where target_id = ?");
 
             pstm20 = con.prepareStatement
-                ("select * from target2disease where target_id = ?");
+                ("select * from target2disease where target_id = ? "
+                 +"order by doid desc");
 
             this.chembl = chembl;
         }
@@ -586,6 +588,8 @@ public class TcrdRegistry extends Controller implements Commons {
                     target.addIfAbsent((Value)tissue);
                 }
                 else if (expr.source.startsWith("HPM Gene")) {
+                }
+                else if (expr.source.startsWith("HPM Protein")) {
                     sourceUrl = "http://www.humanproteomemap.org";
                     expr.sourceid = HPM_EXPR;
                     Keyword tissue = KeywordFactory.registerIfAbsent
@@ -602,6 +606,11 @@ public class TcrdRegistry extends Controller implements Commons {
                     Keyword tissue = KeywordFactory.registerIfAbsent
                         (IDG_TISSUE, expr.tissue, null);
                     target.addIfAbsent((Value)tissue);
+                }
+                else if (expr.source.equals("UniProt Tissue")) {
+                    Keyword tissue = KeywordFactory.registerIfAbsent
+                        (expr.source, expr.tissue, null);
+                    target.addIfAbsent((Value)tissue);              
                 }
                 else if (expr.source.startsWith("HPA")) {
                     sourceUrl = "http://tissues.jensenlab.org";
@@ -1001,46 +1010,82 @@ public class TcrdRegistry extends Controller implements Commons {
             }
         }
         
-        void addDTO (Target target, long protein) throws Exception {
-            pstm5.setLong(1, protein);
-            ResultSet rset = pstm5.executeQuery();
+        void addDTO (Target target, long protein, DTOParser.DTONode dtoNode)
+            throws Exception {
             List<Keyword> path = new ArrayList<Keyword>();
-            Keyword kw = KeywordFactory.registerIfAbsent
-                (DTO_PROTEIN_CLASS + " (0)", target.idgFamily, null);
-            target.properties.add(kw);
-            path.add(kw);
             Logger.debug("Target "+IDGApp.getId(target)+" "
                          +target.idgFamily+" DTO");
-            while (rset.next()) {
-                String label = rset.getString("name").trim();
-                if (target.idgFamily.equals("GPCR")) {
-                    if (label.equalsIgnoreCase("Ligand Type"))
-                        break; // we're done
+            
+            if (dtoNode != null) {
+                List<DTOParser.DTONode> nodes = new ArrayList<DTOParser.DTONode>();
+                for (DTOParser.DTONode node = dtoNode.parent;
+                     node != null
+                         && !node.id.equals("DTO_00200000") // Gene
+                         && !node.id.equals("DTO_00100000") // Protein
+                         ; node = node.parent) {
+                    nodes.add(node);
                 }
-                else if (target.idgFamily.equals("Ion Channel")) {
-                    if (label.equalsIgnoreCase("Transporter Protein Type"))
-                        break;
-                }
-                else if (target.idgFamily.equals("Kinase")) {
-                    if (label.equalsIgnoreCase("Pseudokinase"))
-                        break;
-                }
-                else if (target.idgFamily.equals("Nuclear Receptor")) {
-                    // nothing to check
-                }
-
-                String value = rset.getString("value");
-                if (value.equals(""))
-                    break; // we're done
-                value = value.replaceAll("/", "-");
-                Logger.debug("  name=\""+label+"\" value="+value);
                 
-                kw = KeywordFactory.registerIfAbsent
-                    (DTO_PROTEIN_CLASS+" ("+path.size()+")", value, null);
+                Collections.reverse(nodes);
+                for (DTOParser.DTONode n : nodes) {
+                    Keyword kw = KeywordFactory.registerIfAbsent
+                        (DTO_PROTEIN_CLASS+" ("+path.size()+")",
+                         n.name.replaceAll("/", "-"),
+                         // not a real url.. 
+                         "http://drugtargetontology.org/"+n.id);
+
+                    StringBuilder sb = new StringBuilder ();
+                    for (int i = 0; i < path.size(); ++i)
+                        sb.append("\t");
+                    Logger.debug(kw.id+" "+kw.label+" \""+kw.term+"\" "+kw.href);
+                    
+                    target.properties.add(kw);
+                    path.add(kw);
+                }
+            }
+            else { // this is the older version
+                Keyword kw = KeywordFactory.registerIfAbsent
+                    (DTO_PROTEIN_CLASS + " (0)", target.idgFamily, null);
                 target.properties.add(kw);
                 path.add(kw);
+                
+                pstm5.setLong(1, protein);
+                ResultSet rset = pstm5.executeQuery();
+                while (rset.next()) {
+                    String label = rset.getString("name").trim();
+                    if (target.idgFamily.equals("GPCR")) {
+                        if (label.equalsIgnoreCase("Ligand Type"))
+                            break; // we're done
+                    }
+                    else if (target.idgFamily.equals("Ion Channel")) {
+                        if (label.equalsIgnoreCase("Transporter Protein Type"))
+                            break;
+                    }
+                    else if (target.idgFamily.equals("Kinase")) {
+                        if (label.equalsIgnoreCase("Pseudokinase"))
+                            break;
+                    }
+                    else if (target.idgFamily.equals("Nuclear Receptor")) {
+                        // nothing to check
+                    }
+                    
+                    String value = rset.getString("value");
+                    if (value.equals(""))
+                        break; // we're done
+                    value = value.replaceAll("/", "-");
+                    Logger.debug("  name=\""+label+"\" value="+value);
+                    
+                    kw = KeywordFactory.registerIfAbsent
+                        (DTO_PROTEIN_CLASS+" ("+path.size()+")", value, null);
+                    target.properties.add(kw);
+                    path.add(kw);
+                }
+                rset.close();
             }
-            rset.close();
+
+            if (path.isEmpty()) {
+                Logger.warn("!!! Target "+protein+" has no DTO entry !!!");
+            }
             
             for (int k = path.size(); --k >= 0; ) {
                 Keyword node = path.get(k);
@@ -1141,17 +1186,14 @@ public class TcrdRegistry extends Controller implements Commons {
                 }
 
                 XRef tref = ligand.addIfAbsent(new XRef (target));
-                tref.properties.add
-                        (KeywordFactory.registerIfAbsent
-                                (IDG_DEVELOPMENT, target.idgTDL.name, null));
-                tref.properties.add
-                    (KeywordFactory.registerIfAbsent
-                     (IDG_FAMILY, target.idgFamily, null));
+                tref.addIfAbsent((Value)KeywordFactory.registerIfAbsent
+                                 (IDG_DEVELOPMENT, target.idgTDL.name, null));
+                tref.addIfAbsent((Value)KeywordFactory.registerIfAbsent
+                                 (IDG_FAMILY, target.idgFamily, null));
                 
                 XRef lref = target.addIfAbsent(new XRef (ligand));
-                lref.properties.add
-                    (KeywordFactory.registerIfAbsent
-                     (IDG_LIGAND, ligand.getName(), null));
+                lref.addIfAbsent((Value)KeywordFactory.registerIfAbsent
+                                 (IDG_LIGAND, ligand.getName(), null));
 
                 String actType = rset.getString("act_type");
                 if (actType != null) {
@@ -1164,12 +1206,9 @@ public class TcrdRegistry extends Controller implements Commons {
                 String action = rset.getString("action_type");
                 if (action != null) {
                     String source = rset.getString("source");
-                    Keyword kw = KeywordFactory.registerIfAbsent
-                        (PHARMALOGICAL_ACTION, action,
-                         // chembl source is for the ligand definition as
-                         // opposed to the pharmalogical data
-                         "CHEMBL".equalsIgnoreCase(source) ? null
-                         : rset.getString("reference"));
+                    Keyword kw = new Keyword (PHARMALOGICAL_ACTION, action);
+                    kw.href = rset.getString("reference");
+                    kw.save();
                     
                     tref.addIfAbsent((Value)kw);
                     lref.addIfAbsent((Value)kw);
@@ -1353,13 +1392,21 @@ public class TcrdRegistry extends Controller implements Commons {
                                 if (diseases.isEmpty()) {
                                     d = new Disease ();
                                     d.name = name;
+                                    d.description = rset.getString("description");
                                     d.properties.add(datasources.get(type));
                                     String doid = rset.getString("doid");
-                                    d.synonyms.add
-                                        (KeywordFactory.registerIfAbsent
-                                         ("DOID", doid,
-                                          "http://www.disease-ontology.org/term/"
-                                          +doid));
+                                    if (doid != null) {
+                                        d.synonyms.add
+                                            (KeywordFactory.registerIfAbsent
+                                             ("DOID", doid,
+                                              "http://www.disease-ontology.org/term/"
+                                              +doid));
+                                    }
+                                    else {
+                                        // UniProt Disease
+                                        doid = rset.getString("reference")
+                                            .replaceAll("[\\s]+", "");
+                                    }
                                     d.save();
                                     DISEASES.put(doid, d);
                                 }
@@ -1510,7 +1557,7 @@ public class TcrdRegistry extends Controller implements Commons {
                              +" (protein: "+t.protein+")");
             }
             
-            addDTO (target, t.protein);
+            addDTO (target, t.protein, t.dtoNode);
             addTDL (target, t.protein);
             addPhenotype (target, t.protein);
             addExpression (target, t.protein);
@@ -2284,12 +2331,24 @@ public class TcrdRegistry extends Controller implements Commons {
                  //+"where c.uniprot in ('A5X5Y0')\n"
                  //+"where c.uniprot in ('Q7RTX7')\n"
                  //+"where c.uniprot in ('Q00537','Q8WXA8')\n"
+                 +"where c.uniprot in ('Q401N2')\n"
                  //+"where c.uniprot in ('O94921','Q96Q40','Q00536','Q00537','Q00526','P50613','P49761','P20794')\n"
                  //+"where c.uniprot in ('Q8WXA8')\n"
                  //+"where c.uniprot in ('Q7RTX7','Q86YV6','P07333','P07949')\n"
                  +"order by d.score desc, c.id\n"
                  +(rows > 0 ? ("limit "+rows) : "")
                  );
+
+            DTOParser dto = new DTOParser ();
+            String dtofile = Play.application().configuration().getString("ix.idg.dto");
+            if (dtofile != null) {
+                try {
+                    dto.parse(new File (dtofile));
+                }
+                catch (IOException ex) {
+                    ex.printStackTrace();
+                }
+            }
                  
             while (rset.next()) {
                 long protId = rset.getLong("protein_id");
@@ -2303,6 +2362,7 @@ public class TcrdRegistry extends Controller implements Commons {
                 String fam = rset.getString("idgfam");
                 String tdl = rset.getString("tdl");
                 String acc = rset.getString("uniprot");
+                String sym = rset.getString("c.sym");
                 Double novelty = rset.getDouble("d.score");
                 if (rset.wasNull())
                     novelty = null;
@@ -2314,6 +2374,7 @@ public class TcrdRegistry extends Controller implements Commons {
                     TcrdTarget t =
                         new TcrdTarget (acc, fam, tdl, id, protId,
                                         novelty, source);
+                    t.dtoNode = dto.get(sym);
                     targets.add(t);
                 }
                 else {

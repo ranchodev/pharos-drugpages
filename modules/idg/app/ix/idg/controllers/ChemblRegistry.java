@@ -40,8 +40,10 @@ public class ChemblRegistry implements Commons {
     
     public ChemblRegistry (Map<String, Set<String>> uniprotMap)
         throws SQLException {
+        /*
         if (uniprotMap == null || uniprotMap.isEmpty())
             throw new IllegalArgumentException ("No UniProt mapping provided!");
+        */
         
         chembl = DB.getDataSource("chembl");
         if (chembl == null) {
