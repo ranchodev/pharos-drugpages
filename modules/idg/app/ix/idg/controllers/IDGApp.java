@@ -959,6 +959,22 @@ public class IDGApp extends App implements Commons {
         return breadcrumb;
     }
 
+    public static List<Ligand> getChemblLigands(EntityModel e) {
+        List<Ligand> ret = new ArrayList<>();
+        for (Ligand lig : getLigands(e)) {
+            if (lig.getSynonym(ChEMBL_SYNONYM) != null) ret.add(lig);
+        }
+        return ret;
+    }
+
+    public static List<Ligand> getDrugLigands(EntityModel e) {
+        List<Ligand> ret = new ArrayList<>();
+        for (Ligand lig : getLigands(e)) {
+            if (lig.getSynonym(IDG_DRUG) != null) ret.add(lig);
+        }
+        return ret;
+    }
+
     public static List<Ligand> getLigands (EntityModel e) {
         List<Ligand> ligands = new ArrayList<Ligand>();
         for (XRef xref : e.getLinks()) {
@@ -971,6 +987,25 @@ public class IDGApp extends App implements Commons {
                 ex.printStackTrace();
                 Logger.error("Can't resolve XRef "
                              +xref.kind+":"+xref.refid, ex);
+            }
+        }
+        return ligands;
+    }
+
+    public static List<Ligand> getLigandsWithActivity(EntityModel e) {
+        List<Ligand> ligands = new ArrayList<Ligand>();
+        for (XRef xref : e.getLinks()) {
+            try {
+                Class cls = Class.forName(xref.kind);
+                if (Ligand.class.isAssignableFrom(cls)) {
+                    Ligand lig = (Ligand) xref.deRef();
+
+                    ligands.add((Ligand) xref.deRef());
+                }
+            } catch (Exception ex) {
+                ex.printStackTrace();
+                Logger.error("Can't resolve XRef "
+                        + xref.kind + ":" + xref.refid, ex);
             }
         }
         return ligands;
@@ -2920,6 +2955,15 @@ public class IDGApp extends App implements Commons {
             }
         }
         return App.structure(id, format, size, atomMap);        
+    }
+
+    public static List<String> getOmimPhenotypes(Target target) {
+       List<String> phenos = new ArrayList<>();
+        for (Value value : target.properties) {
+            if (OMIM_TERM.equals(value.label))
+                phenos.add(((VStr)value).strval);
+        }
+        return phenos;
     }
 
     public static List<GeneRIF> getGeneRIFs (Target target) {
