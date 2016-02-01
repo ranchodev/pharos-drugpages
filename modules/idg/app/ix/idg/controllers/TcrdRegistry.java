@@ -218,7 +218,7 @@ public class TcrdRegistry extends Controller implements Commons {
             pstm16 = con.prepareStatement
                 ("select * from chembl_activity where target_id = ?");
             pstm17 = con.prepareStatement
-                ("select * from drugdb_activity where target_id = ?");
+                ("select * from drug_activity where target_id = ?");
             pstm18 = con.prepareStatement("select p.sym, p.uniprot, hg.*, gat.* " +
                     "from target t, t2tc, protein p, hgram_cdf hg, gene_attribute_type gat " +
                     "WHERE t.id = t2tc.target_id AND t2tc.protein_id = p.id AND p.id = hg.protein_id " +
