@@ -28,7 +28,7 @@ public class Target extends EntityModel {
 "<li><p align='left'>target is above the cutoff criteria for Tdark"+
 "<li><p align='left'>target is annotated with a Gene Ontology Molecular Function or Biological Process leaf term(s) with an Experimental Evidence code"+
 "<li><p align='left'>target has confirmed OMIM phenotype(s)"+
-"<ul>",
+"</ul>",
                 "warning"),
         Tdark ("Tdark",
 "These are targets about which virtually nothing is known. They do not have known drug or small molecule activities that satisfy the activity thresholds detailed below AND satisfy two or more of the following criteria:"+

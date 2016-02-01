@@ -1,5 +1,6 @@
 
 @import ix.idg.models.Target
+@import ix.idg.models.Target.TDL
 @import ix.idg.models.Ligand
 @import ix.idg.models.Disease
 @import ix.core.models.Value
@@ -257,6 +258,39 @@
   </div>
 }
 
+@explainTdl(t: Target) = {
+    @t.idgTDL match {
+    case TDL.Tdark => {
+        has a Pubmed text-mining score of @t.jensenScore, @IDGApp.getGeneRIFs(t).size() GeneRIFs
+        and @t.antibodyCount antibodies
+    }
+    case TDL.Tclin => {
+        is associated with @IDGApp.getDrugLigands(t).size() approved drugs and passes the cutoffs for Tdark
+        (Pubmed text mining score of @t.jensenScore, @IDGApp.getGeneRIFs(t).size()
+        GeneRIFs and @t.antibodyCount antibodies), is annotated with
+        @(IDGApp.getProperties(t, GO_COMPONENT, 0).size()+IDGApp.getProperties(t, GO_FUNCTION, 0).size()+IDGApp.getProperties(t, GO_PROCESS, 0).size())
+        GO terms and has @IDGApp.getOmimPhenotypes(t).size() confirmed OMIM phenotypes.
+    }
+    case TDL.Tbio => {
+        passes the cutoffs for Tdark (Pubmed text mining score of @t.jensenScore, @IDGApp.getGeneRIFs(t).size()
+        GeneRIFs and @t.antibodyCount antibodies). In addition it is annotated with
+        @(IDGApp.getProperties(t, GO_COMPONENT, 0).size()+IDGApp.getProperties(t, GO_FUNCTION, 0).size()+IDGApp.getProperties(t, GO_PROCESS, 0).size())
+        GO terms and has @IDGApp.getOmimPhenotypes(t).size() confirmed OMIM phenotypes.
+    }
+    case TDL.Tchem => {
+        is associated with @IDGApp.getChemblLigands(t).size() ChEMBL compounds and passes the cutoffs for Tdark
+        (Pubmed text mining score of @t.jensenScore, @IDGApp.getGeneRIFs(t).size()
+        GeneRIFs and @t.antibodyCount antibodies), is annotated with
+        @(IDGApp.getProperties(t, GO_COMPONENT, 0).size()+IDGApp.getProperties(t, GO_FUNCTION, 0).size()+IDGApp.getProperties(t, GO_PROCESS, 0).size())
+        GO terms and has @IDGApp.getOmimPhenotypes(t).size() confirmed OMIM phenotypes.
+    }
+
+    case _ => {
+
+    }
+    }
+}
+
 @ix.ncats.views.html.main(target.name){
 @targetmenu(null)
 }{
@@ -278,7 +312,8 @@
          <td style="width:10%;">
            <span class="label label-@target.idgTDL.label"
 		 data-toggle="tooltip" data-html="true" data-placement="right"
-		 title="<p align='left'>@target.idgTDL.desc</p>">@target.idgTDL</span>
+		 title="<p align='left'>@target.idgTDL.desc</p><p align='left' style='color:red;'>This target is classified as  @target.idgTDL because
+             it @explainTdl(target)</p>">@target.idgTDL</span>
          </td>
          <td style="padding:5px;"></td>
          <td>@target.name</td>
