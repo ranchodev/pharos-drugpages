@@ -303,7 +303,7 @@
         and @t.antibodyCount antibodies
     }
     case TDL.Tclin => {
-        is associated with @IDGApp.getDrugLigands(t).size() approved drugs (@ligandActivityReport(t)) and passes the cutoffs for Tdark
+        is associated with @IDGApp.getDrugLigands(t).size() approved drugs and passes the cutoffs for Tdark
         (Pubmed text mining score of @t.jensenScore, @IDGApp.getGeneRIFs(t).size()
         GeneRIFs and @t.antibodyCount antibodies), is annotated with
         @(IDGApp.getProperties(t, GO_COMPONENT, 0).size()+IDGApp.getProperties(t, GO_FUNCTION, 0).size()+IDGApp.getProperties(t, GO_PROCESS, 0).size())
