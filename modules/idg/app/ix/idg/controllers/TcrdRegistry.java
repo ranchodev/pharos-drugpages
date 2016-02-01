@@ -900,7 +900,7 @@ public class TcrdRegistry extends Controller implements Commons {
                             target.jensenScore = ((Number)val.getValue()).doubleValue();
                         }
                         else if (type.equalsIgnoreCase
-                                 ("EBI Total Patent Count (Relevant)")) {
+                                 ("OpenPHACTS Relevance 3 Patent Count")) {
                             target.patentCount =
                                 ((Number)val.getValue()).intValue();
                         }
@@ -1517,7 +1517,7 @@ public class TcrdRegistry extends Controller implements Commons {
             addGO (target, t.protein);
             addPathway (target, t.id);
             addPanther (target, t.protein);
-            addPatent (target, t.protein);
+            //  addPatent (target, t.protein);
             addGrant (target, t.id);
             addDrugs (target, t.id);
             addChembl (target, t.id);
