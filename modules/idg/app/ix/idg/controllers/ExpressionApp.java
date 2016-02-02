@@ -141,11 +141,6 @@ public class ExpressionApp extends App {
             }
         }
 
-        for (Expression e : ret) {
-            System.out.println(e);
-        }
-        System.out.println();
-
         return ret;
     }
 
