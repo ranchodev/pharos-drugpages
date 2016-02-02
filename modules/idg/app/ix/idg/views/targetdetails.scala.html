@@ -464,12 +464,12 @@
 			        case "Ab Count" => {
 				  <span data-toggle="tooltip"
 				     data-html="true"
-				     title="<p align='left'>Antibody count from antibodypedia.com</p>"><a href="http://antibodypedia.com">Antibody</a></span>
+				     title="<p align='left'>Antibody count from antibodypedia.com</p>"><a href="http://antibodypedia.com/explore/@for(kw <- target.synonyms) {@if("UniProt Gene".equals(kw.label)) {@kw.term}}">Antibody</a></span>
 				}
 				case "MAb Count" => {
 				  <span data-toggle="tooltip"
 				     data-html="true"
-				     title="<p align='left'>Monoclonal Antibody count from antibodypedia.com</p>"><a href="http://antibodypedia.com">Monoclonal Antibody</a></span>
+				     title="<p align='left'>Monoclonal Antibody count from antibodypedia.com</p>"><a href="http://antibodypedia.com/explore/@for(kw <- target.synonyms) {@if("UniProt Gene".equals(kw.label)) {@kw.term}}">Monoclonal Antibody</a></span>
 				}
 				case "PubMed Count" => {
    				  <span data-toggle="tooltip"
@@ -497,7 +497,7 @@
 		     <td>
 			<span data-toggle="tooltip"
 				 data-html="true"
-				 title="<p align='left'>Number of NIH funded grant applications for 2010-2014 based on text mining of application titles and abstracts, due to nature of text mining results might be inaccurateGrant Count</p>">Grant Count</span>
+				 title="<p align='left'>Number of NIH funded grant applications for 2010-2014 based on text mining of application titles and abstracts, due to nature of text mining results might be inaccurate</p>">Grant Count</span>
 					 </td>
 		     <td>@target.grantCount</td>
 		   </tr>
@@ -507,6 +507,12 @@
 			 title="<p align='left'>Number of NIH funded R01 grants for 2010-2014 based on text mining of application titles and abstracts, due to nature of text mining results might be inaccurate</p>">R01 Count</span></td>
 		     <td>@target.r01Count</td>
 		   </tr>
+               <tr>
+                   <td><span data-toggle="tooltip" data-html="true"
+                   title="Patent Count">Patent Count</span>
+                   </td>
+                   <td>@target.patentCount</td>
+               </tr>
 		   <tr>
 		     <td><span data-toggle="tooltip"
 			 data-html="true"
@@ -544,6 +550,7 @@
 	@property(GO_FUNCTION)	
 	@property(GO_COMPONENT)
 	@property(GO_PROCESS)
+
 	@defining(IDGApp.getLigands(target)) { ligands =>
 	      @if(!ligands.isEmpty()) {
 	         <div class="panel panel-default">
