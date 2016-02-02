@@ -42,9 +42,9 @@ facets: Array[FacetDecorator], targets: List[Target], ctx: String )
 @faceturl() = {
     @defining(App.queryString("facet","q","type")) { uri =>
         @if(uri.length > 0) {
-            <a class="btn btn-info" href='@HtmlFormat.raw(ix.idg.controllers.routes.IDGApp.targetfacets(ctx) + "&"+uri.substring(1))'>All Facets...</a>
+            <a style='width:100%;' class="btn btn-info" href='@HtmlFormat.raw(ix.idg.controllers.routes.IDGApp.targetfacets(ctx) + "&"+uri.substring(1))'>All Facets...</a>
         } else {
-            <a class="btn btn-info" href='@ix.idg.controllers.routes.IDGApp.targetfacets(ctx)'>All Facets...</a>
+            <a style='width:100%;' class="btn btn-info" href='@ix.idg.controllers.routes.IDGApp.targetfacets(ctx)'>All Facets...</a>
         }
     }
 }

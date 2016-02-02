@@ -538,6 +538,12 @@
 			 title="<p align='left'>Number of NIH funded R01 grants for 2010-2014 based on text mining of application titles and abstracts, due to nature of text mining results might be inaccurate</p>">R01 Count</span></td>
 		     <td>@target.r01Count</td>
 		   </tr>
+               <tr>
+                   <td><span data-toggle="tooltip" data-html="true"
+                   title="Patent Count">Patent Count</span>
+                   </td>
+                   <td>@target.patentCount</td>
+               </tr>
 		   <tr>
 		     <td><span data-toggle="tooltip"
 			 data-html="true"
@@ -567,22 +573,6 @@
 	@property(GO_FUNCTION)	
 	@property(GO_COMPONENT)
 	@property(GO_PROCESS)
-	@if(target.patentCount != null && target.patentCount > 0) {
-          <div class="panel panel-default">
-	    <div class="panel-heading">
-	      <h3 class="panel-title">Patent (@target.patentCount)</h3>
-	    </div>
-	    <div class="panel-body">
-	      <div class="row">
-	        <div class="col-md-2"></div>
-		<div class="col-md-8">
-		   <div id="patent-line-plot" style="height:180px;"></div>
-		</div>
-		<div class="col-md-2"></div>
-	      </div>
-	    </div>
-	  </div>
-	}
        
       </div>
       <div class="col-md-4">
