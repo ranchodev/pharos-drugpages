@@ -496,12 +496,12 @@
 			        case "Ab Count" => {
 				  <span data-toggle="tooltip"
 				     data-html="true"
-				     title="<p align='left'>Antibody count from antibodypedia.com</p>"><a href="http://antibodypedia.com">Antibody</a></span>
+				     title="<p align='left'>Antibody count from antibodypedia.com</p>"><a href="http://antibodypedia.com/explore/@for(kw <- target.synonyms) {@if("UniProt Gene".equals(kw.label)) {@kw.term}}">Antibody</a></span>
 				}
 				case "MAb Count" => {
 				  <span data-toggle="tooltip"
 				     data-html="true"
-				     title="<p align='left'>Monoclonal Antibody count from antibodypedia.com</p>"><a href="http://antibodypedia.com">Monoclonal Antibody</a></span>
+				     title="<p align='left'>Monoclonal Antibody count from antibodypedia.com</p>"><a href="http://antibodypedia.com/explore/@for(kw <- target.synonyms) {@if("UniProt Gene".equals(kw.label)) {@kw.term}}">Monoclonal Antibody</a></span>
 				}
 				case "PubMed Count" => {
    				  <span data-toggle="tooltip"
