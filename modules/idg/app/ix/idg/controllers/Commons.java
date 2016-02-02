@@ -101,4 +101,6 @@ public interface Commons {
     public static final String UNIPROT_SEQUENCE = "UniProt Sequence";
 
     public static final String ENTREZ_GENE = "Entrez Gene";
+
+    public static final String STRING_ID = "STRINGDB ID";
 }

@@ -359,6 +359,10 @@ public class TcrdRegistry extends Controller implements Commons {
                 target.addIfAbsent(kw);
 
                 kw = KeywordFactory.registerIfAbsent
+                        (STRING_ID, rset.getString("stringid"), null);
+                target.addIfAbsent(kw);
+
+                kw = KeywordFactory.registerIfAbsent
                     (UNIPROT_NAME, rset.getString("name"), null);
                 target.addIfAbsent(kw);
 
