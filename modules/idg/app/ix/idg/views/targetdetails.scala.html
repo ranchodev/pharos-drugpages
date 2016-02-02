@@ -206,7 +206,7 @@
 
 
 @diseasedblink(d: Disease, x: Any) = {
-<a href="http://diseases.jensenlab.org/Entity?order=textmining,knowledge,experiments&textmining=10&knowledge=10&experiments=10&type1=-26&type2=9606&id1=@IDGApp.getId(d)">@x</a>
+<a href="http://diseases.jensenlab.org/Entity?documents=10&type1=9606&id2=@IDGApp.getId(d)&id1=@target.getSynonym(STRING_ID).term">@x</a>
 }
 
 @diseaserow(dr: DiseaseRelevance) = {
