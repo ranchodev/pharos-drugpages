@@ -970,7 +970,12 @@
                      <h3 class="panel-title">
                      <span data-toggle="tooltip" data-html="true"
                      title="<p align='left'>Publications associated with this target, as identified using the JensenLab text mining protocol</p>">
-            	    Publication</span> <a href="http://www.ncbi.nlm.nih.gov/pubmed?LinkName=gene_pubmed&from_uid=@for(kw <- target.synonyms) {@if("Entrez Gene".equals(kw.label)) {@kw.term}}"><i class="fa fa-external-link"></i></a> (@pmids.size)</h3>
+            	    Publication</span>
+                     <span data-toggle="tooltip" data-html="true" title="<p align='left'>NCBI Gene Bibliography</p>">
+                         <a href="http://www.ncbi.nlm.nih.gov/pubmed?LinkName=gene_pubmed&from_uid=@for(kw <- target.synonyms) {@if("Entrez Gene".equals(kw.label)) {@kw.term}}"><i class="fa fa-book"></i></a></span>
+                         <span data-toggle="tooltip" data-html="true" title="<p align='left'>Search Pubmed with this target</p>">
+                             <a href="http://www.ncbi.nlm.nih.gov/pubmed/?term=@for(kw <- target.synonyms) {@if("UniProt Gene".equals(kw.label)) {@kw.term}}"><i class="fa fa-search-plus"></i></a></span>
+                         (@pmids.size)</h3>
 		 </div>
                  <div class="panel-body">
                     <div class="panel-body">
