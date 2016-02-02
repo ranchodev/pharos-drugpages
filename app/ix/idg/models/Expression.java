@@ -80,6 +80,6 @@ public class Expression extends play.db.ebean.Model {
 
     @Override
     public String toString() {
-        return "Expression{source='"+source+"' sourceId='"+sourceid+"' qualitative="+qualValue+"}";
+        return "Expression{source='"+source+"' sourceId='"+sourceid+"' tissue='"+tissue+"' qualitative="+qualValue+" number="+numberValue+"}";
     }
 }

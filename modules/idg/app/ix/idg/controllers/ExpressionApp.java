@@ -118,11 +118,34 @@ public class ExpressionApp extends App {
         for (XRef xref : t.getLinks()) {
             if (!xref.kind.equals(Expression.class.getName())) continue;
             Expression expr = (Expression) xref.deRef();
-
-            // TODO HPM PROTEIN should get a key in Commons
             if (expr.getSourceid() != null && expr.getSourceid().equals(sourceId))
                 ret.add(expr);
         }
+
+        if (ret.size() > 0) {
+            // sort expression either by qual value or by numeric value
+            if (ret.get(0).getNumberValue() == null) {
+                Collections.sort(ret, new Comparator<Expression>() {
+                    @Override
+                    public int compare(Expression o1, Expression o2) {
+                        return o1.getQualValue().compareTo(o2.getQualValue());
+                    }
+                });
+            } else {
+                Collections.sort(ret, new Comparator<Expression>() {
+                    @Override
+                    public int compare(Expression o1, Expression o2) {
+                        return -1*o1.getNumberValue().compareTo(o2.getNumberValue());
+                    }
+                });
+            }
+        }
+
+        for (Expression e : ret) {
+            System.out.println(e);
+        }
+        System.out.println();
+
         return ret;
     }
 
