@@ -206,7 +206,7 @@ public class TcrdRegistry extends Controller implements Commons {
                 ("select * from panther_class a, p2pc b "
                  +"where a.id = b.panther_class_id and b.protein_id = ?");
             pstm11 = con.prepareStatement
-                ("select * from pathway where target_id = ?");
+                ("select * from pathway where protein_id = ?");
             pstm12 = con.prepareStatement
                 ("select * from xref where protein_id = ?");
             pstm13 = con.prepareStatement
@@ -474,34 +474,38 @@ public class TcrdRegistry extends Controller implements Commons {
                     (GRANT_FUNDING_IC, ic, null);
                 target.properties.add(kw);
             }
-            target.grantCount = count;
-            target.grantTotalCost = cost;
+            
+            if (count > 0)
+                target.grantCount = count;
+            
+            if (cost > 0.)
+                target.grantTotalCost = cost;
         }
         
-        void addPathway (Target target, long tid) throws Exception {
-            pstm11.setLong(1, tid);
+        void addPathway (Target target, long protein) throws Exception {
+            pstm11.setLong(1, protein);
             ResultSet rset = pstm11.executeQuery();
             while (rset.next()) {
-                String source = rset.getString("source");
+                String source = rset.getString("pwtype");
                 String name = rset.getString("name");
                 Keyword term = KeywordFactory.registerIfAbsent
-                    (source+" Pathway", name, null);
-                if (!target.properties.contains(term)) {
-                    target.properties.add(term);
-                    Logger.debug("Target "+target.id
-                                 +" pathway ("+source+"): "+term.term);
+                    (source+" Pathway", name, rset.getString("url"));
+                target.addIfAbsent((Value)term);
+                Logger.debug("Target "+target.id
+                             +" pathway ("+source+"): "+term.term);
+                
+                if ("Reactome".equals(source)) {
+                    List<String> refs = xrefs.get("Reactome");
+                    if (refs != null) {
+                        String id = refs.iterator().next();
+                        Keyword kw = KeywordFactory.registerIfAbsent
+                            (REACTOME_REF, id,
+                             "http://www.reactome.org/content/query?cluster=true&q="+id);
+                        target.addIfAbsent((Value)kw);
+                    }
                 }
             }
             rset.close();
-            
-            List<String> refs = xrefs.get("Reactome");
-            if (refs != null) {
-                String id = refs.iterator().next();
-                Keyword kw = KeywordFactory.registerIfAbsent
-                    (REACTOME_REF, id,
-                     "http://www.reactome.org/content/query?cluster=true&q="+id);
-                target.properties.add(kw);
-            }
         }
 
         void addHarmonogram(Target target, long protein) throws Exception {
@@ -1135,8 +1139,8 @@ public class TcrdRegistry extends Controller implements Commons {
                     String source = rset.getString("source");
                     
                     ligand = new Ligand (drug);
-                    ligand.synonyms.add(KeywordFactory.registerIfAbsent
-                                        (IDG_DRUG, drug, ref));
+                    ligand.addIfAbsent(KeywordFactory.registerIfAbsent
+                                       (IDG_DRUG, drug, ref));
                     if (source != null) {
                         if (chemblId == null) {
                             Keyword ds = datasources.get(source);
@@ -1145,12 +1149,14 @@ public class TcrdRegistry extends Controller implements Commons {
                                     (SOURCE, source, null);
                                 datasources.put(source, ds);
                             }
-                            ligand.properties.add(ds);
+                            // property
+                            ligand.addIfAbsent((Value)ds);
                         }
-                        
-                        ligand.properties.add
-                            (KeywordFactory.registerIfAbsent
-                             (LIGAND_SOURCE, source, ref));
+
+                        // add as property
+                        Keyword kw = new Keyword (LIGAND_SOURCE, source);
+                        kw.href = ref;
+                        ligand.properties.add(kw);
                     }
 
                     ligand.description = rset.getString("nlm_drug_info");
@@ -1566,7 +1572,7 @@ public class TcrdRegistry extends Controller implements Commons {
             addPhenotype (target, t.protein);
             addExpression (target, t.protein);
             addGO (target, t.protein);
-            addPathway (target, t.id);
+            addPathway (target, t.protein);
             addPanther (target, t.protein);
             //  addPatent (target, t.protein);
             addGrant (target, t.id);

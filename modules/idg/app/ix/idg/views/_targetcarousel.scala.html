@@ -85,7 +85,6 @@
 }
 
 @sunburst(id: String, caption: Html) = {
-      <div class="item">
         <div class="container-fluid">
 	    <div class="row">
 	      <div class="col-md-12">
@@ -102,7 +101,6 @@
 	      </div>
 	    </div>
 	 </div>
-      </div>
 }
 
 @wordcloud(facet: String, caption: Html) = {
@@ -111,7 +109,7 @@
       <div class="item">
         <div class="container-fluid">
           <div class="row">
-	     <div class="col-md-6">
+	     <div class="col-md-12 col-lg-offset-2">
 	            <div id="cloud-@Util.sha1(facet)"
 		        style="height:200px;width=500px;padding-left:100px">
 		    </div>
@@ -146,13 +144,17 @@
     
     <!-- Wrapper for slides -->
     <div class="carousel-inner" role="listbox">
+      <!-- the first item should be active -->
       <div class="item active">
-         @carouselpie(ctx.getFacet(IDG_DEVELOPMENT), HtmlFormat.raw("Target Development Level"))
+	@sunburst("dto", HtmlFormat.raw("<a href='http://drugtargetontology.org/'>Drug Target Ontology</a>"))
+      </div>
+      <div class="item">
+        @carouselpie(ctx.getFacet(IDG_DEVELOPMENT), HtmlFormat.raw("Target Development Level"))
       </div>
       @item(IDG_FAMILY, HtmlFormat.raw("Target Family"))
-      @sunburst("dto", HtmlFormat.raw("<a href='http://drugtargetontology.org/'>Drug Target Ontology</a>"))
-      @sunburst("panther", HtmlFormat.raw("<a href='http://pantherdb.org/panther/prowler.jsp'>PANTHER Protein Ontology</a>"))
-
+      <div class="item">
+        @sunburst("panther", HtmlFormat.raw("<a href='http://pantherdb.org/panther/prowler.jsp'>PANTHER Protein Ontology</a>"))
+      </div>
       <div class="item">
         <div class="container-fluid">
 	    <div class="row">

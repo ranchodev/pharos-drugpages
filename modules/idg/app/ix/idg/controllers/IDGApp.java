@@ -438,7 +438,7 @@ public class IDGApp extends App implements Commons {
         IDG_FAMILY,
         IDG_DISEASE,
         IDG_LIGAND,
-        GTEx_TISSUE,
+        GTEx_TISSUE
     };
 
     public static final String[] ALL_TARGET_FACETS = {
@@ -3066,5 +3066,19 @@ public class IDGApp extends App implements Commons {
         //strip the brackets '[', ']' for sparkline
         String res = StringUtils.join(ent, ",");
         return res;
+    }
+
+    public static VNum getActivity (Target target, Ligand ligand) {
+        for (XRef ref : target.getLinks()) {
+            if (ref.kind.equals(ligand.getClass().getName())
+                && ref.refid.equals(ligand.id.toString())) {
+                for (Value v : ref.properties) {
+                    // will we have multiple activity for a target?
+                    if (v instanceof VNum)
+                        return (VNum)v;
+                }
+            }
+        }
+        return null;
     }
 }
