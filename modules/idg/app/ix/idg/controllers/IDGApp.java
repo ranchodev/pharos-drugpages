@@ -1156,8 +1156,19 @@ public class IDGApp extends App implements Commons {
 
     static Result createTargetResult
             (TextIndexer.SearchResult result, int rows, int page) {
+
+        String[] reqf = request().queryString().get("facet");
+
+        // Expand TARGET_FACETS to add in facets that were selected via the full facet
+        // listing page but aren't part of the default set of facets
+        List<String> facetFilter = new ArrayList<String>(Arrays.asList(TARGET_FACETS));
+        for (String af : reqf) {
+            String fname = af.split("/")[0];
+            if (!facetFilter.contains(fname))
+                facetFilter.add(fname);
+        }
         TextIndexer.Facet[] facets = filter
-                (result.getFacets(), TARGET_FACETS);
+                (result.getFacets(), facetFilter.toArray(new String[]{}));
 
         List<Target> targets = new ArrayList<Target>();
         int[] pages = new int[0];
@@ -2866,7 +2877,8 @@ public class IDGApp extends App implements Commons {
                             return null;
                         }
                     });
-            
+
+
             return App.fetchResult
                 (context, rows, page, new DefaultResultRenderer<Target> () {
                         public Result render (SearchResultContext context,
@@ -2876,10 +2888,9 @@ public class IDGApp extends App implements Commons {
                                               List<Target> targets) {
                             return ok (ix.idg.views.html.targets.render
                                        (page, rows, total,
-                                        pages, decorate
-                                        (Target.class,
-                                         filter (facets, TARGET_FACETS)),
-                                        targets, context.getId()));
+                                        pages, decorate(Target.class,
+                                                       filter (facets, TARGET_FACETS)),
+                                               targets, context.getId()));
                         }
                     });
         }
