@@ -623,6 +623,12 @@ public class IDGApp extends App implements Commons {
         }
     }
 
+    @Cached(key="_pmscore", duration = Integer.MAX_VALUE)
+    public static Result pmscore() {
+        return ok(ix.idg.views.html.pmscore.render("Jensen Pubmed Score"));
+    }
+
+
     @Cached(key="_about", duration = Integer.MAX_VALUE)
     public static Result about() {
         final String key = "idg/about";
