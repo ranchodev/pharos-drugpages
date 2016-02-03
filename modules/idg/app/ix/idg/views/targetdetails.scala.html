@@ -576,9 +576,15 @@
 		       <td class="valign-center">
 		          <a class="label label-primary" href='@ix.idg.controllers.routes.IDGApp.ligand(IDGApp.getId(lig))'>@lig.getName()</a>
 		       </td>
-			 <td class="valign-center">
-			   <code>@{IDGApp.getActivity(target, lig).getLabel()} @{"%1$.2f".format(IDGApp.getActivity(target, lig).getValue())}</code>
-			 </td>
+		       @defining(IDGApp.getActivity(target, lig)) { act =>
+			   @if(act != null) {
+			    <td class="valign-center">
+			      <code>@{act.getLabel()} @{"%1$.2f".format(act.getValue())}</code>
+			    </td>
+			    } else {
+			   <td></td>
+			   }
+			}
 		      </tr>
                       }
 		      </table>
@@ -906,6 +912,74 @@
   </div>
   }
 
+  @**************
+    Assay
+  **************@
+
+  @defining(IDGApp.getAssays(target)) { assays =>
+    @if(!assays.isEmpty) {
+    <div class="row">
+      <div class="col-md-12">
+        <div class="panel panel-default">
+          <div class="panel-heading">
+            <h3 class="panel-title"><span data-toggle="tooltip"
+			data-html="true"
+			title="<p align='left'>MLP Assays</p>">MLP Assay (@assays.size)</span></h3>
+          </div>
+          <div class="panel-body">
+            <div class="panel-body">
+              <table class="table table-striped">
+                <tr>
+                  <th>AID <i class="fa fa-external-link"></i></th>
+		  <th>Type</th>
+		  <th>Active&nbsp;/&nbsp;Inconclusive&nbsp;/&nbsp;Inactive</th>
+                  <th>Description</th>
+                </tr>
+		@for(a <- assays) {
+		  @defining(a.getProperty(MLP_ASSAY_AID)) { aid =>
+		      @if(aid != null) {
+	              <tr>
+		        <td>
+		          <a href="https://pubchem.ncbi.nlm.nih.gov/bioassay/@aid.getValue">@aid.getValue</a>
+ 		        </td>
+		        <td><code>@a.getType</code></td>
+		        <td>
+		        @defining(a.getProperty(MLP_ASSAY_ACTIVE)) { p =>
+		          @if(p != null) {
+		             <a href="https://www.ncbi.nlm.nih.gov/pcsubstance?linkname=pcassay_pcsubstance_active&from_uid=@aid.getValue">@p.getValue</a>
+			  }
+		        }
+			/
+		        @defining(a.getProperty(MLP_ASSAY_INCONCLUSIVE)) { p =>
+		          @if(p != null) {
+		             @p.getValue
+			  }
+		        }	
+			/
+		        @defining(a.getProperty(MLP_ASSAY_INACTIVE)) { p =>
+		          @if(p != null) {
+		             <a href="https://www.ncbi.nlm.nih.gov/pcsubstance?linkname=pcassay_pcsubstance_inactive&from_uid=@aid.getValue">@p.getValue</a>
+			  }
+		        }
+		        </td>
+		        <td>@a.name</td>
+		      </tr>
+      		    }
+		  }
+	        }
+	      </table>
+	    </div>
+	  </div>
+	</div>
+      </div>
+    </div>
+    }
+  }
+
+  @*************
+  Gene RIF
+  *************@
+		
   @defining(IDGApp.getGeneRIFs(target)) { generifs =>
     @if(!generifs.isEmpty) {
     <div class="row">

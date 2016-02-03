@@ -101,6 +101,12 @@ public interface Commons {
     public static final String UNIPROT_SEQUENCE = "UniProt Sequence";
 
     public static final String ENTREZ_GENE = "Entrez Gene";
-
     public static final String STRING_ID = "STRINGDB ID";
+
+    public static final String MLP_ASSAY = "MLP Assay";
+    public static final String MLP_ASSAY_TYPE = "MLP Assay Type";
+    public static final String MLP_ASSAY_ACTIVE = "MLP Assay Active";
+    public static final String MLP_ASSAY_INACTIVE = "MLP Assay Inactive";
+    public static final String MLP_ASSAY_INCONCLUSIVE = "MLP Assay Inconclusive";
+    public static final String MLP_ASSAY_AID = "MLP Assay PubChem ID";
 }
