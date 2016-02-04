@@ -1,9 +1,8 @@
-import sbt._
-import Keys._
 import play._
+import sbt.Keys._
+import sbt._
 //import play.PlayImport._
 import play.Play.autoImport._
-import PlayKeys._
 
 object ApplicationBuild extends Build {
   val branch = "git rev-parse --abbrev-ref HEAD".!!.trim
@@ -143,6 +142,8 @@ public class BuildInfo {
     libraryDependencies ++= commonDependencies,
       libraryDependencies += "org.webjars" % "morrisjs" % "0.5.1",
       libraryDependencies += "org.webjars" % "fabric.js" % "1.4.12",
+      libraryDependencies += "org.webjars" % "datatables" % "1.10.10",
+      libraryDependencies += "org.webjars" % "datatables-plugins" % "1.10.9-1",
       javacOptions ++= javaBuildOptions
       //javaOptions in Runtime += "-Dconfig.resource=pharos.conf"
   ).dependsOn(ncats).aggregate(ncats)
