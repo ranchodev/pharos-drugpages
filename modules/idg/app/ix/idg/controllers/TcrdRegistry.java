@@ -152,7 +152,8 @@ public class TcrdRegistry extends Controller implements Commons {
         PreparedStatement pstm, pstm2, pstm3, pstm4,
             pstm5, pstm6, pstm7, pstm8, pstm9, pstm10,
             pstm11, pstm12, pstm13, pstm14, pstm15,
-            pstm16, pstm17, pstm18, pstm19, pstm20;
+            pstm16, pstm17, pstm18, pstm19, pstm20,
+            pstm21;
         Map<String, Keyword> datasources = new HashMap<String, Keyword>();
 
         // xrefs for the current target
@@ -232,6 +233,9 @@ public class TcrdRegistry extends Controller implements Commons {
                 ("select * from target2disease where target_id = ? "
                  +"order by doid desc");
 
+            pstm21 = con.prepareStatement
+                ("select * from mlp_assay_info where protein_id = ? order by aid");
+
             this.chembl = chembl;
         }
 
@@ -292,6 +296,7 @@ public class TcrdRegistry extends Controller implements Commons {
             pstm18.close();
             pstm19.close();
             pstm20.close();
+            pstm21.close();
             
             chembl.shutdown();
         }
@@ -431,6 +436,50 @@ public class TcrdRegistry extends Controller implements Commons {
                 timeline.save();
                 target.links.add(new XRef (timeline));
             }
+        }
+
+        void addAssay (Target target, long protein) throws Exception {
+            pstm21.setLong(1, protein);
+            ResultSet rset = pstm21.executeQuery();
+            int count = 0;
+            while (rset.next()) {
+                Assay assay = new Assay (rset.getString("assay_name"));
+                assay.type = rset.getString("method");
+                assay.properties.add
+                    (new VInt (MLP_ASSAY_ACTIVE, rset.getLong("active_sids")));
+                assay.properties.add
+                    (new VInt (MLP_ASSAY_INACTIVE, rset.getLong("inactive_sids")));
+                assay.properties.add
+                    (new VInt (MLP_ASSAY_INCONCLUSIVE, rset.getLong("iconclusive_sids")));
+                assay.properties.add
+                    (new VInt (MLP_ASSAY_AID, rset.getLong("aid")));
+                assay.save();
+                
+                XRef tref = assay.addIfAbsent(new XRef (target));
+                tref.addIfAbsent((Value)KeywordFactory.registerIfAbsent
+                                 (IDG_DEVELOPMENT, target.idgTDL.name, null));
+                tref.addIfAbsent((Value)KeywordFactory.registerIfAbsent
+                                 (IDG_FAMILY, target.idgFamily, null));
+                
+                XRef aref = target.addIfAbsent(new XRef (assay));
+                aref.addIfAbsent((Value)KeywordFactory.registerIfAbsent
+                                 (MLP_ASSAY_TYPE, assay.type, null));
+                // 
+                aref.properties.add(new Text (MLP_ASSAY, assay.name));
+
+                try {
+                    tref.save();
+                    aref.save();
+                    assay.update();
+                    target.update();
+                }
+                catch (Exception ex) {
+                    ex.printStackTrace();
+                }
+                ++count;
+            }
+            rset.close();
+            Logger.debug("Target " + target.id + " has " + count +" assay(s)!");    
         }
 
         void addGrant (Target target, long tid) throws Exception {
@@ -1577,6 +1626,7 @@ public class TcrdRegistry extends Controller implements Commons {
             //  addPatent (target, t.protein);
             addGrant (target, t.id);
             addDrugs (target, t.id);
+            addAssay (target, t.protein);
             addChembl (target, t.id);
             addDisease (target, t.id);
             addHarmonogram (target, t.protein);

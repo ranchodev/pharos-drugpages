@@ -23,6 +23,7 @@ import ix.core.search.TextIndexer;
 import ix.idg.models.Disease;
 import ix.idg.models.Ligand;
 import ix.idg.models.Target;
+import ix.idg.models.Assay;
 import ix.ncats.controllers.App;
 import ix.seqaln.SequenceIndexer;
 import ix.utils.Util;
@@ -482,6 +483,7 @@ public class IDGApp extends App implements Commons {
         "Jensen Score",
 
         PHARMALOGICAL_ACTION,
+        MLP_ASSAY_TYPE,
         UNIPROT_KEYWORD,
         IDG_TOOLS,
         GRANT_FUNDING_IC,
@@ -1168,10 +1170,12 @@ public class IDGApp extends App implements Commons {
         // Expand TARGET_FACETS to add in facets that were selected via the full facet
         // listing page but aren't part of the default set of facets
         List<String> facetFilter = new ArrayList<String>(Arrays.asList(TARGET_FACETS));
-        for (String af : reqf) {
-            String fname = af.split("/")[0];
-            if (!facetFilter.contains(fname))
-                facetFilter.add(fname);
+        if (reqf != null) {
+            for (String af : reqf) {
+                String fname = af.split("/")[0];
+                if (!facetFilter.contains(fname))
+                    facetFilter.add(fname);
+            }
         }
         TextIndexer.Facet[] facets = filter
                 (result.getFacets(), facetFilter.toArray(new String[]{}));
@@ -3022,6 +3026,24 @@ public class IDGApp extends App implements Commons {
         
         Collections.sort(generifs);
         return generifs;
+    }
+
+    public static List<Assay> getAssays (EntityModel e) {
+        List<Assay> assays = new ArrayList<Assay>();
+        for (XRef ref : e.getLinks()) {
+            if (Assay.class.getName().equals(ref.kind)) {
+                try {
+                    Assay a = (Assay)ref.deRef();
+                    assays.add(a);
+                }
+                catch (Exception ex) {
+                    ex.printStackTrace();
+                    Logger.error("Can't resolve XRef "
+                                 +ref.kind+":"+ref.refid, ex);
+                }
+            }
+        }
+        return assays;
     }
 
     public static List<Long> getPMIDs (Target target) {
