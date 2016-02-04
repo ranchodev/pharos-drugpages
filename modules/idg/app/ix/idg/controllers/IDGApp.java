@@ -657,8 +657,8 @@ public class IDGApp extends App implements Commons {
 
     @Cached(key="_index", duration = Integer.MAX_VALUE)
     public static Result index () {
-        return ok (ix.idg.views.html.index2.render
-                   ("Pharos: Illuminating the Druggable Genome",
+        return ok (ix.idg.views.html.index3.render
+                   ("Illuminating the Druggable Genome",
                     DiseaseFactory.finder.findRowCount(),
                     TargetFactory.finder.findRowCount(),
                     LigandFactory.finder.findRowCount()));
@@ -971,7 +971,7 @@ public class IDGApp extends App implements Commons {
         Double ret = -1.0;
         String[] actNames = {"Ki", "Kd", "EC50", "IC50", "ED50", "A2", "Kb"};
         for (String actName : actNames) {
-            System.out.println("actName = " + actName);
+            //System.out.println("actName = " + actName);
             for (Value v : getProperties(e, actName)) {
                 double d = ((VNum) v).getNumval();
                 System.out.println("  d = " + d);
@@ -3043,6 +3043,19 @@ public class IDGApp extends App implements Commons {
                 }
             }
         }
+        Collections.sort(assays, new Comparator<Assay> () {
+                public int compare (Assay a1, Assay a2) {
+                    VInt aid1 = (VInt)a1.getProperty(MLP_ASSAY_AID);
+                    VInt aid2 = (VInt)a2.getProperty(MLP_ASSAY_AID);
+                    if (aid1 != null && aid2 != null) {
+                        return aid1.intval.compareTo(aid2.intval);
+                    }
+                    if (aid1 != null) return -1;
+                    if (aid2 != null) return 1;
+                    return 0;
+                }
+            });
+        
         return assays;
     }
 
