@@ -109,4 +109,6 @@ public interface Commons {
     public static final String MLP_ASSAY_INACTIVE = "MLP Assay Inactive";
     public static final String MLP_ASSAY_INCONCLUSIVE = "MLP Assay Inconclusive";
     public static final String MLP_ASSAY_AID = "MLP Assay PubChem ID";
+
+    public static final String URL_ANTIBODYPEDIA = "Antibodypedia.com URL";
 }
