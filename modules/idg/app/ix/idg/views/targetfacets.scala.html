@@ -202,14 +202,14 @@ $(document).ready(function() {
   }
 
     $("#facetdivfilter" ).on("input", function() {
-       var str = $(this).val();
+       var str = $(this).val( ).toLowerCase();
         $("div[facetname]").each(function(){
             if (str.trim() == "") {
                 $ (this).show () ;
                 return;
             }
             var attr = $(this ).attr("facetname");
-            if (attr.indexOf(str) == -1) $(this ).hide();
+            if (attr.toLowerCase( ).indexOf(str) == -1) $(this ).hide();
             else $(this ).show();
         });
     });
