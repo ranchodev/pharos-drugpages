@@ -1296,21 +1296,23 @@ public class IDGApp extends App implements Commons {
                 append(csvQuote(dtoClass)).append(",").
                 append(csvQuote(pantherClass)).append(",").
                 append(csvQuote(chemblClass)).append(",").
-                append(csvQuote((String)novelty)).append(",").
+                append(csvQuote((String) novelty)).append(",").
                 append(csvQuote(t.idgFamily)).append(",").
                 append(csvQuote(function.toString())).append(",").
-                append(csvQuote(String.valueOf(t.r01Count))).
-                append(csvQuote(String.valueOf(t.patentCount))).
-                append(csvQuote(String.valueOf(t.antibodyCount))).
-                append(csvQuote(String.valueOf(t.pubmedCount))).
+                append(csvQuote(String.valueOf(t.r01Count))).append(",").
+                append(csvQuote(String.valueOf(t.patentCount))).append(",").
+                append(csvQuote(String.valueOf(t.antibodyCount))).append(",").
+                append(csvQuote(String.valueOf(t.pubmedCount))).append(",").
                 append(csvQuote(sb2.toString()));
         return sb.toString();
     }
 
     static String csvQuote(String s) {
-        if (s == null) return s;
+        if (s == null || s.trim().equals("null")) return "";
         if (s.contains("\"")) s = s.replace("\"", "\\\"");
-        return "\""+s+"\"";
+        if (s.contains(" ") || s.contains(","))
+            return "\""+s+"\"";
+        else return s;
     }
 
     static Result _targets (final String q, final int rows, final int page)
@@ -1337,7 +1339,7 @@ public class IDGApp extends App implements Commons {
             if (action.toLowerCase().equals("download")) {
                 StringBuilder sb = new StringBuilder();
                 String tmp = "URL,Uniprot ID,Name,Description,Development Level,DTOClass,PantherClass,ChemblClass,Novelty,Target Family,Function," +
-                        "R01Count,PatentCount,AntibodyCount,PubmedCount,PMIDs";
+                        "R01Count,PatentCount,AntibodyCount,PubmedCount,PMIDCount";
                 tmp = tmp.replace(",", "\",\"");
                 tmp = "\""+tmp + "\"\n";
                 sb.append(tmp);
