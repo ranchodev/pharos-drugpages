@@ -1458,11 +1458,23 @@ public class IDGApp extends App implements Commons {
         String[] values = params.get("sequence");
         if (values != null && values.length > 0) {
             String seq = values[0];
+            
+            double iden = 0.5;
+            String[] idparm = params.get("identity");
+            if (idparm != null && idparm.length > 0) {
+                try {
+                    iden = Double.parseDouble(idparm[0]);
+                }
+                catch (Exception ex) {
+                    ex.printStackTrace();
+                }
+            }
+            
             try {
                 Payload payload = _payloader.createPayload
                     ("Sequence Search", "text/plain", seq);
                 Call call = routes.IDGApp.targets(payload.id.toString(), 10, 1);
-                return redirect (call.url()+"&type=sequence");
+                return redirect (call.url()+"&type=sequence&identity="+iden);
             }
             catch (Exception ex) {
                 ex.printStackTrace();
