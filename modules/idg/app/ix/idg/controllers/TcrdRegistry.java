@@ -1465,6 +1465,11 @@ public class TcrdRegistry extends Controller implements Commons {
                                         // UniProt Disease
                                         doid = rset.getString("reference")
                                             .replaceAll("[\\s]+", "");
+                                        d.synonyms.add
+                                            (KeywordFactory.registerIfAbsent
+                                             (UNIPROT_DISEASE, doid,
+                                              "http://omim.org/entry/"
+                                              +doid.substring(doid.indexOf(':')+1)));
                                     }
                                     d.save();
                                     DISEASES.put(doid, d);
