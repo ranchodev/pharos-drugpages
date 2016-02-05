@@ -10,8 +10,8 @@
 @(q: String, uri: String, facets: Array[Array[FacetDecorator]])
 
 @facet(f: FacetDecorator) = {
-<div class="col-md-4">
-  <div class="panel panel-default" id="@Util.sha1(App.encode(f.facet))">
+<div class="col-md-4" facetname="@f.name">
+  <div class="panel panel-default" id="@Util.sha1(App.encode(f.facet))" >
     <div class="panel-heading">
       <h3 class="panel-title">@f.name</h3>
     </div>
@@ -99,27 +99,35 @@
 </script>
 
 <div class="container-fluid">
-  <div class="col-md-12">
-    <div class="page-header">
-      <h1>Target Facets
-	<div class="pull-right">
-	  <a href="@ix.idg.controllers.routes.IDGApp.targets()"
-	     class="btn btn-default btn-lg">Clear</a>
-	  <button type="button" class="btn btn-primary btn-lg"
-	  	  onclick="applyFilters(this)">Apply</button>
-	</div>
-      </h1>
+    <div class="col-md-12">
+        <div class="page-header">
+            <h1>Target Facets
+                <div class="pull-right">
+                    <a href="@ix.idg.controllers.routes.IDGApp.targets()"
+                    class="btn btn-default btn-lg">Clear</a>
+                    <button type="button" class="btn btn-primary btn-lg"
+                    onclick="applyFilters ( this )">Apply</button>
+                </div>
+            </h1>
+            <form class="form-inline">
+                <div class="form-group">
+                    <input type="text" id="facetdivfilter" class="form-control" placeholder="Find facets ...">
+                </div>
+            </form>
+        </div>
+
+        <div id="facet-container">
+        @for(i <- 0 until facets.length) {
+            <div class="row">
+            @for(f <- facets(i)) {
+                @if(f != null) {
+                    @facet(f)
+                }
+            }
+            </div>
+        }
+        </div>
     </div>
-    @for(i <- 0 until facets.length) {
-    <div class="row">
-      @for(f <- facets(i)) {
-	@if(f != null) {
-           @facet(f)
-	}
-      }
-    </div>
-    }
-  </div>
 </div>
 }
 
@@ -192,5 +200,18 @@ $(document).ready(function() {
        $('#'+id).addClass('panel-success');
     }
   }
+
+    $("#facetdivfilter" ).on("input", function() {
+       var str = $(this).val();
+        $("div[facetname]").each(function(){
+            if (str.trim() == "") {
+                $ (this).show () ;
+                return;
+            }
+            var attr = $(this ).attr("facetname");
+            if (attr.indexOf(str) == -1) $(this ).hide();
+            else $(this ).show();
+        });
+    });
 });
 </script>
