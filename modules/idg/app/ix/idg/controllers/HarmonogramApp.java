@@ -132,7 +132,11 @@ public class HarmonogramApp extends App {
         StringBuilder sb = new StringBuilder();
         String delimiter = "";
         for (String akey : keys) {
-            sb.append(delimiter).append(map.get(akey).getCdf());
+            HarmonogramCDF cdf = map.get(akey);
+            if (cdf == null)
+                sb.append(delimiter).append(0); // TODO what is a good value ot indicate missingness?
+            else
+                sb.append(delimiter).append(map.get(akey).getCdf());
             delimiter = "\t";
         }
         return sb.toString();
@@ -304,7 +308,6 @@ public class HarmonogramApp extends App {
         // Arrange column names in a default ordering - needs to be updated
         String[] header = colNames.toArray(new String[]{});
         Arrays.sort(header);
-
 
         if (format != null && format.toLowerCase().equals("tsv")) {
             return (ok(_hgmapToTsv(allValues, header)));
