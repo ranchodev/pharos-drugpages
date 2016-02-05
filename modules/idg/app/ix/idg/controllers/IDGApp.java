@@ -494,6 +494,7 @@ public class IDGApp extends App implements Commons {
     public static final String[] DISEASE_FACETS = {
         IDG_DEVELOPMENT,
         IDG_FAMILY,
+        SOURCE,
         UNIPROT_TARGET
     };
 

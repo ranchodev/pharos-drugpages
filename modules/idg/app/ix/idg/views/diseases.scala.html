@@ -3,14 +3,17 @@
 @import ix.idg.controllers.IDGApp
 @import ix.ncats.controllers.App.FacetDecorator
 @import ix.idg.controllers.DiseaseOntologyRegistry
+@import ix.idg.controllers.Commons._
 
 @(current: Int, rows: Int, total: Int, pages: Array[Int],
         facets: Array[FacetDecorator], diseases: List[Disease])
 
 @getdoid(t: Disease) = {
     @* We only consider the first DOID, even if there are alternates *@
-    @for(kw <- t.synonyms.filter(_.label == "DOID").take(1)) {
-        <a href="http://disease-ontology.org/term/@kw.term">@kw.term.replace("DOID:", "")</a>
+    @defining(t.getSynonym("DOID", UNIPROT_DISEASE)) { id =>
+      @if(id != null) {
+        <a href="@id.href">@id.term</a>
+      }
     }
 }
 
@@ -50,7 +53,7 @@
 }{
     <table class="table table-striped">
       <tr>
-        <th>DOID</th>
+        <th>ID <i class="fa fa-external-link"></i></th>
         <th>Name</th>
         <th>Description</th>
       </tr>
