@@ -15,6 +15,7 @@ import ix.core.controllers.EntityFactory;
 import ix.core.controllers.KeywordFactory;
 import ix.core.controllers.PayloadFactory;
 import ix.core.controllers.PredicateFactory;
+import ix.core.controllers.PublicationFactory;
 import ix.core.controllers.search.SearchFactory;
 import ix.core.models.*;
 import ix.core.plugins.IxCache;
@@ -1245,6 +1246,9 @@ public class IDGApp extends App implements Commons {
                 else if (type.equalsIgnoreCase("batch")) {
                     return batchSearch (q, rows, page);
                 }
+                else if (type.equalsIgnoreCase("pmid")) {
+                    return targetsForPublication (Long.parseLong(q), rows, page);
+                }
             }
             
             return _targets (q, rows, page);
@@ -1763,8 +1767,9 @@ public class IDGApp extends App implements Commons {
         List<Disease> diseases =
             filter (Disease.class, result.getMatches(), max);
         List<Ligand> ligands = filter (Ligand.class, result.getMatches(), max);
+        // don't filter on publications.. good idea?
         List<Publication> publications = filter
-            (Publication.class, result.getMatches(), max);
+            (Publication.class, result.getMatches(), totalPubs);
 
         return ok(ix.idg.views.html.search.render
                 (query, total, decorate(facets),
@@ -3147,5 +3152,144 @@ public class IDGApp extends App implements Commons {
             }
         }
         return null;
+    }
+
+    public static List<Publication> getPublications (final Target target) throws Exception {
+        List<Publication> pubs = new ArrayList<Publication>();
+        
+        final String key = "targets/"+target.id+"/publications";
+        Predicate pred = getOrElse (key, new Callable<Predicate> () {
+                public Predicate call () throws Exception {
+                    List<Predicate> preds = PredicateFactory.finder.where
+                    (Expr.and(Expr.eq("subject.refid", target.id),
+                              Expr.eq("predicate", TARGET_PUBLICATIONS)))
+                    .findList();
+                    return preds.isEmpty() ? null : preds.iterator().next();
+                }
+            });
+
+        if (pred != null) {
+            for (XRef ref : pred.objects) {
+                try {
+                    pubs.add((Publication)ref.deRef());
+                }
+                catch (Exception ex) {
+                    ex.printStackTrace();
+                    Logger.trace("Can't retrieve XRef "+ref.kind+":"+ref.refid, ex);
+                }
+            }
+        }
+        return pubs;
+    }
+
+    public static List<Target> getTargetsByPMID (final long pmid) throws Exception {
+        final String key = "publications/"+pmid+"/targets";
+        return getOrElse (key, new Callable<List<Target>> () {
+                public List<Target> call () throws Exception {
+                    final Publication pub = PublicationFactory.byPMID(pmid);
+                    List<Target> targets = new ArrayList<Target>();                 
+                    if (pub != null) {
+                        List<Predicate> preds = PredicateFactory.finder.where
+                            (Expr.and(Expr.eq("predicate", TARGET_PUBLICATIONS),
+                                      Expr.eq("objects.refid", pub.id)))
+                            .findList();
+
+                        for (Predicate pred : preds) {
+                            try {
+                                targets.add((Target)pred.subject.deRef());
+                            }
+                            catch (Exception ex) {
+                                ex.printStackTrace();
+                                Logger.trace("Can't retrieve XRef "
+                                             +pred.subject.kind+":"+pred.subject.refid, ex);
+                            }
+                        }
+                    }
+                    return targets;
+                }
+            });
+    }
+
+    public static Result _publicationsForTarget (String name, int top, int skip)
+        throws Exception {
+        List<Target> targets = TargetResult.find(name);
+        if (targets.isEmpty()) {
+            return _notFound ("Unknown target: "+name);
+        }
+        
+        if (targets.size() > 1) {
+            Logger.debug("** \""+name+"\" resolves to "+targets.size()+" targets!");
+        }
+        
+        Target t = targets.iterator().next();
+        List<Publication> pubs = getPublications (t);
+        if (top > 0 && skip >= 0) {
+            pubs = pubs.subList(skip, Math.min(pubs.size(), skip+top));
+        }
+        else if (skip >= 0) {
+            pubs = pubs.subList(skip, Math.min(pubs.size(), pubs.size() - skip));
+        }
+        else if (top > 0) {
+            pubs = pubs.subList(0, Math.min(top, pubs.size()));
+        }
+        
+        ObjectMapper mapper = EntityFactory.getEntityMapper();
+        return ok (mapper.valueToTree(pubs));
+    }
+
+    public static Result publicationsForTarget
+        (final String name, final int top, final int skip) {
+        try {
+            final String key = "targets/"+name+"/"+top+"/"+skip;
+            return getOrElse (key, new Callable<Result> () {
+                    public Result call () throws Exception {
+                        return _publicationsForTarget (name, top, skip);
+                    }
+                });
+        }
+        catch (Exception ex) {
+            ex.printStackTrace();
+            return _internalServerError (ex);
+        }
+    }
+
+    public static Result targetsForPublication
+        (final long pmid, final int rows, final int page) {
+        try {
+            final String key = "targets/"+pmid+"/publication";
+            return getOrElse (key, new Callable<Result> () {
+                    public Result call () throws Exception {
+                        SearchResultProcessor<Target> processor =
+                            new SearchResultProcessor<Target>() {
+                                protected Object instrument (Target t) throws Exception {
+                                    return t;
+                                }
+                            };
+                        processor.setResults
+                            (rows, Collections.enumeration(getTargetsByPMID (pmid)));
+                        
+                        return App.fetchResult
+                            (processor.getContext(), rows, page,
+                             new DefaultResultRenderer<Target> () {
+                                 public Result render (SearchResultContext context,
+                                                       int page, int rows,
+                                                       int total, int[] pages,
+                                                       List<Facet> facets,
+                                                       List<Target> targets) {
+                                     return ok (ix.idg.views.html.targets.render
+                                                (page, rows, total,
+                                                 pages, decorate(Target.class,
+                                                                 filter (facets,
+                                                                         TARGET_FACETS)),
+                                                 targets, context.getId()));
+                                 }
+                             });
+                    }
+                });
+        }
+        catch (Exception ex) {
+            ex.printStackTrace();
+            return _internalServerError (ex);
+        }
     }
 }

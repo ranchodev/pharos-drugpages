@@ -153,7 +153,7 @@ public class TcrdRegistry extends Controller implements Commons {
             pstm5, pstm6, pstm7, pstm8, pstm9, pstm10,
             pstm11, pstm12, pstm13, pstm14, pstm15,
             pstm16, pstm17, pstm18, pstm19, pstm20,
-            pstm21;
+            pstm21, pstm22;
         Map<String, Keyword> datasources = new HashMap<String, Keyword>();
 
         // xrefs for the current target
@@ -236,6 +236,10 @@ public class TcrdRegistry extends Controller implements Commons {
             pstm21 = con.prepareStatement
                 ("select * from mlp_assay_info where protein_id = ? order by aid");
 
+            pstm22 = con.prepareStatement
+                ("select * from protein2pubmed a, pubmed b "
+                 +"where a.pubmed_id = b.id and a.protein_id = ?");
+
             this.chembl = chembl;
         }
 
@@ -297,6 +301,7 @@ public class TcrdRegistry extends Controller implements Commons {
             pstm19.close();
             pstm20.close();
             pstm21.close();
+            pstm22.close();
             
             chembl.shutdown();
         }
@@ -1595,6 +1600,36 @@ public class TcrdRegistry extends Controller implements Commons {
             }
         }
 
+        void addPublication (Target target, long protein) throws Exception {
+            pstm22.setLong(1, protein);
+            ResultSet rset = pstm22.executeQuery();
+            try {
+                Predicate pred = new Predicate (TARGET_PUBLICATIONS);
+                pred.subject = new XRef (target);
+                while (rset.next()) {
+                    long pmid = rset.getLong("id");
+                    Publication pub = PublicationFactory.byPMID(pmid);
+                    if (pub == null) {
+                        pub = new Publication ();
+                        pub.pmid = pmid;
+                        pub.title = rset.getString("title");
+                        pub.abstractText = rset.getString("abstract");
+                        pub.save();
+                    }
+                    XRef ref = new XRef (pub);
+                    ref.save();
+                    pred.addIfAbsent(ref);
+                }
+                pred.save();
+                
+                Logger.debug("Target "+target.id+" has "
+                             +pred.objects.size()+" publications!");
+            }
+            finally {
+                rset.close();
+            }
+        }
+
         void persists (TcrdTarget t) throws Exception {
             Http.Context.current.set(ctx);
             Logger.debug(t.family+" "+t.tdl+" "+t.acc+" "+t.id);
@@ -1637,6 +1672,7 @@ public class TcrdRegistry extends Controller implements Commons {
             addHarmonogram (target, t.protein);
             addGeneRIF (target, t.protein);
             addTINX (target, t.id);
+            addPublication (target, t.protein);
 
             try {
                 target.update();

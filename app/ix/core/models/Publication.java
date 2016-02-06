@@ -68,10 +68,13 @@ public class Publication extends Model {
     @JsonView(BeanViews.Compact.class)
     @JsonProperty("_authors")
     public JsonNode getJsonAuthors () {
-        ObjectNode node = mapper.createObjectNode();
-        node.put("count", authors.size());
-        node.put("href", Global.getRef(getClass (), id)+"/authors");
-        return node;
+        if (!authors.isEmpty()) {
+            ObjectNode node = mapper.createObjectNode();
+            node.put("count", authors.size());
+            node.put("href", Global.getRef(getClass (), id)+"/authors");
+            return node;
+        }
+        return null;
     }
 
     @PostLoad
