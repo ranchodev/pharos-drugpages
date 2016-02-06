@@ -4,6 +4,7 @@
 @import ix.idg.models.Ligand
 @import ix.idg.models.Disease
 @import ix.core.models.Value
+@import ix.core.models.VStr
 @import ix.core.models.Keyword
 @import ix.core.models.Text
 @import ix.core.models.VInt
@@ -464,12 +465,12 @@
 			        case "Ab Count" => {
 				  <span data-toggle="tooltip"
 				     data-html="true"
-				     title="<p align='left'>Antibody count from antibodypedia.com</p>"><a href="http://antibodypedia.com/explore/@for(kw <- target.synonyms) {@if("UniProt Gene".equals(kw.label)) {@kw.term}}">Antibody</a></span>
+				     title="<p align='left'>Antibody count from antibodypedia.com</p>"><a href="@IDGApp.getProperties(target, URL_ANTIBODYPEDIA).get(0) match { case s: Text => @s.getValue()}">Antibody</a></span>
 				}
 				case "MAb Count" => {
 				  <span data-toggle="tooltip"
 				     data-html="true"
-				     title="<p align='left'>Monoclonal Antibody count from antibodypedia.com</p>"><a href="http://antibodypedia.com/explore/@for(kw <- target.synonyms) {@if("UniProt Gene".equals(kw.label)) {@kw.term}}">Monoclonal Antibody</a></span>
+				     title="<p align='left'>Monoclonal Antibody count from antibodypedia.com</p>"><a href="@IDGApp.getProperties(target, URL_ANTIBODYPEDIA).get(0) match { case s: Text => @s.getValue()}">Monoclonal Antibody</a></span>
 				}
 				case "PubMed Count" => {
    				  <span data-toggle="tooltip"
