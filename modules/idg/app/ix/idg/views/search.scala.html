@@ -73,8 +73,8 @@ publications: List[Publication], totalPubs: Int)
 	    </tr>
 	    @for(t <- targets) {
 	      @tabrow(t)
-		      }
-		      </table>
+        }
+      </table>
 	   @if(targets.length < totalTargets) {
 	    <span><i class="fa fa-ellipsis-h"></i></span>
 	    }
@@ -83,6 +83,8 @@ publications: List[Publication], totalPubs: Int)
 	  <a href="@{ix.idg.controllers.routes.IDGApp.targets()+"?"+App.queryString(request().queryString())}">@totalTargets target(s)</a>
 	</div>
       </div>
+
+      @if(totalLigands>0){
       <div class="panel panel-default" id='panel-ligands'>
           <div class="panel-heading"><h3>Ligands</h3></div>
 	<div class="panel-body">
@@ -140,35 +142,39 @@ publications: List[Publication], totalPubs: Int)
 	  <a href="@{ix.idg.controllers.routes.IDGApp.ligands()+"?"+App.queryString(request().queryString())}">@totalLigands ligand(s)</a>
 	</div>
       </div>
+      }
 
-      <div class="panel panel-default" id='panel-disease'>
-          <div class="panel-heading"><he>Diseases</h3></div>
-          <div class="panel-body">
-              <table class="table table-striped">
-                  <tr>
-                      <th>Name</th>
-                      <th>Description</th>
-                  </tr>
-                  @for(d <- diseases) {
+      @if(totalDiseases>0) {
+          <div class="panel panel-default" id='panel-disease'>
+              <div class="panel-heading"><h3>Diseases</h3></div>
+              <div class="panel-body">
+                  <table class="table table-striped">
                       <tr>
-                          <td><a href="@ix.idg.controllers.routes.IDGApp.disease(IDGApp.getId(d))">@d.name</a></td>
-                          <td>@d.description</td>
+                          <th>Name</th>
+                          <th>Description</th>
                       </tr>
+                      @for(d <- diseases) {
+                          <tr>
+                              <td><a href="@ix.idg.controllers.routes.IDGApp.disease(IDGApp.getId(d))">@d.name</a></td>
+                              <td>@d.description</td>
+                          </tr>
+                      }
+                  </table>
+                  @if(diseases.length < totalDiseases) {
+                      <span><i class="fa fa-ellipsis-h"></i></span>
                   }
-              </table>
-              @if(diseases.length < totalDiseases) {
-                  <span><i class="fa fa-ellipsis-h"></i></span>
-              }
+              </div>
+              <div class="panel-footer">
+                  <a href="@{
+                      ix.idg.controllers.routes.IDGApp.diseases() + "?" + App.queryString(request().queryString())
+                  }">@totalDiseases disease(s)</a>
+              </div>
           </div>
-          <div class="panel-footer">
-              <a href="@{
-                  ix.idg.controllers.routes.IDGApp.diseases() + "?" + App.queryString(request().queryString())
-              }">@totalDiseases disease(s)</a>
-          </div>
-      </div>
+      }
 
+      @if(totalPubs > 0){
       <div class="panel panel-default" id='panel-pubs'>
-          <div class="panel-heading"><h3>Publications (@totalPubs)</h3></div>
+          <div class="panel-heading"><h3>Publications</h3></div>
           <div class="panel-body">
               <table class="table table-striped">
                 <tr>
@@ -190,6 +196,9 @@ publications: List[Publication], totalPubs: Int)
               </table>
           </div>
       </div>
+
+
+  }
 
       </div>
     </div>
