@@ -655,7 +655,12 @@ public class App extends Authentication {
     }
 
     public static String signature (String q, Map<String, String[]> query) {
+        return signature (null, q, query);
+    }
+    
+    public static String signature (Class kind, String q, Map<String, String[]> query) {
         List<String> qfacets = new ArrayList<String>();
+
         if (query.get("facet") != null) {
             for (String f : query.get("facet"))
                 qfacets.add(f);
@@ -682,6 +687,9 @@ public class App extends Authentication {
                 args.add(f);
         }
         Collections.sort(args);
+        
+        if (kind != null)
+            args.add(kind.getName());
         
         return Util.sha1(args.toArray(new String[0]));
     }
@@ -726,7 +734,7 @@ public class App extends Authentication {
         (final TextIndexer indexer, final Class kind,
          final String q, final int total, final Map<String, String[]> query) {
         
-        final String sha1 = signature (q, query);
+        final String sha1 = signature (kind, q, query);
         final boolean hasFacets = q != null
             && q.indexOf('/') > 0 && q.indexOf("\"") < 0;
         

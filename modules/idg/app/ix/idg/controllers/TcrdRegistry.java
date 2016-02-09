@@ -55,7 +55,9 @@ public class TcrdRegistry extends Controller implements Commons {
     static final ConcurrentMap<String, Disease> DISEASES =
         new ConcurrentHashMap<String, Disease>();
     static final List<Target> TARGETS = new ArrayList<Target>();
-    static final List<Ligand> LIGS = new ArrayList<Ligand>();
+    //static final List<Ligand> LIGS = new ArrayList<Ligand>();
+    static final ConcurrentMap<String, Ligand> LIGS =
+        new ConcurrentHashMap<String, Ligand>();
     
     static final ConcurrentMap<Long, Ligand> LIGANDS =
         new ConcurrentHashMap<Long, Ligand>();
@@ -160,6 +162,12 @@ public class TcrdRegistry extends Controller implements Commons {
         Map<String, List<String>> xrefs =
             new HashMap<String, List<String>>();
         Map<String, Keyword> phenotypeSource = new HashMap<String, Keyword>();
+
+        Map<Target.TDL, Keyword> tdlKeywords =
+            new EnumMap<Target.TDL,Keyword>(Target.TDL.class);
+        Map<String, Keyword> famKeywords = new HashMap<String, Keyword>();
+        Map<String, Map<String, Keyword>> keywords =
+            new HashMap<String, Map<String, Keyword>>();
         
         PersistRegistration (Connection con, Http.Context ctx,
                              Collection<TcrdTarget> targets,
@@ -168,6 +176,7 @@ public class TcrdRegistry extends Controller implements Commons {
             this.con = con;
             this.ctx = ctx;
             this.targets = targets;
+
 
             // For some reason it is possible that a target has entries in target2disease and tinx_novelty
             // but no entries in tinx_importance. Example is Q8WXS5. As a result the SQL below would not
@@ -243,6 +252,41 @@ public class TcrdRegistry extends Controller implements Commons {
             this.chembl = chembl;
         }
 
+        Keyword getTdlKw (Target.TDL tdl) {
+            Keyword kw = tdlKeywords.get(tdl);
+            if (kw == null) {
+                kw = KeywordFactory.registerIfAbsent(IDG_DEVELOPMENT, tdl.name, null);
+                tdlKeywords.put(tdl, kw);
+            }
+            return kw;
+        }
+
+        Keyword getFamKw (String fam) {
+            Keyword kw = famKeywords.get(fam);
+            if (kw == null) {
+                kw = KeywordFactory.registerIfAbsent(IDG_FAMILY, fam, null);
+                famKeywords.put(fam, kw);
+            }
+            return kw;
+        }
+        
+        Keyword getKeyword (String label, String value) {
+            return getKeyword (label, value, null);
+        }
+        
+        Keyword getKeyword (String label, String value, String href) {
+            Map<String, Keyword> keys = keywords.get(label);
+            if (keys == null) {
+                keywords.put(label, keys = new HashMap<String, Keyword>());
+            }
+            
+            Keyword kw = keys.get(value);
+            if (kw == null) {
+                keys.put(value, kw = KeywordFactory.registerIfAbsent(label, value, href));
+            }
+            return kw;
+        }
+
         public void persists () throws Exception {
             for (TcrdTarget t : targets) {
                 persists (t);
@@ -258,7 +302,7 @@ public class TcrdRegistry extends Controller implements Commons {
                 }
             }
             
-            for (Ligand l : LIGS) {
+            for (Ligand l : LIGS.values()) {
                 try {
                     //l.update();
                     INDEXER.update(l);              
@@ -461,10 +505,8 @@ public class TcrdRegistry extends Controller implements Commons {
                 assay.save();
                 
                 XRef tref = assay.addIfAbsent(new XRef (target));
-                tref.addIfAbsent((Value)KeywordFactory.registerIfAbsent
-                                 (IDG_DEVELOPMENT, target.idgTDL.name, null));
-                tref.addIfAbsent((Value)KeywordFactory.registerIfAbsent
-                                 (IDG_FAMILY, target.idgFamily, null));
+                tref.addIfAbsent((Value)getTdlKw (target.idgTDL));
+                tref.addIfAbsent((Value)getFamKw (target.idgFamily));
                 
                 XRef aref = target.addIfAbsent(new XRef (assay));
                 aref.addIfAbsent((Value)KeywordFactory.registerIfAbsent
@@ -1180,11 +1222,14 @@ public class TcrdRegistry extends Controller implements Commons {
             while (rset.next()) {
                 String chemblId = rset.getString("cmpd_chemblid");
                 String drug = rset.getString("drug");
-                
+
+                /*
                 List<Ligand> ligands = LigandFactory.finder.where()
                     .eq("synonyms.term", drug).findList();
                 Ligand ligand = ligands.isEmpty() ? null
                     : ligands.iterator().next();
+                */
+                Ligand ligand = LIGS.get(drug);
 
                 if (ligand == null) {
                     // new ligand
@@ -1226,7 +1271,7 @@ public class TcrdRegistry extends Controller implements Commons {
                     }
 
                     ligand.save();
-                    LIGS.add(ligand);
+                    LIGS.put(drug, ligand);
                     
                     Logger.debug("New ligand "+ligand.id+" "
                                  +ligand.getName()+" added!");
@@ -1250,14 +1295,11 @@ public class TcrdRegistry extends Controller implements Commons {
                 }
 
                 XRef tref = ligand.addIfAbsent(new XRef (target));
-                tref.addIfAbsent((Value)KeywordFactory.registerIfAbsent
-                                 (IDG_DEVELOPMENT, target.idgTDL.name, null));
-                tref.addIfAbsent((Value)KeywordFactory.registerIfAbsent
-                                 (IDG_FAMILY, target.idgFamily, null));
+                tref.addIfAbsent((Value)getTdlKw (target.idgTDL));
+                tref.addIfAbsent((Value)getFamKw (target.idgFamily));
                 
                 XRef lref = target.addIfAbsent(new XRef (ligand));
-                lref.addIfAbsent((Value)KeywordFactory.registerIfAbsent
-                                 (IDG_LIGAND, ligand.getName(), null));
+                lref.addIfAbsent((Value)getKeyword (IDG_LIGAND, ligand.getName()));
 
                 String actType = rset.getString("act_type");
                 if (actType != null) {
@@ -1324,15 +1366,24 @@ public class TcrdRegistry extends Controller implements Commons {
             pstm16.setLong(1, tid);
             ResultSet rset = pstm16.executeQuery();
             int count = 0;
+            Set<String> seen = new HashSet<String>();
             while (rset.next()) {
                 String chemblId = rset.getString("cmpd_chemblid");
+                if (seen.contains(chemblId))
+                    continue;
+
+                seen.add(chemblId);
+                long start = System.currentTimeMillis();
+                /*
                 List<Ligand> ligands = LigandFactory.finder.where()
                     .eq("synonyms.term", chemblId).findList();
                 Ligand ligand = null;
                 if (!ligands.isEmpty()) {
                     ligand = ligands.iterator().next();
                 }
-                else {
+                else*/
+                Ligand ligand = LIGS.get(chemblId);
+                if (ligand == null) {
                     ligand = new Ligand (chemblId);
                     ligand.properties.add(source);
                     ligand.synonyms.add
@@ -1353,6 +1404,7 @@ public class TcrdRegistry extends Controller implements Commons {
                     }
 
                     if (smiles != null) {
+                        long t0 = System.currentTimeMillis();
                         ligand.properties.add
                             (new Text (ChEMBL_SMILES, smiles));
                         Structure struc = StructureProcessor.instrument
@@ -1362,15 +1414,18 @@ public class TcrdRegistry extends Controller implements Commons {
                         ligand.links.add(xref);
                         // now index the structure for searching
                         MOLIDX.add(null, struc.id.toString(), struc.molfile);
+                        Logger.debug("... "+chemblId+": structure "+struc.id+" indexed in "
+                                     +(System.currentTimeMillis()-t0)+"ms");
                     }
 
                     ligand.save();
-                    LIGS.add(ligand);
+                    LIGS.put(chemblId, ligand);
                 }
+
 
                 String syn = rset.getString("cmpd_name_in_ref");
                 if (syn.length() <= 255) {
-                    Keyword kw = KeywordFactory.registerIfAbsent
+                    Keyword kw = getKeyword 
                         (ChEMBL_SYNONYM, syn,
                          "https://www.ebi.ac.uk/chembl/compound/inspect/"
                          +chemblId);
@@ -1394,17 +1449,11 @@ public class TcrdRegistry extends Controller implements Commons {
                 }
 
                 XRef tref = ligand.addIfAbsent(new XRef (target));
-                tref.addIfAbsent
-                    ((Value)KeywordFactory.registerIfAbsent
-                     (IDG_DEVELOPMENT, target.idgTDL.name, null));
-                tref.addIfAbsent
-                    ((Value)KeywordFactory.registerIfAbsent
-                     (IDG_FAMILY, target.idgFamily, null));
+                tref.addIfAbsent((Value)getTdlKw (target.idgTDL));
+                tref.addIfAbsent((Value)getFamKw (target.idgFamily));
                 
                 XRef lref = target.addIfAbsent(new XRef (ligand));
-                lref.addIfAbsent
-                    (KeywordFactory.registerIfAbsent
-                     (IDG_LIGAND, ligand.getName(), null));
+                lref.addIfAbsent(getKeyword (IDG_LIGAND, ligand.getName()));
                 
                 tref.properties.add(act);
                 lref.properties.add(act);
@@ -1423,6 +1472,9 @@ public class TcrdRegistry extends Controller implements Commons {
                     }
                     else
                         lref.update();
+                    Logger.debug("..."+count+" ligand "
+                                 +ligand.name+" "+act.label+"="+act.numval
+                                 +" processed in "+(System.currentTimeMillis()-start)+"ms");
                 }
                 catch (Exception ex) {
                     ex.printStackTrace();
@@ -1546,12 +1598,8 @@ public class TcrdRegistry extends Controller implements Commons {
                     }
 
                     xref = d.addIfAbsent(new XRef (target));
-                    xref.addIfAbsent
-                        (KeywordFactory.registerIfAbsent
-                         (IDG_DEVELOPMENT, target.idgTDL.toString(), null));
-                    xref.addIfAbsent
-                        (KeywordFactory.registerIfAbsent
-                         (IDG_FAMILY, target.idgFamily, null));
+                    xref.addIfAbsent(getTdlKw (target.idgTDL));
+                    xref.addIfAbsent(getFamKw(target.idgFamily));
                     xref.addIfAbsent(source);
 
                     try {
@@ -2423,7 +2471,7 @@ public class TcrdRegistry extends Controller implements Commons {
                  //+"where c.id in (11521)\n"
                  //+"where a.target_id in (12241)\n"
                  //+"where c.uniprot = 'Q9H3Y6'\n"
-                 //+"where b.tdl in ('Tclin','Tchem')\n"
+                 +"where b.tdl in ('Tclin','Tchem')\n"
                  //+"where b.idgfam = 'kinase'\n"
                  //+" where c.uniprot = 'Q8N568'\n"
                  //+" where c.uniprot = 'Q6NV75'\n"

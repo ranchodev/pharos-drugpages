@@ -1656,7 +1656,7 @@ public class IDGApp extends App implements Commons {
     static <T> List<T> filter (Class<T> cls, List values, int max) {
         List<T> fv = new ArrayList<T>();
         for (Object v : values) {
-            if (cls.isAssignableFrom(v.getClass())) {
+            if (v != null && cls.isInstance(v)) {
                 fv.add((T)v);
                 if (fv.size() >= max)
                     break;
@@ -1733,10 +1733,9 @@ public class IDGApp extends App implements Commons {
                 ("2. Ellapsed time "+String.format("%1$.3fs", ellapsed));
         }
         
-        TextIndexer.Facet[] facets = filter
-            (result.getFacets(), ALL_FACETS);
+        TextIndexer.Facet[] facets = filter (result.getFacets(), ALL_FACETS);
+        final int max = Math.min(rows, Math.max(1, result.count()));
         
-        int max = Math.min(rows, Math.max(1,result.count()));
         int total = 0, totalTargets = 0, totalDiseases = 0, totalLigands = 0, totalPubs = 0;
         for (TextIndexer.Facet f : result.getFacets()) {
             if (f.getName().equals("ix.Class")) {
@@ -1762,14 +1761,18 @@ public class IDGApp extends App implements Commons {
             }
         }
         
-        List<Target> targets =
-            filter (Target.class, result.getMatches(), max);
-        List<Disease> diseases =
-            filter (Disease.class, result.getMatches(), max);
-        List<Ligand> ligands = filter (Ligand.class, result.getMatches(), max);
         // don't filter on publications.. good idea?
         List<Publication> publications = filter
             (Publication.class, result.getMatches(), totalPubs);
+
+        result = getSearchResult (Target.class, query, max);
+        List<Target> targets = filter (Target.class, result.getMatches(), max); 
+
+        result = getSearchResult (Disease.class, query, max);
+        List<Disease> diseases = filter (Disease.class, result.getMatches(), max);
+
+        result = getSearchResult (Ligand.class, query, max);    
+        List<Ligand> ligands = filter (Ligand.class, result.getMatches(), max); 
 
         return ok(ix.idg.views.html.search.render
                 (query, total, decorate(facets),
@@ -3015,8 +3018,10 @@ public class IDGApp extends App implements Commons {
     public static List<String> getOmimPhenotypes(Target target) {
        List<String> phenos = new ArrayList<>();
         for (Value value : target.properties) {
-            if (OMIM_TERM.equals(value.label))
-                phenos.add(((VStr)value).strval);
+            if (OMIM_TERM.equals(value.label)) {
+                Object term = value.getValue();
+                phenos.add(term.toString());
+            }
         }
         return phenos;
     }
