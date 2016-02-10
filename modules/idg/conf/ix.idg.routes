@@ -25,7 +25,7 @@ GET	/targets/:name	ix.idg.controllers.IDGApp.target(name: String)
 GET	/targets/:name/publications	ix.idg.controllers.IDGApp.publicationsForTarget(name: String, top: Int ?= -1, skip: Int ?= 0)
 GET	/diseases	ix.idg.controllers.IDGApp.diseases(q: String ?= null, rows: Int ?= 10, page: Int ?= 1)
 GET	/diseases/:name	ix.idg.controllers.IDGApp.disease(name: String)
-GET	/ligands	ix.idg.controllers.IDGApp.ligands(q: String ?= null, rows: Int ?= 8, page: Int ?= 1)
+GET	/ligands	ix.idg.controllers.IDGApp.ligands(q: String ?= null, rows: Int ?= 16, page: Int ?= 1)
 GET	/ligands/:name	ix.idg.controllers.IDGApp.ligand(name: String)
 GET	/search		ix.idg.controllers.IDGApp.search(kind: String ?= null)
 POST	/sequence	ix.idg.controllers.IDGApp.sequence

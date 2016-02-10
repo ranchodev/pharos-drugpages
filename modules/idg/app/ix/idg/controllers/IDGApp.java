@@ -1212,7 +1212,7 @@ public class IDGApp extends App implements Commons {
             result.copyTo(ligands, (page-1)*rows, rows);
         }
 
-        return ok(ix.idg.views.html.ligandsmedia.render
+        return ok(ix.idg.views.html.ligandsgallery.render
                   (page, rows, result.count(),
                    pages, decorate (facets), ligands, null));
     }
@@ -1619,10 +1619,10 @@ public class IDGApp extends App implements Commons {
                 else if (Disease.class.getName().equals(kind))
                     return redirect (routes.IDGApp.diseases(q, 10, 1));
                 else if (Ligand.class.getName().equals(kind))
-                    return redirect (routes.IDGApp.ligands(q, 8, 1));
+                    return redirect (routes.IDGApp.ligands(q, 16, 1));
             }
             else if ("substructure".equalsIgnoreCase(t)) {
-                String url = routes.IDGApp.ligands(q, 8, 1).url()
+                String url = routes.IDGApp.ligands(q, 16, 1).url()
                     +"&type=substructure";
                 return redirect (url);
             }
@@ -1631,7 +1631,7 @@ public class IDGApp extends App implements Commons {
                 if (cutoff == null) {
                     cutoff = "0.8";
                 }
-                String url = routes.IDGApp.ligands(q, 8, 1).url()
+                String url = routes.IDGApp.ligands(q, 16, 1).url()
                     +"&type=similarity&cutoff="+cutoff;
                 return redirect (url);
             }
@@ -1792,7 +1792,7 @@ public class IDGApp extends App implements Commons {
                         .eq("label", key).findList();
                     if (!kws.isEmpty()) {
                         Keyword n = kws.iterator().next();
-                        String url = routes.IDGApp.ligands(null, 8, 1).url();
+                        String url = routes.IDGApp.ligands(null, 16, 1).url();
                         n.term = n.term.toLowerCase();
                         n.href = url + (url.indexOf('?') > 0?"&":"?")
                             +"facet="+WHO_ATC+"/"+term;
@@ -1931,7 +1931,7 @@ public class IDGApp extends App implements Commons {
                         List<Ligand> ligands = LigandFactory.getLigands
                             (_rows, (page-1)*_rows, null);
             
-                        return ok (ix.idg.views.html.ligandsmedia.render
+                        return ok (ix.idg.views.html.ligandsgallery.render
                                    (page, _rows, total, pages,
                                     decorate (facets), ligands, null));
                     }
@@ -2083,7 +2083,7 @@ public class IDGApp extends App implements Commons {
                                           int total, int[] pages,
                                           List<TextIndexer.Facet> facets,
                                           List<Ligand> ligands) {
-                        return ok (ix.idg.views.html.ligandsmedia.render
+                        return ok (ix.idg.views.html.ligandsgallery.render
                                    (page, rows, total,
                                     pages, decorate (filter
                                                      (facets, LIGAND_FACETS)),

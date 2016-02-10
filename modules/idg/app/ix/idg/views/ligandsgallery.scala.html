@@ -1,0 +1,117 @@
+@import ix.core.models.Text
+@import ix.idg.controllers.LigandFactory
+@import ix.idg.models.Ligand
+@import ix.idg.controllers.IDGApp
+@import ix.idg.controllers.TcrdRegistry
+@import ix.idg.controllers.ChemblRegistry
+@import ix.idg.controllers.Commons._
+@import ix.ncats.controllers.App.FacetDecorator
+@import java.net.URLEncoder
+
+@(current: Int, rows: Int, total: Int, pages: Array[Int],
+     facets: Array[FacetDecorator], ligands: List[Ligand], ctx: String)
+
+@ix.ncats.views.html._content("Ligands", "ix.idg.models.Ligand",
+ix.idg.controllers.routes.IDGApp.ligands().url,
+current, rows, total, pages, facets){ @ligandmenu() }{
+<ol class="breadcrumb">
+  <li><a href="@ix.idg.controllers.routes.IDGApp.index()"><span class="fa fa-home"></span> Home</a></li>
+  @defining(request().queryString.get("facet")) { facets =>
+     @if(facets != null && facets.length == 1) {
+      <li><a href="@ix.idg.controllers.routes.IDGApp.ligands()">Ligands</a></li>
+      @for(f <- facets) {
+         @if(f.startsWith(WHO_ATC)) {
+            @for(a <- IDGApp.getATCAncestry(f)) {
+	       <li><a href="@a.href">@a.term</a></li>
+	    }
+	    <li class="active">@IDGApp.getATC(f.substring(f.indexOf('/')+1)).term</li>
+	 }
+       }
+     } else {
+       <li class="active">Ligands</li>
+     }
+  }
+</ol>
+    @inprogress("ligands")
+}{
+<div id="grid-gallery" class="grid-gallery">
+  <section class="grid-wrap">
+    <ul class="grid">
+      <li class="grid-sizer"></li><!-- for Masonry column width -->
+      @for(lig <-ligands) {
+         @defining(IDGApp.getStructure(lig)) { struc =>
+           @if(struc != null) {
+	   <li>
+	     <figure>
+	       <img src='@ix.idg.controllers.routes.IDGApp.structure(struc.getId,"svg",150,ctx)' alt="Structure for @lig.getName"/>
+	       <figcaption>
+		 <h4><a href='@ix.idg.controllers.routes.IDGApp.ligand(IDGApp.getId(lig))'>@lig.getName</a></h4>
+		 <p>
+		   @for(t <- IDGApp.getTDL(lig)) {
+		   <span class="label label-@t.label"
+	      		 data-toggle="tooltip"
+          		 data-html="true" title="<p align='left'>@t.desc</p>">@t.name</span>
+		   }
+		 </p>
+	       </figcaption>
+	     </figure>
+	   </li>
+	   }
+	 }
+      }
+    </ul>
+  </section><!-- // grid-wrap -->
+  <section class="slideshow">
+    <ul>
+      @for(lig <-ligands) {
+         @defining(IDGApp.getStructure(lig)) { struc =>
+           @if(struc != null) {
+	   <li>
+	     <figure>
+	       <figcaption>
+		 <h3><a href='@ix.idg.controllers.routes.IDGApp.ligand(IDGApp.getId(lig))'>@lig.getName</a>
+		   @for(t <- IDGApp.getTDL(lig)) {
+		   <span class="label label-@t.label"
+	      		 data-toggle="tooltip"
+			 data-placement="bottom"
+          		 data-html="true"
+			 title="<p align='left'>@t.desc</p>">@t.name</span>
+		   }
+		   </h3>
+	       </figcaption>
+	       <img src='@ix.idg.controllers.routes.IDGApp.structure(struc.getId,"svg",400,ctx)' alt="Structure for @lig.getName"/>
+	     </figure>
+	   </li>
+          }
+	 }
+       }
+    </ul>
+    <nav>
+      <span class="icon nav-prev"></span>
+      <span class="icon nav-next"></span>
+      <span class="icon nav-close"></span>
+    </nav>
+    <div class="info-keys icon">Navigate with arrow keys</div>
+  </section><!-- // slideshow -->
+</div><!-- // grid-gallery -->
+}(HtmlFormat.empty)(HtmlFormat.empty)
+
+<head>
+  @*
+  <link rel="stylesheet" type="text/css" href='@routes.Assets.at("GridGallery/css/demo.css")'/>
+  *@
+    <link rel="stylesheet" type="text/css" href='@routes.Assets.at("GridGallery/css/component.css")'/>
+    <script src='@routes.Assets.at("GridGallery/js/modernizr.custom.js")'></script>
+    <script src='@routes.Assets.at("GridGallery/js/imagesloaded.pkgd.min.js")'></script>
+    <script src='@routes.Assets.at("GridGallery/js/masonry.pkgd.min.js")'></script>
+    <script src='@routes.Assets.at("GridGallery/js/classie.js")'></script>
+    <script src='@routes.Assets.at("GridGallery/js/cbpGridGallery.js")'></script>
+</head>
+
+<script>
+$(function () {
+  new CBPGridGallery( document.getElementById( 'grid-gallery' ) );  
+  $('[data-toggle="popover"]').popover();
+  $('[data-toggle="tooltip"]').tooltip();
+});
+</script>
