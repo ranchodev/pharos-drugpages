@@ -8,9 +8,11 @@
 @main(title){ @header }{ @breadcrumb }{
 <div class="container-fluid">
     <div class="row">
-        <div class="col-md-3">
-        @furl
-        </div>
+        @if(total>0) {
+            <div class="col-md-3">
+            @furl
+            </div>
+        }
     </div>
   <div class="row">
     @if(total > 0 && facets.length > 0) {
@@ -89,28 +91,30 @@
         }
       }
 
-      @pagination(current, rows, total, pages){
-          <h3>
-	  @if(!carousel.equals(HtmlFormat.empty)) {
-	     <button class="btn btn-default" type="button"
-	     	     id="carousel-toggle"
-	     	     data-toggle="collapse"
-		     data-target="#carousel-highlight"
-		     aria-expanded="true"
-		     aria-controls="carousel-highlight"
-		     style="margin-right: 5px"><i class="fa fa-dashboard"></i></button>
-	  }
+      @if(total > 0) {
+          @pagination(current, rows, total, pages) {
+              <h3>
+                  @if(!carousel.equals(HtmlFormat.empty)) {
+                      <button class="btn btn-default" type="button"
+                      id="carousel-toggle"
+                      data-toggle="collapse"
+                      data-target="#carousel-highlight"
+                      aria-expanded="true"
+                      aria-controls="carousel-highlight"
+                      style="margin-right : 5 px"><i class="fa fa-dashboard"></i></button>
+                  }
 
-          @if(request.getQueryString("q") != null
-	      || request.getQueryString("facet") != null) {
-              <a class="btn btn-default" href="@HtmlFormat.raw(request.uri)&action=download" role="button" style="margin-right: 5px">
-                  <i class="fa fa-download fa-lg "></i></a>
-          } else {
-              <a class="btn btn-default disabled" href="@HtmlFormat.raw(request.uri)?action=download" role="button" style="margin-right: 5px">
-                  <i class="fa fa-download fa-lg "></i></a>
+                  @if(request.getQueryString("q") != null
+                          || request.getQueryString("facet") != null) {
+                      <a class="btn btn-default" href="@HtmlFormat.raw(request.uri)&action=download" role="button" style="margin-right : 5 px">
+                          <i class="fa fa-download fa-lg "></i></a>
+                  } else {
+                      <a class="btn btn-default disabled" href="@HtmlFormat.raw(request.uri)?action=download" role="button" style="margin-right : 5 px">
+                          <i class="fa fa-download fa-lg "></i></a>
+                  }
+                  @trailer
+              </h3>
           }
-          @trailer
-          </h3>
       }
 
       <div class="panel panel-default">
