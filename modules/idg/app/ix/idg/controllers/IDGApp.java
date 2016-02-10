@@ -484,6 +484,7 @@ public class IDGApp extends App implements Commons {
         "Jensen Score",
 
         PHARMALOGICAL_ACTION,
+        LIGAND_ACTIVITY,
         MLP_ASSAY_TYPE,
         UNIPROT_KEYWORD,
         IDG_TOOLS,
@@ -505,7 +506,8 @@ public class IDGApp extends App implements Commons {
         IDG_DEVELOPMENT,
         IDG_FAMILY,
         PHARMALOGICAL_ACTION,
-        LIGAND_SOURCE
+        LIGAND_SOURCE,
+        LIGAND_ACTIVITY
     };
 
     public static final String[] ALL_FACETS = {

@@ -1448,12 +1448,15 @@ public class TcrdRegistry extends Controller implements Commons {
                     ligand.properties.add(new VInt (PUBMED_ID, pmid));
                 }
 
+                Keyword endpoint = getKeyword (LIGAND_ACTIVITY, act.label);
                 XRef tref = ligand.addIfAbsent(new XRef (target));
                 tref.addIfAbsent((Value)getTdlKw (target.idgTDL));
                 tref.addIfAbsent((Value)getFamKw (target.idgFamily));
+                tref.addIfAbsent(endpoint);
                 
                 XRef lref = target.addIfAbsent(new XRef (ligand));
                 lref.addIfAbsent(getKeyword (IDG_LIGAND, ligand.getName()));
+                lref.addIfAbsent(endpoint);
                 
                 tref.properties.add(act);
                 lref.properties.add(act);
