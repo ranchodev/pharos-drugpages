@@ -10,8 +10,9 @@
 </script>
 
 @facet(f: FacetDecorator) = {
-<div class="panel panel-default">
-  <div class="panel-heading"  id='@f.name().replace(" ","")'>
+ @defining(f.name.toLowerCase.replaceAll("[\\(\\)]+","").replaceAll("[\\s]+","-")) { fname =>
+<div class="panel panel-default @{fname}-panel">
+  <div class="panel-heading"  id='@fname'>
     <h3 class="panel-title">
     @if(f.raw) {
       @HtmlFormat.raw(f.name())
@@ -20,7 +21,7 @@
     }
     </h3>
   </div>
-  <div class="panel-body facet-panel-body">
+  <div class='panel-body facet-panel-body @{fname}-panel-body'>
     <table class="table table-condensed">
       @** move all selected filters upfront **@
       @for(i <- 0 until f.size()) {
@@ -91,6 +92,7 @@
     </table>
   </div>
 </div>
+  }
 }
 
 <div class="panel-group">
@@ -127,6 +129,6 @@ function filterToggle (el) {
 
 $(".panel-heading" ).on("click", function(e){
     $(this ).siblings(".facet-panel-body" ).toggle();
-})
+});
 
 </script>
