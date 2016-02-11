@@ -1303,6 +1303,10 @@ public class TcrdRegistry extends Controller implements Commons {
                 XRef tref = ligand.addIfAbsent(new XRef (target));
                 tref.addIfAbsent((Value)getTdlKw (target.idgTDL));
                 tref.addIfAbsent((Value)getFamKw (target.idgFamily));
+                Keyword acc = target.getSynonym(UNIPROT_ACCESSION);
+                if (acc != null)
+                    tref.addIfAbsent((Value)getKeyword
+                                     (IDG_TARGET, acc.term, acc.href));
                 
                 XRef lref = target.addIfAbsent(new XRef (ligand));
                 lref.addIfAbsent((Value)getKeyword (IDG_LIGAND, ligand.getName()));
@@ -1468,6 +1472,10 @@ public class TcrdRegistry extends Controller implements Commons {
                 XRef tref = ligand.addIfAbsent(new XRef (target));
                 tref.addIfAbsent((Value)getTdlKw (target.idgTDL));
                 tref.addIfAbsent((Value)getFamKw (target.idgFamily));
+                Keyword acc = target.getSynonym(UNIPROT_ACCESSION);
+                if (acc != null)
+                    tref.addIfAbsent((Value)getKeyword
+                                     (IDG_TARGET, acc.term, acc.href));
                 tref.addIfAbsent(endpoint);
                 
                 XRef lref = target.addIfAbsent(new XRef (ligand));
