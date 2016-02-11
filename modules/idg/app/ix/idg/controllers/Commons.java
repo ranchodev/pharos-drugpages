@@ -72,21 +72,21 @@ public interface Commons {
     public static final String WHO_ATC = "WHO ATC";
     public static final String ATC_ANCESTRY =  "ATC Ancestry";
     
-    public static final String ChEMBL = "ChEMBL";
-    public static final String ChEMBL_ID = "ChEMBL ID";
-    public static final String ChEMBL_MECHANISM = "ChEMBL Mechanism";
-    public static final String ChEMBL_MOA_MODE = "ChEBML MOA Mode";
-    public static final String ChEMBL_MECHANISM_COMMENT = "ChEMBL Mechanism Comment";
-    public static final String ChEMBL_SYNONYM = "ChEMBL Synonym";
-    public static final String ChEMBL_MOLFILE = "ChEMBL Molfile";
-    public static final String ChEMBL_INCHI = "ChEMBL InChI";
-    public static final String ChEMBL_INCHI_KEY = "ChEMBL InChI Key";
-    public static final String ChEMBL_SMILES = "ChEMBL Canonical SMILES";
-    public static final String ChEMBL_PROTEIN_CLASS = "ChEMBL Protein Class";
+    public static final String ChEMBL = "CHEMBL";
+    public static final String ChEMBL_ID = "CHEMBL ID";
+    public static final String ChEMBL_MECHANISM = "CHEMBL Mechanism";
+    public static final String ChEMBL_MOA_MODE = "CHEBML MOA Mode";
+    public static final String ChEMBL_MECHANISM_COMMENT = "CHEMBL Mechanism Comment";
+    public static final String ChEMBL_SYNONYM = "CHEMBL Synonym";
+    public static final String ChEMBL_MOLFILE = "CHEMBL Molfile";
+    public static final String ChEMBL_INCHI = "CHEMBL InChI";
+    public static final String ChEMBL_INCHI_KEY = "CHEMBL InChI Key";
+    public static final String ChEMBL_SMILES = "CHEMBL Canonical SMILES";
+    public static final String ChEMBL_PROTEIN_CLASS = "CHEMBL Protein Class";
     public static final String ChEMBL_PROTEIN_ANCESTRY =
-        "ChEMBL Protein Ancestry";
-    public static final String ChEMBL_ACTIVITY_ID = "ChEMBL Activity ID";
-    public static final String ChEMBL_MOLREGNO = "ChEMBL Molregno";
+        "CHEMBL Protein Ancestry";
+    public static final String ChEMBL_ACTIVITY_ID = "CHEMBL Activity ID";
+    public static final String ChEMBL_MOLREGNO = "CHEMBL Molregno";
 
     public static final String UNIPROT_ACCESSION = "UniProt Accession";
     public static final String UNIPROT_GENE = "UniProt Gene";
