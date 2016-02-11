@@ -359,6 +359,15 @@
             <td style="text-align:right;">
                 <div class="dropdown pull-right">
                     <button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown">
+                        <i class="fa fa-list"></i>
+                    </button>
+                    <ul class="dropdown-menu pull-left" id="toc">
+
+                    </ul>
+                </div>
+
+                <div class="dropdown pull-right">
+                    <button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown">
                         <i class="fa fa-shopping-cart"></i>&nbsp;<span id="sc-count"></span>
                     </button>
                     <ul class="dropdown-menu pull-left">
@@ -394,7 +403,8 @@
       <!--
         -- Synonyms
         -->
-      <div class="col-md-4">
+      <div class="col-md-4" >
+          <a name="synonym"  tocname="Synonyms"></a>
         <div class="panel panel-default">
           <div class="panel-heading">
             <h3 class="panel-title">Synonym <i class="fa fa-external-link"></i> </h3>
@@ -440,6 +450,7 @@
         -- Genes
         -->
         <div class="panel panel-default">
+            <a name="genes" tocname="Genes"></a>
           <div class="panel-heading">
             <h3 class="panel-title">Gene <i class="fa fa-external-link"></i></h3>
           </div>
@@ -453,7 +464,8 @@
         </div>
 	 @defining(IDGApp.getProperties(target, "Count", 1)) { props =>
 	    @if(!props.isEmpty()) {
-               <div class="panel panel-default">
+               <div class="panel panel-default" >
+                   <a name="properties" tocname="Properties"></a>
 		 <div class="panel-body">
 		   <table class="table table-striped">
 		   @for(p <- props) {
@@ -535,6 +547,7 @@
 	 }
       </div>
       <div class="col-md-4">
+          <a name="goterms" tocname="GO Terms"></a>
         @**
         @defining(target.getProperty(IDG_TISSUE_REF)) { ref =>
 	   @ref match {
@@ -555,6 +568,7 @@
 	@defining(IDGApp.getLigands(target)) { ligands =>
 	      @if(!ligands.isEmpty()) {
 	         <div class="panel panel-default">
+                 <a name="ligands" tocname="Ligands"></a>
 		    <div class="panel-heading">
 		       <h3 class="panel-title">Ligand (@ligands.size)</h3>
 		    </div>
@@ -621,6 +635,7 @@
         @property(UNIPROT_KEYWORD)
         <div class="panel panel-default">
 	    <div class="panel-heading">
+            <a name="datatypes" tocname="Data Types"></a>
 	      <h3 class="panel-title">Data Types</h3>
 	    </div>
 	    <div class="panel-body">
@@ -647,6 +662,7 @@
     <div class="row">
       <div class="col-md-6">
          <div class="panel panel-default">
+             <a name="tinx" tocname="TINX"></a>
             <div class="panel-heading">
                 <h3 class="panel-title">TINX Plot</h3>
             </div>
@@ -657,6 +673,7 @@
       </div>
       <div class="col-md-6">   
         <div class="panel panel-default">
+            <a name="diseases" tocname="Diseases"></a>
           <div class="panel-heading">
             <h3 class="panel-title"><span data-toggle="tooltip"
 			data-html="true"
@@ -711,6 +728,7 @@
     <div class="row">
       <div class="col-md-12">
          <div class="panel panel-default">
+             <a name="expression" tocname="Gene/Protein Expression"></a>
             <div class="panel-heading">
                <h3 class="panel-title">Expression</h3>
             </div>
@@ -857,6 +875,7 @@
     <div class="row">
       <div class="col-md-12">
         <div class="panel panel-default">
+            <a name="pubs" tocname="Publications"></a>
           <div class="panel-heading">
             <h3 class="panel-title">
                 <span data-toggle="tooltip" data-html="true" title="<p align='left'>Publications associated with this target, as identified using the JensenLab text mining protocol</p>">Publication (@target.publications.size)</span>
@@ -922,6 +941,7 @@
     <div class="row">
       <div class="col-md-12">
         <div class="panel panel-default">
+            <a name="assays" tocname="BioAssays"></a>
           <div class="panel-heading">
             <h3 class="panel-title"><span data-toggle="tooltip"
 			data-html="true"
@@ -986,6 +1006,7 @@
     <div class="row">
       <div class="col-md-12">
         <div class="panel panel-default">
+            <a name="generif" tocname="Gene RIF"></a>
           <div class="panel-heading">
             <h3 class="panel-title"><span data-toggle="tooltip"
 			data-html="true"
@@ -1043,6 +1064,7 @@
          <div class="row">
       	    <div class="col-md-12">
             	 <div class="panel panel-default">
+                     <a name="seq" tocname="Sequence"></a>
              	      <div class="panel-heading">
                       	   <h3 class="panel-title">Sequence</h3>
              	      </div>
@@ -1061,8 +1083,7 @@
 	   <div class="col-md-12">
               <div class="panel panel-default">
                  <div class="panel-heading">
-                     @** Maybe we should link to http://www.ncbi.nlm.nih.gov/pubmed?LinkName=gene_pubmed&from_uid=3750
-                     which requires us to get the Entrez ID for the gene **@
+                     <a name="tpubs" tocname="Text Mined References"></a>
                      <h3 class="panel-title">
                      <span data-toggle="tooltip" data-html="true"
                      title="<p align='left'>Publications associated with this target, as identified using the JensenLab text mining protocol</p>">
@@ -1165,6 +1186,13 @@ $(function () {
 });
 
 $(document).ready(function () {
+
+    /* populate TOC menu */
+    $("a[tocname]" ).each(function(){
+        var aname = $(this ).attr("name");
+        var tname = $(this ).attr("tocname");
+        $("#toc" ).append("<li><a href='#"+aname+"'>"+tname+"</a></li>");
+    });
 
     /* Cart related methods and vars */
     $.ajax({
