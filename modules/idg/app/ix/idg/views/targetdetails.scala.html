@@ -211,7 +211,6 @@
 }
 
 @diseaserow(dr: DiseaseRelevance) = {
-   @if(dr.zscore != null) {
      <tr @*class="treegrid-@dr.disease.id"*@>
        <td><a class="label label-primary" href="@{ix.idg.controllers.routes.IDGApp.targets()+"?facet="+URLEncoder.encode(IDG_DISEASE,"utf8")+"/"+URLEncoder.encode(dr.disease.name, "utf8")}">@dr.disease.name</a></td>
        <td>@diseasedblink(dr.disease,dr.zscore)</td>
@@ -237,7 +236,6 @@
          </tr>
        }
      }
-   }
 }
 
 @expression(name: String, skull: String) = {
@@ -685,7 +683,7 @@
                                   }
                                   case _ => {
                                       @for(i <- 0 until Math.min(10, diseases.size())) {
-                                          @diseaserow(diseases(i))
+					  @diseaserow(diseases(i))
                                       }
                                       @if(diseases.size() > 10) {
                                           <tr>
