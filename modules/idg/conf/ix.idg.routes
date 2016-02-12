@@ -36,6 +36,7 @@ GET /hg/view ix.idg.controllers.HarmonogramApp.view(q: String ?= null, ctx: Stri
 GET /hg/ds ix.idg.controllers.HarmonogramApp.dataSources(field: String ?= null, value: String ?= null)
 GET	/hierarchy	ix.idg.controllers.IDGApp.getHierarchy(ctx: String, facet: String)
 GET	/kinases	ix.idg.controllers.IDGApp.getKinases(q: String ?= null)
+GET	/tdldata	ix.idg.controllers.IDGApp.getTDLData(q: String ?= null, format: String ?= "csv")
 GET	/resolve/:q/$format<(json|txt|csv)>	ix.idg.controllers.IDGApp.resolve(q: String, format: String, kind: String ?= null)
 POST	/resolve/$kind<(target|ligand|disease)>.$format<(json|txt|csv)> ix.idg.controllers.IDGApp.resolveBatch(kind: String, format: String)
 POST	/batch		ix.idg.controllers.IDGApp.batch

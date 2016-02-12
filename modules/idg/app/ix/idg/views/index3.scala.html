@@ -26,6 +26,7 @@
     <link href='@routes.WebJarAssets.at(WebJarAssets.locate("css/bootstrap.min.css"))' rel='stylesheet' >
     <link rel="stylesheet" type="text/css"
 	  href='@routes.WebJarAssets.at(WebJarAssets.locate("font-awesome.min.css"))'>
+  <link type="text/css" rel="stylesheet" href='@routes.Assets.at("stylesheets/main.css")'/>      
     <script src='@routes.WebJarAssets.at(WebJarAssets.locate("jquery.min.js"))' type='text/javascript' ></script>
     <script src='@routes.WebJarAssets.at(WebJarAssets.locate("bootstrap.min.js"))' type='text/javascript' ></script>
     <script src='@routes.WebJarAssets.at(WebJarAssets.locate("respond.js"))' type='text/javascript'></script>
@@ -98,7 +99,7 @@ ga('send', 'pageview');
 	</div>
       </div>	
       <div id="footer">
-	<pre>build: @ix.BuildInfo.TIME (commit: @ix.BuildInfo.COMMIT)</pre>
+	<pre>Build: @ix.BuildInfo.TIME (commit: @ix.BuildInfo.COMMIT)</pre>
       </div>
     </body>
 </html>

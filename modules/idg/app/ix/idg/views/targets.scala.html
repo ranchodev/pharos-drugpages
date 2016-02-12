@@ -83,8 +83,7 @@ facets: Array[FacetDecorator], targets: List[Target], ctx: String )
             }
         }
     </ol>
-} {
-
+    } {
     <form>
     <table id="target-table" class="table table-striped">
         <tr>
@@ -109,20 +108,31 @@ facets: Array[FacetDecorator], targets: List[Target], ctx: String )
     </table>
     </form>
 } {  @* viz *@
+@*    
+    <div class="pull-right">
+      <button type="button" class="btn btn-default"
+	      id="graphics-well-btn" data-toggle="collapse"
+	      data-target="#graphics-well" aria-expanded="false"
+	      aria-controls="graphics-well">
+	<i class="fa fa-bar-chart"></i>
+      </button>
+    </div>
+*@    
     <div class="dropdown pull-right">
-        <button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown">
-            <i class="fa fa-shopping-cart"></i>&nbsp;<span id="sc-count"></span>
-        </button>
-            <ul class="dropdown-menu pull-left">
-                <li><a href="#" id="sc-add-selected">Add Selected</a></li>
-                <li><a href="#" id="sc-add-all">Add All</a></li>
-                <li><a href="@ix.idg.controllers.routes.DossierApp.view(null)" id="sc-view">View Collections</a></li>
-		<li><a href="#" id="sc-empty">Empty Collection</a></li>
-            </ul>
+      <button type="button" class="btn btn-default dropdown-toggle"
+	      data-toggle="dropdown" style="margin-right:1px">
+        <i class="fa fa-shopping-cart"></i>&nbsp;<span id="sc-count"></span>
+      </button>
+      <ul class="dropdown-menu pull-left">
+        <li><a href="#" id="sc-add-selected">Add Selected</a></li>
+        <li><a href="#" id="sc-add-all">Add All</a></li>
+        <li><a href="@ix.idg.controllers.routes.DossierApp.view(null)" id="sc-view">View Collections</a></li>
+	<li><a href="#" id="sc-empty">Empty Collection</a></li>
+      </ul>
     </div>
     <div class="dropdown pull-right">
       <button type="button" class="btn btn-default dropdown-toggle @if(request.getQueryString("q") == null && request.getQueryString("facet") == null) { disabled }" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"
-      style="margin-right: 5px">
+      style="margin-right: 1px">
         <i class="fa fa-eye"></i>
       </button>
       <ul class="dropdown-menu pull-left">
@@ -238,6 +248,7 @@ role="dialog" aria-labelledby="modalLabelFolder" aria-hidden="true">
     <link type="text/css" rel="stylesheet" href='@routes.Assets.at("stylesheets/clustergram.css")' />
     <link type="text/css" rel="stylesheet" href='@routes.Assets.at("stylesheets/radar-chart.css")' />
     <link type="text/css" rel="stylesheet" href='@routes.WebJarAssets.at(WebJarAssets.locate("morris.css"))' />
+    <link type="text/css" rel="stylesheet" href='@routes.Assets.at("stylesheets/main.css")'/>
 </head>
 
 <script>
@@ -249,11 +260,21 @@ $(function() {
 var _cart_selectType = "selected";
 
 $(document).ready(function () {
+
     /*
     $(".facet-panel-body" ).each(function() {
         $(this ).toggle();
     });
     */
+   $('#opener').on('click', function() {		
+      var panel = $('#slide-panel');
+      if (panel.hasClass("visible")) {
+         panel.removeClass('visible').animate({'margin-right':'-300px'});
+      } else {
+         panel.addClass('visible').animate({'margin-right':'0px'});
+      }	
+      return false;	
+   });
 
    $('#loadmodal').on('shown.bs.modal', function (e) {
       console.log('loadmodal is shown...');

@@ -803,6 +803,10 @@ public class IDGApp extends App implements Commons {
         }
         return "";
     }
+
+    public static String format (Integer value) {
+        return value != null ? value.toString() : "";
+    }
     
     public static String getId (Target t) {
         Keyword kw = t.getSynonym(UNIPROT_ACCESSION);
@@ -1006,8 +1010,9 @@ public class IDGApp extends App implements Commons {
         for (XRef xref : e.getLinks()) {
             try {
                 Class cls = Class.forName(xref.kind);
-                if (Ligand.class.isAssignableFrom(cls))
+                if (Ligand.class.isAssignableFrom(cls)) {
                     ligands.add((Ligand)xref.deRef());
+                }
             }
             catch (Exception ex) {
                 ex.printStackTrace();
@@ -3291,6 +3296,50 @@ public class IDGApp extends App implements Commons {
                                                  targets, context.getId()));
                                  }
                              });
+                    }
+                });
+        }
+        catch (Exception ex) {
+            ex.printStackTrace();
+            return _internalServerError (ex);
+        }
+    }
+
+    static Result _getTDLData (final String q, String format)
+        throws Exception {
+        int total = TargetFactory.finder.findRowCount();
+        SearchResult result = getSearchResult (Target.class, q, total);
+        
+        ByteArrayOutputStream bos = new ByteArrayOutputStream ();
+        PrintStream ps = new PrintStream (bos);
+        ps.println("family,tdl,novelty,antibody,monoclonal,"
+                   +"pubmed,jensen,patent,grant,r01,cost");
+        List matches = result.getMatches();
+        for (int i = 0; i < result.size(); ++i) {
+            Object obj = matches.get(i);
+            if (obj instanceof Target) {
+                Target t = (Target)obj;
+                ps.println(t.idgFamily+","+t.idgTDL+","+format (t.novelty)+","
+                           +format (t.antibodyCount)+","
+                           +format (t.monoclonalCount)+","
+                           +format (t.pubmedCount)+","
+                           +format (t.jensenScore)+","
+                           +format (t.patentCount)+","
+                           +format (t.grantCount)+","
+                           +format (t.r01Count)+","
+                           +format (t.grantTotalCost));
+            }
+        }
+        return ok (new String (bos.toByteArray()));
+    }
+
+    public static Result getTDLData (final String q, final String format) {
+        final String key = "tdldata/"+format+"/"
+            +signature (q, request().queryString());
+        try {
+            return getOrElse (key, new Callable<Result> () {
+                    public Result call () throws Exception {
+                        return _getTDLData (q, format);
                     }
                 });
         }

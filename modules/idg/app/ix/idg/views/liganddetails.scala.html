@@ -10,6 +10,27 @@
 
 @(ligand: Ligand, activities: List[LigandActivity], breadcrumb: List[Keyword])
 
+@actrow(act: LigandActivity) = {
+<tr class="treegrid-@act.target.id">
+  <td><a onclick="showLoadModal()" href="@ix.idg.controllers.routes.IDGApp.target(IDGApp.getId(act.target))">@act.target.getName()</a></td>
+  <td><span class="label label-@act.target.idgTDL.label"
+	    data-toggle="tooltip" data-html="true"
+	    title="<p align='left'>@act.target.idgTDL.desc</p>">@act.target.idgTDL</span></td>
+</tr>
+@if(act.mechanism != null) {
+<tr class="treegrid-parent-@act.target.id">
+  <td><em>@act.mechanism</em></td>
+  <td><span class="label label-default">Mechanism</span></td>
+</tr>
+}
+   @for(a <- act.activities) {
+   <tr class="treegrid-@a.id treegrid-parent-@act.target.id">
+     <td>@a.label</td>
+     <td>@a.numval @a.unit</td>
+   </tr>
+   }
+}
+
 @ix.ncats.views.html.main(ligand.getName()){
 @ligandmenu()	 
 }{
@@ -100,28 +121,22 @@
           </div>
           <div class="panel-body">
 	    <table class="tree table">
-	      @for(act <- activities) {
-	         <tr class="treegrid-@act.target.id">
-		   <td><a onclick="showLoadModal()" href="@ix.idg.controllers.routes.IDGApp.target(IDGApp.getId(act.target))">@act.target.getName()</a></td>
-		   <td><span class="label label-@act.target.idgTDL.label"
-		          data-toggle="tooltip" data-html="true"
-			  title="<p align='left'>@act.target.idgTDL.desc</p>">@act.target.idgTDL</span></td>
-		 </tr>
-		 @if(act.mechanism != null) {
-		   <tr class="treegrid-parent-@act.target.id">
-		      <td><em>@act.mechanism</em></td>
-		      <td><span class="label label-default">Mechanism</span></td>
-		   </tr>
+	      @if(activities.size > 20) {
+	         @for(act <- activities.subList(0,20)) {
+		   @actrow(act)
 		 }
-		 @for(a <- act.activities) {
-		   <tr class="treegrid-@a.id treegrid-parent-@act.target.id">
-		     <td>@a.label</td>
-		     <td>@a.numval @a.unit</td>
-		   </tr>
+	      } else {
+	         @for(act <- activities) {
+		    @actrow(act)
 		 }
 	      }
 	    </table>
 	  </div>
+	  @if(activities.size > 20) {
+	     <div class="panel-footer">
+	        <a href='@{ix.idg.controllers.routes.IDGApp.targets() + "?facet=" + IDG_LIGAND+"/"+IDGApp.getId(ligand)}'>See all @activities.size targets...</a>
+	     </div>
+	  }
          </div>
         <div class="panel panel-default">
           <div class="panel-heading">
@@ -209,6 +224,10 @@
     </div>
   </div>
 </div>
+
+<head>
+  <link type="text/css" rel="stylesheet" href='@routes.Assets.at("stylesheets/main.css")'/>
+</head>
 
 <script>
 $(function () {
