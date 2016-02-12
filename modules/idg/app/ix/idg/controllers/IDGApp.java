@@ -316,6 +316,10 @@ public class IDGApp extends App implements Commons {
                             // also cache all the synonyms
                             for (T v : values) {
                                 for (Keyword kw : v.getSynonyms()) {
+                                    if (kw.term == null) {
+                                        Logger.warn("NULL term for synonym keyword label: "+kw.label);
+                                        continue;
+                                    }
                                     if (!kw.term.equals(name))
                                         IxCache.set(cls.getName()+"/"
                                                     +kw.term, values);
