@@ -1277,11 +1277,12 @@ public class TcrdRegistry extends Controller implements Commons {
                     }
 
                     ligand.save();
+                    if (chemblId != null)
+                        LIGS.put(chemblId, ligand);
                     LIGS.put(drug, ligand);
                     
                     Logger.debug("New ligand "+ligand.id+" "
                                  +ligand.getName()+" added!");
-                    
                 }
                 
                 if (chemblId != null) {
@@ -1444,12 +1445,21 @@ public class TcrdRegistry extends Controller implements Commons {
 
 
                 String syn = rset.getString("cmpd_name_in_ref");
-                if (syn.length() <= 255) {
-                    Keyword kw = getKeyword 
-                        (ChEMBL_SYNONYM, syn,
-                         "https://www.ebi.ac.uk/chembl/compound/inspect/"
-                         +chemblId);
-                    ligand.addIfAbsent(kw);
+                if (syn != null && syn.length() <= 255) {
+                    Keyword found = null;
+                    for (Keyword kw : ligand.getSynonyms())
+                        if (syn.equalsIgnoreCase(kw.term)) {
+                            found = kw;
+                            break;
+                        }
+                    
+                    if (found == null) {
+                        Keyword kw = getKeyword 
+                            (ChEMBL_SYNONYM, syn,
+                             "https://www.ebi.ac.uk/chembl/compound/inspect/"
+                             +chemblId);
+                        ligand.addIfAbsent(kw);
+                    }
                 }
 
                 VNum act = new VNum (rset.getString("act_type"),
@@ -1486,12 +1496,11 @@ public class TcrdRegistry extends Controller implements Commons {
                 lref.properties.add(act);
                 
                 try {
-                    if (tref.id == null) {
+                    if (tref.id == null)
                         tref.save();
-                        ligand.update();                        
-                    }
                     else
                         tref.update();
+                    ligand.update();
                     
                     if (lref.id == null) {
                         lref.save();
@@ -2517,7 +2526,9 @@ public class TcrdRegistry extends Controller implements Commons {
                  //+"where b.tdl in ('Tclin','Tchem')\n"
                  //+"where b.idgfam = 'kinase'\n"
                  //+" where c.uniprot = 'Q8N568'\n"
+                 //+"where c.uniprot = 'Q9Y5X4'\n"
                  //+" where c.uniprot = 'Q6NV75'\n"
+                 +"where c.uniprot in ('O00444', 'P07333')\n"
                  //+"where c.uniprot in ('P35968')\n"
                  //+"where c.uniprot in ('P42685')\n"
                  //+"where c.uniprot in ('Q6PIU1')\n"
