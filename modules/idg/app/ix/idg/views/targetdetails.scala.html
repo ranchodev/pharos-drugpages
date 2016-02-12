@@ -1374,13 +1374,15 @@ $('.tree').treegrid({
 
 
 
-   new Morris.Line({
-      element: 'patent-line-plot',
-      data: @HtmlFormat.raw(IDGApp.getPatents(target).toString),
-      xkey: 'year',
-      ykeys: ['count'],
-      labels: ['Count']
-   });
+   @*new Morris.Line({*@
+      @*element: 'patent-line-plot',*@
+      @*data: @HtmlFormat.raw(IDGApp.getPatents(target).toString),*@
+      @*xkey: 'year',*@
+      @*ykeys: ['count'],*@
+      @*labels: ['Count']*@
+   @*});*@
+
+
   tinx_target_plot("#tinx-plot", "@IDGApp.getId(target)");
 });
 
