@@ -155,7 +155,7 @@ public class TcrdRegistry extends Controller implements Commons {
             pstm5, pstm6, pstm7, pstm8, pstm9, pstm10,
             pstm11, pstm12, pstm13, pstm14, pstm15,
             pstm16, pstm17, pstm18, pstm19, pstm20,
-            pstm21, pstm22;
+            pstm21, pstm22, pstm23, pstm24;
         Map<String, Keyword> datasources = new HashMap<String, Keyword>();
 
         // xrefs for the current target
@@ -183,17 +183,17 @@ public class TcrdRegistry extends Controller implements Commons {
             // return anything
             pstm = con.prepareStatement
                     ("select distinct " +
-                            "a.target_id, d.doid, d.name, d.novelty_score as diseaseNovelty, c.score as importance,  " +
-                            "e.uniprot, f.score as targetNovelty " +
-                            "from target2disease a, tinx_disease d, tinx_importance c, protein e, tinx_novelty f " +
-                            "where a.target_id = ? " +
-                            "and a.doid = d.doid " +
-                            "and c.protein_id = a.target_id " +
-                            "and c.disease_id = d.id " +
-                            "and e.id = a.target_id " +
-                            "and f.protein_id = a.target_id");
+                     "a.target_id, d.doid, d.name, d.novelty_score as diseaseNovelty, c.score as importance,  " +
+                     "e.uniprot, f.score as targetNovelty " +
+                     "from target2disease a, tinx_disease d, tinx_importance c, protein e, tinx_novelty f " +
+                     "where a.target_id = ? " +
+                     "and a.doid = d.doid " +
+                     "and c.protein_id = a.target_id " +
+                     "and c.disease_id = d.id " +
+                     "and e.id = a.target_id " +
+                     "and f.protein_id = a.target_id");
             pstm2 = con.prepareStatement
-                    ("select * from chembl_activity where target_id = ?");
+                ("select * from chembl_activity where target_id = ?");
             pstm3 = con.prepareStatement
                 ("select * from drug_activity where target_id = ?");
             pstm4 = con.prepareStatement
@@ -248,6 +248,14 @@ public class TcrdRegistry extends Controller implements Commons {
             pstm22 = con.prepareStatement
                 ("select * from protein2pubmed a, pubmed b "
                  +"where a.pubmed_id = b.id and a.protein_id = ?");
+
+            pstm23 = con.prepareStatement
+                ("select distinct cmpd_chemblid "
+                 +"from drug_activity where drug = ?");
+
+            pstm24 = con.prepareStatement
+                ("select distinct cmpd_name_in_ref "
+                 +"from chembl_activity where cmpd_chemblid = ?");
 
             this.chembl = chembl;
         }
@@ -346,6 +354,8 @@ public class TcrdRegistry extends Controller implements Commons {
             pstm20.close();
             pstm21.close();
             pstm22.close();
+            pstm23.close();
+            pstm24.close();
             
             chembl.shutdown();
         }
@@ -1236,8 +1246,10 @@ public class TcrdRegistry extends Controller implements Commons {
                 if (ligand == null && chemblId != null) {
                     // try chembl
                     ligand = LIGS.get(chemblId);
-                    if (ligand != null)
+                    if (ligand != null) {
                         ligand.name = drug;
+                        ligand.description = rset.getString("nlm_drug_info");
+                    }
                 }
 
                 if (ligand == null) {
@@ -1282,9 +1294,28 @@ public class TcrdRegistry extends Controller implements Commons {
                         MOLIDX.add(null, struc.id.toString(), struc.molfile);
                     }
 
+                    pstm23.setString(1, drug);
+                    ResultSet rs = pstm23.executeQuery();
+                    while (rs.next()) {
+                        String syn = rs.getString(1);
+                        if (syn != null) {
+                            if (syn.startsWith("CHEMBL")) {
+                                ligand.addIfAbsent
+                                    (KeywordFactory.registerIfAbsent
+                                     (ChEMBL_ID, syn,
+                                      "https://www.ebi.ac.uk/chembl/compound/inspect/" +syn));
+                            }
+                            else {
+                                ligand.addIfAbsent
+                                    (KeywordFactory.registerIfAbsent
+                                     (ChEMBL_SYNONYM, syn, null));
+                            }
+                            LIGS.put(syn, ligand);
+                        }
+                    }
+                    rs.close();
+                    
                     ligand.save();
-                    if (chemblId != null)
-                        LIGS.put(chemblId, ligand);
                     LIGS.put(drug, ligand);
                     
                     Logger.debug("New ligand "+ligand.id+" "
@@ -1292,6 +1323,8 @@ public class TcrdRegistry extends Controller implements Commons {
                 }
                 
                 if (chemblId != null) {
+                    LIGS.put(chemblId, ligand);
+
                     Keyword kw = KeywordFactory.registerIfAbsent
                         (ChEMBL_ID, chemblId,
                          "https://www.ebi.ac.uk/chembl/compound/inspect/"
@@ -1450,6 +1483,19 @@ public class TcrdRegistry extends Controller implements Commons {
                         */
                     }
 
+                    pstm24.setString(1, chemblId);
+                    ResultSet rs = pstm24.executeQuery();
+                    while (rs.next()) {
+                        String s = rs.getString(1);
+                        if (s != null && s.length() <= 255) {
+                            ligand.addIfAbsent
+                                (KeywordFactory.registerIfAbsent
+                             (ChEMBL_SYNONYM, s, null));
+                            LIGS.put(s, ligand);
+                        }
+                    }
+                    rs.close();
+                    
                     ligand.save();
                     LIGS.put(chemblId, ligand);
                     if (syn != null)
@@ -2540,49 +2586,7 @@ public class TcrdRegistry extends Controller implements Commons {
                  //+"where c.uniprot = 'Q9Y5X4'\n"
                  //+" where c.uniprot = 'Q6NV75'\n"
                  //+"where c.uniprot in ('O00444', 'P07333')\n"
-                 /*
-                 +"where c.uniprot in ("
-+"'O14976',"
-+"'O43293',"
-+"'O75385',"
-+"'O75582',"
-+"'O75914',"
-+"'O94804',"
-+"'O96017',"
-+"'P07333',"
-+"'P07949',"
-+"'P09619',"
-+"'P10721',"
-+"'P15735',"
-+"'P16234',"
-+"'P17948',"
-+"'P30530',"
-+"'P35916',"
-+"'P35968',"
-+"'P36888',"
-+"'P48730',"
-+"'P49674',"
-+"'P49759',"
-+"'P49760',"
-+"'P51617',"
-+"'Q12866',"
-+"'Q13043',"
-+"'Q13131',"
-+"'Q15349',"
-+"'Q15746',"
-+"'Q16816',"
-+"'Q2M2I8',"
-+"'Q56UN5',"
-+"'Q86YV6',"
-+"'Q8IYT8',"
-+"'Q8N4C8',"
-+"'Q92918',"
-+"'Q9BYT3',"
-+"'Q9H2X6',"
-+"'Q9HAZ1',"
-+"'Q9NSY1',"
-+"'Q9UEE5',"
-+"'Q9UKE5')\n"*/
+                 //+"where c.uniprot in ('O14976','O43293','O75385','O75582')\n"
                  //+"where c.uniprot in ('P35968')\n"
                  //+"where c.uniprot in ('P42685')\n"
                  //+"where c.uniprot in ('Q6PIU1')\n"
