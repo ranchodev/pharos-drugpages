@@ -1233,6 +1233,12 @@ public class TcrdRegistry extends Controller implements Commons {
                     : ligands.iterator().next();
                 */
                 Ligand ligand = LIGS.get(drug);
+                if (ligand == null && chemblId != null) {
+                    // try chembl
+                    ligand = LIGS.get(chemblId);
+                    if (ligand != null)
+                        ligand.name = drug;
+                }
 
                 if (ligand == null) {
                     // new ligand
@@ -1386,7 +1392,8 @@ public class TcrdRegistry extends Controller implements Commons {
                     continue;
 
                 seen.add(chemblId);
-
+                String syn = rset.getString("cmpd_name_in_ref");
+                
                 /*
                 List<Ligand> ligands = LigandFactory.finder.where()
                     .eq("synonyms.term", chemblId).findList();
@@ -1396,6 +1403,10 @@ public class TcrdRegistry extends Controller implements Commons {
                 }
                 else*/
                 Ligand ligand = LIGS.get(chemblId);
+                if (ligand == null && syn != null) {
+                    ligand = LIGS.get(syn);
+                }
+                
                 if (ligand == null) {
                     ligand = new Ligand (chemblId);
                     ligand.properties.add(source);
@@ -1441,10 +1452,10 @@ public class TcrdRegistry extends Controller implements Commons {
 
                     ligand.save();
                     LIGS.put(chemblId, ligand);
+                    if (syn != null)
+                        LIGS.put(syn, ligand);
                 }
 
-
-                String syn = rset.getString("cmpd_name_in_ref");
                 if (syn != null && syn.length() <= 255) {
                     Keyword found = null;
                     for (Keyword kw : ligand.getSynonyms())
@@ -2523,19 +2534,62 @@ public class TcrdRegistry extends Controller implements Commons {
                  //+"where c.id in (11521)\n"
                  //+"where a.target_id in (12241)\n"
                  //+"where c.uniprot = 'Q9H3Y6'\n"
-                 //+"where b.tdl in ('Tclin','Tchem')\n"
+                 +"where b.tdl in ('Tclin','Tchem')\n"
                  //+"where b.idgfam = 'kinase'\n"
                  //+" where c.uniprot = 'Q8N568'\n"
                  //+"where c.uniprot = 'Q9Y5X4'\n"
                  //+" where c.uniprot = 'Q6NV75'\n"
-                 +"where c.uniprot in ('O00444', 'P07333')\n"
+                 //+"where c.uniprot in ('O00444', 'P07333')\n"
+                 /*
+                 +"where c.uniprot in ("
++"'O14976',"
++"'O43293',"
++"'O75385',"
++"'O75582',"
++"'O75914',"
++"'O94804',"
++"'O96017',"
++"'P07333',"
++"'P07949',"
++"'P09619',"
++"'P10721',"
++"'P15735',"
++"'P16234',"
++"'P17948',"
++"'P30530',"
++"'P35916',"
++"'P35968',"
++"'P36888',"
++"'P48730',"
++"'P49674',"
++"'P49759',"
++"'P49760',"
++"'P51617',"
++"'Q12866',"
++"'Q13043',"
++"'Q13131',"
++"'Q15349',"
++"'Q15746',"
++"'Q16816',"
++"'Q2M2I8',"
++"'Q56UN5',"
++"'Q86YV6',"
++"'Q8IYT8',"
++"'Q8N4C8',"
++"'Q92918',"
++"'Q9BYT3',"
++"'Q9H2X6',"
++"'Q9HAZ1',"
++"'Q9NSY1',"
++"'Q9UEE5',"
++"'Q9UKE5')\n"*/
                  //+"where c.uniprot in ('P35968')\n"
                  //+"where c.uniprot in ('P42685')\n"
                  //+"where c.uniprot in ('Q6PIU1')\n"
                  //+"where c.uniprot in ('A5X5Y0')\n"
                  //+"where c.uniprot in ('Q7RTX7')\n"
                  //+"where c.uniprot in ('Q00537','Q8WXA8')\n"
-//                 +"where c.uniprot in ('Q401N2')\n"
+                 //+"where c.uniprot in ('Q401N2')\n"
                  //+"where c.uniprot in ('O94921','Q96Q40','Q00536','Q00537','Q00526','P50613','P49761','P20794')\n"
                  //+"where c.uniprot in ('Q8WXA8')\n"
                  //+"where c.uniprot in ('Q7RTX7','Q86YV6','P07333','P07949')\n"
