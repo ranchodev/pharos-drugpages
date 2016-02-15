@@ -98,13 +98,15 @@
 			 }
 		      }
 		      case _ => {
-		        <tr>
+		      <tr>
 		        @if(syn.href != null) {
-			    @if(syn.href.startsWith("http")) {
+			   @if(syn.href.startsWith("http")) {
 			      <td><a href="@syn.href">@syn.term</a></td>
-			    } else {
+			   } else {
 		              <td>@syn.term [@syn.href]</td>
-			    }
+			   }
+			} else {
+			   <td>@syn.term</td>
 			}
 			</tr>
 		      }

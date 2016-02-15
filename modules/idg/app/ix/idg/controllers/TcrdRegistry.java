@@ -1321,6 +1321,13 @@ public class TcrdRegistry extends Controller implements Commons {
                     Logger.debug("New ligand "+ligand.id+" "
                                  +ligand.getName()+" added!");
                 }
+                else if (ligand.name.startsWith("CHEMBL")) {
+                    ligand.description = rset.getString("nlm_drug_info");
+                    ligand.name = drug;
+                    ligand.addIfAbsent
+                        (KeywordFactory.registerIfAbsent
+                         (IDG_DRUG, drug, rset.getString("reference")));
+                }
                 
                 if (chemblId != null) {
                     LIGS.put(chemblId, ligand);
@@ -1437,7 +1444,7 @@ public class TcrdRegistry extends Controller implements Commons {
                 else*/
                 Ligand ligand = LIGS.get(chemblId);
                 if (ligand == null && syn != null) {
-                    ligand = LIGS.get(syn);
+                    ligand = LIGS.get(syn.toLowerCase());
                 }
                 
                 if (ligand == null) {
@@ -1490,8 +1497,8 @@ public class TcrdRegistry extends Controller implements Commons {
                         if (s != null && s.length() <= 255) {
                             ligand.addIfAbsent
                                 (KeywordFactory.registerIfAbsent
-                             (ChEMBL_SYNONYM, s, null));
-                            LIGS.put(s, ligand);
+                                 (ChEMBL_SYNONYM, s, "https://www.ebi.ac.uk/chembl/compound/inspect/"+chemblId));
+                            LIGS.put(s.toLowerCase(), ligand);
                         }
                     }
                     rs.close();
@@ -1499,7 +1506,7 @@ public class TcrdRegistry extends Controller implements Commons {
                     ligand.save();
                     LIGS.put(chemblId, ligand);
                     if (syn != null)
-                        LIGS.put(syn, ligand);
+                        LIGS.put(syn.toLowerCase(), ligand);
                 }
 
                 if (syn != null && syn.length() <= 255) {
@@ -2586,6 +2593,7 @@ public class TcrdRegistry extends Controller implements Commons {
                  //+"where c.uniprot = 'Q9Y5X4'\n"
                  //+" where c.uniprot = 'Q6NV75'\n"
                  //+"where c.uniprot in ('O00444', 'P07333')\n"
+                 //+"where c.uniprot in ('Q8NE63','O14976')\n"
                  //+"where c.uniprot in ('O14976','O43293','O75385','O75582')\n"
                  //+"where c.uniprot in ('P35968')\n"
                  //+"where c.uniprot in ('P42685')\n"
