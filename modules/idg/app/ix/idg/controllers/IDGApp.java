@@ -512,7 +512,8 @@ public class IDGApp extends App implements Commons {
         IDG_FAMILY,
         PHARMALOGICAL_ACTION,
         LIGAND_SOURCE,
-        LIGAND_ACTIVITY
+        LIGAND_ACTIVITY,
+        IDG_TARGET
     };
 
     public static final String[] ALL_FACETS = {
