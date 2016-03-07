@@ -1298,9 +1298,9 @@ public class IDGApp extends App implements Commons {
                 List<Target> targets = new ArrayList<>();
                 if (result.count() > 0) {
                     for (int i = 0; i < result.count(); i++) targets.add((Target) result.getMatches().get(i));
-                    byte[] targetDownload = DownloadEntities.downloadTargets(targets);
+                    byte[] targetDownload = DownloadEntities.downloadEntities(targets);
                     response().setHeader("Content-Disposition", "attachment;filename=export-target.csv");
-                    return ok(targetDownload).as("text/csv");
+                    return ok(targetDownload).as(DownloadEntities.getDownloadMimeType(Target.class));
                 }
             }
 
@@ -1808,9 +1808,9 @@ public class IDGApp extends App implements Commons {
                     for (int i = 0; i < result.count(); i++) {
                         ligands.add((Ligand) result.getMatches().get(i));
                     }
-                    byte[] contents = DownloadEntities.downloadLigands(ligands);
+                    byte[] contents = DownloadEntities.downloadEntities(ligands);
                     response().setHeader("Content-Disposition", "attachment;filename=export-ligand.csv");
-                    return ok(contents).as("text/csv");
+                    return ok(contents).as(DownloadEntities.getDownloadMimeType(Ligand.class));
                 }
             }
 
@@ -2145,9 +2145,9 @@ public class IDGApp extends App implements Commons {
                     for (int i = 0; i < result.count(); i++) {
                         diseases.add((Disease) result.getMatches().get(i));
                     }
-                    byte[] contents = DownloadEntities.downloadDiseases(diseases);
+                    byte[] contents = DownloadEntities.downloadEntities(diseases);
                     response().setHeader("Content-Disposition", "attachment;filename=export-disease.csv");
-                    return ok(contents).as("text/csv");
+                    return ok(contents).as(DownloadEntities.getDownloadMimeType(Disease.class));
                 }
             }
 

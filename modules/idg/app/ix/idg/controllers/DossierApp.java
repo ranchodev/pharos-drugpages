@@ -19,12 +19,15 @@ import play.db.ebean.Model;
 import play.mvc.BodyParser;
 import play.mvc.Result;
 
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.Callable;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipOutputStream;
 
 public class DossierApp extends App implements Commons {
     public static final String IDG_BUCKET = "IDG BUCKET";
@@ -274,7 +277,7 @@ public class DossierApp extends App implements Commons {
         return ok(ret);
     }
 
-    public static Result view(String folderName) throws IOException {
+    public static Result view(String folderName) throws IOException, ClassNotFoundException {
         if (folderName == null) folderName = "Default";
 
         ArrayNode cart = getCartFromSession();
@@ -317,7 +320,35 @@ public class DossierApp extends App implements Commons {
             // TODO ligands
         }
 
-        return ok(ix.idg.views.html.cart.render(folderName, folderNames, targets, diseases, ligands, null));
+        String action = request().getQueryString("action");
+        if (action == null) action = "";
+        if (action.toLowerCase().equals("download")) {
+            // All entities get bundled into a single ZIP file
+            ByteArrayOutputStream baos = new ByteArrayOutputStream();
+            ZipOutputStream zip = new ZipOutputStream(baos);
+
+            ZipEntry entry = new ZipEntry("targets.csv");
+            zip.putNextEntry(entry);
+            zip.write(DownloadEntities.downloadEntities(targets));
+            zip.closeEntry();
+
+            entry = new ZipEntry("ligands.csv");
+            zip.putNextEntry(entry);
+            zip.write(DownloadEntities.downloadEntities(ligands));
+            zip.closeEntry();
+
+            entry = new ZipEntry("diseases.csv");
+            zip.putNextEntry(entry);
+            zip.write(DownloadEntities.downloadEntities(diseases));
+            zip.closeEntry();
+
+
+            zip.finish();
+            zip.close();
+            response().setHeader("Content-Disposition", "attachment;filename=dossier-"+folderName+".zip");
+            return ok(baos.toByteArray()).as("application/zip");
+        } else
+            return ok(ix.idg.views.html.cart.render(folderName, folderNames, targets, diseases, ligands, null));
     }
 
     public static Result emptyCart () throws IOException {

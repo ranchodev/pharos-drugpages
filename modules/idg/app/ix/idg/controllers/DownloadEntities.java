@@ -1,9 +1,6 @@
 package ix.idg.controllers;
 
-import ix.core.models.Keyword;
-import ix.core.models.Publication;
-import ix.core.models.Value;
-import ix.core.models.XRef;
+import ix.core.models.*;
 import ix.idg.models.Disease;
 import ix.idg.models.Ligand;
 import ix.idg.models.Target;
@@ -128,7 +125,7 @@ public class DownloadEntities {
         else return s;
     }
 
-    public static byte[] downloadTargets(List<Target> targets) {
+    static byte[] downloadTargets(List<Target> targets) {
         StringBuilder sb = new StringBuilder();
         String tmp = "URL,Uniprot ID,Name,Description,Development Level,DTOClass,PantherClass,ChemblClass,Novelty,Target Family,Function," +
                 "R01Count,PatentCount,AntibodyCount,PubmedCount,PMIDCount";
@@ -141,7 +138,7 @@ public class DownloadEntities {
         return sb.toString().getBytes();
     }
 
-    public static byte[] downloadDiseases(List<Disease> diseases) throws ClassNotFoundException {
+    static byte[] downloadDiseases(List<Disease> diseases) throws ClassNotFoundException {
         StringBuilder sb = new StringBuilder();
         sb.append("URL,DOID,Name,Description,Targets\n");
         for (Disease d : diseases) {
@@ -150,12 +147,34 @@ public class DownloadEntities {
         return sb.toString().getBytes();
     }
 
-    public static byte[] downloadLigands(List<Ligand> ligands) throws ClassNotFoundException {
+    static byte[] downloadLigands(List<Ligand> ligands) throws ClassNotFoundException {
         StringBuilder sb = new StringBuilder();
         sb.append("URL,ID,Name,Description,SMILES,InChI Key,Targets\n");
         for (Ligand l : ligands) {
             sb.append(csvFromLigand(l)).append("\n");
         }
         return sb.toString().getBytes();
+    }
+
+    public static <T extends EntityModel> byte[] downloadEntities(List<T> entities) throws ClassNotFoundException {
+        if (entities.size() == 0) return new byte[]{};
+        Class eclass = entities.get(0).getClass();
+        if (Target.class.isAssignableFrom(eclass))
+            return downloadTargets((List<Target>) entities);
+        else if (Ligand.class.isAssignableFrom(eclass))
+            return downloadLigands((List<Ligand>) entities);
+        else if (Disease.class.isAssignableFrom(eclass))
+            return downloadDiseases((List<Disease>) entities);
+        else throw new IllegalArgumentException("Must supply disease, ligand or target entities for download");
+    }
+
+    public static String getDownloadMimeType(Class klass) {
+        if (Target.class.isAssignableFrom(klass))
+            return "text/csv";
+        else if (Ligand.class.isAssignableFrom(klass))
+            return "text/csv";
+        else if (Disease.class.isAssignableFrom(klass))
+            return "text/csv";
+        else throw new IllegalArgumentException("Must supply objects of class Target, Disease or Ligand");
     }
 }
