@@ -1273,65 +1273,6 @@ public class IDGApp extends App implements Commons {
         }
     }
 
-    static String csvFromTarget(Target t) {
-        Object novelty = "";
-        Object function = "";
-
-        StringBuilder sb2 = new StringBuilder();
-        String delimiter = "";
-        for (Publication pub : t.getPublications()) {
-            sb2.append(delimiter).append(pub.pmid);
-            delimiter = "|";
-        }
-
-        List<Value> props = t.getProperties();
-        for (Value v : props) {
-            if (v.label.equals("TINX Novelty")) novelty = v.getValue();
-            else if (v.label.equals("function")) function = v.getValue();
-        }
-
-        // get classifications
-        String chemblClass = "";
-        String dtoClass = "";
-        String pantherClass = "";
-        for (Value v : t.properties) {
-            if (v.label == null) continue;
-            if (v.label.startsWith(DTO_PROTEIN_CLASS))
-                dtoClass = ((Keyword) v).getValue();
-            else if (v.label.startsWith(PANTHER_PROTEIN_CLASS))
-                pantherClass = ((Keyword) v).getValue();
-            else if (v.label.startsWith(ChEMBL_PROTEIN_CLASS))
-                chemblClass = ((Keyword) v).getValue();
-        }
-
-
-        StringBuilder sb = new StringBuilder();
-        sb.append(routes.IDGApp.target(csvQuote(getId(t)))).append(",").
-                append(csvQuote(getId(t))).append(",").
-                append(csvQuote(t.getName())).append(",").
-                append(csvQuote(t.getDescription())).append(",").
-                append(csvQuote(t.idgTDL.toString())).append(",").
-                append(csvQuote(dtoClass)).append(",").
-                append(csvQuote(pantherClass)).append(",").
-                append(csvQuote(chemblClass)).append(",").
-                append(csvQuote((String) novelty)).append(",").
-                append(csvQuote(t.idgFamily)).append(",").
-                append(csvQuote(function.toString())).append(",").
-                append(csvQuote(String.valueOf(t.r01Count))).append(",").
-                append(csvQuote(String.valueOf(t.patentCount))).append(",").
-                append(csvQuote(String.valueOf(t.antibodyCount))).append(",").
-                append(csvQuote(String.valueOf(t.pubmedCount))).append(",").
-                append(csvQuote(sb2.toString()));
-        return sb.toString();
-    }
-
-    static String csvQuote(String s) {
-        if (s == null || s.trim().equals("null")) return "";
-        if (s.contains("\"")) s = s.replace("\"", "\\\"");
-        if (s.contains(" ") || s.contains(","))
-            return "\""+s+"\"";
-        else return s;
-    }
 
     static Result _targets (final String q, final int rows, final int page)
         throws Exception {
@@ -1353,22 +1294,14 @@ public class IDGApp extends App implements Commons {
             
             String action = request().getQueryString("action");
             if (action == null) action = "";
-
             if (action.toLowerCase().equals("download")) {
-                StringBuilder sb = new StringBuilder();
-                String tmp = "URL,Uniprot ID,Name,Description,Development Level,DTOClass,PantherClass,ChemblClass,Novelty,Target Family,Function," +
-                        "R01Count,PatentCount,AntibodyCount,PubmedCount,PMIDCount";
-                tmp = tmp.replace(",", "\",\"");
-                tmp = "\""+tmp + "\"\n";
-                sb.append(tmp);
+                List<Target> targets = new ArrayList<>();
                 if (result.count() > 0) {
-                    for (int i = 0; i < result.count(); i++) {
-                        Target t = (Target) result.getMatches().get(i);
-                        sb.append(csvFromTarget(t)).append("\n");
-                    }
+                    for (int i = 0; i < result.count(); i++) targets.add((Target) result.getMatches().get(i));
+                    byte[] targetDownload = DownloadEntities.downloadTargets(targets);
+                    response().setHeader("Content-Disposition", "attachment;filename=export-target.csv");
+                    return ok(targetDownload).as("text/csv");
                 }
-                response().setHeader("Content-Disposition", "attachment;filename=export.csv");
-                return ok(sb.toString().getBytes()).as("text/csv");
             }
 
             if (result.finished()) {
@@ -1385,7 +1318,7 @@ public class IDGApp extends App implements Commons {
             return createTargetResult (result, rows, page);
         }
         else {
-            final SearchResult result = getSearchFacets (Target.class);
+            final SearchResult result = getSearchFacets(Target.class);
             return getOrElse (key+"/result", new Callable<Result> () {
                     public Result call () throws Exception {
                         TextIndexer.Facet[] facets = filter
@@ -1856,41 +1789,6 @@ public class IDGApp extends App implements Commons {
         }
     }
 
-    static String csvFromLigand(Ligand l) throws ClassNotFoundException {
-
-        String inchiKey = "";
-        String canSmi = "";
-
-        for (Value v : l.getProperties()) {
-            if (ChEMBL_INCHI_KEY.equals(v.label))
-                inchiKey = (String) v.getValue();
-            else if (ChEMBL_SMILES.equals(v.label))
-                canSmi = (String) v.getValue();
-        }
-
-        StringBuilder sb2 = new StringBuilder();
-        String delimiter = "";
-        List<XRef> links = l.getLinks();
-        for (XRef xref : links) {
-            if (Target.class.isAssignableFrom(Class.forName(xref.kind))) {
-                sb2.append(delimiter).append(getId((Target) xref.deRef()));
-                delimiter = "|";
-            }
-        }
-
-
-        StringBuilder sb = new StringBuilder();
-        sb.append(routes.IDGApp.ligand(getId(l))).append(",").
-                append(getId(l)).append(",").
-                append(csvQuote(l.getName())).append(",").
-                append(csvQuote(l.getDescription())).append(",").
-                append(canSmi).append(",").
-                append(inchiKey).append(",").
-                append(sb2.toString());
-        return sb.toString();
-    }
-
-
     static Result _ligands (final String q, final int rows, final int page)
         throws Exception {
         final String key = "ligands/"+Util.sha1(request ());
@@ -1905,15 +1803,15 @@ public class IDGApp extends App implements Commons {
             if (action == null) action = "";
 
             if (action.toLowerCase().equals("download")) {
-                StringBuilder sb = new StringBuilder();
-                sb.append("URL,ID,Name,Description,SMILES,InChI Key,Targets\n");
                 if (result.count() > 0) {
+                    List<Ligand> ligands = new ArrayList<>();
                     for (int i = 0; i < result.count(); i++) {
-                        Ligand d = (Ligand) result.getMatches().get(i);
-                        sb.append(csvFromLigand(d)).append("\n");
+                        ligands.add((Ligand) result.getMatches().get(i));
                     }
+                    byte[] contents = DownloadEntities.downloadLigands(ligands);
+                    response().setHeader("Content-Disposition", "attachment;filename=export-ligand.csv");
+                    return ok(contents).as("text/csv");
                 }
-                return ok(sb.toString().getBytes()).as("text/csv");
             }
 
             if (result.finished()) {
@@ -2228,26 +2126,6 @@ public class IDGApp extends App implements Commons {
         }
     }
 
-    static String csvFromDisease(Disease d) throws ClassNotFoundException {
-
-        StringBuilder sb2 = new StringBuilder();
-        String delimiter = "";
-        List<XRef> links = d.getLinks();
-        for (XRef xref : links) {
-            if (Target.class.isAssignableFrom(Class.forName(xref.kind))) {
-                sb2.append(delimiter).append(getId((Target) xref.deRef()));
-                delimiter = "|";
-            }
-        }
-        StringBuilder sb = new StringBuilder();
-        sb.append(routes.IDGApp.disease(getId(d))).append(",").
-                append(getId(d)).append(",").
-                append(csvQuote(d.getName())).append(",").
-                append(csvQuote(d.getDescription())).append(",").
-                append(sb2.toString());
-        return sb.toString();
-    }
-
     static Result _diseases (final String q, final int rows, final int page)
         throws Exception {
         final int total = DiseaseFactory.finder.findRowCount();
@@ -2262,15 +2140,15 @@ public class IDGApp extends App implements Commons {
             if (action == null) action = "";
 
             if (action.toLowerCase().equals("download")) {
-                StringBuilder sb = new StringBuilder();
-                sb.append("URL,DOID,Name,Description,Targets\n");
+                List<Disease> diseases = new ArrayList<>();
                 if (result.count() > 0) {
                     for (int i = 0; i < result.count(); i++) {
-                        Disease d = (Disease) result.getMatches().get(i);
-                        sb.append(csvFromDisease(d)).append("\n");
+                        diseases.add((Disease) result.getMatches().get(i));
                     }
+                    byte[] contents = DownloadEntities.downloadDiseases(diseases);
+                    response().setHeader("Content-Disposition", "attachment;filename=export-disease.csv");
+                    return ok(contents).as("text/csv");
                 }
-                return ok(sb.toString().getBytes()).as("text/csv");
             }
 
             if (result.finished()) {
