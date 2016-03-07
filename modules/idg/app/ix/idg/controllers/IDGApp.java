@@ -1299,7 +1299,8 @@ public class IDGApp extends App implements Commons {
                 if (result.count() > 0) {
                     for (int i = 0; i < result.count(); i++) targets.add((Target) result.getMatches().get(i));
                     byte[] targetDownload = DownloadEntities.downloadEntities(targets);
-                    response().setHeader("Content-Disposition", "attachment;filename=export-target.csv");
+                    String suffix = DownloadEntities.getDownloadMimeType(Target.class).endsWith("zip") ? ".zip" : ".csv";
+                    response().setHeader("Content-Disposition", "attachment;filename=export-target"+suffix);
                     return ok(targetDownload).as(DownloadEntities.getDownloadMimeType(Target.class));
                 }
             }
