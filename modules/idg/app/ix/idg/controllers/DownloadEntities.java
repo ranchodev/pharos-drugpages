@@ -114,7 +114,7 @@ public class DownloadEntities {
         List<Ligand> ligands = IDGApp.getLigandsWithActivity(t);
         for (Ligand l : ligands) {
             VNum act = IDGApp.getActivity(t, l);
-            Double actVal = act == null ? null : act.getNumval();
+            String actVal = act == null ? "" : act.getNumval().toString();
             String actUnit = act == null ? "" : act.label;
             String ligType = "";
             if (l.getSynonym(Commons.IDG_DRUG) != null)
@@ -125,7 +125,7 @@ public class DownloadEntities {
                     append(csvQuote(l.getName())).append(",").
                     append(ligType).append(",").
                     append(csvQuote(l.getDescription())).append(",").
-                    append(IDGApp.getStructure(l).smiles).append(",").
+                    append(IDGApp.getStructure(l) == null ? "" : IDGApp.getStructure(l).smiles).append(",").
                     append(routes.IDGApp.ligand(IDGApp.getId(l))).append(",").
                     append(actVal).append(",").
                     append(actUnit).append(",").
