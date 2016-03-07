@@ -313,6 +313,9 @@ public class DossierApp extends App implements Commons {
             if (type.equals(Target.class.getName())) {
                 targets.addAll(targetFinder.where(Expr.and(Expr.eq("synonyms.label", Commons.UNIPROT_ACCESSION),
                         Expr.eq("synonyms.term", id))).findList());
+            } else if (type.equals(Disease.class.getName())) {
+                diseases.addAll(diseaseFinder.where(Expr.and(Expr.eq("synonyms.label", Commons.IDG_DISEASE),
+                        Expr.eq("synonyms.term", id))).findList());
             }
 //            else if (type.equals(Disease.class.getName()))
 //                diseases.addAll(diseaseFinder.where(Expr.and(Expr.eq("synonyms.label", "DOID"),
