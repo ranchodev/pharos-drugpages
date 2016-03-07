@@ -277,7 +277,7 @@ public class DossierApp extends App implements Commons {
         return ok(ret);
     }
 
-    public static Result view(String folderName) throws IOException, ClassNotFoundException {
+    public static Result view(String folderName) throws Exception {
         if (folderName == null) folderName = "Default";
 
         ArrayNode cart = getCartFromSession();
