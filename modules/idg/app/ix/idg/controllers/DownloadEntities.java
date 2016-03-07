@@ -172,30 +172,16 @@ public class DownloadEntities {
         String turl = routes.IDGApp.target(csvQuote(IDGApp.getId(t))).toString();
         String uniprot = csvQuote(IDGApp.getId(t));
 
-        List<Value> props = IDGApp.getProperties(t, Commons.GO_COMPONENT);
-        for (Value prop : props) {
-            sb2.append(turl).append(",").
-                    append(uniprot).append(",").
-                    append(csvQuote(prop.getValue().toString())).append(",").
-                    append(Commons.GO_COMPONENT).append("\n");
+        String[] go = new String[]{Commons.GO_COMPONENT, Commons.GO_FUNCTION, Commons.GO_PROCESS};
+        for (String goclass : go) {
+            List<Value> props = IDGApp.getProperties(t, goclass);
+            for (Value prop : props) {
+                sb2.append(turl).append(",").
+                        append(uniprot).append(",").
+                        append(csvQuote(prop.getValue().toString())).append(",").
+                        append(goclass).append("\n");
+            }
         }
-
-        props = IDGApp.getProperties(t, Commons.GO_FUNCTION);
-        for (Value prop : props) {
-            sb2.append(turl).append(",").
-                    append(uniprot).append(",").
-                    append(prop.getValue()).append(",").
-                    append(Commons.GO_FUNCTION).append("\n");
-        }
-
-        props = IDGApp.getProperties(t, Commons.GO_PROCESS);
-        for (Value prop : props) {
-            sb2.append(turl).append(",").
-                    append(uniprot).append(",").
-                    append(prop.getValue()).append(",").
-                    append(Commons.GO_PROCESS).append("\n");
-        }
-
         return sb2.toString();
     }
 
