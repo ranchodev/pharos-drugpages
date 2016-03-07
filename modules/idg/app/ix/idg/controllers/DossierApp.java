@@ -330,7 +330,9 @@ public class DossierApp extends App implements Commons {
             ByteArrayOutputStream baos = new ByteArrayOutputStream();
             ZipOutputStream zip = new ZipOutputStream(baos);
 
-            ZipEntry entry = new ZipEntry("targets.csv");
+            String mimetype = DownloadEntities.getDownloadMimeType(Target.class);
+            String suffix = mimetype.endsWith("zip") ? ".zip" : ".csv";
+            ZipEntry entry = new ZipEntry("targets"+suffix);
             zip.putNextEntry(entry);
             zip.write(DownloadEntities.downloadEntities(targets));
             zip.closeEntry();
