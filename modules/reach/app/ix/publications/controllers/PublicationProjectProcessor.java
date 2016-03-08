@@ -995,8 +995,10 @@ public class PublicationProjectProcessor extends Controller {
                 firstname = "(bill william)";
             else if ("gene".equalsIgnoreCase(firstname)
                      || "eugen".equalsIgnoreCase(firstname)
-                     || "eugene".equalsIgnoreCase(firstname))
+                     || "eugene".equalsIgnoreCase(firstname)) {
+                lastname = "(beuhler buehler)";
                 firstname = "(gene eugen eugene)";
+            }
             else if ("henrike".equalsIgnoreCase(firstname))
                 lastname = "(veith nelson)";
             else if ("Wichterman".equalsIgnoreCase(lastname)
