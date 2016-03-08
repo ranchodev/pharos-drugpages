@@ -50,6 +50,26 @@ public class DownloadEntities {
         return sb.toString();
     }
 
+    static String diseaseFromTarget(Target t) throws Exception {
+        StringBuilder sb2 = new StringBuilder();
+        String turl = routes.IDGApp.target(csvQuote(IDGApp.getId(t))).toString();
+        String uniprot = csvQuote(IDGApp.getId(t));
+
+        List<IDGApp.DiseaseRelevance> diseases = IDGApp.getDiseases(t);
+        for (IDGApp.DiseaseRelevance dr : diseases) {
+            sb2.append(turl).append(",").
+                    append(uniprot).append(",").
+                    append(IDGApp.getId(dr.disease)).append(",").
+                    append(csvQuote(dr.disease.getName())).append(",").
+                    append(csvQuote(dr.disease.getDescription())).append(",").
+                    append(csvQuote(dr.zscore)).append(",").
+                    append(dr.conf).append(",").
+                    append("http://diseases.jensenlab.org/Entity?documents=10&type1=9606&id2=" + IDGApp.getId(dr.disease) + "&id1=" + t.getSynonym(Commons.STRING_ID).term).
+                    append("\n");
+        }
+        return sb2.toString();
+    }
+
     static String exprFromTarget(Target t) {
         StringBuilder sb2 = new StringBuilder();
         String turl = routes.IDGApp.target(csvQuote(IDGApp.getId(t))).toString();
@@ -111,7 +131,10 @@ public class DownloadEntities {
         String uniprot = csvQuote(IDGApp.getId(t));
 
 
+        long start = System.currentTimeMillis();
         List<Ligand> ligands = IDGApp.getLigandsWithActivity(t);
+        long end = System.currentTimeMillis();
+//        System.out.println("Got "+ligands.size()+" in "+ ((end-start)/1000.0)+"s for "+IDGApp.getId(t));
         for (Ligand l : ligands) {
             VNum act = IDGApp.getActivity(t, l);
             String actVal = act == null ? "" : act.getNumval().toString();
@@ -257,6 +280,10 @@ public class DownloadEntities {
         return sb.toString();
     }
 
+    static String csvQuote(Double d) {
+        return csvQuote(String.valueOf(d));
+    }
+
     static String csvQuote(String s) {
         if (s == null || s.trim().equals("null")) return "";
         if (s.contains("\"")) s = s.replace("\"", "\\\"");
@@ -357,6 +384,17 @@ public class DownloadEntities {
         }
         byte[] exprFile = sb.toString().getBytes();
 
+        // Diseases
+        sb = new StringBuilder();
+        tmp = "URL,Uniprot ID,DOID,Name,Description,ZScore,Confidence,Link";
+        tmp = tmp.replace(",", "\",\"");
+        tmp = "\"" + tmp + "\"\n";
+        sb.append(tmp);
+        for (Target t : targets) {
+            sb.append(diseaseFromTarget(t));
+        }
+        byte[] diseaseFile = sb.toString().getBytes();
+
         // Generate zip file with the components
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
         ZipOutputStream zip = new ZipOutputStream(baos);
@@ -399,6 +437,11 @@ public class DownloadEntities {
         entry = new ZipEntry("expression.csv");
         zip.putNextEntry(entry);
         zip.write(exprFile);
+        zip.closeEntry();
+
+        entry = new ZipEntry("diseases.csv");
+        zip.putNextEntry(entry);
+        zip.write(diseaseFile);
         zip.closeEntry();
 
         zip.finish();
