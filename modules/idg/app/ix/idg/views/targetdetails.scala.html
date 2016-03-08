@@ -1095,8 +1095,8 @@
        }
     }
 
-    @defining(IDGApp.getPMIDs(target)) { pmids =>
-       @if(!pmids.isEmpty) {
+    @defining(IDGApp.getPublications(target)) { pubs =>
+       @if(!pubs.isEmpty) {
          <div class="row">
 	   <div class="col-md-12">
               <div class="panel panel-default">
@@ -1110,13 +1110,23 @@
                          <a href="http://www.ncbi.nlm.nih.gov/pubmed?LinkName=gene_pubmed&from_uid=@for(kw <- target.synonyms) {@if("Entrez Gene".equals(kw.label)) {@kw.term}}"><i class="fa fa-book"></i></a></span>
                          <span data-toggle="tooltip" data-html="true" title="<p align='left'>Search Pubmed with this target</p>">
                              <a href="http://www.ncbi.nlm.nih.gov/pubmed/?term=@for(kw <- target.synonyms) {@if("UniProt Gene".equals(kw.label)) {@kw.term}}"><i class="fa fa-search-plus"></i></a></span>
-                         (@pmids.size)</h3>
+                         (@pubs.size)</h3>
 		 </div>
                  <div class="panel-body">
                     <div class="panel-body">
-		      @for(p <- pmids) {
-		        <a href="http://www.ncbi.nlm.nih.gov/pubmed/@p">@p</a>&nbsp;
-		      }
+
+                        <table class="table table-striped">
+                            <tr>
+                                <th>PMID <i class="fa fa-external-link"></i></th>
+                                <th>Title</th>
+                            </tr>
+                            @for(pub <- pubs) {
+                                <tr>
+                                    <td><a href="http://www.ncbi.nlm.nih.gov/pubmed/@pub.pmid">@pub.pmid</a></td>
+                                    <td>@pub.title</td>
+                                </tr>
+                            }
+                        </table>
 		    </div>
 		 </div>
 	      </div>
