@@ -8,9 +8,11 @@
 @import ix.core.models.Keyword
 @import ix.core.models.Text
 @import ix.core.models.VInt
+@import ix.core.models.VNum
 @import ix.core.models.Publication
 @import ix.idg.controllers.ExpressionApp
 @import ix.idg.controllers.IDGApp
+@import ix.idg.controllers.WordCloud
 @import ix.idg.controllers.IDGApp._
 @import ix.idg.controllers.Commons._
 @import ix.idg.controllers.TcrdRegistry
@@ -1111,25 +1113,64 @@
                          <span data-toggle="tooltip" data-html="true" title="<p align='left'>Search Pubmed with this target</p>">
                              <a href="http://www.ncbi.nlm.nih.gov/pubmed/?term=@for(kw <- target.synonyms) {@if("UniProt Gene".equals(kw.label)) {@kw.term}}"><i class="fa fa-search-plus"></i></a></span>
                          (@pubs.size)</h3>
-		 </div>
+                 </div>
                  <div class="panel-body">
-                    <div class="panel-body">
 
-                        <table class="table table-striped">
-                            <tr>
-                                <th>PMID <i class="fa fa-external-link"></i></th>
-                                <th>Title</th>
-                            </tr>
-                            @for(pub <- pubs) {
-                                <tr>
-                                    <td><a href="http://www.ncbi.nlm.nih.gov/pubmed/@pub.pmid">@pub.pmid</a></td>
-                                    <td>@pub.title</td>
-                                </tr>
-                            }
-                        </table>
-		    </div>
-		 </div>
+                     <div>
+                         <ul class="nav nav-tabs" role="tablist">
+                             <li role="presentation" class="active"><a href="#pubwc" aria-controls="pubwc" role="tab" data-toggle="tab">Summary</a></li>
+                             <li role="presentation"><a href="#publist" aria-controls="publist" role="tab" data-toggle="tab">Details</a></li>
+                         </ul>
+                         <div class="tab-content">
+                             <div role="tabpanel" class="tab-pane active" id="pubwc">
+                                 <div id="tpub-wc"></div>
+                             </div>
+                             <div role="tabpanel" class="tab-pane" id="publist">
+
+
+                                     <table class="table table-striped">
+                                         <tr>
+                                             <th>PMID <i class="fa fa-external-link"></i></th>
+                                             <th>Title</th>
+                                         </tr>
+                                         @defining(request().getQueryString("view")) { view =>
+                                             @view match {
+                                                 case "full" => {
+                                                     @for(pub <- pubs) {
+                                                         <tr>
+                                                             <td><a href="http://www.ncbi.nlm.nih.gov/pubmed/@pub.pmid">@pub.pmid</a></td>
+                                                             <td>@pub.title</td>
+                                                         </tr>
+                                                     }
+
+                                                 }
+                                                 case _ => {
+                                                     @for(i <- 0 until Math.min(10, pubs.size())) {
+                                                         <tr>
+                                                             <td><a href="http://www.ncbi.nlm.nih.gov/pubmed/@pubs.get(i).pmid">@pubs.get(i).pmid</a></td>
+                                                             <td>@pubs.get(i).title</td>
+                                                         </tr>
+
+                                                     }
+                                                     @if(pubs.size() > 10) {
+                                                         <tr>
+                                                             <td><a href="@request().uri?view=full">More...</a></td>
+                                                             <td></td>
+                                                         </tr>
+                                                     }
+                                                 }
+                                             }
+                                         }
+                                     </table>
+
+                             </div>
+                         </div>
+                     </div>
+
+		        </div>
 	      </div>
+
+
 	   </div>
 	 </div>
        }
@@ -1202,6 +1243,8 @@ role="dialog" aria-labelledby="modalLabelFolder" aria-hidden="true">
     <script type="text/javascript" src='@routes.Assets.at("javascripts/underscore.js")'></script>
     <script type="text/javascript" src='@routes.Assets.at("javascripts/underscore.string.js")'></script>
     <script type="text/javascript" src='@routes.Assets.at("javascripts/cart.js")'></script>
+    <script type="text/javascript" src='@routes.Assets.at("javascripts/d3.layout.cloud.js")'></script>
+    <script type="text/javascript" src='@routes.Assets.at("javascripts/wordcloud.js")'></script>
     <link type="text/css" rel="stylesheet" href='@routes.Assets.at("stylesheets/d3-tip.css")' />
     <link type="text/css" rel="stylesheet" href='@routes.Assets.at("stylesheets/radar-chart.css")' />
     <link type="text/css" rel="stylesheet" href='@routes.WebJarAssets.at(WebJarAssets.locate("morris.css"))' />
@@ -1227,6 +1270,15 @@ $(document).ready(function () {
     _.each(tocs, function(o, idx, l) {
         $("#toc" ).append("<li><a href='#"+ o.aname+"'>"+ o.tname+"</a></li>");
     });
+
+    /* Word cloud for text mined pubs */
+    @defining(WordCloud.textHistogram(target, "title", "sqrt")) { counts =>
+        wordcloud ( "tpub-wc", 600, 300, "foo", [
+            @for(count <- counts) {
+                {text:'@count.label', size:@count.numval},
+            }
+        ]);
+    }
 
     /* Cart related methods and vars */
     $.ajax({
