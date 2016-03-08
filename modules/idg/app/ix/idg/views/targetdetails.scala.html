@@ -1207,10 +1207,15 @@ $(function () {
 $(document).ready(function () {
 
     /* populate TOC menu */
+    var tocs = [];
     $("a[tocname]" ).each(function(){
         var aname = $(this ).attr("name");
         var tname = $(this ).attr("tocname");
-        $("#toc" ).append("<li><a href='#"+aname+"'>"+tname+"</a></li>");
+        tocs.push( {aname:aname, tname:tname} );
+    });
+    tocs = _.sortBy(tocs, 'tname');
+    _.each(tocs, function(o, idx, l) {
+        $("#toc" ).append("<li><a href='#"+ o.aname+"'>"+ o.tname+"</a></li>");
     });
 
     /* Cart related methods and vars */
