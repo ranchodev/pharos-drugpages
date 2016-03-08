@@ -319,9 +319,9 @@ public class DownloadEntities {
         tmp = tmp.replace(",", "\",\"");
         tmp = "\"" + tmp + "\"\n";
         sb.append(tmp);
-        for (Target t : targets) {
-            sb.append(ligandFromTarget(t));
-        }
+//        for (Target t : targets) {
+//            sb.append(ligandFromTarget(t));
+//        }
         byte[] ligandFile = sb.toString().getBytes();
 
         // Gene RIFs
