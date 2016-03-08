@@ -1778,6 +1778,13 @@ public class TcrdRegistry extends Controller implements Commons {
                         pub.pmid = pmid;
                         pub.title = rset.getString("title");
                         pub.abstractText = rset.getString("abstract");
+
+                        String date = rset.getString("date");
+                        Integer year = null;
+                        if (date != null) {
+                            year = Integer.parseInt(date.split("-")[0]);
+                        }
+                        pub.year = year;
                         pub.save();
                     }
                     XRef ref = new XRef (pub);

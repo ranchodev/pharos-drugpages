@@ -1131,6 +1131,7 @@
                                      <table class="table table-striped">
                                          <tr>
                                              <th>PMID <i class="fa fa-external-link"></i></th>
+                                             <th>Year</th>
                                              <th>Title</th>
                                          </tr>
                                          @defining(request().getQueryString("view")) { view =>
@@ -1139,6 +1140,7 @@
                                                      @for(pub <- pubs) {
                                                          <tr>
                                                              <td><a href="http://www.ncbi.nlm.nih.gov/pubmed/@pub.pmid">@pub.pmid</a></td>
+                                                             <td>@pub.year</td>
                                                              <td>@pub.title</td>
                                                          </tr>
                                                      }
@@ -1148,6 +1150,7 @@
                                                      @for(i <- 0 until Math.min(10, pubs.size())) {
                                                          <tr>
                                                              <td><a href="http://www.ncbi.nlm.nih.gov/pubmed/@pubs.get(i).pmid">@pubs.get(i).pmid</a></td>
+                                                             <td>@pubs.get(i).year</td>
                                                              <td>@pubs.get(i).title</td>
                                                          </tr>
 
