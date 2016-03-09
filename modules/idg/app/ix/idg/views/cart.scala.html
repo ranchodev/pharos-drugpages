@@ -22,6 +22,26 @@
     </li>
 }
 
+@getdoid(t: Disease) = {
+    @* We only consider the first DOID, even if there are alternates *@
+    @defining(t.getSynonym("DOID", UNIPROT_DISEASE)) { id =>
+        @if(id != null) {
+            <a href="@id.href">@id.term</a>
+        }
+    }
+}
+
+@diseaserow(d: Disease) = {
+    <tr id="row-@IDGApp.getId(d)">
+        <td><input type="checkbox" class="cb-table-row" id="cb-@IDGApp.getId(d)" /></td>
+        <td>@getdoid(d)</td>
+        <td><a href="@ix.idg.controllers.routes.IDGApp.disease(IDGApp.getId(d))">@d.name.capitalize</a></td>
+        <td>@if(d.getDescription() != null) {
+            @d.getDescription().replace("_", " ")
+        } else {}</td>
+    </tr>
+}
+
 @tabrow(t: Target) = {
     <tr id="row-@IDGApp.getId(t)">
         <td><input type="checkbox" class="cb-table-row" id="cb-@IDGApp.getId(t)" /></td>
@@ -79,10 +99,16 @@
             </div>
             <div class="col-md-9">
 
+    @if(targets.size() == 0 && diseases.size() == 0 && ligands.size() == 0) {
+        <h3>No entries in this dossier</h3>
+    }
+
+    @if(targets.size() > 0){
     <form>
+        <h3>Targets</h3>
     <table id="target-table" class="table table-striped">
         <tr>
-            <th><button id="cb-addall" class="btn btn-default" type="button">Select all</button></th>
+            <th><button id="cb-addall" class="btn btn-default" type="button"><i class="fa fa-check fa-fw"></i></button></button></th>
             <th>Name</th>
             <th>Development Level</th>
             <th>Target Family</th>
@@ -99,6 +125,24 @@
         }
     </table>
     </form>
+    }
+
+    @if(diseases.size() > 0) {
+        <form>
+            <h3>Diseases</h3>
+            <table id="disease-table" class="table table-striped">
+                <tr>
+                    <th><button id="cb-addall" class="btn btn-default" type="button"><i class="fa fa-check fa-fw"></i></button></th>
+                    <th>ID <i class="fa fa-external-link"></i></th>
+                    <th>Name</th>
+                    <th>Description</th>
+                </tr>
+                @for(d <- diseases) {
+                    @diseaserow(d)
+                }
+            </table>
+        </form>
+    }
 
     </div>
     </div>

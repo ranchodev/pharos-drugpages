@@ -8,61 +8,227 @@
 @(current: Int, rows: Int, total: Int, pages: Array[Int],
         facets: Array[FacetDecorator], diseases: List[Disease])
 
-@getdoid(t: Disease) = {
+    @getdoid(t: Disease) = {
     @* We only consider the first DOID, even if there are alternates *@
     @defining(t.getSynonym("DOID", UNIPROT_DISEASE)) { id =>
-      @if(id != null) {
-        <a href="@id.href">@id.term</a>
-      }
+        @if(id != null) {
+            <a href="@id.href">@id.term</a>
+        }
     }
 }
 
-@tabrow(t: Disease) = {
+    @tabrow(t: Disease) = {
     <tr>
+        <td><input type="checkbox" class="cb-table-row" id="cb-@IDGApp.getId(t)" /></td>
         <td>@getdoid(t)</td>
         <td><a href="@ix.idg.controllers.routes.IDGApp.disease(IDGApp.getId(t))">@t.name.capitalize</a></td>
-        <td>@if(t.getDescription() != null){
+        <td>@if(t.getDescription() != null) {
             @t.getDescription().replace("_", " ")
         } else {}</td>
     </tr>
 }
 
-@ix.ncats.views.html.content("Diseases", "ix.idg.models.Disease",
+@ix.ncats.views.html._content("Diseases", "ix.idg.models.Disease",
     ix.idg.controllers.routes.IDGApp.diseases().url,
-    current, rows, total, pages, facets){ @diseasemenu() }{
-<ol class="breadcrumb">
-  <li><a href="@ix.idg.controllers.routes.IDGApp.index()"><span class="fa fa-home"></span> Home</a></li>
-  @defining(request().queryString.get("facet")) { facets =>
-     @if(facets != null) {
-      <li><a href="@ix.idg.controllers.routes.IDGApp.diseases()">Diseases</a></li>
-       @for(f <- facets) {
-         @if(f.startsWith(DiseaseOntologyRegistry.CLASS)) {
-	     @for(a <- IDGApp.getDiseaseAncestry(f.substring(f.indexOf('/')+1))) {
-	        <li><a href="@a.href">@a.term</a></li>
-             }
-	     <li class="active">@f.substring(f.indexOf('/')+1)</li>
-	  }
-       }
-     } else {
-       <li class="active">Diseases</li>
-     }
-  }
-  
-</ol>
+    current, rows, total, pages, facets) {
+    @diseasemenu()
+} {
+    <ol class="breadcrumb">
+        <li><a href="@ix.idg.controllers.routes.IDGApp.index()"><span class="fa fa-home"></span> Home</a></li>
+        @defining(request().queryString.get("facet")) { facets =>
+            @if(facets != null) {
+                <li><a href="@ix.idg.controllers.routes.IDGApp.diseases()">Diseases</a></li>
+                @for(f <- facets) {
+                    @if(f.startsWith(DiseaseOntologyRegistry.CLASS)) {
+                        @for(a <- IDGApp.getDiseaseAncestry(f.substring(f.indexOf('/') + 1))) {
+                            <li><a href="@a.href">@a.term</a></li>
+                        }
+                        <li class="active">@f.substring(f.indexOf('/') + 1)</li>
+                    }
+                }
+            } else {
+                <li class="active">Diseases</li>
+            }
+        }
+
+    </ol>
     @inprogress("diseases")
-}{
-    <table class="table table-striped">
-      <tr>
-        <th>ID <i class="fa fa-external-link"></i></th>
-        <th>Name</th>
-        <th>Description</th>
-      </tr>
-      @for(t <- diseases) {
-          @tabrow(t)
-      }
+} {
+    <table class="table table-striped" id="disease-table">
+        <tr>
+            <th><button id="cb-addall" alt="Toggle check all"
+            style="padding: 3px"
+            class="btn btn-default" type="button">
+                <i class="fa fa-check fa-fw"></i></button></th>
+            <th>ID <i class="fa fa-external-link"></i></th>
+            <th>Name</th>
+            <th>Description</th>
+        </tr>
+        @for(t <- diseases) {
+            @tabrow(t)
+        }
     </table>
-}(HtmlFormat.empty)
+} {
+    <div class="dropdown pull-right">
+        <button type="button" class="btn btn-default dropdown-toggle"
+        data-toggle="dropdown" style="margin-right : 1 px">
+            <i class="fa fa-shopping-cart"></i>&nbsp;<span id="sc-count"></span>
+        </button>
+        <ul class="dropdown-menu pull-left">
+            <li><a href="#" id="sc-add-selected">Add Selected</a></li>
+            <li><a href="#" id="sc-add-all">Add All</a></li>
+            <li><a href="@ix.idg.controllers.routes.DossierApp.view(null)" id="sc-view">View Collections</a></li>
+            <li><a href="#" id="sc-empty">Empty Collection</a></li>
+        </ul>
+    </div>
+} {
+    @HtmlFormat.empty
+}
+
+
+<div class="modal fade" id="modal-folder" tabindex="-1"
+role="dialog" aria-labelledby="modalLabelFolder" aria-hidden="true">
+    <div class="modal-dialog modal-lg" style="width : 40 % ; ">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close"
+                data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="modalLabelFolder">Select a dossier</h4>
+            </div>
+            <div class="modal-body">
+                @*<div class="row">*@
+            <div id="combo-container" >
+                <input id='folder-combobox' class="folder-typeahead" type="text">
+                <button type="button" id="button-select-folder" class="btn btn-primary">OK</button>
+            </div>
+                @*</div>*@
+            </div>
+        </div>
+    </div>
+</div>
 
 <head>
-  <link type="text/css" rel="stylesheet" href='@routes.Assets.at("stylesheets/main.css")'/>  
+    <link type="text/css" rel="stylesheet" href='@routes.Assets.at("stylesheets/main.css")'/>
+    <script type="text/javascript" src='@routes.Assets.at("javascripts/underscore.js")'></script>
+    <script type="text/javascript" src='@routes.Assets.at("javascripts/underscore.string.js")'></script>
+    <script type="text/javascript" src='@routes.Assets.at("javascripts/cart.js")'></script>
+
+
+<script>
+    $(function() {
+        $('[data-toggle="popover"]').popover();
+        $('[data-toggle="tooltip"]').tooltip ();
+    });
+
+    var _cart_selectType = "selected";
+
+    $(document).ready(function () {
+
+    $('#opener').on('click', function() {
+        var panel = $('#slide-panel');
+        if (panel.hasClass("visible")) {
+        panel.removeClass('visible').animate({'margin-right':'-300px'});
+    } else {
+        panel.addClass('visible').animate({'margin-right':'0px'});
+    }
+    return false;
+    });
+
+    $('#loadmodal').on('shown.bs.modal', function (e) {
+        console.log('loadmodal is shown...');
+    });
+
+    function selectEntities(sel) {
+        return $(sel).map(function() {
+            var id = $(this ).attr("id");
+            if (id.indexOf("-") != -1) id = id.split("-")[1];
+            return id;
+        });
+    }
+
+    var folderNames = ['Default'];
+    @for(f <- ix.idg.controllers.DossierApp.getFolderNames()) {
+        @if( !f.equals("")) {
+                folderNames.push('@f');
+        }
+    }
+
+    $("#folder-combobox").typeahead(
+        {hint:true,minLength:1,highlight:true },
+        {source:substringMatcher(folderNames), name:'dossiers'}
+    );
+    $('#folder-combobox' ).typeahead('val', "Default");
+    $('#folder-combobox').on("typeahead:selected", function (evt, val, d) {
+        if (d == 'MeSH') {}
+        else $('#folder-combobox').typeahead('val', +val.value);
+    });
+
+    $("#button-select-folder" ).on('click', function() {
+        $('#modal-folder').modal('hide');
+        var selectedFolderName = $("#folder-combobox" ).typeahead('val');
+        var ents;
+        if (_cart_selectType == 'selected')
+            ents = selectEntities("#disease-table  input:checked");
+        else if (_cart_selectType == 'all')
+            ents = selectEntities("#disease-table  input");
+        addEntitiesToShoppingCart(ents, 'ix.idg.models.Disease', selectedFolderName, '@ix.idg.controllers.routes.DossierApp.addEntities()');
+    });
+
+    $.ajax({
+        url:'@ix.idg.controllers.routes.DossierApp.count',
+        dataType:'text',
+        success:function(d) {
+            $("#sc-count" ).html(d);
+        }
+    })
+
+    // select all checkboxes in the table
+    $("#cb-addall" ).click(function(e) {
+        var cb = $("#cb-addall").find("i");
+        var table = $("#disease-table");
+        if (cb.hasClass('fa-check')) {
+            $ ( 'td input:checkbox',table ).prop ( 'checked', true ) ;
+            $("#cb-addall" ).html('<i class="fa fa-remove fa-fw"></i>');
+        } else {
+            $ ( 'td input:checkbox',table ).prop ( 'checked', false ) ;
+            $("#cb-addall" ).html('<i class="fa fa-check fa-fw"></i>');
+        }
+    });
+
+    $("#sc-add-selected" ).click(function(e) {
+        _cart_selectType = 'selected';
+        $('#modal-folder').modal('show');
+    });
+    $("#sc-add-all" ).click(function(e) {
+        _cart_selectType = 'all';
+        $('#modal-folder').modal('show');
+    });
+
+    $("#sc-empty").click(function (e) {
+        $.get('@ix.idg.controllers.routes.DossierApp.emptyCart', function (d) {
+            $("#sc-count" ).html('');
+        });
+    });
+
+
+
+    function showLoadModal () {
+        console.log('showing modal...');
+        $('#loadmodal').modal({
+            keyboard: false,
+            show: true,
+            backdrop: 'static'
+        });
+    }
+
+    $(window).unload(function () {
+        $('#loadmodal').modal('hide');
+        $('#hgramModal').modal('hide');
+        $('#modal-folder').modal('hide');
+    });
+
+}) /** document.ready **/
+</script>
+
 </head>
