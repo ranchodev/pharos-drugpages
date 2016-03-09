@@ -36,7 +36,7 @@
         <td>@t.patentCount</td>
         <td>@t.antibodyCount</td>
         @*<td><div style="display: inline;" id="radar-@IDGApp.getId(t)" class="radar-div"></div></td>*@
-        <td><div id="radar-@IDGApp.getId(t)" class="radar-div"></div></td>
+        <td><div id="radar-@IDGApp.getId(t)" class="radar-div" genesym="@IDGApp.getGeneSymbol(t)"></div></td>
     </tr>
 }
 
@@ -115,7 +115,7 @@
   </div>
 </div>
 
-@modalradar(null)
+@modalradar(null, null)
 
 <div class="modal fade" id="hgramModal" tabindex="-1"
      role="dialog" aria-labelledby="hgramModalLabel" aria-hidden="true" >
@@ -262,6 +262,7 @@ $(document).ready(function () {
 
     $("#target-table" ).on("click", ".radar-div", function() {
         var target = $(this ).attr("id" ).split("-")[1];
+        var gene = $(this ).attr("genesym" );
         $.ajax({
             url: '@ix.idg.controllers.routes.HarmonogramApp.hgForTarget(null,null,null,"radar-attr_type")'+'&q='+target,
             dataType:"json",
@@ -269,6 +270,7 @@ $(document).ready(function () {
                 var chartConfig = getModalChartConfig('@ix.idg.controllers.routes.HarmonogramApp.dataSources(null,null)'+'?field=radar-attr_type');
                 $("#modal-radardiv" ).attr("target", target);
                 $("#modalLabelRadar" ).text("Data type summary for "+target);
+                $("#radardownloadlink" ).attr("href", "http://amp.pharm.mssm.edu/Harmonizome/gene/"+gene);
                 renderChart(data, chartConfig);
             }
         });

@@ -1856,6 +1856,14 @@ public class IDGApp extends App implements Commons {
             }
         };
 
+    public static String getGeneSymbol(Target t) {
+        for (Keyword kw : t.getSynonyms()) {
+            if (kw.label.equals(UNIPROT_GENE))
+                return kw.term;
+        }
+        return null;
+    }
+
     static Result _getLigandResult (List<Ligand> ligands) throws Exception {
         // force it to show only one since it's possible that the provided
         // name isn't unique
