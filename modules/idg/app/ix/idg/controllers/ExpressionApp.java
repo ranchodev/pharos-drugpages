@@ -7,6 +7,7 @@ import ix.core.models.XRef;
 import ix.idg.models.Expression;
 import ix.idg.models.Target;
 import ix.ncats.controllers.App;
+import org.w3c.dom.Attr;
 import org.w3c.dom.Document;
 import org.w3c.dom.NamedNodeMap;
 import org.w3c.dom.Node;
@@ -31,12 +32,13 @@ public class ExpressionApp extends App {
     static final Map<String, String> onm;
 
     static {
-        onm = new HashMap<>();
-        onm.put("brain", "nervous_system");
-        onm.put("cortex", "nervous_system");
-        onm.put("pituitary", "nervous_system");
-        onm.put("cerebra", "nervous_system");
-        onm.put("cerebell", "nervous_system");
+        onm = new LinkedHashMap<>();
+        onm.put("spinal", "nervous_system");
+        onm.put("brain", "brain");
+        onm.put("cortex", "brain");
+        onm.put("pituitary", "brain");
+        onm.put("cerebra", "brain");
+        onm.put("cerebell", "brain");
         onm.put("bone", "bone");
         onm.put("blood", "blood");
         onm.put("artery", "blood");
@@ -187,7 +189,6 @@ public class ExpressionApp extends App {
                                 else if (expr.getQualValue().toLowerCase().equals("medium")) theLevel = 1;
                                 else if (expr.getQualValue().toLowerCase().equals("high")) theLevel = 2;
                             }
-
                             String tissue = onm.get(key);
                             if (organs.containsKey(tissue)) {
                                 Integer level = organs.get(tissue);
@@ -224,11 +225,17 @@ public class ExpressionApp extends App {
                     Node node = XPath.selectNode("//*[@id='" + tissue + "']", doc);
                     NamedNodeMap attributes = node == null ? null : node.getAttributes();
                     if (attributes == null) continue;
-                    Node attrNode = attributes.getNamedItem("fill");
+                    Node attrNode = attributes.getNamedItem("style");
+                    if (attrNode == null) {
+                        Attr attr = doc.createAttribute("style");
+                        attr.setValue("");
+                        attributes.setNamedItem(attr);
+                        attrNode = attributes.getNamedItem("style");
+                    }
                     if (ds.equals(Commons.IDG_EXPR))
-                        attrNode.setNodeValue(confidenceColorsIDG[organs.get(tissue)]);
+                        attrNode.setNodeValue("fill:"+confidenceColorsIDG[organs.get(tissue)]+";");
                     else
-                        attrNode.setNodeValue(confidenceColorsOther[organs.get(tissue)]);
+                        attrNode.setNodeValue("fill:"+confidenceColorsOther[organs.get(tissue)]+";");
                     attributes.setNamedItem(attrNode);
                 }
                 return ok(xml2str(doc));
