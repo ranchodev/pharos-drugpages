@@ -167,6 +167,7 @@ public class ExpressionApp extends App {
                     else if ("hpm".equalsIgnoreCase(source)) ds = Commons.HPM_EXPR;
                     else if ("gtex".equalsIgnoreCase(source)) ds = Commons.GTEx_EXPR;
                     else if ("hpa".equalsIgnoreCase(source)) ds = Commons.HPA_RNA_EXPR;
+                    else if ("consensus".equalsIgnoreCase(source)) ds = Commons.CONSENSUS_EXPR;
                 }
 
                 HashMap<String,Integer> organs = new HashMap<>();
@@ -179,7 +180,10 @@ public class ExpressionApp extends App {
 
                     // map to canonical organ terms
                     for (String key : onm.keySet()) {
-                        if (expr.getTissue().toLowerCase().contains(key)) {
+
+                        // since tissue terms from CONSENSUS_EXPR will always map to the
+                        // svg id values, we don't have to check the mapping
+                        if (expr.getTissue().toLowerCase().contains(key) || ds.equals(Commons.CONSENSUS_EXPR)) {
 
                             // derive the expr level or confidence
                             Integer theLevel = 0;
