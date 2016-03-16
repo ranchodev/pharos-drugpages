@@ -354,7 +354,7 @@
    @defining(IDGApp.getActivity(target, lig)) { act =>
       @if(act != null) {
          <td class="valign-center">
-	     <code>@{act.getLabel()} @{"%1$.2f".format(act.getValue())}</code>
+	     <code>@{act.label} @{"%1$.2f".format(act.getValue())}</code>
 	 </td>
       } else {
          <td></td>
