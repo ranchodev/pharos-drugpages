@@ -2,7 +2,7 @@
  * code shameless stolen from http://bl.ocks.org/mbostock/7607535
  */
 
-function circlepacking (source) {
+function circlepacking (source, base) {
     var margin = 20,
 	diameter = 760;
     
@@ -14,7 +14,7 @@ function circlepacking (source) {
     var pack = d3.layout.pack()
 	.padding(2)
 	.size([diameter - margin, diameter - margin])
-	.value(function(d) { return d.size; })
+	.value(function(d) { return d.size ? d.size : 100; })
     
     var svg = d3.select("body").append("svg")
 	.attr("width", diameter)
@@ -46,15 +46,15 @@ function circlepacking (source) {
 	    .data(nodes)
 	    .enter().append("circle")
 	    .attr("class", function(d) {
+		var leaf = d.tdl ? "node--leaf-"+d.tdl : "node--leaf";
 		return d.parent ? d.children
-		    ? "node" : "node node--leaf" : "node node--root"; })
+		    ? "node" : "node "+leaf : "node node--root"; })
 	    .style("fill", function(d) {
 		return d.children ? color(d.depth) : null; })
 	    .on("mouseover", function(d) {
 		return tooltip
 		    .text(d.name)
-		    .style("visibility", "visible")
-		;})
+		    .style("visibility", "visible"); })
 	    .on("mousemove", function () {
 		return tooltip
 		    .style("top", (d3.event.pageY-10)+"px")
@@ -68,7 +68,15 @@ function circlepacking (source) {
 	    .data(nodes)
 	    .enter()
             .append("svg:a").attr("xlink:target","_blank")
-	    .attr("xlink:href", function(d){ return d.url; })
+	    .attr("xlink:href", function(d) {
+		if (d.url) return d.url;
+		var url;
+		if (base) {
+		    url = base;
+		    url += base.indexOf('?') >= 0 ? '&q="' : '?q="';
+		    url += d.name+'"';
+		}
+		return url; })
 	    .append("text")
 	    .attr("class", "label")
 	    .style("font-size", "14px")
