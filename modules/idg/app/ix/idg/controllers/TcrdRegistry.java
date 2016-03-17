@@ -1140,6 +1140,17 @@ public class TcrdRegistry extends Controller implements Commons {
                          +target.idgFamily+" DTO");
             
             if (dtoNode != null) {
+                dtoNode.url = routes.IDGApp.target
+                    (IDGApp.getId(target)).url();
+                dtoNode.tdl = target.idgTDL.toString();
+                dtoNode.size = 100;
+                if (target.novelty != null) {
+                    // this assumes novelty is expressed as log10, so that
+                    //  "novel" targets are bigger
+                    dtoNode.size += (int)(10*target.novelty + 0.5);
+                }
+                dtoNode.fullname = target.name;
+                
                 List<DTOParser.Node> nodes = new ArrayList<DTOParser.Node>();
                 for (DTOParser.Node node = dtoNode.parent;
                      node != null
@@ -1150,6 +1161,14 @@ public class TcrdRegistry extends Controller implements Commons {
                 }
                 
                 Collections.reverse(nodes);
+                String enhanced = Play.application()
+                    .configuration().getString("ix.idg.dto.enhanced");
+                if (enhanced != null) {
+                    File file = new File (enhanced);
+                    DTOParser.Node node = nodes.iterator().next();
+                    DTOParser.writeJson(file, node.parent);
+                }
+                
                 for (DTOParser.Node n : nodes) {
                     Keyword kw = KeywordFactory.registerIfAbsent
                         (DTO_PROTEIN_CLASS+" ("+path.size()+")",
@@ -1161,6 +1180,9 @@ public class TcrdRegistry extends Controller implements Commons {
                     for (int i = 0; i < path.size(); ++i)
                         sb.append("\t");
                     Logger.debug(kw.id+" "+kw.label+" \""+kw.term+"\" "+kw.href);
+                    if (n.url == null)
+                        n.url = routes.IDGApp.targets(null, 10, 1).url()
+                            +"?facet="+kw.label+"/"+kw.term;
                     
                     target.properties.add(kw);
                     path.add(kw);
@@ -2623,14 +2645,34 @@ public class TcrdRegistry extends Controller implements Commons {
                  +(rows > 0 ? ("limit "+rows) : "")
                  );
 
-            DTOParser dto = new DTOParser ();
-            String dtofile = Play.application().configuration().getString("ix.idg.dto");
-            if (dtofile != null) {
-                try {
-                    dto.parse(new File (dtofile));
+            DTOParser dto = null;
+            String enhanced = Play.application()
+                .configuration().getString("ix.idg.dto.enhanced");
+            if (enhanced != null) {
+                File file = new File (enhanced);
+                if (file.exists()) {
+                    // load the dto from this file
+                    Logger.debug("Loading enhanced DTO file..."+file);
+                    dto = DTOParser.readJson(file);
                 }
-                catch (IOException ex) {
-                    ex.printStackTrace();
+            }
+                            
+            if (dto == null) {
+                String dtofile = Play.application()
+                    .configuration().getString("ix.idg.dto.basic");
+                File file = new File (dtofile);
+                if (file.exists()) {
+                    Logger.debug("Loading basic DTO file..."+dtofile);
+                    try {
+                        dto = new DTOParser ();
+                        dto.parse(file);
+                    }
+                    catch (IOException ex) {
+                        ex.printStackTrace();
+                    }
+                }
+                else {
+                    Logger.warn("!!!! NO DTO AVAILABLE !!!!");
                 }
             }
                  
@@ -2687,6 +2729,9 @@ public class TcrdRegistry extends Controller implements Commons {
     }
     
     public static Result index () {
+        if (Play.isProd()) {
+            return redirect (routes.IDGApp.index());
+        }
         return ok (ix.idg.views.html.tcrd.render("IDG TCRD Loader"));
     }
 }

@@ -8,7 +8,6 @@ function circlepacking (source) {
     
     var color = d3.scale.linear()
 	.domain([-1, 5])
-    //.range(["hsl(152,80%,80%)", "hsl(228,30%,40%)"])
 	.range(["hsl(180,80%,80%)", "hsl(240,30%,40%)"])
 	.interpolate(d3.interpolateHcl);
 
@@ -67,7 +66,10 @@ function circlepacking (source) {
 	
 	var text = svg.selectAll("text")
 	    .data(nodes)
-	    .enter().append("text")
+	    .enter()
+            .append("svg:a").attr("xlink:target","_blank")
+	    .attr("xlink:href", function(d){ return d.url; })
+	    .append("text")
 	    .attr("class", "label")
 	    .style("font-size", "14px")
 	    .style("fill-opacity", function(d) {
@@ -83,7 +85,9 @@ function circlepacking (source) {
 
 	d3.select("body")
 	    .style("background", color(-1))
-	    .on("click", function() { zoom(root); });
+	    .on("click", function() {
+		zoom(root);
+	    });
 	
 	zoomTo([root.x, root.y, root.r * 2 + margin]);
 	

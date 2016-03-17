@@ -6,13 +6,25 @@
 @targetmenu(ctx)
 }(HtmlFormat.empty){
 <div class="container">
+  <div class="page-header">
+    <h1>Drug Target Ontology
+      <div class="pull-right">
+        <a href="@ix.idg.controllers.routes.IDGApp.targets()"
+           class="btn btn-primary btn-lg">Browse</a>
+      </div>
+    </h1>
+  </div>
   <div class="col-lg-12">
-    <iframe sandbox="allow-scripts allow-forms allow-same-origin"
+    <iframe sandbox="allow-scripts allow-forms allow-same-origin allow-popups"
 	    src='@ix.idg.controllers.routes.DTOHier.dtoViz'
 	    marginwidth="0" marginheight="0"
 	    frameBorder="0"
-	    style="height:100%; width:100%" scrolling="yes">
+	    style="height:100%; width:100%" scrolling="no">
     </iframe>
   </div>
 </div>
+
+<head>
+  <link type="text/css" rel="stylesheet" href='@routes.Assets.at("stylesheets/main.css")'/>
+</head>
 }
