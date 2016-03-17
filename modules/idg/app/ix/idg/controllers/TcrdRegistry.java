@@ -688,7 +688,7 @@ public class TcrdRegistry extends Controller implements Commons {
                 Expression expr = new Expression();
                 expr.proteinId = protein;
                 expr.source = rset.getString("etype");
-                expr.tissue = rset.getString("tissue"); 
+                expr.tissue = rset.getString("tissue");
                 expr.confidence = rset.getDouble("conf");
                 expr.qualValue = rset.getString("qual_value"); 
                 expr.numberValue = rset.getDouble("number_value");
@@ -700,6 +700,13 @@ public class TcrdRegistry extends Controller implements Commons {
                     expr.sourceid = GTEx_EXPR;
                     Keyword tissue = KeywordFactory.registerIfAbsent
                         (GTEx_TISSUE, expr.tissue, null);
+                    target.addIfAbsent((Value)tissue);
+                }
+                else if (expr.source.startsWith("Consensus")) {
+                    sourceUrl = "http://www.unm.edu/";
+                    expr.sourceid = CONSENSUS_EXPR;
+                    Keyword tissue = KeywordFactory.registerIfAbsent
+                            (CONSENSUS_TISSUE, expr.tissue, null);
                     target.addIfAbsent((Value)tissue);
                 }
                 else if (expr.source.startsWith("HPM Gene")) {
