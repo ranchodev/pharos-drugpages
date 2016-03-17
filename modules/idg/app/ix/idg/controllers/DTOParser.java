@@ -5,37 +5,40 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 
 import java.io.*;
 import java.util.*;
 
 public class DTOParser {
     
-    public class DTONode {
+    public class Node {
         public String id;
         public String name;
-        public DTONode parent;
-        public List<DTONode> children = new ArrayList<DTONode>();
+        @JsonIgnore
+        public Node parent;
+        public List<Node> children = new ArrayList<Node>();
+        public Integer size;
 
-        protected DTONode (String id, String name) {
+        protected Node (String id, String name) {
             this.id = id;
             this.name = name;
         }
     }
 
-    DTONode root;
+    Node root;
     // quick lookup based on a given name
-    Map<String, DTONode> nodes = new HashMap<String, DTONode>();
-    Map<String, DTONode> ids = new HashMap<String, DTONode>();
+    Map<String, Node> nodes = new HashMap<String, Node>();
+    Map<String, Node> ids = new HashMap<String, Node>();
 
     public DTOParser () {
     }
 
-    DTONode parse (DTONode parent, JsonNode node) {
+    Node parse (Node parent, JsonNode node) {
         String id = node.get("id").asText();
         String name = node.get("name").asText();
 
-        DTONode n = new DTONode (id, name);
+        Node n = new Node (id, name);
         n.parent = parent;
 
         // index for quick lookup
@@ -56,7 +59,7 @@ public class DTOParser {
         return n;
     }
 
-    public DTONode get (String name) {
+    public Node get (String name) {
         if (name.startsWith("DTO_"))
             return ids.get(name);
         return nodes.get(name);
@@ -64,13 +67,13 @@ public class DTOParser {
 
     public int size () { return nodes.size(); }
 
-    public DTONode parse (InputStream is) throws IOException {
+    public Node parse (InputStream is) throws IOException {
         ObjectMapper mapper = new ObjectMapper ();
         JsonNode node = mapper.readTree(is);
         return root = parse (null, node);
     }
 
-    public DTONode parse (File file) throws IOException {
+    public Node parse (File file) throws IOException {
         FileInputStream fis = new FileInputStream (file);
         parse (fis);
         fis.close();
@@ -84,21 +87,26 @@ public class DTOParser {
         }
 
         DTOParser dto = new DTOParser ();
-        DTONode node = dto.parse(new File (argv[0]));
+        Node node = dto.parse(new File (argv[0]));
         System.out.println("DTO file \""+argv[0]+"\" parsed with "+dto.size()+" nodes!");
         for (int i = 1; i < argv.length; ++i) {
             System.out.println("Searching for protein \""+argv[i]+"\"...");
-            DTONode n = dto.get(argv[i]);
+            Node n = dto.get(argv[i]);
             if (n != null) {
                 System.out.println(n.id+": "+n.name);
                 int j = 1;
-                for (DTONode p = n.parent; p != null; p = p.parent) {
+                for (Node p = n.parent; p != null; p = p.parent) {
                     for (int k = 0; k < j; ++k)
                         System.out.print("\t");
                     System.out.println(p.id+": "+p.name);
                     ++j;
                 }
                 System.out.println();
+                System.out.println(">> json...");
+                ObjectMapper mapper = new ObjectMapper ();
+                System.out.println
+                    (mapper.writerWithDefaultPrettyPrinter()
+                     .writeValueAsString(n));
             }
         }
     }

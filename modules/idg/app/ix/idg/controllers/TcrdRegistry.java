@@ -111,7 +111,7 @@ public class TcrdRegistry extends Controller implements Commons {
         Long protein;
         Double novelty;
         Keyword source;
-        DTOParser.DTONode dtoNode;
+        DTOParser.Node dtoNode;
 
         TcrdTarget () {}
         TcrdTarget (String acc, String family, String tdl,
@@ -1133,15 +1133,15 @@ public class TcrdRegistry extends Controller implements Commons {
             }
         }
         
-        void addDTO (Target target, long protein, DTOParser.DTONode dtoNode)
+        void addDTO (Target target, long protein, DTOParser.Node dtoNode)
             throws Exception {
             List<Keyword> path = new ArrayList<Keyword>();
             Logger.debug("Target "+IDGApp.getId(target)+" "
                          +target.idgFamily+" DTO");
             
             if (dtoNode != null) {
-                List<DTOParser.DTONode> nodes = new ArrayList<DTOParser.DTONode>();
-                for (DTOParser.DTONode node = dtoNode.parent;
+                List<DTOParser.Node> nodes = new ArrayList<DTOParser.Node>();
+                for (DTOParser.Node node = dtoNode.parent;
                      node != null
                          && !node.id.equals("DTO_00200000") // Gene
                          && !node.id.equals("DTO_00100000") // Protein
@@ -1150,7 +1150,7 @@ public class TcrdRegistry extends Controller implements Commons {
                 }
                 
                 Collections.reverse(nodes);
-                for (DTOParser.DTONode n : nodes) {
+                for (DTOParser.Node n : nodes) {
                     Keyword kw = KeywordFactory.registerIfAbsent
                         (DTO_PROTEIN_CLASS+" ("+path.size()+")",
                          n.name.replaceAll("/", "-"),
