@@ -445,7 +445,7 @@ public class IDGApp extends App implements Commons {
         IDG_FAMILY,
         IDG_DISEASE,
         IDG_LIGAND,
-        GTEx_TISSUE
+        CONSENSUS_TISSUE
     };
 
     public static final String[] ALL_TARGET_FACETS = {
@@ -456,6 +456,7 @@ public class IDGApp extends App implements Commons {
         IDG_LIGAND,
         IDG_DRUG,
 
+        CONSENSUS_TISSUE,
         IDG_TISSUE,
         GTEx_TISSUE,
         HPM_TISSUE,
