@@ -12,18 +12,50 @@ import java.util.*;
 
 public class DTOParser {
     
-    public class Node {
+    static public class Node {
         public String id;
         public String name;
         @JsonIgnore
         public Node parent;
         public List<Node> children = new ArrayList<Node>();
         public Integer size;
+        public String url;
+        public String tdl;
+        public String fullname;
 
-        protected Node (String id, String name) {
+        public Node () {
+        }
+
+        public Node (String id, String name) {
             this.id = id;
             this.name = name;
         }
+    }
+
+    static void index (DTOParser dto, Node node) {
+        dto.nodes.put(node.name, node);
+        dto.ids.put(node.id, node);
+        for (Node child : node.children) {
+            child.parent = node;
+            index (dto, child);
+        }
+    }
+    
+    static public DTOParser readJson (File file) throws IOException {
+        ObjectMapper mapper = new ObjectMapper ();
+        DTOParser dto = new DTOParser ();
+        dto.root = mapper.readValue(file, Node.class);
+        index (dto, dto.root);
+        return dto;
+    }
+
+    static public void writeJson (File file, DTOParser dto) throws IOException {
+        writeJson (file, dto.root);
+    }
+    
+    static public void writeJson (File file, Node node) throws IOException {
+        ObjectMapper mapper = new ObjectMapper ();
+        mapper.writerWithDefaultPrettyPrinter().writeValue(file, node);
     }
 
     Node root;

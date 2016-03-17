@@ -31,20 +31,24 @@ public class DTOHier extends App {
     
     public static DTOParser getDTO () {
         String param = Play.application()
-            .configuration().getString("ix.idg.dto");
+            .configuration().getString("ix.idg.dto.enhanced");
         if (param == null) {
             throw new RuntimeException ("No dto file specified!");
         }
-
+        
+        File file = new File (param);
+        if (!file.exists())
+            throw new RuntimeException ("DTO file "+file+" is not available!");
+        
         try {
-            DTOParser parser = new DTOParser ();
-            DTOParser.Node root = parser.parse(new File (param));
-            assignRandomSize (root);
+            DTOParser dto = DTOParser.readJson(file);
+            //assignRandomSize (root);
             Logger.debug("## DTO parsed!");
             
-            return parser;
+            return dto;
         }
         catch (IOException ex) {
+            ex.printStackTrace();
             throw new RuntimeException ("Can't parse DTO file "+param);
         }
     }
