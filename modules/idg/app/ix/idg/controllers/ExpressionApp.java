@@ -33,6 +33,28 @@ public class ExpressionApp extends App {
 
     static {
         onm = new LinkedHashMap<>();
+        onm.put("bone","bone");
+        onm.put("nervous_system","nervous_system");
+        onm.put("blood","blood");
+        onm.put("skin","skin");
+        onm.put("gall_bladder","gall_bladder");
+        onm.put("spleen","spleen");
+        onm.put("muscle","muscle");
+        onm.put("pancreas","pancreas");
+        onm.put("urine","urine");
+        onm.put("saliva","saliva");
+        onm.put("lymph_nodes","lymph_nodes");
+        onm.put("thyroid_gland","thyroid_gland");
+        onm.put("eye","eye");
+        onm.put("kidney","kidney");
+        onm.put("adrenal_gland","adrenal_gland");
+        onm.put("bone_marrow","bone_marrow");
+        onm.put("stomach","stomach");
+        onm.put("liver","liver");
+        onm.put("heart","heart");
+        onm.put("lung","lung");
+        onm.put("intestine","intestine");
+
         onm.put("spinal", "nervous_system");
         onm.put("brain", "brain");
         onm.put("cortex", "brain");
@@ -183,7 +205,7 @@ public class ExpressionApp extends App {
 
                         // since tissue terms from CONSENSUS_EXPR will always map to the
                         // svg id values, we don't have to check the mapping
-                        if (expr.getTissue().toLowerCase().contains(key) || ds.equals(Commons.CONSENSUS_EXPR)) {
+                        if (expr.getTissue().toLowerCase().contains(key)) {
 
                             // derive the expr level or confidence
                             Integer theLevel = 0;
