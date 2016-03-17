@@ -615,7 +615,18 @@ public class IDGApp extends App implements Commons {
         }
         return m;
     }
-    
+
+    public static Result sitemap() {
+        StringBuilder sb = new StringBuilder();
+        for (Target t : TargetFactory.finder.all()) {
+            sb.append("https://pharos.nih.gov/idg/targets/").append(getId(t)).append("\n");
+        }
+        for (Disease d : DiseaseFactory.finder.all()) {
+            sb.append("https://pharos.nih.gov/idg/diseases/").append(getId(d)).append("\n");
+        }
+        return(ok(sb.toString()).as("text/plain"));
+    }
+
     @Cached(key="_help", duration= Integer.MAX_VALUE)
     public static Result help() {
         final String key = "idg/help";
