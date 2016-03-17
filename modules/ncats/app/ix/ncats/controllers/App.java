@@ -9,8 +9,11 @@ import java.util.regex.Matcher;
 import java.util.concurrent.Callable;
 import java.util.concurrent.CopyOnWriteArrayList;
 
+import controllers.AssetsBuilder;
 import play.Play;
 import play.Logger;
+import play.api.mvc.Action;
+import play.api.mvc.AnyContent;
 import play.mvc.Controller;
 import play.mvc.Result;
 import play.mvc.Call;
@@ -96,7 +99,12 @@ public class App extends Authentication {
         private static final String DISPLAY_CD_VALUE_RELATIVE = "RELATIVE";
 
         static final String APP_CACHE = App.class.getName();
-    
+
+    private static AssetsBuilder delegate = new AssetsBuilder();
+    public static Action<AnyContent> asset(String path, String file) {
+        return delegate.at(path, file, false);
+    }
+
     static final String RENDERER_URL =
         play.Play.application()
         .configuration().getString("ix.structure.renderer.url");

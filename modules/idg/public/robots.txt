@@ -1,0 +1,3 @@
+User-agent: *
+Disallow:
+Sitemap: https://pharos.nih.gov/idg/sitemap.txt

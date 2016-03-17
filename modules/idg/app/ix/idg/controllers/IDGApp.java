@@ -11,6 +11,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import controllers.AssetsBuilder;
 import ix.core.controllers.EntityFactory;
 import ix.core.controllers.KeywordFactory;
 import ix.core.controllers.PayloadFactory;
@@ -31,6 +32,8 @@ import ix.utils.Util;
 import org.apache.commons.lang3.StringUtils;
 import play.Logger;
 import play.Play;
+import play.api.mvc.Action;
+import play.api.mvc.AnyContent;
 import play.cache.Cached;
 import play.db.ebean.Model;
 import play.libs.Akka;
@@ -51,6 +54,11 @@ import static ix.core.search.TextIndexer.SearchResult;
 public class IDGApp extends App implements Commons {
     static final int MAX_SEARCH_RESULTS = 1000;
     public static final String IDG_RESOLVER = "IDG Resolver";
+
+    private static AssetsBuilder delegate = new AssetsBuilder();
+    public static Action<AnyContent> asset(String path, String file) {
+        return delegate.at(path, file, false);
+    }
 
     public interface Filter<T extends EntityModel> {
         boolean accept (T e);

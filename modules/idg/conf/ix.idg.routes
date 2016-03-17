@@ -51,6 +51,9 @@ GET	/dto		ix.idg.controllers.DTOHier.dto(ctx: String ?= null)
 GET	/dtoviz		ix.idg.controllers.DTOHier.dtoViz
 GET	/dto/:label	ix.idg.controllers.DTOHier.dtoNode(label: String)
 
+GET /robots.txt ix.idg.controllers.IDGApp.asset(path="/public", file="robots.txt")
+GET /sitemap.txt ix.idg.controllers.IDGApp.asset(path="/public", file="sitemap.txt")
+
 ->	/	ix.ncats.Routes
 ->	/	ix.core.test.Routes
 
