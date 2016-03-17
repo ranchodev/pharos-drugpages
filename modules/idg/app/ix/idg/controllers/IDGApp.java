@@ -2105,9 +2105,22 @@ public class IDGApp extends App implements Commons {
                     }
                 });
 
+        final String ligkey = "diseases/"+d.id+"/ligands";
+        List<Ligand> ligs = getOrElse(ligkey, new Callable<List<Ligand>> () {
+            public List<Ligand> call () throws Exception {
+                List<Ligand> ligands = new ArrayList<>();
+                for (XRef ref : d.links) {
+                    if (Ligand.class.isAssignableFrom(Class.forName(ref.kind))) {
+                        Ligand l = (Ligand) ref.deRef();
+                        ligands.add(l);
+                    }
+                }
+                return ligands;
+            }
+        });
         
         return ok(ix.idg.views.html.diseasedetails.render
-                  (d, targets.toArray(new Target[0]), getBreadcrumb (d)));
+                  (d, ligs.toArray(new Ligand[0]), targets.toArray(new Target[0]), getBreadcrumb (d)));
     }
 
     public static List<Keyword> getBreadcrumb (Disease d) {

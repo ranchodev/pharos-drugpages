@@ -1,11 +1,12 @@
 @import ix.idg.models.Disease
 @import ix.idg.models.Target
+@import ix.idg.models.Ligand
 @import ix.core.models.Keyword
 @import ix.core.models.Text
 @import ix.idg.controllers.IDGApp 
 
 
-@(d: Disease, targets: Array[Target], breadcrumb: List[Keyword])
+@(d: Disease, ligands: Array[Ligand], targets: Array[Target], breadcrumb: List[Keyword])
 
 
 @getsyn(t: Disease, label: String) = {
@@ -33,6 +34,13 @@
         <td><a href="@ix.idg.controllers.routes.IDGApp.target(IDGApp.getId(t))">@t.name</a></td>
         <td>@t.idgTDL</td>
         <td>@t.idgFamily</td>
+    </tr>
+}
+
+@ligandrow(l: Ligand) = {
+    <tr>
+        <td><a href="@ix.idg.controllers.routes.IDGApp.ligand(IDGApp.getId(l))">@l.name</a></td>
+        <td>@l.getDescription</td>
     </tr>
 }
 
@@ -106,7 +114,7 @@
                           <a href="#targets" aria-controls="targets" role="tab" data-toggle="tab">Targets (@targets.length)</a>
                         </li>
                         <li role="presentation" >
-                          <a href="#molecules" aria-controls="molecules" role="tab" data-toggle="tab">Molecules</a>
+                          <a href="#molecules" aria-controls="molecules" role="tab" data-toggle="tab">Molecules (@ligands.length)</a>
                         </li>
                         <li role="presentation" >
                           <a href="#trials" aria-controls="trials" role="tab" data-toggle="tab">Clinical Trials</a>
@@ -133,7 +141,22 @@
                           </tbody>
                       </table>
                   </div>
-              <div role="tabpanel" class="tab-pane" id="molecules"></div>
+              <div role="tabpanel" class="tab-pane" id="molecules">
+                  <table class="table table-striped" id="ligandTable">
+                      <thead>
+                          <tr>
+                              <th>Name</th>
+                              <th>Description</th>
+                          </tr>
+                      </thead>
+                      <tbody>
+                      @for(l <- ligands) {
+                          @ligandrow(l)
+                      }
+                      </tbody>
+                  </table>
+
+              </div>
               <div role="tabpanel" class="tab-pane" id="trials"></div>
               <div role="tabpanel" class="tab-pane" id="xrefs">@getxrefs(d)</div>
             </div>

@@ -1635,54 +1635,63 @@ public class TcrdRegistry extends Controller implements Commons {
             
             pstm20.setLong(1, tid);
             final ResultSet rset = pstm20.executeQuery();
+            final Model.Finder<Long, Ligand> ligandFinder = LigandFactory.finder;
             try {
                 int cnt = 0;
                 while (rset.next()) {
                     final String name = rset.getString("name");
-                    Disease d = IxCache.getOrElse(name, new Callable<Disease> () {
-                            public Disease call () throws Exception {
-                                List<Disease> diseases = DiseaseFactory
-                                .finder.where().eq("name", name).findList();
-                                Disease d = null;
-                                if (diseases.isEmpty()) {
-                                    d = new Disease ();
-                                    d.name = name;
-                                    d.description = rset.getString("description");
-                                    d.properties.add(datasources.get(type));
-                                    d.properties.add(tcrd);
-                                    String doid = rset.getString("doid");
-                                    if (doid != null) {
-                                        d.synonyms.add
-                                            (KeywordFactory.registerIfAbsent
-                                             ("DOID", doid,
-                                              "http://www.disease-ontology.org/term/"
-                                              +doid));
+                    Disease d = IxCache.getOrElse(name, new Callable<Disease>() {
+                        public Disease call() throws Exception {
+                            List<Disease> diseases = DiseaseFactory
+                                    .finder.where().eq("name", name).findList();
+                            Disease d = null;
+                            if (diseases.isEmpty()) {
+                                d = new Disease();
+                                d.name = name;
+                                d.description = rset.getString("description");
+                                d.properties.add(datasources.get(type));
+                                d.properties.add(tcrd);
+                                String doid = rset.getString("doid");
+
+                                String drugName = rset.getString("drug_name");
+                                if (drugName != null) {
+                                    Ligand drug = LIGS.get(drugName);
+                                    if (drug != null) {
+                                        XRef xref = d.addIfAbsent(new XRef(drug));
+                                        if (xref.id == null) xref.save();
+                                        Logger.debug("disease "+d.id+" has "+drug.getName());
                                     }
-                                    else {
-                                        // UniProt Disease
-                                        doid = rset.getString("reference")
+                                }
+
+                                if (doid != null) {
+                                    d.synonyms.add
+                                            (KeywordFactory.registerIfAbsent
+                                                    ("DOID", doid, "http://www.disease-ontology.org/term/" + doid));
+                                } else {
+                                    // UniProt Disease
+                                    doid = rset.getString("reference")
                                             .replaceAll("[\\s]+", "");
-                                        d.synonyms.add
+                                    d.synonyms.add
                                             (KeywordFactory.registerIfAbsent
-                                             (UNIPROT_DISEASE, doid,
-                                              "http://omim.org/entry/"
-                                              +doid.substring(doid.indexOf(':')+1)));
-                                        Keyword kw = datasources.get("OMIM");
-                                        if (kw != null)
-                                            d.addIfAbsent((Value)kw);
-                                        kw = datasources.get("UniProt");
-                                        if (kw != null)
-                                            d.addIfAbsent((Value)kw);
-                                    }
-                                    d.save();
-                                    DISEASES.put(doid, d);
+                                                    (UNIPROT_DISEASE, doid,
+                                                            "http://omim.org/entry/"
+                                                                    + doid.substring(doid.indexOf(':') + 1)));
+                                    Keyword kw = datasources.get("OMIM");
+                                    if (kw != null)
+                                        d.addIfAbsent((Value) kw);
+                                    kw = datasources.get("UniProt");
+                                    if (kw != null)
+                                        d.addIfAbsent((Value) kw);
                                 }
-                                else {
-                                    d = diseases.iterator().next();
-                                }
-                                return d;
+
+                                d.save();
+                                DISEASES.put(doid, d);
+                            } else {
+                                d = diseases.iterator().next();
                             }
-                        });
+                            return d;
+                        }
+                    });
                     
                     XRef xref = target.addIfAbsent(new XRef (d));                    
                     String dtype = rset.getString("datype");
@@ -2641,6 +2650,7 @@ public class TcrdRegistry extends Controller implements Commons {
                  //+"where c.uniprot in ('O94921','Q96Q40','Q00536','Q00537','Q00526','P50613','P49761','P20794')\n"
                  //+"where c.uniprot in ('Q8WXA8')\n"
                  //+"where c.uniprot in ('Q7RTX7','Q86YV6','P07333','P07949')\n"
+//                 +"where c.uniprot in ('A5X5Y0','O00329','O00329', 'O95069')\n"
                  +"order by d.score desc, c.id\n"
                  +(rows > 0 ? ("limit "+rows) : "")
                  );
