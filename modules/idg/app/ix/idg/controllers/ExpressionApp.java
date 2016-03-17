@@ -175,7 +175,8 @@ public class ExpressionApp extends App {
                     else if ("consensus".equalsIgnoreCase(source)) ds = Commons.CONSENSUS_EXPR;
                 }
 
-                HashMap<String, Integer> organs = new HashMap<>();
+                HashMap<String, Integer> organsLevel = new HashMap<>();
+                HashMap<String, Integer> organsConf = new HashMap<>();
                 for (XRef xref : t.getLinks()) {
                     if (!xref.kind.equals(Expression.class.getName())) continue;
                     Expression expr = (Expression) xref.deRef();
@@ -186,23 +187,26 @@ public class ExpressionApp extends App {
                     // map to canonical organ terms
                     for (String key : onm.keySet()) {
 
-                        // since tissue terms from CONSENSUS_EXPR will always map to the
-                        // svg id values, we don't have to check the mapping
                         if (expr.getTissue().toLowerCase().contains(key)) {
 
                             // derive the expr level or confidence
-                            Integer theLevel = 0;
-                            if (ds.equals(Commons.IDG_EXPR)) theLevel = expr.getConfidence().intValue();
-                            else {
-                                if (expr.getQualValue().toLowerCase().equals("low")) theLevel = 0;
-                                else if (expr.getQualValue().toLowerCase().equals("medium")) theLevel = 1;
-                                else if (expr.getQualValue().toLowerCase().equals("high")) theLevel = 2;
-                            }
+                            Integer conf = expr.getConfidence().intValue();
+                            Integer level = -1;
+                            if (expr.getQualValue().toLowerCase().equals("low")) level = 0;
+                            else if (expr.getQualValue().toLowerCase().equals("medium")) level = 1;
+                            else if (expr.getQualValue().toLowerCase().equals("high")) level = 2;
+
                             String tissue = onm.get(key);
-                            if (organs.containsKey(tissue)) {
-                                Integer level = organs.get(tissue);
-                                if (theLevel > level) organs.put(tissue, theLevel);
-                            } else organs.put(tissue, theLevel);
+                            if (organsLevel.containsKey(tissue)) {
+                                Integer tmp = organsLevel.get(tissue);
+                                if (level > tmp) organsLevel.put(tissue, level);
+                            } else organsLevel.put(tissue, level);
+
+                            if (organsConf.containsKey(tissue)) {
+                                Integer tmp = organsConf.get(tissue);
+                                if (conf > tmp) organsConf.put(tissue, conf);
+                            } else organsConf.put(tissue, conf);
+
                         }
                     }
                 }
@@ -210,13 +214,22 @@ public class ExpressionApp extends App {
                 String[] confidenceColorsIDG = new String[]{
                         "#ffffff", "#EDF8E9", "#BAE4B3", "#74C476", "#31A354", "#006D2C"
                 };
+                String[] colorsConsHigh = new String[]{
+                        "#ffe6e6", "#ffb3b3", "#ff6666", "#ff0000", "#b30000", "#660000"
+                };
+                String[] colorsConsMedium = new String[]{
+                        "#e6e6ff", "#b3b3ff", "#6666ff", "#0000ff", "#0000b3", "#000066"
+                };
+                String[] colorsConsLow = new String[]{
+                        "#e6ffe6", "#b3ffb3", "#66ff66", "#00ff00", "#00b300", "#006600"
+                };
                 String[] confidenceColorsOther = new String[]{
                         "#EDF8E9", "#74C476", "#006D2C"
                 };
 
-
                 String suffix = "";
-                if (!ds.equals(Commons.IDG_EXPR)) suffix = "-qual";
+                if (ds.equals(Commons.CONSENSUS_EXPR)) suffix = "-cons";
+                else if (!ds.equals(Commons.IDG_EXPR)) suffix = "-qual";
 
                 Document doc;
                 if (Play.isProd()) {
@@ -230,7 +243,7 @@ public class ExpressionApp extends App {
                     doc = XML.fromInputStream(fis, "UTF-8");
                 }
 
-                for (String tissue : organs.keySet()) {
+                for (String tissue : organsLevel.keySet()) {
                     Node node = XPath.selectNode("//*[@id='" + tissue + "']", doc);
                     NamedNodeMap attributes = node == null ? null : node.getAttributes();
                     if (attributes == null) continue;
@@ -242,9 +255,31 @@ public class ExpressionApp extends App {
                         attrNode = attributes.getNamedItem("style");
                     }
                     String color = "";
-                    if (ds.equals(Commons.IDG_EXPR))
-                        color = confidenceColorsIDG[organs.get(tissue)];
-                    else color = confidenceColorsOther[organs.get(tissue)];
+                    switch (ds) {
+                        case Commons.IDG_EXPR:
+                            color = confidenceColorsIDG[organsConf.get(tissue)];
+                            break;
+                        case Commons.CONSENSUS_EXPR:
+                            int level = organsLevel.get(tissue);
+                            int conf = organsConf.get(tissue);
+
+                            switch (level) {
+                                case 0: // low
+                                    color = colorsConsLow[conf];
+                                    break;
+                                case 1: // medium
+                                    color = colorsConsMedium[conf];
+                                    break;
+                                case 2: //high
+                                    color = colorsConsHigh[conf];
+                                    break;
+                            }
+                            System.out.println(tissue+" color = " + color);
+                            break;
+                        default:
+                            color = confidenceColorsOther[organsLevel.get(tissue)];
+                            break;
+                    }
                     attrNode.setNodeValue("fill:" + color + ";");
                     attributes.setNamedItem(attrNode);
                     colorChildren(node, color, doc);

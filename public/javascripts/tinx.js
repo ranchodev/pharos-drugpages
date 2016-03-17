@@ -10,12 +10,20 @@ function unhighlightTargetTable(elem) {
 
 function _tinx_target_plot(json, selector) {
 
+    console.log(json);
+
     var nFn = function (d) {
-        return d.dnovelty;
+        if (d.dnovelty == 0) return 0.001;
+        else return d.dnovelty;
     };
     var iFn = function (d) {
         return d.imp;
     };
+
+    var rangeFromSingleValue = function(x) {
+        if (x == 0) x = x + 0.001;
+        return [x - 0.01*x, x+0.01*x];
+    }
 
     var styleCurveBorder = {"stroke": "rgb(128, 0, 0)", "stroke-width": "1px"};
     var width = $(selector).width() / 1.2;
@@ -24,9 +32,17 @@ function _tinx_target_plot(json, selector) {
     var padding = width * 0.1;
     var axisLabelFontSize = 1 * 1.1;
 
+    console.log(d3.extent(json, nFn).reverse());
 
     var y = d3.scale.log().domain(d3.extent(json.importances, iFn).reverse()).range([padding, height]).nice();
-    var x = d3.scale.log().domain(d3.extent(json.importances, nFn).reverse()).range([padding, width]).nice();
+
+    // handle x-axis scale differently - in case we have a single disease, we need to create
+    // a range bracketing the single novelty value
+    var x = undefined;
+    if (json.importances.length == 1)
+        x = d3.scale.log().domain(rangeFromSingleValue(json.importances[0].dnovelty).reverse()).range([padding, width]).nice();
+    else
+        x = d3.scale.log().domain(d3.extent(json, nFn).reverse()).range([padding, width]).nice();
 
     var svg = d3.select(selector).append("svg:svg")
         .attr("width", width + padding)
