@@ -192,9 +192,12 @@ public class ExpressionApp extends App {
                             // derive the expr level or confidence
                             Integer conf = expr.getConfidence().intValue();
                             Integer level = -1;
-                            if (expr.getQualValue().toLowerCase().equals("low")) level = 0;
-                            else if (expr.getQualValue().toLowerCase().equals("medium")) level = 1;
-                            else if (expr.getQualValue().toLowerCase().equals("high")) level = 2;
+                            String qual = expr.getQualValue();
+                            if (qual == null)
+                                ;
+                            else if (qual.equalsIgnoreCase("low")) level = 0;
+                            else if (qual.equalsIgnoreCase("medium")) level = 1;
+                            else if (qual.equalsIgnoreCase("high")) level = 2;
 
                             String tissue = onm.get(key);
                             if (organsLevel.containsKey(tissue)) {

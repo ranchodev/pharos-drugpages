@@ -498,6 +498,7 @@ public class IDGApp extends App implements Commons {
         "Jensen Score",
 
         PHARMALOGICAL_ACTION,
+        "IMPC Mice Produced",
         LIGAND_ACTIVITY,
         MLP_ASSAY_TYPE,
         UNIPROT_KEYWORD,
@@ -510,6 +511,7 @@ public class IDGApp extends App implements Commons {
     public static final String[] DISEASE_FACETS = {
         IDG_DEVELOPMENT,
         IDG_FAMILY,
+        IDG_DRUG,
         SOURCE,
         UNIPROT_TARGET
     };
@@ -861,7 +863,7 @@ public class IDGApp extends App implements Commons {
         for (String la : labels ) {
             DataSource ds = new DataSource (la);
             for (Class cls : entities) {
-                opts = new SearchOptions (cls, 1, 0, 10);
+                opts = new SearchOptions (cls, 1, 0, 100);
                 results = _textIndexer.search(opts, null);
                 for (TextIndexer.Facet f : results.getFacets()) {
                     if (f.getName().equals(SOURCE)) {

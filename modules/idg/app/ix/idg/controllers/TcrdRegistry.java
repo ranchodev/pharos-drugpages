@@ -767,7 +767,10 @@ public class TcrdRegistry extends Controller implements Commons {
                             +"\" for target "+target.id);
 
                 expr.save();
-                target.addIfAbsent(new XRef(expr));
+                XRef ref = target.addIfAbsent(new XRef(expr));
+                if (ref.id == null)
+                    ref.save();
+                
                 Logger.debug("Target "+target.id+" "+expr.source+": "+expr.tissue);
 
                 Keyword source = datasources.get(expr.source);
@@ -883,9 +886,9 @@ public class TcrdRegistry extends Controller implements Commons {
                              "https://www.genome.gov/26525384");
                         datasources.put(type, source);
                     }
-                    sources.put(type, source);
                     String trait = rset.getString("trait");
                     if (trait != null) {
+                        sources.put(type, source);                      
                         trait = trait.replaceAll("/", "-");
                         Keyword gwas = KeywordFactory.registerIfAbsent
                                 (GWAS_TRAIT, trait, null);
@@ -965,7 +968,6 @@ public class TcrdRegistry extends Controller implements Commons {
                     if (trait != null) {
                         sources.put(type, source);
                         parseOMIMPhenotype (trait, target);
-                        target.addIfAbsent((Value)source);
                     }
                 }
                 else {
@@ -1001,28 +1003,42 @@ public class TcrdRegistry extends Controller implements Commons {
             pstm6.setLong(1, protein);
             ResultSet rset = pstm6.executeQuery();
             int selective = 0;
+            Keyword mice = KeywordFactory.registerIfAbsent
+                ("IMPC Mice Produced", "YES", null);
+            
             while (rset.next()) {
                 String type = rset.getString("itype");
+                
                 Value val = null;
-                for (String field : new String[]{"string_value",
-                                                 "number_value",
-                                                 "integer_value",
-                                                 "date_value",
-                                                 "boolean_value"}) {
-                    if (field.equals("string_value")) {
-                        String str = rset.getString(field);
-                        if (str != null)
-                            val = new Text (type, str);
-                    }
-                    else if (field.equals("number_value")) {
-                        double num = rset.getDouble(field);
-                        if (!rset.wasNull())
-                            val = new VNum (type, num);
-                    }
-                    else {
-                        long num = rset.getLong(field);
-                        if (!rset.wasNull())
-                            val = new VInt (type, num);
+                if (type.equals("IMPC Mice Produced")) {
+                    int bv = rset.getInt("boolean_value");
+                    if (bv != 0)
+                        val = mice;
+                }
+                else {
+                    for (String field : new String[]{"string_value",
+                                                     "number_value",
+                                                     "integer_value",
+                                                     "date_value",
+                                                     "boolean_value"}) {
+                        if (field.equals("string_value")) {
+                            String str = rset.getString(field);
+                            if (str != null)
+                                val = new Text (type, str);
+                        }
+                        else if (field.equals("number_value")) {
+                            double num = rset.getDouble(field);
+                            if (!rset.wasNull())
+                                val = new VNum (type, num);
+                        }
+                        else if (field.equals("boolean_value")) {
+                            
+                        }
+                        else {
+                            long num = rset.getLong(field);
+                            if (!rset.wasNull())
+                                val = new VInt (type, num);
+                        }
                     }
                 }
                 
@@ -1048,7 +1064,7 @@ public class TcrdRegistry extends Controller implements Commons {
                             target.jensenScore = ((Number)val.getValue()).doubleValue();
                         }
                         else if (type.equalsIgnoreCase
-                                 ("OpenPHACTS Relevance 3 Patent Count")) {
+                                 ("EBI Total Patent Count")) {
                             target.patentCount =
                                 ((Number)val.getValue()).intValue();
                         }
@@ -1204,7 +1220,7 @@ public class TcrdRegistry extends Controller implements Commons {
                     path.add(kw);
                 }
             }
-            else { // this is the older version
+            else if (false) { // this is the older version
                 Keyword kw = KeywordFactory.registerIfAbsent
                     (DTO_PROTEIN_CLASS + " (0)", target.idgFamily, null);
                 target.properties.add(kw);
@@ -1243,9 +1259,13 @@ public class TcrdRegistry extends Controller implements Commons {
                 }
                 rset.close();
             }
+            else {
+                
+            }
 
             if (path.isEmpty()) {
-                Logger.warn("!!! Target "+protein+" has no DTO entry !!!");
+                Logger.warn("!!! Target "+protein+"/"
+                            +IDGApp.getId(target)+" has no DTO entry !!!");
             }
             
             for (int k = path.size(); --k >= 0; ) {
