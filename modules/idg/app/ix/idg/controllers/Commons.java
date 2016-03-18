@@ -40,7 +40,9 @@ public interface Commons {
     public static final String OMIM_TERM = "OMIM Term";
     
     public static final String REACTOME_REF = "Reactome Pathway Ref";
-    
+
+    public static final String CONSENSUS_EXPR = "Consensus Expression";
+    public static final String CONSENSUS_TISSUE = "Consensus Tissue";
     public static final String GTEx_TISSUE = "GTEx Tissue";
     public static final String GTEx_EXPR = "GTEx Expression";
     public static final String HPM_TISSUE = "HPM Tissue";

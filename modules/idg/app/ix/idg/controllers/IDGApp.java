@@ -11,6 +11,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import controllers.AssetsBuilder;
 import ix.core.controllers.EntityFactory;
 import ix.core.controllers.KeywordFactory;
 import ix.core.controllers.PayloadFactory;
@@ -31,6 +32,8 @@ import ix.utils.Util;
 import org.apache.commons.lang3.StringUtils;
 import play.Logger;
 import play.Play;
+import play.api.mvc.Action;
+import play.api.mvc.AnyContent;
 import play.cache.Cached;
 import play.db.ebean.Model;
 import play.libs.Akka;
@@ -51,6 +54,11 @@ import static ix.core.search.TextIndexer.SearchResult;
 public class IDGApp extends App implements Commons {
     static final int MAX_SEARCH_RESULTS = 1000;
     public static final String IDG_RESOLVER = "IDG Resolver";
+
+    private static AssetsBuilder delegate = new AssetsBuilder();
+    public static Action<AnyContent> asset(String path, String file) {
+        return delegate.at(path, file, false);
+    }
 
     public interface Filter<T extends EntityModel> {
         boolean accept (T e);
@@ -445,7 +453,7 @@ public class IDGApp extends App implements Commons {
         IDG_FAMILY,
         IDG_DISEASE,
         IDG_LIGAND,
-        GTEx_TISSUE
+        CONSENSUS_TISSUE
     };
 
     public static final String[] ALL_TARGET_FACETS = {
@@ -456,6 +464,7 @@ public class IDGApp extends App implements Commons {
         IDG_LIGAND,
         IDG_DRUG,
 
+        CONSENSUS_TISSUE,
         IDG_TISSUE,
         GTEx_TISSUE,
         HPM_TISSUE,
@@ -606,7 +615,18 @@ public class IDGApp extends App implements Commons {
         }
         return m;
     }
-    
+
+    public static Result sitemap() {
+        StringBuilder sb = new StringBuilder();
+        for (Target t : TargetFactory.finder.all()) {
+            sb.append("https://pharos.nih.gov/idg/targets/").append(getId(t)).append("\n");
+        }
+        for (Disease d : DiseaseFactory.finder.all()) {
+            sb.append("https://pharos.nih.gov/idg/diseases/").append(getId(d)).append("\n");
+        }
+        return(ok(sb.toString()).as("text/plain"));
+    }
+
     @Cached(key="_help", duration= Integer.MAX_VALUE)
     public static Result help() {
         final String key = "idg/help";
@@ -1856,6 +1876,14 @@ public class IDGApp extends App implements Commons {
             }
         };
 
+    public static String getGeneSymbol(Target t) {
+        for (Keyword kw : t.getSynonyms()) {
+            if (kw.label.equals(UNIPROT_GENE))
+                return kw.term;
+        }
+        return null;
+    }
+
     static Result _getLigandResult (List<Ligand> ligands) throws Exception {
         // force it to show only one since it's possible that the provided
         // name isn't unique
@@ -2077,9 +2105,22 @@ public class IDGApp extends App implements Commons {
                     }
                 });
 
+        final String ligkey = "diseases/"+d.id+"/ligands";
+        List<Ligand> ligs = getOrElse(ligkey, new Callable<List<Ligand>> () {
+            public List<Ligand> call () throws Exception {
+                List<Ligand> ligands = new ArrayList<>();
+                for (XRef ref : d.links) {
+                    if (Ligand.class.isAssignableFrom(Class.forName(ref.kind))) {
+                        Ligand l = (Ligand) ref.deRef();
+                        ligands.add(l);
+                    }
+                }
+                return ligands;
+            }
+        });
         
         return ok(ix.idg.views.html.diseasedetails.render
-                  (d, targets.toArray(new Target[0]), getBreadcrumb (d)));
+                  (d, ligs.toArray(new Ligand[0]), targets.toArray(new Target[0]), getBreadcrumb (d)));
     }
 
     public static List<Keyword> getBreadcrumb (Disease d) {

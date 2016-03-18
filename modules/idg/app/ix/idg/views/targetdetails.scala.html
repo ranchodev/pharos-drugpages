@@ -8,9 +8,12 @@
 @import ix.core.models.Keyword
 @import ix.core.models.Text
 @import ix.core.models.VInt
+@import ix.core.models.VNum
 @import ix.core.models.Publication
+@import ix.ncats.controllers.App
 @import ix.idg.controllers.ExpressionApp
 @import ix.idg.controllers.IDGApp
+@import ix.idg.controllers.WordCloud
 @import ix.idg.controllers.IDGApp._
 @import ix.idg.controllers.Commons._
 @import ix.idg.controllers.TcrdRegistry
@@ -352,7 +355,7 @@
    @defining(IDGApp.getActivity(target, lig)) { act =>
       @if(act != null) {
          <td class="valign-center">
-	     <code>@{act.getLabel()} @{"%1$.2f".format(act.getValue())}</code>
+	     <code>@{act.label} @{"%1$.2f".format(act.getValue())}</code>
 	 </td>
       } else {
          <td></td>
@@ -771,37 +774,53 @@
 		 </div>
 		 
 		 </div>
-		 <div class="col-md-8">
-	              <ul class="nav nav-tabs">
-		        <li role="presentation" class="active"><a href="#idg-tab" aria-controls="idg" data-toggle="tab">IDG</a></li>
-		        <li role="presentation"><a href="#gtex-tab" role="tab" aria-controls="gtex" data-toggle="tab">
-					<span data-toggle="tooltip"
-					data-html="true"
-					title="<p align='left'>Tissue expression data from The Genotype-Tissue Expression (GTEx) project</p>">GTEx</span></a></li>
-		        <li role="presentation"><a href="#hpm-tab" role="tab" data-toggle="tab">
-					<span data-toggle="tooltip"
-					data-html="true"
-					title="<p align='left'>Tissue expression data from The Human Proteome Map (HPM)</p>">HPM</span></a></li>
-		        <li role="presentation"><a href="#hpa-tab" role="tab" data-toggle="tab">
-					<span data-toggle="tooltip"
-					data-html="true"
-					title="<p align='left'>Tissue expression data from The Human Protein Atlas</p>">HPA</span></a></li>
-		      </ul>
-		   <div class="tab-content">
-		      <div role="tabpanel" class="tab-pane active" id="idg-tab">
-		        @expression(IDG_EXPR, "idg")
-		      </div>
-		      <div role="tabpanel" class="tab-pane" id="gtex-tab">
-		        @expression(GTEx_EXPR, "gtex")
-		      </div>
-		      <div role="tabpanel" class="tab-pane" id="hpm-tab">
-		        @expression(HPM_EXPR, "hpm")
-		      </div>
-		      <div role="tabpanel" class="tab-pane" id="hpa-tab">
-		        @expression(HPA_RNA_EXPR, "hpa")
-		      </div>
-		   </div>
-		 </div>
+               <div class="col-md-8">
+                   <ul class="nav nav-tabs">
+                       <li role="presentation" class="active"><a href="#consensus-tab" role="tab" aria-controls="consensus" data-toggle="tab">
+                           <span data-toggle="tooltip"
+                           data-html="true"
+                           title="<p align='left'>Consensus tissue expression (combining GTEx, HPM and HPA)</p>">
+                               Consensus</span></a></li>
+                       <li role="presentation"><a href="#gtex-tab" role="tab" aria-controls="gtex" data-toggle="tab">
+                           <span data-toggle="tooltip"
+                           data-html="true"
+                           title="<p align='left'>Tissue expression data from The Genotype-Tissue Expression (GTEx) project</p>">
+                               GTEx</span></a></li>
+                       <li role="presentation"><a href="#hpm-tab" role="tab" data-toggle="tab">
+                           <span data-toggle="tooltip"
+                           data-html="true"
+                           title="<p align='left'>Tissue expression data from The Human Proteome Map (HPM)</p>">
+                               HPM</span></a></li>
+                       <li role="presentation"><a href="#hpa-tab" role="tab" data-toggle="tab">
+                           <span data-toggle="tooltip"
+                           data-html="true"
+                           title="<p align='left'>Tissue expression data from The Human Protein Atlas</p>">
+                               HPA</span></a></li>
+                       <li role="presentation"><a href="#idg-tab" aria-controls="idg" data-toggle="tab">
+                           <span data-toggle="tooltip"
+                           data-html="true"
+                           title="<p align='left'>Text mined tissue expression data from the Jensen Lab</p>">
+                               IDG-TM
+                           </span></a></li>
+                   </ul>
+                   <div class="tab-content">
+                       <div role="tabpanel" class="tab-pane active" id="consensus-tab">
+                       @expression(CONSENSUS_EXPR, "consensus")
+                       </div>
+                       <div role="tabpanel" class="tab-pane" id="gtex-tab">
+                       @expression(GTEx_EXPR, "gtex")
+                       </div>
+                       <div role="tabpanel" class="tab-pane" id="hpm-tab">
+                       @expression(HPM_EXPR, "hpm")
+                       </div>
+                       <div role="tabpanel" class="tab-pane" id="hpa-tab">
+                       @expression(HPA_RNA_EXPR, "hpa")
+                       </div>
+                       <div role="tabpanel" class="tab-pane" id="idg-tab">
+                       @expression(IDG_EXPR, "idg")
+                       </div>
+                   </div>
+               </div>
 	       </div>
 	    </div>
 	  </div> <!-- panel-body -->
@@ -1095,8 +1114,8 @@
        }
     }
 
-    @defining(IDGApp.getPMIDs(target)) { pmids =>
-       @if(!pmids.isEmpty) {
+    @defining(IDGApp.getPublications(target)) { pubs =>
+       @if(!pubs.isEmpty) {
          <div class="row">
 	   <div class="col-md-12">
               <div class="panel panel-default">
@@ -1110,16 +1129,68 @@
                          <a href="http://www.ncbi.nlm.nih.gov/pubmed?LinkName=gene_pubmed&from_uid=@for(kw <- target.synonyms) {@if("Entrez Gene".equals(kw.label)) {@kw.term}}"><i class="fa fa-book"></i></a></span>
                          <span data-toggle="tooltip" data-html="true" title="<p align='left'>Search Pubmed with this target</p>">
                              <a href="http://www.ncbi.nlm.nih.gov/pubmed/?term=@for(kw <- target.synonyms) {@if("UniProt Gene".equals(kw.label)) {@kw.term}}"><i class="fa fa-search-plus"></i></a></span>
-                         (@pmids.size)</h3>
-		 </div>
+                         (@pubs.size)</h3>
+                 </div>
                  <div class="panel-body">
-                    <div class="panel-body">
-		      @for(p <- pmids) {
-		        <a href="http://www.ncbi.nlm.nih.gov/pubmed/@p">@p</a>&nbsp;
-		      }
-		    </div>
-		 </div>
+
+                     <div>
+                         <ul class="nav nav-tabs" role="tablist">
+                             <li role="presentation" class="active"><a href="#pubwc" aria-controls="pubwc" role="tab" data-toggle="tab">Summary</a></li>
+                             <li role="presentation"><a href="#publist" aria-controls="publist" role="tab" data-toggle="tab">Details</a></li>
+                         </ul>
+                         <div class="tab-content">
+                             <div role="tabpanel" class="tab-pane active" id="pubwc">
+                                 <div id="tpub-wc"></div>
+                             </div>
+                             <div role="tabpanel" class="tab-pane" id="publist">
+
+
+                                     <table class="table table-striped">
+                                         <tr>
+                                             <th>PMID <i class="fa fa-external-link"></i></th>
+                                             <th>Year</th>
+                                             <th>Title</th>
+                                         </tr>
+                                         @defining(request().getQueryString("view")) { view =>
+                                             @view match {
+                                                 case "full" => {
+                                                     @for(pub <- pubs) {
+                                                         <tr>
+                                                             <td><a href="http://www.ncbi.nlm.nih.gov/pubmed/@pub.pmid">@pub.pmid</a></td>
+                                                             <td>@pub.year</td>
+                                                             <td>@pub.title</td>
+                                                         </tr>
+                                                     }
+
+                                                 }
+                                                 case _ => {
+                                                     @for(i <- 0 until Math.min(10, pubs.size())) {
+                                                         <tr>
+                                                             <td><a href="http://www.ncbi.nlm.nih.gov/pubmed/@pubs.get(i).pmid">@pubs.get(i).pmid</a></td>
+                                                             <td>@pubs.get(i).year</td>
+                                                             <td>@pubs.get(i).title</td>
+                                                         </tr>
+
+                                                     }
+                                                     @if(pubs.size() > 10) {
+                                                         <tr>
+                                                             <td><a href="@request().uri?view=full">More...</a></td>
+                                                             <td></td>
+                                                         </tr>
+                                                     }
+                                                 }
+                                             }
+                                         }
+                                     </table>
+
+                             </div>
+                         </div>
+                     </div>
+
+		        </div>
 	      </div>
+
+
 	   </div>
 	 </div>
        }
@@ -1159,7 +1230,9 @@ role="dialog" aria-labelledby="modalLabelFolder" aria-hidden="true">
     </div>
 </div>
 
-@modalradar(null)
+
+@modalradar(null, IDGApp.getGeneSymbol(target))
+
 
 <head>
     <style type="text/css">
@@ -1192,6 +1265,8 @@ role="dialog" aria-labelledby="modalLabelFolder" aria-hidden="true">
     <script type="text/javascript" src='@routes.Assets.at("javascripts/underscore.js")'></script>
     <script type="text/javascript" src='@routes.Assets.at("javascripts/underscore.string.js")'></script>
     <script type="text/javascript" src='@routes.Assets.at("javascripts/cart.js")'></script>
+    <script type="text/javascript" src='@routes.Assets.at("javascripts/d3.layout.cloud.js")'></script>
+    <script type="text/javascript" src='@routes.Assets.at("javascripts/wordcloud.js")'></script>
     <link type="text/css" rel="stylesheet" href='@routes.Assets.at("stylesheets/d3-tip.css")' />
     <link type="text/css" rel="stylesheet" href='@routes.Assets.at("stylesheets/radar-chart.css")' />
     <link type="text/css" rel="stylesheet" href='@routes.WebJarAssets.at(WebJarAssets.locate("morris.css"))' />
@@ -1207,11 +1282,26 @@ $(function () {
 $(document).ready(function () {
 
     /* populate TOC menu */
+    var tocs = [];
     $("a[tocname]" ).each(function(){
         var aname = $(this ).attr("name");
         var tname = $(this ).attr("tocname");
-        $("#toc" ).append("<li><a href='#"+aname+"'>"+tname+"</a></li>");
+        tocs.push( {aname:aname, tname:tname} );
     });
+    tocs = _.sortBy(tocs, 'tname');
+    _.each(tocs, function(o, idx, l) {
+        $("#toc" ).append("<li><a href='#"+ o.aname+"'>"+ o.tname+"</a></li>");
+    });
+
+    /* Word cloud for text mined pubs */
+    @defining(WordCloud.textHistogram(target, "title", "sqrt")) { counts =>
+        wordcloud ("tpub-wc", 600, 300,
+                '@ix.idg.controllers.routes.IDGApp.targets(null,10,1)', [
+            @for(count <- counts) {
+                {text:'@count.label', size:@count.numval},
+            }
+        ]);
+    }
 
     /* Cart related methods and vars */
     $.ajax({

@@ -1,4 +1,7 @@
-@(title: String)
+@import ix.idg.models.Target
+@import ix.idg.controllers.IDGApp
+
+@(title: String, gene: String)
 
 <div class="modal fade" id="modal-radar" tabindex="-1"
 role="dialog" aria-labelledby="modalLabelRadar" aria-hidden="true">
@@ -15,10 +18,13 @@ role="dialog" aria-labelledby="modalLabelRadar" aria-hidden="true">
             <div class="modal-body">
                 <div class="row">
                     <div class="col-md-3">
+                        <a class="btn btn-info" target="_blank" id="radardownloadlink" style="width:100%;"
+                           href="http://amp.pharm.mssm.edu/Harmonizome/api/1.0/download/associations?gene=@gene" role="button">Download</a>
+                        <br><br>
                         <form>
                             <div class="form-group">
                                 <label for="select-agg">Aggregation Type</label>
-                                <select id="select-agg">
+                                <select id="select-agg" style="width:100%;">
                                     <option value="radar-attr_type">Attribute Type</option>
                                     <option value="radar-attr_group">Attribute Group</option>
                                     <option value="radar-data_type">Data Type</option>
@@ -26,7 +32,7 @@ role="dialog" aria-labelledby="modalLabelRadar" aria-hidden="true">
                             </div>
                             <div class="form-group">
                                 <label for="select-overlay">Overlay Data from</label>
-                                <select id="select-overlay">
+                                <select id="select-overlay" style="width:100%;">
                                     <option value="none">None</option>
                                     <option value="all">All targets</option>
                                     <option value="tdark">TDark</option>

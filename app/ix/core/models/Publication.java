@@ -1,16 +1,18 @@
 package ix.core.models;
 
-import java.util.*;
-import play.db.ebean.*;
-import javax.persistence.*;
-
-import com.fasterxml.jackson.annotation.JsonView;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.annotation.JsonView;
 import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
-
 import ix.utils.Global;
+import play.db.ebean.Model;
+
+import javax.persistence.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.List;
 
 @Entity
 @Table(name="ix_core_publication")
@@ -28,6 +30,9 @@ public class Publication extends Model {
     @Basic(fetch=FetchType.EAGER)
     @Indexable(suggest=true,name="Publication")
     public String title; // publication title
+
+    @Indexable(name="Year")
+    public Integer year;
 
     public String pages;
     public String doi;

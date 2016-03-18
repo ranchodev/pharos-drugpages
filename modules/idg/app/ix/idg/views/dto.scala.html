@@ -1,0 +1,30 @@
+@import ix.ncats.controllers.App
+
+@(node: String)
+
+@ix.ncats.views.html.main("Drug Target Ontology"){
+@targetmenu(null)
+}(HtmlFormat.empty){
+<div class="container">
+  <div class="page-header">
+    <h1><a href="http://drugtargetontology.org/">Drug Target Ontology <i class="fa fa-external-link"></i></a>
+      <div class="pull-right">
+        <a href="@ix.idg.controllers.routes.IDGApp.targets()"
+           class="btn btn-primary btn-lg">Browse</a>
+      </div>
+    </h1>
+  </div>
+  <div class="col-lg-12">
+    <iframe sandbox="allow-scripts allow-forms allow-same-origin allow-popups allow-top-navigation allow-popups-to-escape-sandbox allow-modals"
+	    src='@ix.idg.controllers.routes.DTOHier.dtoViz(node)'
+	    marginwidth="0" marginheight="0"
+	    frameBorder="0"
+	    style="height:100%; width:100%" scrolling="no">
+    </iframe>
+  </div>
+</div>
+
+<head>
+  <link type="text/css" rel="stylesheet" href='@routes.Assets.at("stylesheets/main.css")'/>
+</head>
+}

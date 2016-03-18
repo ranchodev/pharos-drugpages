@@ -111,7 +111,7 @@ public class TcrdRegistry extends Controller implements Commons {
         Long protein;
         Double novelty;
         Keyword source;
-        DTOParser.DTONode dtoNode;
+        DTOParser.Node dtoNode;
 
         TcrdTarget () {}
         TcrdTarget (String acc, String family, String tdl,
@@ -322,6 +322,22 @@ public class TcrdRegistry extends Controller implements Commons {
 
             for (Disease d : DISEASES.values()) {
                 try {
+                    Value drug = d.getProperty(IDG_DRUG);
+                    if (drug != null) {
+                        Keyword kw = (Keyword)drug;
+                        Ligand lig = LIGS.get(kw.term);
+                        if (lig != null) {
+                            XRef ref = d.addIfAbsent(new XRef (lig));
+                            if (ref.id == null)
+                                ref.save();
+                            d.update();
+                        }
+                        else {
+                            Logger.warn("Can't find drug \""
+                                        +kw.term+"\" for disease "
+                                        +d.id+" "+d.name);
+                        }
+                    }
                     //d.update();             
                     INDEXER.update(d);              
                 }
@@ -688,7 +704,7 @@ public class TcrdRegistry extends Controller implements Commons {
                 Expression expr = new Expression();
                 expr.proteinId = protein;
                 expr.source = rset.getString("etype");
-                expr.tissue = rset.getString("tissue"); 
+                expr.tissue = rset.getString("tissue");
                 expr.confidence = rset.getDouble("conf");
                 expr.qualValue = rset.getString("qual_value"); 
                 expr.numberValue = rset.getDouble("number_value");
@@ -700,6 +716,13 @@ public class TcrdRegistry extends Controller implements Commons {
                     expr.sourceid = GTEx_EXPR;
                     Keyword tissue = KeywordFactory.registerIfAbsent
                         (GTEx_TISSUE, expr.tissue, null);
+                    target.addIfAbsent((Value)tissue);
+                }
+                else if (expr.source.startsWith("Consensus")) {
+                    sourceUrl = "http://www.unm.edu/";
+                    expr.sourceid = CONSENSUS_EXPR;
+                    Keyword tissue = KeywordFactory.registerIfAbsent
+                            (CONSENSUS_TISSUE, expr.tissue, null);
                     target.addIfAbsent((Value)tissue);
                 }
                 else if (expr.source.startsWith("HPM Gene")) {
@@ -1126,15 +1149,26 @@ public class TcrdRegistry extends Controller implements Commons {
             }
         }
         
-        void addDTO (Target target, long protein, DTOParser.DTONode dtoNode)
+        void addDTO (Target target, long protein, DTOParser.Node dtoNode)
             throws Exception {
             List<Keyword> path = new ArrayList<Keyword>();
             Logger.debug("Target "+IDGApp.getId(target)+" "
                          +target.idgFamily+" DTO");
             
             if (dtoNode != null) {
-                List<DTOParser.DTONode> nodes = new ArrayList<DTOParser.DTONode>();
-                for (DTOParser.DTONode node = dtoNode.parent;
+                dtoNode.url = routes.IDGApp.target
+                    (IDGApp.getId(target)).url();
+                dtoNode.tdl = target.idgTDL.toString();
+                dtoNode.size = 100;
+                if (target.novelty != null) {
+                    // this assumes novelty is expressed as log10, so that
+                    //  "novel" targets are bigger
+                    dtoNode.size += (int)(10*target.novelty + 0.5);
+                }
+                dtoNode.fullname = target.name;
+                
+                List<DTOParser.Node> nodes = new ArrayList<DTOParser.Node>();
+                for (DTOParser.Node node = dtoNode.parent;
                      node != null
                          && !node.id.equals("DTO_00200000") // Gene
                          && !node.id.equals("DTO_00100000") // Protein
@@ -1143,7 +1177,15 @@ public class TcrdRegistry extends Controller implements Commons {
                 }
                 
                 Collections.reverse(nodes);
-                for (DTOParser.DTONode n : nodes) {
+                String enhanced = Play.application()
+                    .configuration().getString("ix.idg.dto.enhanced");
+                if (enhanced != null) {
+                    File file = new File (enhanced);
+                    DTOParser.Node node = nodes.iterator().next();
+                    DTOParser.writeJson(file, node.parent);
+                }
+                
+                for (DTOParser.Node n : nodes) {
                     Keyword kw = KeywordFactory.registerIfAbsent
                         (DTO_PROTEIN_CLASS+" ("+path.size()+")",
                          n.name.replaceAll("/", "-"),
@@ -1154,6 +1196,9 @@ public class TcrdRegistry extends Controller implements Commons {
                     for (int i = 0; i < path.size(); ++i)
                         sb.append("\t");
                     Logger.debug(kw.id+" "+kw.label+" \""+kw.term+"\" "+kw.href);
+                    if (n.url == null)
+                        n.url = routes.IDGApp.targets(null, 10, 1).url()
+                            +"?facet="+kw.label+"/"+kw.term;
                     
                     target.properties.add(kw);
                     path.add(kw);
@@ -1606,54 +1651,63 @@ public class TcrdRegistry extends Controller implements Commons {
             
             pstm20.setLong(1, tid);
             final ResultSet rset = pstm20.executeQuery();
+            final Model.Finder<Long, Ligand> ligandFinder = LigandFactory.finder;
             try {
                 int cnt = 0;
                 while (rset.next()) {
                     final String name = rset.getString("name");
-                    Disease d = IxCache.getOrElse(name, new Callable<Disease> () {
-                            public Disease call () throws Exception {
-                                List<Disease> diseases = DiseaseFactory
-                                .finder.where().eq("name", name).findList();
-                                Disease d = null;
-                                if (diseases.isEmpty()) {
-                                    d = new Disease ();
-                                    d.name = name;
-                                    d.description = rset.getString("description");
-                                    d.properties.add(datasources.get(type));
-                                    d.properties.add(tcrd);
-                                    String doid = rset.getString("doid");
-                                    if (doid != null) {
-                                        d.synonyms.add
-                                            (KeywordFactory.registerIfAbsent
-                                             ("DOID", doid,
-                                              "http://www.disease-ontology.org/term/"
-                                              +doid));
-                                    }
-                                    else {
-                                        // UniProt Disease
-                                        doid = rset.getString("reference")
-                                            .replaceAll("[\\s]+", "");
-                                        d.synonyms.add
-                                            (KeywordFactory.registerIfAbsent
-                                             (UNIPROT_DISEASE, doid,
-                                              "http://omim.org/entry/"
-                                              +doid.substring(doid.indexOf(':')+1)));
-                                        Keyword kw = datasources.get("OMIM");
-                                        if (kw != null)
-                                            d.addIfAbsent((Value)kw);
-                                        kw = datasources.get("UniProt");
-                                        if (kw != null)
-                                            d.addIfAbsent((Value)kw);
-                                    }
-                                    d.save();
-                                    DISEASES.put(doid, d);
+                    Disease d = IxCache.getOrElse(name, new Callable<Disease>() {
+                        public Disease call() throws Exception {
+                            List<Disease> diseases = DiseaseFactory
+                                    .finder.where().eq("name", name).findList();
+                            Disease d = null;
+                            if (diseases.isEmpty()) {
+                                d = new Disease();
+                                d.name = name;
+                                d.description = rset.getString("description");
+                                d.properties.add(datasources.get(type));
+                                d.properties.add(tcrd);
+                                String doid = rset.getString("doid");
+
+                                String drugName = rset.getString("drug_name");
+                                if (drugName != null) {
+                                    // add this temporary for now and we
+                                    //  resolve it later..
+                                    d.properties.add
+                                        (KeywordFactory.registerIfAbsent
+                                         (IDG_DRUG, drugName, null));
                                 }
-                                else {
-                                    d = diseases.iterator().next();
+
+                                if (doid != null) {
+                                    d.synonyms.add
+                                        (KeywordFactory.registerIfAbsent
+                                         ("DOID", doid,
+                                          "http://www.disease-ontology.org/term/" + doid));
+                                } else {
+                                    // UniProt Disease
+                                    doid = rset.getString("reference")
+                                        .replaceAll("[\\s]+", "");
+                                    d.synonyms.add
+                                        (KeywordFactory.registerIfAbsent
+                                         (UNIPROT_DISEASE, doid,
+                                          "http://omim.org/entry/"
+                                          + doid.substring(doid.indexOf(':') + 1)));
+                                    Keyword kw = datasources.get("OMIM");
+                                    if (kw != null)
+                                        d.addIfAbsent((Value) kw);
+                                    kw = datasources.get("UniProt");
+                                    if (kw != null)
+                                        d.addIfAbsent((Value) kw);
                                 }
-                                return d;
+                                
+                                d.save();
+                                DISEASES.put(doid, d);
+                            } else {
+                                d = diseases.iterator().next();
                             }
-                        });
+                            return d;
+                        }
+                    });
                     
                     XRef xref = target.addIfAbsent(new XRef (d));                    
                     String dtype = rset.getString("datype");
@@ -1778,6 +1832,13 @@ public class TcrdRegistry extends Controller implements Commons {
                         pub.pmid = pmid;
                         pub.title = rset.getString("title");
                         pub.abstractText = rset.getString("abstract");
+
+                        String date = rset.getString("date");
+                        Integer year = null;
+                        if (date != null) {
+                            year = Integer.parseInt(date.split("-")[0]);
+                        }
+                        pub.year = year;
                         pub.save();
                     }
                     XRef ref = new XRef (pub);
@@ -2605,18 +2666,39 @@ public class TcrdRegistry extends Controller implements Commons {
                  //+"where c.uniprot in ('O94921','Q96Q40','Q00536','Q00537','Q00526','P50613','P49761','P20794')\n"
                  //+"where c.uniprot in ('Q8WXA8')\n"
                  //+"where c.uniprot in ('Q7RTX7','Q86YV6','P07333','P07949')\n"
+//                 +"where c.uniprot in ('A5X5Y0','O00329','O00329', 'O95069')\n"
                  +"order by d.score desc, c.id\n"
                  +(rows > 0 ? ("limit "+rows) : "")
                  );
 
-            DTOParser dto = new DTOParser ();
-            String dtofile = Play.application().configuration().getString("ix.idg.dto");
-            if (dtofile != null) {
-                try {
-                    dto.parse(new File (dtofile));
+            DTOParser dto = null;
+            String enhanced = Play.application()
+                .configuration().getString("ix.idg.dto.enhanced");
+            if (enhanced != null) {
+                File file = new File (enhanced);
+                if (file.exists()) {
+                    // load the dto from this file
+                    Logger.debug("Loading enhanced DTO file..."+file);
+                    dto = DTOParser.readJson(file);
                 }
-                catch (IOException ex) {
-                    ex.printStackTrace();
+            }
+                            
+            if (dto == null) {
+                String dtofile = Play.application()
+                    .configuration().getString("ix.idg.dto.basic");
+                File file = new File (dtofile);
+                if (file.exists()) {
+                    Logger.debug("Loading basic DTO file..."+dtofile);
+                    try {
+                        dto = new DTOParser ();
+                        dto.parse(file);
+                    }
+                    catch (IOException ex) {
+                        ex.printStackTrace();
+                    }
+                }
+                else {
+                    Logger.warn("!!!! NO DTO AVAILABLE !!!!");
                 }
             }
                  
@@ -2673,6 +2755,9 @@ public class TcrdRegistry extends Controller implements Commons {
     }
     
     public static Result index () {
+        if (Play.isProd()) {
+            return redirect (routes.IDGApp.index());
+        }
         return ok (ix.idg.views.html.tcrd.render("IDG TCRD Loader"));
     }
 }

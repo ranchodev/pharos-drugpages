@@ -22,6 +22,26 @@
     </li>
 }
 
+@getdoid(t: Disease) = {
+    @* We only consider the first DOID, even if there are alternates *@
+    @defining(t.getSynonym("DOID", UNIPROT_DISEASE)) { id =>
+        @if(id != null) {
+            <a href="@id.href">@id.term</a>
+        }
+    }
+}
+
+@diseaserow(d: Disease) = {
+    <tr id="row-@IDGApp.getId(d)">
+        <td><input type="checkbox" class="cb-table-row" id="cb-@IDGApp.getId(d)" /></td>
+        <td>@getdoid(d)</td>
+        <td><a href="@ix.idg.controllers.routes.IDGApp.disease(IDGApp.getId(d))">@d.name.capitalize</a></td>
+        <td>@if(d.getDescription() != null) {
+            @d.getDescription().replace("_", " ")
+        } else {}</td>
+    </tr>
+}
+
 @tabrow(t: Target) = {
     <tr id="row-@IDGApp.getId(t)">
         <td><input type="checkbox" class="cb-table-row" id="cb-@IDGApp.getId(t)" /></td>
@@ -36,7 +56,7 @@
         <td>@t.patentCount</td>
         <td>@t.antibodyCount</td>
         @*<td><div style="display: inline;" id="radar-@IDGApp.getId(t)" class="radar-div"></div></td>*@
-        <td><div id="radar-@IDGApp.getId(t)" class="radar-div"></div></td>
+        <td><div id="radar-@IDGApp.getId(t)" class="radar-div" genesym="@IDGApp.getGeneSymbol(t)"></div></td>
     </tr>
 }
 
@@ -79,10 +99,16 @@
             </div>
             <div class="col-md-9">
 
+    @if(targets.size() == 0 && diseases.size() == 0 && ligands.size() == 0) {
+        <h3>No entries in this dossier</h3>
+    }
+
+    @if(targets.size() > 0){
     <form>
+        <h3>Targets</h3>
     <table id="target-table" class="table table-striped">
         <tr>
-            <th><button id="cb-addall" class="btn btn-default" type="button">Select all</button></th>
+            <th><button id="cb-addall" class="btn btn-default" type="button"><i class="fa fa-check fa-fw"></i></button></button></th>
             <th>Name</th>
             <th>Development Level</th>
             <th>Target Family</th>
@@ -99,6 +125,24 @@
         }
     </table>
     </form>
+    }
+
+    @if(diseases.size() > 0) {
+        <form>
+            <h3>Diseases</h3>
+            <table id="disease-table" class="table table-striped">
+                <tr>
+                    <th><button id="cb-addall" class="btn btn-default" type="button"><i class="fa fa-check fa-fw"></i></button></th>
+                    <th>ID <i class="fa fa-external-link"></i></th>
+                    <th>Name</th>
+                    <th>Description</th>
+                </tr>
+                @for(d <- diseases) {
+                    @diseaserow(d)
+                }
+            </table>
+        </form>
+    }
 
     </div>
     </div>
@@ -115,7 +159,7 @@
   </div>
 </div>
 
-@modalradar(null)
+@modalradar(null, null)
 
 <div class="modal fade" id="hgramModal" tabindex="-1"
      role="dialog" aria-labelledby="hgramModalLabel" aria-hidden="true" >
@@ -262,6 +306,7 @@ $(document).ready(function () {
 
     $("#target-table" ).on("click", ".radar-div", function() {
         var target = $(this ).attr("id" ).split("-")[1];
+        var gene = $(this ).attr("genesym" );
         $.ajax({
             url: '@ix.idg.controllers.routes.HarmonogramApp.hgForTarget(null,null,null,"radar-attr_type")'+'&q='+target,
             dataType:"json",
@@ -269,6 +314,7 @@ $(document).ready(function () {
                 var chartConfig = getModalChartConfig('@ix.idg.controllers.routes.HarmonogramApp.dataSources(null,null)'+'?field=radar-attr_type');
                 $("#modal-radardiv" ).attr("target", target);
                 $("#modalLabelRadar" ).text("Data type summary for "+target);
+                $("#radardownloadlink" ).attr("href", "http://amp.pharm.mssm.edu/Harmonizome/api/1.0/download/associations?gene="+gene);
                 renderChart(data, chartConfig);
             }
         });

@@ -7,9 +7,7 @@ import ix.core.models.XRef;
 import ix.idg.models.Expression;
 import ix.idg.models.Target;
 import ix.ncats.controllers.App;
-import org.w3c.dom.Document;
-import org.w3c.dom.NamedNodeMap;
-import org.w3c.dom.Node;
+import org.w3c.dom.*;
 import play.Play;
 import play.libs.XML;
 import play.libs.XPath;
@@ -31,38 +29,47 @@ public class ExpressionApp extends App {
     static final Map<String, String> onm;
 
     static {
-        onm = new HashMap<>();
-        onm.put("brain", "nervous_system");
-        onm.put("cortex", "nervous_system");
-        onm.put("pituitary", "nervous_system");
-        onm.put("cerebra", "nervous_system");
-        onm.put("cerebell", "nervous_system");
+        onm = new LinkedHashMap<>();
         onm.put("bone", "bone");
+        onm.put("nervous_system", "nervous_system");
         onm.put("blood", "blood");
-        onm.put("artery", "blood");
-        onm.put("circula", "blood");
         onm.put("skin", "skin");
-        onm.put("sweat", "skin");
-        onm.put("gall", "gall_bladder");
+        onm.put("gall_bladder", "gall_bladder");
         onm.put("spleen", "spleen");
         onm.put("muscle", "muscle");
-        onm.put("pancreas", "pancrease");
+        onm.put("pancreas", "pancreas");
         onm.put("urine", "urine");
-        onm.put("ureth", "urine");
         onm.put("saliva", "saliva");
-        onm.put("lymph", "lymph_nodes");
-        onm.put("thyroid", "thyroid_gland");
+        onm.put("lymph_nodes", "lymph_nodes");
+        onm.put("thyroid_gland", "thyroid_gland");
         onm.put("eye", "eye");
-        onm.put("retina", "eye");
         onm.put("kidney", "kidney");
-        onm.put("adrenal", "adrenal_gland");
+        onm.put("adrenal_gland", "adrenal_gland");
         onm.put("bone_marrow", "bone_marrow");
-        onm.put("marrow", "bone_marrow");
         onm.put("stomach", "stomach");
         onm.put("liver", "liver");
         onm.put("heart", "heart");
         onm.put("lung", "lung");
         onm.put("intestine", "intestine");
+
+        onm.put("spinal", "nervous_system");
+        onm.put("brain", "brain");
+        onm.put("cortex", "brain");
+        onm.put("pituitary", "brain");
+        onm.put("cerebra", "brain");
+        onm.put("cerebell", "brain");
+        onm.put("artery", "blood");
+        onm.put("circula", "blood");
+        onm.put("skin", "skin");
+        onm.put("sweat", "skin");
+        onm.put("gall", "gall_bladder");
+        onm.put("ureth", "urine");
+        onm.put("lymph", "lymph_nodes");
+        onm.put("thyroid", "thyroid_gland");
+        onm.put("retina", "eye");
+        onm.put("adrenal", "adrenal_gland");
+        onm.put("bone_marrow", "bone_marrow");
+        onm.put("marrow", "bone_marrow");
         onm.put("ileum", "intestine");
         onm.put("colon", "intestine");
         onm.put("digest", "intestine");
@@ -135,7 +142,7 @@ public class ExpressionApp extends App {
                 Collections.sort(ret, new Comparator<Expression>() {
                     @Override
                     public int compare(Expression o1, Expression o2) {
-                        return -1*o1.getNumberValue().compareTo(o2.getNumberValue());
+                        return -1 * o1.getNumberValue().compareTo(o2.getNumberValue());
                     }
                 });
             }
@@ -165,9 +172,11 @@ public class ExpressionApp extends App {
                     else if ("hpm".equalsIgnoreCase(source)) ds = Commons.HPM_EXPR;
                     else if ("gtex".equalsIgnoreCase(source)) ds = Commons.GTEx_EXPR;
                     else if ("hpa".equalsIgnoreCase(source)) ds = Commons.HPA_RNA_EXPR;
+                    else if ("consensus".equalsIgnoreCase(source)) ds = Commons.CONSENSUS_EXPR;
                 }
 
-                HashMap<String,Integer> organs = new HashMap<>();
+                HashMap<String, Integer> organsLevel = new HashMap<>();
+                HashMap<String, Integer> organsConf = new HashMap<>();
                 for (XRef xref : t.getLinks()) {
                     if (!xref.kind.equals(Expression.class.getName())) continue;
                     Expression expr = (Expression) xref.deRef();
@@ -177,22 +186,27 @@ public class ExpressionApp extends App {
 
                     // map to canonical organ terms
                     for (String key : onm.keySet()) {
+
                         if (expr.getTissue().toLowerCase().contains(key)) {
 
                             // derive the expr level or confidence
-                            Integer theLevel = 0;
-                            if (ds.equals(Commons.IDG_EXPR)) theLevel = expr.getConfidence().intValue();
-                            else {
-                                if (expr.getQualValue().toLowerCase().equals("low")) theLevel = 0;
-                                else if (expr.getQualValue().toLowerCase().equals("medium")) theLevel = 1;
-                                else if (expr.getQualValue().toLowerCase().equals("high")) theLevel = 2;
-                            }
+                            Integer conf = expr.getConfidence().intValue();
+                            Integer level = -1;
+                            if (expr.getQualValue().toLowerCase().equals("low")) level = 0;
+                            else if (expr.getQualValue().toLowerCase().equals("medium")) level = 1;
+                            else if (expr.getQualValue().toLowerCase().equals("high")) level = 2;
 
                             String tissue = onm.get(key);
-                            if (organs.containsKey(tissue)) {
-                                Integer level = organs.get(tissue);
-                                if (theLevel > level) organs.put(tissue, theLevel);
-                            } else organs.put(tissue, theLevel);
+                            if (organsLevel.containsKey(tissue)) {
+                                Integer tmp = organsLevel.get(tissue);
+                                if (level > tmp) organsLevel.put(tissue, level);
+                            } else organsLevel.put(tissue, level);
+
+                            if (organsConf.containsKey(tissue)) {
+                                Integer tmp = organsConf.get(tissue);
+                                if (conf > tmp) organsConf.put(tissue, conf);
+                            } else organsConf.put(tissue, conf);
+
                         }
                     }
                 }
@@ -200,13 +214,22 @@ public class ExpressionApp extends App {
                 String[] confidenceColorsIDG = new String[]{
                         "#ffffff", "#EDF8E9", "#BAE4B3", "#74C476", "#31A354", "#006D2C"
                 };
+                String[] colorsConsHigh = new String[]{
+                        "#ffe6e6", "#ffb3b3", "#ff6666", "#ff0000", "#b30000", "#660000"
+                };
+                String[] colorsConsMedium = new String[]{
+                        "#e6e6ff", "#b3b3ff", "#6666ff", "#0000ff", "#0000b3", "#000066"
+                };
+                String[] colorsConsLow = new String[]{
+                        "#e6ffe6", "#b3ffb3", "#66ff66", "#00ff00", "#00b300", "#006600"
+                };
                 String[] confidenceColorsOther = new String[]{
                         "#EDF8E9", "#74C476", "#006D2C"
                 };
 
-
                 String suffix = "";
-                if (!ds.equals(Commons.IDG_EXPR)) suffix = "-qual";
+                if (ds.equals(Commons.CONSENSUS_EXPR)) suffix = "-cons";
+                else if (!ds.equals(Commons.IDG_EXPR)) suffix = "-qual";
 
                 Document doc;
                 if (Play.isProd()) {
@@ -220,20 +243,65 @@ public class ExpressionApp extends App {
                     doc = XML.fromInputStream(fis, "UTF-8");
                 }
 
-                for (String tissue : organs.keySet()) {
+                for (String tissue : organsLevel.keySet()) {
                     Node node = XPath.selectNode("//*[@id='" + tissue + "']", doc);
                     NamedNodeMap attributes = node == null ? null : node.getAttributes();
                     if (attributes == null) continue;
-                    Node attrNode = attributes.getNamedItem("fill");
-                    if (ds.equals(Commons.IDG_EXPR))
-                        attrNode.setNodeValue(confidenceColorsIDG[organs.get(tissue)]);
-                    else
-                        attrNode.setNodeValue(confidenceColorsOther[organs.get(tissue)]);
+                    Node attrNode = attributes.getNamedItem("style");
+                    if (attrNode == null) {
+                        Attr attr = doc.createAttribute("style");
+                        attr.setValue("");
+                        attributes.setNamedItem(attr);
+                        attrNode = attributes.getNamedItem("style");
+                    }
+                    String color = "";
+                    switch (ds) {
+                        case Commons.IDG_EXPR:
+                            color = confidenceColorsIDG[organsConf.get(tissue)];
+                            break;
+                        case Commons.CONSENSUS_EXPR:
+                            int level = organsLevel.get(tissue);
+                            int conf = organsConf.get(tissue);
+
+                            switch (level) {
+                                case 0: // low
+                                    color = colorsConsLow[conf];
+                                    break;
+                                case 1: // medium
+                                    color = colorsConsMedium[conf];
+                                    break;
+                                case 2: //high
+                                    color = colorsConsHigh[conf];
+                                    break;
+                            }
+                            System.out.println(tissue+" color = " + color);
+                            break;
+                        default:
+                            color = confidenceColorsOther[organsLevel.get(tissue)];
+                            break;
+                    }
+                    attrNode.setNodeValue("fill:" + color + ";");
                     attributes.setNamedItem(attrNode);
+                    colorChildren(node, color, doc);
+
                 }
                 return ok(xml2str(doc));
             }
         });
     }
+
+    static void colorChildren(Node node, String color, Document doc) {
+        NodeList children = XPath.selectNodes("*", node);
+        if (children == null || children.getLength() == 0) return;
+        for (int i = 0; i < children.getLength(); i++) {
+            Node child = children.item(i);
+            NamedNodeMap childAttrs = child.getAttributes();
+            Attr attr = doc.createAttribute("style");
+            attr.setNodeValue("fill:" + color + ";");
+            childAttrs.setNamedItem(attr);
+            colorChildren(child, color, doc);
+        }
+    }
+
 
 }
