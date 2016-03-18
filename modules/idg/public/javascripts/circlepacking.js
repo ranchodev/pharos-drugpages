@@ -47,13 +47,13 @@ function circlepacking (source, base) {
 	    .enter().append("circle")
 	    .attr("class", function(d) {
 		var leaf = d.tdl ? "node--leaf-"+d.tdl : "node--leaf";
-		return d.parent ? d.children
+		return d.parent ? d.children && d.children.length > 0
 		    ? "node" : "node "+leaf : "node node--root"; })
 	    .style("fill", function(d) {
 		return d.children ? color(d.depth) : null; })
 	    .on("mouseover", function(d) {
 		return tooltip
-		    .text(d.name)
+		    .text(d.fullname ? d.fullname : d.name)
 		    .style("visibility", "visible"); })
 	    .on("mousemove", function () {
 		return tooltip
@@ -79,7 +79,8 @@ function circlepacking (source, base) {
 		return url; })
 	    .append("text")
 	    .attr("class", "label")
-	    .style("font-size", "14px")
+	    .style("font-size", function(d) {
+		return d.depth > 1 ? "20px" : "14px"; })
 	    .style("fill-opacity", function(d) {
 		return d.parent === root ? 1 : 0; })
 	    .style("display", function(d) {
@@ -94,12 +95,44 @@ function circlepacking (source, base) {
 	d3.select("body")
 	    .style("background", color(-1))
 	    .on("click", function() {
-		zoom(root);
+		zoom (root);
 	    });
 	
 	zoomTo([root.x, root.y, root.r * 2 + margin]);
-	
+
 	function zoom(d) {
+	    if (d.parent)
+		zoom1(d);
+	    else
+		zoom0(d);
+	}
+	
+	function zoom1(d) {
+	    var focus0 = focus; focus = d;
+	    
+	    var transition = d3.transition()
+		.duration(d3.event.altKey ? 7500 : 750)
+		.tween("zoom", function(d) {
+		    var i = d3.interpolateZoom
+		    (view, [focus.x, focus.y, focus.r * 2 + margin]);
+		    return function(t) { zoomTo(i(t)); };
+		});
+	    
+	    transition.selectAll("text")
+		.filter(function(d) {
+		    return d === focus
+			|| this.style.display === "inline"; })
+		.style("fill-opacity", function(d) {
+		    return d === focus ? 1 : 0; })
+		.each("start", function(d) {
+		    if (d === focus)
+			this.style.display = "inline"; })
+	        .each("end", function(d) {
+		    if (d !== focus)
+			this.style.display = "none"; });
+	}
+
+	function zoom0(d) {
 	    var focus0 = focus; focus = d;
 	    
 	    var transition = d3.transition()
@@ -117,9 +150,11 @@ function circlepacking (source, base) {
 		.style("fill-opacity", function(d) {
 		    return d.parent === focus ? 1 : 0; })
 		.each("start", function(d) {
-		    if (d.parent === focus) this.style.display = "inline"; })
-		    .each("end", function(d) {
-			if (d.parent !== focus) this.style.display = "none"; });
+		    if (d.parent === focus)
+			this.style.display = "inline"; })
+	        .each("end", function(d) {
+		    if (d.parent !== focus)
+			this.style.display = "none"; });
 	}
 	
 	function zoomTo(v) {

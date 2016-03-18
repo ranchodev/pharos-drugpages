@@ -322,6 +322,22 @@ public class TcrdRegistry extends Controller implements Commons {
 
             for (Disease d : DISEASES.values()) {
                 try {
+                    Value drug = d.getProperty(IDG_DRUG);
+                    if (drug != null) {
+                        Keyword kw = (Keyword)drug;
+                        Ligand lig = LIGS.get(kw.term);
+                        if (lig != null) {
+                            XRef ref = d.addIfAbsent(new XRef (lig));
+                            if (ref.id == null)
+                                ref.save();
+                            d.update();
+                        }
+                        else {
+                            Logger.warn("Can't find drug \""
+                                        +kw.term+"\" for disease "
+                                        +d.id+" "+d.name);
+                        }
+                    }
                     //d.update();             
                     INDEXER.update(d);              
                 }
@@ -1655,27 +1671,27 @@ public class TcrdRegistry extends Controller implements Commons {
 
                                 String drugName = rset.getString("drug_name");
                                 if (drugName != null) {
-                                    Ligand drug = LIGS.get(drugName);
-                                    if (drug != null) {
-                                        XRef xref = d.addIfAbsent(new XRef(drug));
-                                        if (xref.id == null) xref.save();
-                                        Logger.debug("disease "+d.id+" has "+drug.getName());
-                                    }
+                                    // add this temporary for now and we
+                                    //  resolve it later..
+                                    d.properties.add
+                                        (KeywordFactory.registerIfAbsent
+                                         (IDG_DRUG, drugName, null));
                                 }
 
                                 if (doid != null) {
                                     d.synonyms.add
-                                            (KeywordFactory.registerIfAbsent
-                                                    ("DOID", doid, "http://www.disease-ontology.org/term/" + doid));
+                                        (KeywordFactory.registerIfAbsent
+                                         ("DOID", doid,
+                                          "http://www.disease-ontology.org/term/" + doid));
                                 } else {
                                     // UniProt Disease
                                     doid = rset.getString("reference")
-                                            .replaceAll("[\\s]+", "");
+                                        .replaceAll("[\\s]+", "");
                                     d.synonyms.add
-                                            (KeywordFactory.registerIfAbsent
-                                                    (UNIPROT_DISEASE, doid,
-                                                            "http://omim.org/entry/"
-                                                                    + doid.substring(doid.indexOf(':') + 1)));
+                                        (KeywordFactory.registerIfAbsent
+                                         (UNIPROT_DISEASE, doid,
+                                          "http://omim.org/entry/"
+                                          + doid.substring(doid.indexOf(':') + 1)));
                                     Keyword kw = datasources.get("OMIM");
                                     if (kw != null)
                                         d.addIfAbsent((Value) kw);
@@ -1683,7 +1699,7 @@ public class TcrdRegistry extends Controller implements Commons {
                                     if (kw != null)
                                         d.addIfAbsent((Value) kw);
                                 }
-
+                                
                                 d.save();
                                 DISEASES.put(doid, d);
                             } else {

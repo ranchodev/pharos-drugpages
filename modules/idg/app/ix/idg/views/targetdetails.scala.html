@@ -10,6 +10,7 @@
 @import ix.core.models.VInt
 @import ix.core.models.VNum
 @import ix.core.models.Publication
+@import ix.ncats.controllers.App
 @import ix.idg.controllers.ExpressionApp
 @import ix.idg.controllers.IDGApp
 @import ix.idg.controllers.WordCloud
@@ -1294,7 +1295,8 @@ $(document).ready(function () {
 
     /* Word cloud for text mined pubs */
     @defining(WordCloud.textHistogram(target, "title", "sqrt")) { counts =>
-        wordcloud ( "tpub-wc", 600, 300, "foo", [
+        wordcloud ("tpub-wc", 600, 300,
+                '@ix.idg.controllers.routes.IDGApp.targets(null,10,1)', [
             @for(count <- counts) {
                 {text:'@count.label', size:@count.numval},
             }

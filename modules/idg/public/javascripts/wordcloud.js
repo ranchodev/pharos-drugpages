@@ -1,4 +1,4 @@
-function wordcloud (id, width, height, facetName, data) {
+function wordcloud (id, width, height, url, data) {
     var fill = d3.scale.category20();
 
     d3.layout.cloud().size([width, height])
@@ -30,12 +30,7 @@ function wordcloud (id, width, height, facetName, data) {
             .data(words)
             .enter()
             .append("svg:a").attr("xlink:href", function(d){
-                if (facetName == null || facetName == undefined)
-                    return "";
-                var uri = '@HtmlFormat.raw(App.url("page"))';
-                uri += (uri.indexOf('?') > 0 ? '&' : '?')
-                + 'facet='+facetName+'/'+d.text;
-                return uri;
+                return url+(url.indexOf('?') > 0 ? '&' : '?')+'q='+d.text;
             })
             .append("text")
             .style("font-size", function(d) { return d.size + "px"; })
