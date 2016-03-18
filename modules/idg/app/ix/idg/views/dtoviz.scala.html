@@ -1,3 +1,6 @@
+
+@(node: String)
+
 <!DOCTYPE html>
 <meta charset="utf-8">
 <head>
@@ -10,7 +13,7 @@
 <body>
 <script>
   $(document).ready(function () {
-     circlepacking('@ix.idg.controllers.routes.DTOHier.dtoNode("DTO_00200000")', '@ix.idg.controllers.routes.IDGApp.targets(null,10,1)');
+     circlepacking('@ix.idg.controllers.routes.DTOHier.dtoNode(node)', '@ix.idg.controllers.routes.IDGApp.targets(null,10,1)');
   });
 </script>
 </body>

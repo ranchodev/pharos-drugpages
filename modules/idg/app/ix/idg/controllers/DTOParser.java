@@ -49,6 +49,14 @@ public class DTOParser {
         return dto;
     }
 
+    static public DTOParser readJson (InputStream is) throws IOException {
+        ObjectMapper mapper = new ObjectMapper ();
+        DTOParser dto = new DTOParser ();
+        dto.root = mapper.readValue(is, Node.class);
+        index (dto, dto.root);
+        return dto;
+    }
+
     static public void writeJson (File file, DTOParser dto) throws IOException {
         writeJson (file, dto.root);
     }

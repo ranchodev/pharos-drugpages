@@ -47,8 +47,8 @@ POST	/dossier ix.idg.controllers.DossierApp.addEntities
 GET	/dossier/count ix.idg.controllers.DossierApp.count
 GET	/dossier/view ix.idg.controllers.DossierApp.view(folder: String ?= null)
 GET	/dossier/empty	ix.idg.controllers.DossierApp.emptyCart
-GET	/dto		ix.idg.controllers.DTOHier.dto(ctx: String ?= null)
-GET	/dtoviz		ix.idg.controllers.DTOHier.dtoViz
+GET	/dto		ix.idg.controllers.DTOHier.dto(node: String ?= null)
+GET	/dtoviz		ix.idg.controllers.DTOHier.dtoViz(node: String ?= null)
 GET	/dto/:label	ix.idg.controllers.DTOHier.dtoNode(label: String)
 
 GET /sitemap.txt ix.idg.controllers.IDGApp.sitemap()
