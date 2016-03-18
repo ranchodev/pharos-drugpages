@@ -914,7 +914,6 @@ public class IDGApp extends App implements Commons {
 
     public static Result target(final String name) throws Exception {
         String action = request().getQueryString("action");
-        System.out.println("action = " + action);
         if (action != null && action.toLowerCase().equals("download")) {
             List<Target> targets = TargetFactory.finder.where().eq("synonyms.term", name).findList();
             if (targets == null || targets.size() != 1)
