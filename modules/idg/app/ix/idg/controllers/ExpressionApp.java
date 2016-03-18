@@ -277,7 +277,6 @@ public class ExpressionApp extends App {
                                     color = colorsConsHigh[conf];
                                     break;
                             }
-                            System.out.println(tissue+" color = " + color);
                             break;
                         default:
                             color = confidenceColorsOther[organsLevel.get(tissue)];
