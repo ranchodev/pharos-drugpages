@@ -912,7 +912,18 @@ public class IDGApp extends App implements Commons {
             }
         };
 
-    public static Result target (final String name) {
+    public static Result target(final String name) throws Exception {
+        String action = request().getQueryString("action");
+        System.out.println("action = " + action);
+        if (action != null && action.toLowerCase().equals("download")) {
+            List<Target> targets = TargetFactory.finder.where().eq("synonyms.term", name).findList();
+            if (targets == null || targets.size() != 1)
+                return notFound("No target for " + name);
+            byte[] targetDownload = DownloadEntities.downloadEntities(targets);
+            String suffix = DownloadEntities.getDownloadMimeType(Target.class).endsWith("zip") ? ".zip" : ".csv";
+            response().setHeader("Content-Disposition", "attachment;filename=export-target-" + name + suffix);
+            return ok(targetDownload).as(DownloadEntities.getDownloadMimeType(Target.class));
+        }
         return TargetResult.get(name);
     }
 
