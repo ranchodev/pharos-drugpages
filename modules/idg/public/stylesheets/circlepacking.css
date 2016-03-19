@@ -15,22 +15,26 @@
 
 /* bootstrap color primary */
 .node--leaf-Tclin {
-    fill: #337ab7;
+    /*    fill: #337ab7;*/
+    fill: #00ff00;
 }
 
 /* info */
 .node--leaf-Tchem {
-    fill: #31708f;
+    /*    fill: #31708f;*/
+    fill: #00ccff;
 }
 
 /* warning */
 .node--leaf-Tbio {
-    fill: #8a6d3b;
+    /*    fill: #8a6d3b;*/
+    fill: #ffcc00;
 }
 
 /* danger */
 .node--leaf-Tdark {
     fill: #a94442;
+    /*fill: #ff0000;*/
 }
 
 .node--leaf {

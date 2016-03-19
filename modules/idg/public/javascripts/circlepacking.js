@@ -53,7 +53,7 @@ function circlepacking (source, base) {
 		return d.children ? color(d.depth) : null; })
 	    .on("mouseover", function(d) {
 		return tooltip
-		    .text(d.fullname ? d.fullname : d.name)
+		    .text(d.fullname ? '['+d.tdl+'] '+d.fullname : d.name)
 		    .style("visibility", "visible"); })
 	    .on("mousemove", function () {
 		return tooltip
