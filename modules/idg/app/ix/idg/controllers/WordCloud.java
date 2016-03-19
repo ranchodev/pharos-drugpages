@@ -4,6 +4,7 @@ import ix.core.models.Publication;
 import ix.core.models.VNum;
 import ix.idg.models.Target;
 
+import java.text.Normalizer;
 import java.util.*;
 
 /**
@@ -11,9 +12,12 @@ import java.util.*;
  */
 public class WordCloud {
 
+    private static final String[] PUNCTUTATION = new String[]{
+            ".", "(", ")", ";", ",", "*", "!", "/", "?", "<", ">", "[", "]", "+", ":", "'", "\""
+    };
+
     private static final String[] STOPWORDS = new String[]{
             "a", "x",
-            "1", "2", "3", "4", "5", "6", "7", "8", "9", "0",
             "about", "above", "across", "after", "again", "against", "all", "almost", "alone", "along", "already",
             "also", "although", "always", "among", "an", "and", "another", "any", "anybody", "anyone", "anything",
             "anywhere", "are", "area", "areas", "around", "as", "ask", "asked", "asking", "asks", "at", "away",
@@ -52,6 +56,14 @@ public class WordCloud {
             "years", "yet", "you", "young", "younger", "youngest", "your", "yours"
     };
 
+    static String normalize(String s) {
+        s = s.toLowerCase().replaceAll("[0-9]","").replaceAll(" [a-z] ", "");
+        for (String p : PUNCTUTATION) s = s.replace(p, " ");
+        s = s.trim();
+        s = Normalizer.normalize(s, Normalizer.Form.NFD);
+        return s.replaceAll("[^\\x00-\\x7F]", "");
+    }
+
     public static List<VNum> textHistogram(Target t, String textType, String transform) throws Exception {
         List<String> words = new ArrayList<>();
         List<Publication> pubs = IDGApp.getPublications(t);
@@ -67,8 +79,9 @@ public class WordCloud {
         List<String> swl = Arrays.asList(STOPWORDS);
         List<String> cleaned = new ArrayList<>();
         for (String w : words) {
-            w = w.replace(".", "");
-            if (!swl.contains(w.toLowerCase()))
+            w = normalize(w);
+            if (w.equals("")) continue;
+            if (!swl.contains(w))
                 cleaned.add(w);
         }
 

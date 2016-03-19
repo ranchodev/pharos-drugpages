@@ -1547,7 +1547,12 @@ public class TcrdRegistry extends Controller implements Commons {
                         XRef xref = new XRef (struc);
                         ligand.links.add(xref);
                         // now index the structure for searching
-                        MOLIDX.add(null, struc.id.toString(), struc.molfile);
+
+                        try {
+                            MOLIDX.add(null, struc.id.toString(), struc.molfile);
+                        } catch (IllegalArgumentException e) {
+                            Logger.debug(e.toString());
+                        }
                         /*
                         Logger.debug("... "+chemblId+": structure "
                         +struc.id+" indexed in "
@@ -2687,6 +2692,7 @@ public class TcrdRegistry extends Controller implements Commons {
                  //+"where c.uniprot in ('Q8WXA8')\n"
                  //+"where c.uniprot in ('Q7RTX7','Q86YV6','P07333','P07949')\n"
 //                 +"where c.uniprot in ('A5X5Y0','O00329','O00329', 'O95069')\n"
+//                                +"where c.uniprot in ('P00533')\n"
                  +"order by d.score desc, c.id\n"
                  +(rows > 0 ? ("limit "+rows) : "")
                  );
