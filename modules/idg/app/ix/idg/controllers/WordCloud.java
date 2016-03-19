@@ -93,7 +93,16 @@ public class WordCloud {
                 counts.add(new VNum(w, (double) hist.get(w)));
         }
 
-        return (counts);
+        // sort in reverse order.. for log we should flip
+        Collections.sort(counts, new Comparator<VNum>() {
+                public int compare (VNum v1, VNum v2) {
+                    if (v1.numval < v2.numval) return 1;
+                    if (v1.numval > v2.numval) return -1;
+                    return 0;
+                }
+            });
+
+        return counts.subList(0, Math.min(counts.size(), 150));
     }
 
 }
