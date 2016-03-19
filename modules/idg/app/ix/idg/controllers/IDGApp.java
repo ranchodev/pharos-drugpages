@@ -624,7 +624,8 @@ public class IDGApp extends App implements Commons {
             sb.append("https://pharos.nih.gov/idg/targets/").append(getId(t)).append("\n");
         }
         for (Disease d : DiseaseFactory.finder.all()) {
-            sb.append("https://pharos.nih.gov/idg/diseases/").append(getId(d)).append("\n");
+            if (!getId(d).equals(""))
+                sb.append("https://pharos.nih.gov/idg/diseases/").append(getId(d)).append("\n");
         }
         return(ok(sb.toString()).as("text/plain"));
     }
