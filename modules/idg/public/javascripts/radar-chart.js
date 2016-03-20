@@ -1,4 +1,5 @@
 function showDataSources(selector, dsUrl) {
+
     var func = function (d) {
         $.ajax({
             url: dsUrl + "&value=" + d.name,
@@ -8,7 +9,9 @@ function showDataSources(selector, dsUrl) {
                 for (var i = 0; i < data.ds.length; i++) {
                     var bgcolor = '#FFFFFF';
                     if (i % 2 == 0) bgcolor = '#E6E6E6';
-                    $(selector).append("<div style='background: " + bgcolor + ";'>" + data.ds[i] + "</span><br>");
+                    $(selector).append("<div style='background: " + bgcolor + ";'>" +
+                        "<a href='"+data.ds[i].ds_url+"' target='_blank'>"+
+                        data.ds[i].ds_name + "</a></span><br>");
                 }
             }
         });
