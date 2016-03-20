@@ -2711,7 +2711,7 @@ public class TcrdRegistry extends Controller implements Commons {
                  //+" where c.uniprot = 'Q6NV75'\n"
                  //+"where c.uniprot in ('O00444', 'P07333')\n"
                  //+"where c.uniprot in ('Q8NE63','O14976')\n"
-                 +"where c.uniprot in ('O14976','O43293','O75385','O75582','P07949','P09619')\n"
+//                 +"where c.uniprot in ('O14976','O43293','O75385','O75582','P07949','P09619')\n"
                  //+"where c.uniprot in ('P35968')\n"
                  //+"where c.uniprot in ('P42685')\n"
                  //+"where c.uniprot in ('Q6PIU1')\n"
