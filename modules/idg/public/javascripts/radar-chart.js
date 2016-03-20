@@ -1,5 +1,4 @@
 function showDataSources(selector, dsUrl) {
-
     var func = function (d) {
         $.ajax({
             url: dsUrl + "&value=" + d.name,
@@ -9,9 +8,13 @@ function showDataSources(selector, dsUrl) {
                 for (var i = 0; i < data.ds.length; i++) {
                     var bgcolor = '#FFFFFF';
                     if (i % 2 == 0) bgcolor = '#E6E6E6';
-                    $(selector).append("<div style='background: " + bgcolor + ";'>" +
-                        "<a href='"+data.ds[i].ds_url+"' target='_blank'>"+
-                        data.ds[i].ds_name + "</a></span><br>");
+
+                    var txt = "<div style='background: " + bgcolor + ";'>";
+                    if (data.ds[i].ds_url != "")
+                        txt = txt + "<a href='"+data.ds[i].ds_url+"' target='_blank'>"+data.ds[i].ds_name + "</a></div><br>";
+                    else
+                        txt = txt + data.ds[i].ds_name + "</a></div><br>";
+                    $(selector).append(txt);
                 }
             }
         });
@@ -22,7 +25,9 @@ function showDataSources(selector, dsUrl) {
 function getModalChartConfig(mouseOverUrl) {
     return { w: 600, h: 600,
         axisText: true, levels: 0, circles: true,
-        axisTextMouseOverFunc: showDataSources('#radar-ds-container',mouseOverUrl)
+        axisTextMouseOverFunc: function(e) {
+            showDataSources('#radar-ds-container',mouseOverUrl)
+        }
     };
 }
 
@@ -273,7 +278,13 @@ var RadarChart = {
                             .text(function (d) {
                                 return d.name;
                             })
-                            .on('mouseover', cfg.axisTextMouseOverFunc)
+                            .on('mouseover', function(e) {
+                                d3.select(d3.event.target).classed("radar-label-highlight", true);
+                                cfg.axisTextMouseOverFunc(e);
+                            })
+                            .on("mouseout", function() {
+                                d3.select(d3.event.target).classed("radar-label-highlight", false);
+                            })
                             .attr('x', function (d, i) {
                                 return d.xOffset + (cfg.w / 2 - radius2) + getHorizontalPosition(i, radius2, cfg.factorLegend);
                             })
