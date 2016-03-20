@@ -2084,7 +2084,7 @@ public class IDGApp extends App implements Commons {
     public static String getId (Disease d) {
         Keyword kw = d.getSynonym(DiseaseOntologyRegistry.DOID,
                                   UNIPROT_DISEASE);
-        return kw != null ? kw.term : null;
+        return kw != null ? kw.term : "IDG:D"+d.id;
     }
     
     static final GetResult<Disease> DiseaseResult =
@@ -2095,12 +2095,26 @@ public class IDGApp extends App implements Commons {
         };
 
     public static Result disease (final String name) {
+        if (name.startsWith("IDG:D")) {
+            try {
+                long id = Long.parseLong(name.substring(5));
+                Disease d = DiseaseFactory.getDisease(id);
+                if (d != null)
+                    return _getDiseaseResult (d);
+            }
+            catch (Exception ex) {
+                ex.printStackTrace();
+            }
+        }
         return DiseaseResult.get(name);
     }
 
     static Result _getDiseaseResult (final List<Disease> diseases)
         throws Exception {
-        final Disease d = diseases.iterator().next();
+        return _getDiseaseResult (diseases.iterator().next());
+    }
+
+    static Result _getDiseaseResult (final Disease d) throws Exception {
         // resolve the targets for this disease
         final String key = "diseases/"+d.id+"/targets";
         List<Target> targets = getOrElse
@@ -2133,7 +2147,8 @@ public class IDGApp extends App implements Commons {
         });
         
         return ok(ix.idg.views.html.diseasedetails.render
-                  (d, ligs.toArray(new Ligand[0]), targets.toArray(new Target[0]), getBreadcrumb (d)));
+                  (d, ligs.toArray(new Ligand[0]),
+                   targets.toArray(new Target[0]), getBreadcrumb (d)));
     }
 
     public static List<Keyword> getBreadcrumb (Disease d) {

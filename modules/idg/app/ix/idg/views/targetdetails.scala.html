@@ -607,7 +607,7 @@
 	         <div class="panel panel-default">
                  <a name="ligands" tocname="Ligands"></a>
 		    <div class="panel-heading">
-		       <h3 class="panel-title"><a href='@{ix.idg.controllers.routes.IDGApp.ligands() + "?facet=" + IDG_TARGET+"/"+IDGApp.getId(target)}'>Ligand (@ligands.size)</a></h3>
+		       <h3 class="panel-title"><a href='@{ix.idg.controllers.routes.IDGApp.ligands() + "?facet=" + IDG_TARGET+"/"+target.getSynonym(UNIPROT_GENE).term}'>Ligand (@ligands.size)</a></h3>
 		    </div>
 		    <div class="panel-body"
 			 style="max-height: 300px;overflow-y: scroll;">
@@ -625,7 +625,7 @@
 	           </div>
 		   @if(ligands.size > 20) {
 		   <div class="panel-footer">
-		      <a href='@{ix.idg.controllers.routes.IDGApp.ligands() + "?facet=" + IDG_TARGET+"/"+IDGApp.getId(target)}'>See all @ligands.size ligands...</a>
+		      <a href='@{ix.idg.controllers.routes.IDGApp.ligands() + "?facet=" + IDG_TARGET+"/"+target.getSynonym(UNIPROT_GENE).term}'>See all @ligands.size ligands...</a>
 		   </div>
 		   }
    	        </div>

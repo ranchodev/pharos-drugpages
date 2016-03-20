@@ -8,7 +8,7 @@
 @(current: Int, rows: Int, total: Int, pages: Array[Int],
         facets: Array[FacetDecorator], diseases: List[Disease])
 
-    @getdoid(t: Disease) = {
+@getdoid(t: Disease) = {
     @* We only consider the first DOID, even if there are alternates *@
     @defining(t.getSynonym("DOID", UNIPROT_DISEASE)) { id =>
         @if(id != null) {

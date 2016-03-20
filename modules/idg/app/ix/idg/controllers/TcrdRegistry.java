@@ -345,6 +345,7 @@ public class TcrdRegistry extends Controller implements Commons {
                     ex.printStackTrace();
                 }
             }
+            Logger.debug("#### PERSISTENCE COMPLETE! #####");
         }
 
         public void shutdown () throws SQLException {
@@ -1416,7 +1417,7 @@ public class TcrdRegistry extends Controller implements Commons {
                 XRef tref = ligand.addIfAbsent(new XRef (target));
                 tref.addIfAbsent((Value)getTdlKw (target.idgTDL));
                 tref.addIfAbsent((Value)getFamKw (target.idgFamily));
-                Keyword acc = target.getSynonym(UNIPROT_ACCESSION);
+                Keyword acc = target.getSynonym(UNIPROT_GENE);
                 if (acc != null)
                     tref.addIfAbsent((Value)getKeyword
                                      (IDG_TARGET, acc.term, acc.href));
@@ -1528,6 +1529,7 @@ public class TcrdRegistry extends Controller implements Commons {
                     ligand.properties.add(kw);
                     
                     String smiles = rset.getString("smiles");
+                    /*
                     if (smiles == null) {
                         // grab from chembl schema.. sigh
                         smiles = chembl.getMolfile(chemblId);
@@ -1537,8 +1539,9 @@ public class TcrdRegistry extends Controller implements Commons {
                                  +chemblId);
                         }
                     }
-
-                    if (smiles != null) {
+                    */
+                    
+                    if (smiles != null && smiles.length() > 0) {
                         long t0 = System.currentTimeMillis();
                         ligand.properties.add
                             (new Text (ChEMBL_SMILES, smiles));
@@ -1617,7 +1620,7 @@ public class TcrdRegistry extends Controller implements Commons {
                 XRef tref = ligand.addIfAbsent(new XRef (target));
                 tref.addIfAbsent((Value)getTdlKw (target.idgTDL));
                 tref.addIfAbsent((Value)getFamKw (target.idgFamily));
-                Keyword acc = target.getSynonym(UNIPROT_ACCESSION);
+                Keyword acc = target.getSynonym(UNIPROT_GENE);
                 if (acc != null)
                     tref.addIfAbsent((Value)getKeyword
                                      (IDG_TARGET, acc.term, acc.href));
@@ -1665,6 +1668,79 @@ public class TcrdRegistry extends Controller implements Commons {
             }
         }
 
+        Disease registerDiseaseIfAbsent
+            (String name, String type, Keyword tcrd, ResultSet rset)
+            throws Exception {
+            List<Disease> diseases = DiseaseFactory
+                .finder.where().eq("name", name).findList();
+            Disease d = null;
+            if (diseases.isEmpty()) {
+                d = new Disease();
+                d.name = name;
+                d.description = rset.getString("description");
+                d.properties.add(datasources.get(type));                
+                d.properties.add(tcrd);
+                String doid = rset.getString("doid");
+                if (doid != null)
+                    doid = doid.trim();
+                
+                String drugName = rset.getString("drug_name");
+                if (drugName != null) {
+                    // add this temporary for now and we
+                    //  resolve it later..
+                    d.properties.add
+                        (KeywordFactory.registerIfAbsent
+                         (IDG_DRUG, drugName, null));
+                }
+                
+                if (doid != null && doid.length() > 0) {
+                    d.synonyms.add
+                        (KeywordFactory.registerIfAbsent
+                         ("DOID", doid,
+                          "http://www.disease-ontology.org/term/" + doid));
+                }
+                else {
+                    String ref = rset.getString("reference");
+                    if (ref != null) {
+                        // UniProt Disease
+                        doid = ref.replaceAll("[\\s]+", "");
+                        d.synonyms.add
+                            (KeywordFactory.registerIfAbsent
+                             (UNIPROT_DISEASE, doid,
+                              "http://omim.org/entry/"
+                              + doid.substring(doid.indexOf(':') + 1)));
+                        Keyword kw = datasources.get("OMIM");
+                        if (kw != null)
+                            d.addIfAbsent((Value) kw);
+                        kw = datasources.get("UniProt");
+                        if (kw != null)
+                            d.addIfAbsent((Value) kw);
+                    }
+                    else { // DrugCentral
+                        doid = null;
+                        Keyword kw =
+                            datasources.get("DrugCentral");
+                        if (kw == null) {
+                            kw = KeywordFactory.registerIfAbsent
+                                (SOURCE, "DrugCentral", null);
+                            datasources.put("DrugCentral", kw);
+                        }
+                        d.addIfAbsent((Value)kw);
+                    }
+                }
+                d.save();
+                if (doid == null) {
+                    doid = "IDG:D"+d.id;
+                }
+                DISEASES.put(doid, d);
+            }
+            else {
+                d = diseases.iterator().next();
+            }
+
+            return d;
+        }
+        
         void addDisease (Target target, long tid, final Keyword tcrd)
             throws Exception {
             final String type = "DiseaseOntology";
@@ -1677,63 +1753,17 @@ public class TcrdRegistry extends Controller implements Commons {
             
             pstm20.setLong(1, tid);
             final ResultSet rset = pstm20.executeQuery();
-            final Model.Finder<Long, Ligand> ligandFinder = LigandFactory.finder;
             try {
                 int cnt = 0;
                 while (rset.next()) {
                     final String name = rset.getString("name");
-                    Disease d = IxCache.getOrElse(name, new Callable<Disease>() {
-                        public Disease call() throws Exception {
-                            List<Disease> diseases = DiseaseFactory
-                                    .finder.where().eq("name", name).findList();
-                            Disease d = null;
-                            if (diseases.isEmpty()) {
-                                d = new Disease();
-                                d.name = name;
-                                d.description = rset.getString("description");
-                                d.properties.add(datasources.get(type));
-                                d.properties.add(tcrd);
-                                String doid = rset.getString("doid");
-
-                                String drugName = rset.getString("drug_name");
-                                if (drugName != null) {
-                                    // add this temporary for now and we
-                                    //  resolve it later..
-                                    d.properties.add
-                                        (KeywordFactory.registerIfAbsent
-                                         (IDG_DRUG, drugName, null));
+                    Disease d = IxCache.getOrElse
+                        (name, new Callable<Disease>() {
+                                public Disease call() throws Exception {
+                                    return registerDiseaseIfAbsent
+                                    (name, type, tcrd, rset);
                                 }
-
-                                if (doid != null) {
-                                    d.synonyms.add
-                                        (KeywordFactory.registerIfAbsent
-                                         ("DOID", doid,
-                                          "http://www.disease-ontology.org/term/" + doid));
-                                } else {
-                                    // UniProt Disease
-                                    doid = rset.getString("reference")
-                                        .replaceAll("[\\s]+", "");
-                                    d.synonyms.add
-                                        (KeywordFactory.registerIfAbsent
-                                         (UNIPROT_DISEASE, doid,
-                                          "http://omim.org/entry/"
-                                          + doid.substring(doid.indexOf(':') + 1)));
-                                    Keyword kw = datasources.get("OMIM");
-                                    if (kw != null)
-                                        d.addIfAbsent((Value) kw);
-                                    kw = datasources.get("UniProt");
-                                    if (kw != null)
-                                        d.addIfAbsent((Value) kw);
-                                }
-                                
-                                d.save();
-                                DISEASES.put(doid, d);
-                            } else {
-                                d = diseases.iterator().next();
-                            }
-                            return d;
-                        }
-                    });
+                            });
                     
                     XRef xref = target.addIfAbsent(new XRef (d));                    
                     String dtype = rset.getString("datype");
@@ -2681,7 +2711,7 @@ public class TcrdRegistry extends Controller implements Commons {
                  //+" where c.uniprot = 'Q6NV75'\n"
                  //+"where c.uniprot in ('O00444', 'P07333')\n"
                  //+"where c.uniprot in ('Q8NE63','O14976')\n"
-                 //+"where c.uniprot in ('O14976','O43293','O75385','O75582')\n"
+                 +"where c.uniprot in ('O14976','O43293','O75385','O75582','P07949','P09619')\n"
                  //+"where c.uniprot in ('P35968')\n"
                  //+"where c.uniprot in ('P42685')\n"
                  //+"where c.uniprot in ('Q6PIU1')\n"
