@@ -641,6 +641,7 @@ public class TcrdRegistry extends Controller implements Commons {
                 hg.attrType = rset.getString("attribute_type");
                 hg.cdf = rset.getDouble("attr_cdf");
                 hg.dataSource = rset.getString("name");
+                hg.dataSourceUrl = rset.getString("url");
                 //hg.dataSourceDescription = rset.getString("description");
                 hg.dataType  =rset.getString("resource_group");
                 hg.IDGFamily = target.idgFamily;
