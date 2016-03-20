@@ -163,12 +163,12 @@ public class HarmonogramApp extends App {
 
         final String fieldName = field.split("-")[1];
         final String key = "hg/ds/" + fieldName + "/" + value;
-        Set<String> ds = getOrElse(key, new Callable<Set<String>>() {
-            public Set<String> call() throws Exception {
+        Set<String[]> ds = getOrElse(key, new Callable<Set<String[]>>() {
+            public Set<String[]> call() throws Exception {
                 List<HarmonogramCDF> cdfs = HarmonogramFactory.finder.select("dataSource").where().eq(fieldName, value).findList();
-                Set<String> ds = new HashSet<>();
+                Set<String[]> ds = new HashSet<>();
                 for (HarmonogramCDF cdf : cdfs)
-                    ds.add(cdf.getDataSource());
+                    ds.add(new String[]{cdf.getDataSource(),cdf.getDataSourceUrl()});
                 return ds;
             }
         });
@@ -176,7 +176,12 @@ public class HarmonogramApp extends App {
         root.put("fieldName", fieldName);
         root.put("value", value);
         ArrayNode arr = mapper.createArrayNode();
-        for (String s : ds) arr.add(s);
+        for (String[] s : ds) {
+            ObjectNode o = mapper.createObjectNode();
+            o.put("ds_name", s[0]);
+            o.put("ds_url", s[1]);
+            arr.add(o);
+        }
         root.put("ds", arr);
         return ok(root);
     }
