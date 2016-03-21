@@ -112,6 +112,7 @@ public class TcrdRegistry extends Controller implements Commons {
         Double novelty;
         Keyword source;
         DTOParser.Node dtoNode;
+        DTOParser dto;
 
         TcrdTarget () {}
         TcrdTarget (String acc, String family, String tdl,
@@ -1171,7 +1172,7 @@ public class TcrdRegistry extends Controller implements Commons {
             List<Keyword> path = new ArrayList<Keyword>();
             Logger.debug("Target "+IDGApp.getId(target)+" "
                          +target.idgFamily+" DTO");
-            
+
             if (dtoNode != null) {
                 dtoNode.url = routes.IDGApp.target
                     (IDGApp.getId(target)).url();
@@ -1935,7 +1936,16 @@ public class TcrdRegistry extends Controller implements Commons {
                 Logger.debug("Can't persist target "+t.id
                              +" (protein: "+t.protein+")");
             }
-            
+
+            if (t.dtoNode == null) {
+                for (Keyword kw : target.getSynonyms()) {
+                    if (kw.term != null) {
+                        t.dtoNode = t.dto.get(kw.term);
+                        if (t.dtoNode != null)
+                            break;
+                    }
+                }
+            }
             addDTO (target, t.protein, t.dtoNode);
             addTDL (target, t.protein);
             addPhenotype (target, t.protein);
@@ -2710,7 +2720,7 @@ public class TcrdRegistry extends Controller implements Commons {
                  //+" where c.uniprot = 'Q6NV75'\n"
                  //+"where c.uniprot in ('O00444', 'P07333')\n"
                  //+"where c.uniprot in ('Q8NE63','O14976')\n"
-                 +"where c.uniprot in ('O14976','O43293','O75385','O75582','P07949','P09619')\n"
+                 //+"where c.uniprot in ('O14976','O43293','O75385','O75582','P07949','P09619')\n"
                  //+"where c.uniprot in ('P35968')\n"
                  //+"where c.uniprot in ('P42685')\n"
                  //+"where c.uniprot in ('Q6PIU1')\n"
@@ -2782,6 +2792,7 @@ public class TcrdRegistry extends Controller implements Commons {
                     TcrdTarget t =
                         new TcrdTarget (acc, fam, tdl, id, protId,
                                         novelty, source);
+                    t.dto = dto;
                     t.dtoNode = dto.get(sym);
                     targets.add(t);
                 }

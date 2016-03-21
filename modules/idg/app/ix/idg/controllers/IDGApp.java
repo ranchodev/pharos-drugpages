@@ -250,6 +250,16 @@ public class IDGApp extends App implements Commons {
                 }
                 assert false: "Unknown TDL label: "+label;
             }
+            else if (name.equals(IDG_DRUG) || name.equals(IDG_LIGAND)) {
+                return "<a href='"+routes.IDGApp.ligand(label)+"'>"+label+"</a>";
+            }
+            else if (name.equals(IDG_TARGET)) {
+                return "<a href='"+routes.IDGApp.target(label)+"'>"+label+"</a>";
+            }
+            else if (name.equals(IDG_DISEASE)) {
+                return "<a href='"+routes.IDGApp.disease(label)+"'>"
+                    +label+"</a>";
+            }
             else if (name.equals(WHO_ATC)) {
                 final String key = WHO_ATC+":"+label;
                 try {
@@ -274,20 +284,20 @@ public class IDGApp extends App implements Commons {
             }
             else if (name.equals(Target.IDG_FAMILY)) {
                 if (label.equalsIgnoreCase("ogpcr")) {
-                    return "<a href='https://en.wikipedia.org/wiki/Olfactory_receptor'>oGPCR</a>";
+                    return "<a href='https://en.wikipedia.org/wiki/Olfactory_receptor'>oGPCR</a> <i class='fa fa-external-link'></i>";
                 }
                 
                 if (label.equalsIgnoreCase("gpcr")) {
-                    return "<a href=\"http://en.wikipedia.org/wiki/G_protein%E2%80%93coupled_receptor\">"+label+"</a>";
+                    return "<a href=\"http://en.wikipedia.org/wiki/G_protein%E2%80%93coupled_receptor\">"+label+"</a> <i class='fa fa-external-link'></i>";
                 }
                 if (label.equalsIgnoreCase("kinase")) {
-                    return "<a href=\"http://en.wikipedia.org/wiki/Kinase\">"+label+"</a>";
+                    return "<a href=\"http://en.wikipedia.org/wiki/Kinase\">"+label+"</a> <i class='fa fa-external-link'></i>";
                 }
                 if (label.equalsIgnoreCase("ion channel")) {
-                    return "<a href=\"http://en.wikipedia.org/wiki/Ion_channel\">"+label+"</a>";
+                    return "<a href=\"http://en.wikipedia.org/wiki/Ion_channel\">"+label+"</a> <i class='fa fa-external-link'></i>";
                 }
                 if (label.equalsIgnoreCase("nuclear receptor")) {
-                    return "<a href=\"http://en.wikipedia.org/wiki/Nuclear_receptor\">"+label+"</a>";
+                    return "<a href=\"http://en.wikipedia.org/wiki/Nuclear_receptor\">"+label+"</a> <i class='fa fa-external-link'></i>";
                 }
             }
             
@@ -316,6 +326,12 @@ public class IDGApp extends App implements Commons {
                         public List<T> call () throws Exception {
                             List<T> values = finder.where()
                             .eq("synonyms.term", name).findList();
+                            if (values.isEmpty()) {
+                                // let try name directly
+                                values = finder.where()
+                                    .eq("name", name).findList();
+                            }
+                            
                             if (values.size() > 1) {
                                 Logger.warn("\""+name+"\" yields "
                                             +values.size()+" matches!");
@@ -325,7 +341,9 @@ public class IDGApp extends App implements Commons {
                             for (T v : values) {
                                 for (Keyword kw : v.getSynonyms()) {
                                     if (kw.term == null) {
-                                        Logger.warn("NULL term for synonym keyword label: "+kw.label);
+                                        Logger.warn("NULL term for synonym"
+                                                    +" keyword label: "
+                                                    +kw.label);
                                         continue;
                                     }
 
