@@ -636,6 +636,7 @@ public class IDGApp extends App implements Commons {
         return m;
     }
 
+    @Cached(key="_sitemap", duration = Integer.MAX_VALUE)
     public static Result sitemap() {
         StringBuilder sb = new StringBuilder();
         for (Target t : TargetFactory.finder.all()) {
