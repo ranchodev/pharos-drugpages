@@ -1,6 +1,6 @@
 // load clustergram function
 function load_clustergram(json_url) {
-
+    console.log(json_url);
   // load network
   d3.json(json_url, function(network_data){
 
@@ -42,8 +42,8 @@ function load_clustergram(json_url) {
     var arguments_obj = {
       'network_data': network_data,
       'svg_div_id': 'svg_div',
-      'row_label':'Data Source',
-      'col_label':'Target',
+      'col_label':'Data Source',
+      'row_label':'Target',
       'super_label_scale': 1,
       'outer_margins': outer_margins,
       'outer_margins_expand': outer_margins_expand,

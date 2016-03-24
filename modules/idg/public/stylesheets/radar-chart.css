@@ -59,3 +59,9 @@
 .radar-chart .d3-enter, .radar-chart .d3-exit {
   opacity: 0;
 }
+
+.radar-label-highlight {
+    color: #ff0000;
+    font-weight: bold;
+    font-size: x-large;
+}
