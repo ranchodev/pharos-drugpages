@@ -22,7 +22,8 @@ facets: Array[FacetDecorator], targets: List[Target], ctx: String )
         <td>@t.antibodyCount</td>
         <td>@t.patentCount</td>
         @*<td><div style="display: inline;" id="radar-@IDGApp.getId(t)" class="radar-div"></div></td>*@
-        <td><div id="radar-@IDGApp.getId(t)" class="radar-div" genesym="@IDGApp.getGeneSymbol(t)"></div></td>
+        <td><div id="radar-@IDGApp.getId(t)" class="radar-div" genesym="@IDGApp.getGeneSymbol(t)"
+                 tdlLabel="@t.idgTDL.label" tdl="@t.idgTDL" tname="@t.name"></div></td>
     </tr>
     @if(ctx != null) {
        @defining(IDGApp.getSeqAlignment(ctx, t)) { aln =>
@@ -376,6 +377,9 @@ $(document).ready(function () {
 
     $("#target-table" ).on("click", ".radar-div", function() {
         var target = $(this ).attr("id" ).split("-")[1];
+        var tdlLabel = $(this ).attr("tdlLabel" );
+        var tdl = $(this ).attr("tdl" );
+        var tname = $(this ).attr("tname" );
         var gene = $(this ).attr("genesym" );
         $.ajax({
             url: '@ix.idg.controllers.routes.HarmonogramApp.hgForTarget(null,null,null,"radar-attr_type")'+'&q='+target,
@@ -383,7 +387,7 @@ $(document).ready(function () {
             success:function(data) {
                 var chartConfig = getModalChartConfig('@ix.idg.controllers.routes.HarmonogramApp.dataSources(null,null)'+'?field=radar-attr_type');
                 $("#modal-radardiv" ).attr("target", target);
-                $("#modalLabelRadar" ).text("Data type summary for "+target);
+                $("#modalLabelRadar" ).html('<h4><span class="label label-'+tdlLabel+'">&nbsp;'+tdl+'</span>'+tname+'</h4>');
                 $("#radardownloadlink" ).attr("href", "http://amp.pharm.mssm.edu/Harmonizome/api/1.0/download/associations?gene="+gene);
                 renderChart(data, chartConfig);
             }
