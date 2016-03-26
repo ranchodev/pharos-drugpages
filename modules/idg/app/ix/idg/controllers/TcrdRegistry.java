@@ -406,6 +406,10 @@ public class TcrdRegistry extends Controller implements Commons {
                         target.addIfAbsent((Value)kw);
                     }
                 }
+                else if ("pdb".equalsIgnoreCase(xtype)) {
+                    target.properties.add
+                            (new VStr (PDB_ID, value));
+                }
                 else if ("pubmed".equalsIgnoreCase(xtype)) {
                     /*
                     Publication pub = PublicationFactory.registerIfAbsent
@@ -2723,7 +2727,7 @@ public class TcrdRegistry extends Controller implements Commons {
                  //+"where c.uniprot in ('Q8WXA8')\n"
                  //+"where c.uniprot in ('Q7RTX7','Q86YV6','P07333','P07949')\n"
 //                 +"where c.uniprot in ('A5X5Y0','O00329','O00329', 'O95069')\n"
-//                                +"where c.uniprot in ('P00533')\n"
+//                                +"where c.uniprot in ('O00141','O00168','O00299')\n"
                  +"order by d.score desc, c.id\n"
                  +(rows > 0 ? ("limit "+rows) : "")
                  );
