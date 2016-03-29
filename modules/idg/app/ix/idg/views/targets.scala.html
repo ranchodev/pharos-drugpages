@@ -136,9 +136,10 @@ facets: Array[FacetDecorator], targets: List[Target], ctx: String )
       style="margin-right: 1px">
         <i class="fa fa-eye"></i>
       </button>
-      <ul class="dropdown-menu pull-left">
-        <li><a  href="#hgramModal" data-toggle="modal" ><i class="fa fa-cubes"></i>&nbsp;Harmonogram</a></li>
-      </ul>
+        <ul class="dropdown-menu pull-left">
+            <li><a href="#modal-kinome" data-toggle="modal" ><i class="fa fa-pagelines"></i>&nbsp;Kinome Tree</a></li>
+            <li><a href="#hgramModal" data-toggle="modal" ><i class="fa fa-cubes"></i>&nbsp;Harmonogram</a></li>
+        </ul>
     </div>
 } {
  @targetcarousel(ctx)
@@ -176,6 +177,7 @@ role="dialog" aria-labelledby="modalLabelFolder" aria-hidden="true">
 </div>
 
 @modalradar(null,null)
+@modalkinome("The Human Kinome")
 
 <div class="modal fade" id="hgramModal" tabindex="-1"
      role="dialog" aria-labelledby="hgramModalLabel" aria-hidden="true" >
@@ -279,6 +281,15 @@ $(document).ready(function () {
    $('#loadmodal').on('shown.bs.modal', function (e) {
       console.log('loadmodal is shown...');
    });
+
+    $('#modal-kinome').on('shown.bs.modal', function (e) {
+        console.log('kinome tree modal shown...');
+        new Kinome('kinome-canvas',
+            '@routes.Assets.at("images/kinome200.png")',
+        '@HtmlFormat.raw(ix.idg.controllers.routes.IDGApp.getKinases(null)+App.queryString("q", "facet"))'
+        );
+    });
+
    $('#hgramModal').on('shown.bs.modal', function (e) {
       console.log('hgram modal is shown...');
       load_clustergram ('@ix.idg.controllers.routes.HarmonogramApp.hgForTarget(null, ctx, null)');

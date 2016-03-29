@@ -155,24 +155,7 @@
       <div class="item">
         @sunburst("panther", HtmlFormat.raw("<a href='http://pantherdb.org/panther/prowler.jsp'>PANTHER Protein Ontology</a>"))
       </div>
-      <div class="item">
-        <div class="container-fluid">
-	    <div class="row">
-	      <div class="col-md-12">
-	         <div class="col-xs-3 col-md-4" style="text-align:right;"></div>
-		 <div class="col-xs-3 col-md-4">
-		     <canvas id="kinome-canvas" width="162" height="200">
-		     </canvas>
-		 </div>
-	      </div>
-	    </div>
-	    <div class="row">
-    	      <div class="col-md-12">
-	        <center><h4>The Human Kinome</h4></center>
-	      </div>
-	    </div>
-	 </div>
-      </div>
+
       
       @item(IDG_TISSUE, HtmlFormat.raw("UniProtKB Tissue"))
       @item(IDG_LIGAND, HtmlFormat.raw("Ligand"))
@@ -291,11 +274,6 @@ $(document).ready(function () {
   @cloud(UNIPROT_KEYWORD)
   @cloud("MeSH")
 
-  new Kinome('kinome-canvas',
-      '@routes.Assets.at("images/kinome200.png")',
-      '@HtmlFormat.raw(ix.idg.controllers.routes.IDGApp.getKinases(null)+App.queryString("q", "facet"))'
-  );
-  
 @defining(IDGApp.getHierarchyAsJson(ctx, DTO_PROTEIN_CLASS)) { json =>
   @if(json != null) {
     new Sunburst({
