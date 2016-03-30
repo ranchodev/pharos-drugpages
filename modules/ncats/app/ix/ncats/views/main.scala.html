@@ -36,6 +36,17 @@
     <script src='@routes.WebJarAssets.at(WebJarAssets.locate("bloodhound.min.js"))'></script>
     <script src='@routes.Assets.at("javascripts/jquery.treegrid.js")'></script>
     <script src='@routes.Assets.at("javascripts/jquery.treegrid.bootstrap3.js")'></script>
+    <script src='@routes.Assets.at("javascripts/jquery.cookie.js")'></script>
+
+    <script>
+    $(document).ready(function () {
+        if ( $.cookie ( 'pharos_first_visit' )  ) {
+        } else {
+            $("#modal-disclaimer" ).modal("show");
+            $.cookie('pharos_first_visit', 'true');
+        }
+    });
+    </script>
   </head>
   <body>
     @header
@@ -44,5 +55,27 @@
     </div>      
     @content
     @footer()
+
+  <div class="modal fade" id="modal-disclaimer" tabindex="-1" role="dialog" aria-labelledby="disclaimer-title" aria-hidden="true">
+      <div class="modal-dialog modal-lg" style="width : 40 % ; ">
+          <div class="modal-content">
+              <div class="modal-header">
+                  <button type="button" class="close"
+                  data-dismiss="modal" aria-label="Close">
+                      <span aria-hidden="true">&times;</span></button>
+                  <h2 class="modal-title" id="disclaimer-title">Welcome to Pharos</h2>
+              </div>
+              <div class="modal-body">
+                  <div>
+                    @disclaimer()
+                  </div>
+              </div>
+              <div class="modal-footer">
+                  <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+              </div>
+          </div>
+      </div>
+  </div>
+
   </body>
 </html>

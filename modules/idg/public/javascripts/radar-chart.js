@@ -25,9 +25,7 @@ function showDataSources(selector, dsUrl) {
 function getModalChartConfig(mouseOverUrl) {
     return { w: 600, h: 600,
         axisText: true, levels: 0, circles: true,
-        axisTextMouseOverFunc: function(e) {
-            showDataSources('#radar-ds-container',mouseOverUrl)
-        }
+        axisTextMouseOverFunc: showDataSources('#radar-ds-container',mouseOverUrl)
     };
 }
 

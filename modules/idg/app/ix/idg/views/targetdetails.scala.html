@@ -499,6 +499,24 @@
             }
           </div>
         </div>
+
+
+          @defining(IDGApp.getProperties(target, PDB_ID)) { pdbids =>
+              @if(pdbids.size() > 0) {
+                  <div class="panel panel-default">
+                      <a name="pdb" tocname="PDB"></a>
+                      <div class="panel-heading">
+                          <h3 class="panel-title">PDB <i class="fa fa-external-link"></i></h3>
+                      </div>
+                      <div class="panel-body">
+                          @for(aval <- pdbids){
+                          <a href="http://www.rcsb.org/pdb/explore.do?structureId=@aval.getValue()">@aval.getValue()</a> &nbsp;
+                            }
+                      </div>
+                  </div>
+              }
+          }
+
 	 @defining(IDGApp.getProperties(target, "Count", 1)) { props =>
 	    @if(!props.isEmpty()) {
                <div class="panel panel-default" >
@@ -577,6 +595,7 @@
 		     <td><a href="@ix.idg.controllers.routes.IDGApp.pmscore()">JensenLab PubMed Score</a></td>
 		     <td>@{"%.2f".format(target.jensenScore)}</td>
 		   </tr>
+
 	           </table>
 		 </div>
 	       </div>
