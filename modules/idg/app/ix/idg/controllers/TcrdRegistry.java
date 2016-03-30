@@ -184,7 +184,7 @@ public class TcrdRegistry extends Controller implements Commons {
             // return anything
             pstm = con.prepareStatement
                     ("select distinct " +
-                     "a.target_id, d.doid, d.name, d.novelty_score as diseaseNovelty, c.score as importance,  " +
+                     "a.target_id, d.doid, d.name, d.score as diseaseNovelty, c.score as importance,  " +
                      "e.uniprot, f.score as targetNovelty " +
                      "from target2disease a, tinx_disease d, tinx_importance c, protein e, tinx_novelty f " +
                      "where a.target_id = ? " +
@@ -1881,10 +1881,10 @@ public class TcrdRegistry extends Controller implements Commons {
             try {
                 Predicate pred = new Predicate (TARGET_PUBLICATIONS);
                 pred.subject = new XRef (target);
-                // add synonyms for search results
+                // add synonyms for search results              
                 for (Keyword kw : target.getSynonyms())
-                    pred.properties.add(kw);
-                
+                    pred.subject.properties.add(kw);
+
                 while (rset.next()) {
                     long pmid = rset.getLong("id");
                     Publication pub = PublicationFactory.byPMID(pmid);
@@ -1902,7 +1902,10 @@ public class TcrdRegistry extends Controller implements Commons {
                         pub.year = year;
                         pub.save();
                     }
+                    
                     XRef ref = new XRef (pub);
+                    for (Keyword kw : target.getSynonyms())
+                        ref.properties.add(kw);
                     ref.save();
                     pred.addIfAbsent(ref);
                 }
@@ -2727,6 +2730,7 @@ public class TcrdRegistry extends Controller implements Commons {
                  //+"where c.uniprot in ('Q8NE63','O14976')\n"
                  //+"where c.uniprot in ('O14976','O43293','O75385','O75582','P07949','P09619')\n"
                  //+"where c.uniprot in ('P35968')\n"
+                 //+"where c.uniprot in ('Q15743')\n"
                  //+"where c.uniprot in ('P42685')\n"
                  //+"where c.uniprot in ('Q6PIU1')\n"
                  //+"where c.uniprot in ('A5X5Y0')\n"
