@@ -408,8 +408,11 @@ public class TcrdRegistry extends Controller implements Commons {
                     }
                 }
                 else if ("pdb".equalsIgnoreCase(xtype)) {
-                    target.properties.add
-                            (new VStr (PDB_ID, value));
+                    Keyword kw = KeywordFactory.registerIfAbsent
+                        (PDB_ID, value,
+                         "http://www.rcsb.org/pdb/explore/explore.do?structureId="
+                         +value);
+                    target.addIfAbsent(kw);
                 }
                 else if ("pubmed".equalsIgnoreCase(xtype)) {
                     /*
@@ -2713,8 +2716,8 @@ public class TcrdRegistry extends Controller implements Commons {
                      "http://habanero.health.unm.edu");
             }
             rset.close();
-            
-            rset = stm.executeQuery
+
+            String sql = 
                 ("select *\n"
                  +"from t2tc a "
                  +"     join (target b, protein c)\n"
@@ -2749,6 +2752,9 @@ public class TcrdRegistry extends Controller implements Commons {
                  +"order by d.score desc, c.id\n"
                  +(rows > 0 ? ("limit "+rows) : "")
                  );
+
+            Logger.debug("Executing sql..."+sql);
+            rset = stm.executeQuery(sql);           
 
             DTOParser dto = null;
             String enhanced = Play.application()

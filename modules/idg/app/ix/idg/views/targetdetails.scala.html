@@ -500,8 +500,7 @@
           </div>
         </div>
 
-
-          @defining(IDGApp.getProperties(target, PDB_ID)) { pdbids =>
+          @defining(target.getSynonyms(PDB_ID)) { pdbids =>
               @if(pdbids.size() > 0) {
                   <div class="panel panel-default">
                       <a name="pdb" tocname="PDB"></a>

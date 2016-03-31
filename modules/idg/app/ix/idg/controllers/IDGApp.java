@@ -253,7 +253,7 @@ public class IDGApp extends App implements Commons {
             else if (name.equals(IDG_DRUG) || name.equals(IDG_LIGAND)) {
                 return "<a href='"+routes.IDGApp.ligand(label)+"'>"+label+"</a>";
             }
-            else if (name.equals(IDG_TARGET)) {
+            else if (name.equals(IDG_TARGET) || name.equals(UNIPROT_GENE)) {
                 return "<a href='"+routes.IDGApp.target(label)+"'>"+label+"</a>";
             }
             else if (name.equals(IDG_DISEASE)) {
@@ -517,6 +517,7 @@ public class IDGApp extends App implements Commons {
 
         PHARMALOGICAL_ACTION,
         "IMPC Mice Produced",
+        PDB_ID,
         LIGAND_ACTIVITY,
         MLP_ASSAY_TYPE,
         UNIPROT_KEYWORD,
@@ -530,8 +531,8 @@ public class IDGApp extends App implements Commons {
         IDG_DEVELOPMENT,
         IDG_FAMILY,
         IDG_DRUG,
-        SOURCE,
-        UNIPROT_TARGET
+        IDG_TARGET,
+        SOURCE
     };
 
     public static final String[] LIGAND_FACETS = {
@@ -549,8 +550,10 @@ public class IDGApp extends App implements Commons {
         IDG_DEVELOPMENT,
         IDG_FAMILY,
         IDG_DISEASE,
-        UNIPROT_TARGET,
-        "Ligand"
+        UNIPROT_GENE,
+        IDG_DRUG,
+        CONSENSUS_TISSUE,
+        SOURCE
     };
 
     static FacetDecorator[] decorate (Class kind, Facet... facets) {

@@ -37,12 +37,12 @@
     <script src='@routes.Assets.at("javascripts/jquery.treegrid.js")'></script>
     <script src='@routes.Assets.at("javascripts/jquery.treegrid.bootstrap3.js")'></script>
     <script src='@routes.Assets.at("javascripts/jquery.cookie.js")'></script>
-
     <script>
     $(document).ready(function () {
         if ( $.cookie ( 'pharos_first_visit' )  ) {
         } else {
-            $("#modal-disclaimer" ).modal("show");
+           //$("#modal-disclaimer" ).modal("show");
+            $('#visit-alert').append('<div style="overflow:auto;" class="alert alert-success alert-dismissible" class="alert alert-danger alert-dismissible" role="alert"> <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>Since this is your first visit to the site, you are seeing this message. It will not be displayed on subsequent visits.</div>');
             $.cookie('pharos_first_visit', 'true');
         }
     });
@@ -51,6 +51,7 @@
   <body>
     @header
     <div class="container-fluid">
+      <div id="visit-alert"></div>
       @breadcrumb
     </div>      
     @content
