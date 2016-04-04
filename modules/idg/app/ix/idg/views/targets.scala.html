@@ -118,7 +118,11 @@ facets: Array[FacetDecorator], targets: List[Target], ctx: String )
 	<i class="fa fa-bar-chart"></i>
       </button>
     </div>
-*@    
+*@
+
+    <a id="compare-selected" class="btn btn-default" href="#" role="button" style="margin-right:1px; margin-left:1px;">
+        <i class="fa fa-exchange fa-lg "></i></a>
+
     <div class="dropdown pull-right">
       <button type="button" class="btn btn-default dropdown-toggle"
 	      data-toggle="dropdown" style="margin-right:1px">
@@ -442,6 +446,12 @@ $(document).ready(function () {
             $("#modalLabelRadar" ).text("Data type summary for "+target);
             renderChart(chartData, chartConfig);
         });
+    });
+
+    $("#compare-selected" ).click(function(e) {
+        var ents = selectEntities("#target-table  input:checked");
+        console.log(ents);
+        window.location.href = "@ix.idg.controllers.routes.IDGApp.compareTargets()?q="+ents.join();
     });
 
     $("#sc-empty").click(function (e) {

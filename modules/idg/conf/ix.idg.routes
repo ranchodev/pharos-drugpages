@@ -51,6 +51,8 @@ GET	/dto		ix.idg.controllers.DTOHier.dto(node: String ?= null)
 GET	/dtoviz		ix.idg.controllers.DTOHier.dtoViz(node: String ?= null)
 GET	/dto/:label	ix.idg.controllers.DTOHier.dtoNode(label: String)
 
+GET /targets/compare ix.idg.controllers.IDGApp.compareTargets(q: String ?= null)
+
 GET /sitemap.txt ix.idg.controllers.IDGApp.sitemap()
 
 ->	/	ix.ncats.Routes

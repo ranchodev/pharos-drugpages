@@ -3302,4 +3302,8 @@ public class IDGApp extends App implements Commons {
             return _internalServerError (ex);
         }
     }
+
+    public static Result compareTargets(String q) {
+        return null;
+    }
 }
