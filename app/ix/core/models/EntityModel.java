@@ -172,11 +172,27 @@ public abstract class EntityModel extends IxModel {
         return null;
     }
     
+    public List<Keyword> getSynonyms (String label) {
+        List<Keyword> keywords = new ArrayList<Keyword>();
+        for (Keyword kw : getSynonyms ())
+            if (label.equals(kw.label))
+                keywords.add(kw);
+        return keywords;
+    }
+    
     public Value getProperty (String label) {
         for (Value v : getProperties ())
             if (label.equalsIgnoreCase(v.label))
                 return v;
         return null;
+    }
+
+    public List<Value> getProperties (String label) {
+        List<Value> props = new ArrayList<Value>();
+        for (Value v : getProperties ())
+            if (label.equals(v.label))
+                props.add(v);
+        return props;
     }
     
     public boolean hasProperty (String label) {

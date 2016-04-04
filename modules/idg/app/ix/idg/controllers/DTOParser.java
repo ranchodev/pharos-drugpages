@@ -100,6 +100,9 @@ public class DTOParser {
     }
 
     public Node get (String name) {
+        if (name == null)
+            return null;
+        
         if (name.startsWith("DTO_"))
             return ids.get(name);
         return nodes.get(name);
