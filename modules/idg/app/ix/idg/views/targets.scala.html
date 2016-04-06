@@ -18,6 +18,7 @@ facets: Array[FacetDecorator], targets: List[Target], ctx: String )
         <td>@t.idgFamily</td>
         <td>@IDGApp.format(t.novelty)</td>
         <td>@t.pubmedCount</td>
+        <td>@IDGApp.format(t.jensenScore)</td>
         <td>@t.grantCount</td>
         <td>@t.antibodyCount</td>
         <td>@t.patentCount</td>
@@ -97,6 +98,7 @@ facets: Array[FacetDecorator], targets: List[Target], ctx: String )
             <th>Target Family</th>
 	    @HtmlFormat.raw(IDGApp.getTargetTableHeader("Log Novelty", "novelty"))
 	    @HtmlFormat.raw(IDGApp.getTargetTableHeader("PubMed Count", "pubmedCount"))
+            @HtmlFormat.raw(IDGApp.getTargetTableHeader("Jensen Score", "jensenScore"))
 	    @HtmlFormat.raw(IDGApp.getTargetTableHeader("Grant Count", "grantCount"))
 	    @HtmlFormat.raw(IDGApp.getTargetTableHeader("Antibody Count", "antibodyCount"))
 	    @HtmlFormat.raw(IDGApp.getTargetTableHeader("Patent", "patentCount"))

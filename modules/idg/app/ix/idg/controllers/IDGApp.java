@@ -850,8 +850,8 @@ public class IDGApp extends App implements Commons {
             if (value < 0.001)
                 return String.format("%1$.5f", value);
             if (value < 10.)
-                return String.format("%1$.1f", value);
-            return String.format("%1$.0f", value);
+                return String.format("%1$.2f", value);
+            return String.format("%1$.1f", value);
         }
         return "";
     }
