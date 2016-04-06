@@ -465,13 +465,14 @@ public class IDGApp extends App implements Commons {
         public long getStart () { return start.get(); }
         public long getStop () { return stop.get(); }
     }
-    
+
     public static final String[] TARGET_FACETS = {
-        IDG_DEVELOPMENT,
-        IDG_FAMILY,
-        IDG_DISEASE,
-        IDG_LIGAND,
-        CONSENSUS_TISSUE
+            IDG_DEVELOPMENT,
+            IDG_FAMILY,
+            IDG_DISEASE,
+            CONSENSUS_TISSUE,
+            "R01 Grant Count",
+            "Jensen Score"
     };
 
     public static final String[] ALL_TARGET_FACETS = {
