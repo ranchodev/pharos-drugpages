@@ -3325,7 +3325,19 @@ public class IDGApp extends App implements Commons {
         }
     }
 
-    public static Result compareTargets(String q) {
-        return null;
+    public static Result compareTargets(final String q) throws Exception {
+        if (q == null || q.trim().equals(""))
+            return _badRequest("Must specify comma separated list of Uniprot IDs");
+        final String key = "targets/compare/" + q + "/" + Util.sha1(request());
+        return getOrElse(key, new Callable<Result>() {
+            public Result call() throws Exception {
+                String[] ids = q.split(",");
+                List<Target> targets = new ArrayList<>();
+                for (String id : ids) {
+                    targets.addAll(TargetFactory.finder.where().eq("synonyms.term", id).findList());
+                }
+                return ok(ix.idg.views.html.targetcompare.render(targets));
+            }
+        });
     }
 }

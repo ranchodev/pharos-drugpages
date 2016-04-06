@@ -1,0 +1,419 @@
+@import java.util
+
+@import ix.idg.models.Target
+@import ix.idg.models.Target.TDL
+@import ix.idg.models.Ligand
+@import ix.idg.models.Disease
+@import ix.core.models.Value
+@import ix.core.models.VStr
+@import ix.core.models.Keyword
+@import ix.core.models.Text
+@import ix.core.models.VInt
+@import ix.core.models.VNum
+@import ix.core.models.Publication
+@import ix.ncats.controllers.App
+@import ix.idg.controllers.ExpressionApp
+@import ix.idg.controllers.IDGApp
+@import ix.idg.controllers.WordCloud
+@import ix.idg.controllers.IDGApp._
+@import ix.idg.controllers.Commons._
+@import ix.utils.Util
+@import java.net.URLEncoder
+
+@(targets: List[Target])
+
+@facet(label: String, value: String, href: String = null, max: Int = 40) = {
+  @if(max > 0 && value.length > max) {
+    <a id="keyword" class="label label-primary"
+       data-toggle="popover"
+       data-html="true"
+       data-trigger="hover"
+       data-placement="top"
+       title="@label"
+       data-content="<p align='left'>@value</p>"
+       onclick="showLoadModal()"
+       href='@{ix.idg.controllers.routes.IDGApp.targets()+"?facet="+URLEncoder.encode(label,"utf8")+"/"}@URLEncoder.encode(value, "utf8")'>@{value.substring(0, max)}...</a>&nbsp;
+  } else {
+    <a id="keyword" class="label label-primary" onclick="showLoadModal()"
+       href='@{ix.idg.controllers.routes.IDGApp.targets()+"?facet="+URLEncoder.encode(label,"utf8")+"/"}@URLEncoder.encode(value, "utf8")'>@value</a>
+  }
+  @if(href != null) {
+     <a href="@href"><i class="fa fa-external-link"></i></a>
+  }
+}
+
+@keyword(kw: Keyword, max: Int = 40) = {
+  @facet(kw.label, kw.term, kw.href, max)
+}
+
+
+@property(target: Target, name: String, href: String = null, dir: Int = 0) = {
+ @defining(IDGApp.getProperties(target, name, dir)) { props =>
+    @if(!props.isEmpty()) {
+       @if(props.length > 10) {
+       <div class="modal fade" id="@Util.sha1(name).substring(0,5)"
+          tabindex="-1" role="dialog" aria-labelledby="myModalLabel"
+	  aria-hidden="true">
+	  <div class="modal-dialog">
+	     <div class="modal-content">
+	        <div class="modal-header">
+	          <button type="button" class="close"
+		  	data-dismiss="modal" aria-label="Close">
+			<span aria-hidden="true">&times;</span></button>
+			<h4 class="modal-title" id="myModalLabel">@name for @target.getName</h4>
+		</div>
+      		<div class="modal-body">
+		    @for(p <- props) {
+		        @p match {
+	          	   case kw: Keyword => {
+			       @keyword(kw, 0)
+			   }
+			   case _ => {
+		  	   }
+	       		}
+	    	     }
+		</div>
+             </div>
+          </div>	  
+       </div>
+       <div class="panel panel-default">
+          <div class="panel-heading">
+	    @if(href != null) {
+	      <h3 class="panel-title"><a href="@href">@name <i class="fa fa-external-link"></i></a> (@props.length)</h3>
+	    } else {
+              <h3 class="panel-title">@name (@props.length)</h3>
+	    }
+          </div>
+	  <div class="panel-body">
+	    @for(p <- props.subList(0,10)) {
+	       @p match {
+	          case kw: Keyword => {
+		    @keyword(kw)
+		  }
+		  case _ => {
+		  }
+	       }
+	    }
+   	    <a class="label label-danger"
+	        data-toggle="modal"
+		data-target="#@Util.sha1(name).substring(0,5)"
+		href="#">See all...</a>
+	  </div>
+       </div>
+       } else {
+       <div class="panel panel-default">
+          <div class="panel-heading">
+	    @if(href != null) {
+	      <h3 class="panel-title"><a href="@href">@name <i class="fa fa-external-link"></i></a> (@props.length)</h3>
+	    } else {
+              <h3 class="panel-title">@name (@props.length)</h3>
+	    }
+          </div>
+	  <div class="panel-body">
+	    @for(p <- props) {
+	       @p match {
+	          case kw: Keyword => {
+		    @keyword(kw)
+		  }
+		  case _ => {
+		  }
+	       }
+	    }
+	  </div>
+       </div>
+       }
+     }
+  }
+}
+
+@label(x: Value, title: String, label: String) = {
+  @if(x.getValue().toString().length() > 50) {
+       <a class="label label-@label"
+           href="#@Util.sha1(x.getValue().toString()).substring(0,6)"
+           tabindex="0"
+           data-toggle="popover"
+           data-animation="true"
+           data-placement="top"
+           data-trigger="click hover focus"
+           data-title="@title"
+           data-content="@x.getValue()">@x.getValue().toString().substring(0, 50)...</a></span>
+  } else {
+      <span class="label label-@label">@x.getValue()</span>
+  }
+}
+
+
+@diseasedblink(target: Target, d: Disease, x: Any) = {
+<a href="http://diseases.jensenlab.org/Entity?documents=10&type1=9606&id2=@IDGApp.getId(d)&id1=@target.getSynonym(STRING_ID).term">@x</a>
+}
+
+@diseaserow(target: Target ,dr: DiseaseRelevance) = {
+     <tr @*class="treegrid-@dr.disease.id"*@>
+       <td><a class="label label-primary" href="@{ix.idg.controllers.routes.IDGApp.targets()+"?facet="+URLEncoder.encode(IDG_DISEASE,"utf8")+"/"+URLEncoder.encode(dr.disease.name, "utf8")}">@dr.disease.name</a></td>
+       <td>@diseasedblink(target, dr.disease,dr.zscore)</td>
+       <td>@diseasedblink(target, dr.disease,dr.conf)</td>
+       @if(dr.tinxScore != null) {
+       <td>@{"%1$.3f".format(dr.tinxScore)}</td>
+       } else {
+       <td></td>
+       }
+     </tr>
+
+     @for(i <- 0 until dr.lineage.size()) {
+       @defining(dr.lineage(i)) { x =>	    
+         <tr class="treegrid-@x.disease.id treegrid-parent-@dr.disease.id">
+            <td><a href="@ix.idg.controllers.routes.IDGApp.disease(IDGApp.getId(x.disease))">@x.disease.name</a></td>
+            <td>@diseasedblink(target, x.disease,x.zscore)</td>
+            <td>@diseasedblink(target, x.disease,x.conf)</td>
+	    @if(x.tinxScore != null) {
+	    <td>@{"%1$.3f".format(x.tinxScore)}</td>
+	    } else {
+	    <td></td>
+	    }
+         </tr>
+       }
+     }
+}
+
+@expression(target: Target, name: String, skull: String) = {
+   <div class="row">
+      <div class="col-md-6">
+         @defining(ExpressionApp.getLinkedExpr(target, name)){ exprs =>
+	 <div class="panel-body">
+	    @for(expr <- exprs) {
+            @if(expr.sourceid.equals(name)) {
+                @facet(expr.sourceid.replaceAll("Expression", "Tissue"), expr.tissue)
+            }
+	    }
+	 </div>
+	 }
+      </div>
+      <div class="col-md-6">
+         <img class="img-responsive" height="200" src='@ix.idg.controllers.routes.ExpressionApp.homunculus(IDGApp.getId(target), skull)' />
+      </div>
+  </div>
+}
+
+
+@ligandActivityReport(t: Target) = {
+    @t.idgFamily match {
+        case "Kinase" => {
+            @if(IDGApp.getMinimumLigandActivity(t) >= 7.5) {
+                with at least one activity < 30 nM
+            } else {
+                but has no reported activity < 30 nM
+            }
+        }
+        case "IC" | "Ion Channel" => {
+            @if(IDGApp.getMinimumLigandActivity(t) >= 5.0) {
+                with at least one activity < 10uM
+            } else {
+                but has no reported activity < 10uM
+            }
+        }
+        case "NR" => {
+            @if(IDGApp.getMinimumLigandActivity(t) >= 7.0) {
+                with at least one activity < 10uM
+            } else {
+                but has no reported activity < 10uM
+            }
+        }
+        case "GPCR" | "oGPCR" => {
+            @if(IDGApp.getMinimumLigandActivity(t) >= 7.0) {
+                with at least one activity < 10uM
+            } else {
+                but has no reported activity < 10uM
+            }
+        }
+
+        case _ => {
+
+        }
+    }
+
+}
+
+@explainTdl(t: Target) = {
+    @t.idgTDL match {
+    case TDL.Tdark => {
+        has a Pubmed text-mining score of @t.jensenScore, @IDGApp.getGeneRIFs(t).size() GeneRIFs
+        and @t.antibodyCount antibodies
+    }
+    case TDL.Tclin => {
+        is associated with @IDGApp.getDrugLigands(t).size() approved drugs and passes the cutoffs for Tdark
+        (Pubmed text mining score of @t.jensenScore, @IDGApp.getGeneRIFs(t).size()
+        GeneRIFs and @t.antibodyCount antibodies), is annotated with
+        @(IDGApp.getProperties(t, GO_COMPONENT, 0).size()+IDGApp.getProperties(t, GO_FUNCTION, 0).size()+IDGApp.getProperties(t, GO_PROCESS, 0).size())
+        GO terms and has @IDGApp.getOmimPhenotypes(t).size() confirmed OMIM phenotypes.
+    }
+    case TDL.Tbio => {
+        passes the cutoffs for Tdark (Pubmed text mining score of @t.jensenScore, @IDGApp.getGeneRIFs(t).size()
+        GeneRIFs and @t.antibodyCount antibodies). In addition it is annotated with
+        @(IDGApp.getProperties(t, GO_COMPONENT, 0).size()+IDGApp.getProperties(t, GO_FUNCTION, 0).size()+IDGApp.getProperties(t, GO_PROCESS, 0).size())
+        GO terms and has @IDGApp.getOmimPhenotypes(t).size() confirmed OMIM phenotypes.
+    }
+    case TDL.Tchem => {
+        is associated with @IDGApp.getChemblLigands(t).size() ChEMBL compounds (@ligandActivityReport(t)) and passes the cutoffs for Tdark
+        (Pubmed text mining score of @t.jensenScore, @IDGApp.getGeneRIFs(t).size()
+        GeneRIFs and @t.antibodyCount antibodies), is annotated with
+        @(IDGApp.getProperties(t, GO_COMPONENT, 0).size()+IDGApp.getProperties(t, GO_FUNCTION, 0).size()+IDGApp.getProperties(t, GO_PROCESS, 0).size())
+        GO terms and has @IDGApp.getOmimPhenotypes(t).size() confirmed OMIM phenotypes.
+    }
+
+    case _ => {
+       Something went wrong
+    }
+    }
+}
+
+@ligandrow(target: Target, lig: Ligand) = {
+<tr>
+   <td>
+   @defining(IDGApp.getStructure(lig)) { struc =>
+      @if(struc != null) {
+          <a tabindex="-1"
+	     data-toggle="popover"
+	     data-animation="true"
+             data-placement="top"
+             data-trigger="click hover focus"
+             data-title="@lig.getName()"
+	     data-html="true"
+             data-content="<img src='@ix.ncats.controllers.routes.App.structure(struc.getId,"svg",200,null)'>">
+	     <img alt="Structure of @IDGApp.getId(lig)"
+		src='@ix.ncats.controllers.routes.App.structure(struc.getId,"svg",80,null)'></a>
+      }
+   }
+   </td>
+   <td class="valign-center">
+       <a class="label label-primary" href='@ix.idg.controllers.routes.IDGApp.ligand(IDGApp.getId(lig))'>@lig.getName()</a>
+   </td>
+   @defining(IDGApp.getActivity(target, lig)) { act =>
+      @if(act != null) {
+         <td class="valign-center">
+	     <code>@{act.label} @{"%1$.2f".format(act.getValue())}</code>
+	 </td>
+      } else {
+         <td></td>
+      }
+   }
+</tr>
+}
+
+@ix.ncats.views.html.main("Compare Targets ..."){
+@targetmenu(null)
+}{
+    <h1>
+    Comparing
+    @for(t <- targets){
+        <a href="@ix.idg.controllers.routes.IDGApp.target(IDGApp.getId(t))">@IDGApp.getId(t)</a>
+    }
+    </h1>
+}{
+<div class="container-fluid">
+    <div class="col-md-12">
+        <div class="page-header">
+            <h1>
+            </h1>
+        </div>
+
+        <center>
+            @defining(targets.size()+1) { factor =>
+                @for(t <- targets) {
+                    <iframe height="100%" onload="this.width = screen.width / @factor ; this.height = screen.height ;" name="@IDGApp.getId(t)" src="@ix.idg.controllers.routes.IDGApp.target(IDGApp.getId(t))">
+                        <p>Your browser does not support iframes.</p>
+                    </iframe>
+                }
+            }
+        </center>
+        <!--
+        <table class="table" id="comparison-table">
+            <thead>
+                <tr>
+                    <th></th>
+                    @for(t <- targets) {
+                        <th>@t.toString()</th>
+                    }
+                </tr>
+            </thead>
+            <tbody>
+                @* TDL label *@
+                @* target family *@
+                @* Uniprot ID/link *@
+                @* Gene symbol *@
+                @* Data availability *@
+                @* Antibody count *@
+                @* R01 count *@
+                @* Grant count *@
+                @* jensenlab pubmed score *@
+                @* Pub count/summary *@
+                @* Consensus expression summary (?) *@
+            </tbody>
+        </table>
+        -->
+    </div>
+</div>
+}
+
+
+
+<head>
+    <style type="text/css">
+    .axis path,
+    .axis line {
+    fill: none;
+    stroke: black;
+    shape-rendering: crispEdges;
+    }
+
+    .axis text {
+    font-family: sans-serif;
+    font-size: 11px;
+    }
+
+    .point:hover {
+    opacity: 0.5;
+    }
+
+    .tick text {
+    visibility:inherit;
+    }
+    </style>
+    <script type="text/javascript" src='@routes.Assets.at("javascripts/d3.js")'></script>
+    <script type="text/javascript" src='@routes.Assets.at("javascripts/tinx.js")'></script>
+    <script type="text/javascript" src='@routes.Assets.at("javascripts/d3-tip.js")'></script>
+    <script type="text/javascript" src='@routes.Assets.at("javascripts/radar-chart.js")'></script>
+    <script type="text/javascript" src='@routes.WebJarAssets.at(WebJarAssets.locate("raphael-min.js"))'></script>
+    <script type="text/javascript" src='@routes.WebJarAssets.at(WebJarAssets.locate("morris.min.js"))'></script>
+    <script type="text/javascript" src='@routes.Assets.at("javascripts/underscore.js")'></script>
+    <script type="text/javascript" src='@routes.Assets.at("javascripts/underscore.string.js")'></script>
+    <script type="text/javascript" src='@routes.Assets.at("javascripts/cart.js")'></script>
+    <script type="text/javascript" src='@routes.Assets.at("javascripts/d3.layout.cloud.js")'></script>
+    <script type="text/javascript" src='@routes.Assets.at("javascripts/wordcloud.js")'></script>
+    <link type="text/css" rel="stylesheet" href='@routes.Assets.at("stylesheets/d3-tip.css")' />
+    <link type="text/css" rel="stylesheet" href='@routes.Assets.at("stylesheets/radar-chart.css")' />
+    <link type="text/css" rel="stylesheet" href='@routes.WebJarAssets.at(WebJarAssets.locate("morris.css"))' />
+    <link type="text/css" rel="stylesheet" href='@routes.Assets.at("stylesheets/main.css")'/>    
+</head>
+
+<script>
+$(function () {
+  $('[data-toggle="popover"]').popover();
+  $('[data-toggle="tooltip"]').tooltip();
+});
+
+$(document).ready(function () {
+
+});
+
+function showLoadModal () {
+  $('#loadmodal').modal({
+      keyboard: false,
+      show: true,
+      backdrop: 'static'
+    });
+}
+
+$(window).unload(function () {
+    $('#loadmodal').modal('hide');    
+});
+</script>
