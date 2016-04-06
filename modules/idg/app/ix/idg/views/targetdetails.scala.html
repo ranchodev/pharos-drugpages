@@ -772,7 +772,10 @@
          <div class="panel panel-default">
              <a name="expression" tocname="Gene/Protein Expression"></a>
             <div class="panel-heading">
-               <h3 class="panel-title">Expression</h3>
+               <h3 class="panel-title">Expression
+                       <a class="btn btn-default" href="@ix.idg.controllers.routes.IDGApp.help()#expression" role="button" style="margin-right:1px; margin-left:1px;">
+                           <i class="fa fa-info-circle fa-sm "></i></a>
+               </h3>
             </div>
 	    <div class="panel-body">
 	       <div class="row">
@@ -816,20 +819,19 @@
                            <span data-toggle="tooltip"
                            data-html="true"
                            title="<p align='left'>Text mined tissue expression data from the Jensen Lab</p>">
-                               IDG-TM
+                               Jensen-TM
                            </span></a></li>
                        <li role="presentation"><a href="#consensus-tab" role="tab" aria-controls="consensus" data-toggle="tab">
                            <span data-toggle="tooltip"
                            data-html="true"
                            title="<p align='left'>Consolidated tissue expression (combining GTEx, HPM and HPA)</p>">
-                               Consolidated</span></a></li>
+                               IDG </span></a>
+
+                       </li>
 
                    </ul>
                    <div class="tab-content">
-                       <div role="tabpanel" class="tab-pane active" id="consensus-tab">
-                       @expression(CONSENSUS_EXPR, "consensus")
-                       </div>
-                       <div role="tabpanel" class="tab-pane" id="gtex-tab">
+                       <div role="tabpanel" class="tab-pane active" id="gtex-tab">
                        @expression(GTEx_EXPR, "gtex")
                        </div>
                        <div role="tabpanel" class="tab-pane" id="hpm-tab">
@@ -840,6 +842,9 @@
                        </div>
                        <div role="tabpanel" class="tab-pane" id="idg-tab">
                        @expression(IDG_EXPR, "idg")
+                       </div>
+                       <div role="tabpanel" class="tab-pane" id="consensus-tab">
+                       @expression(CONSENSUS_EXPR, "consensus")
                        </div>
                    </div>
                </div>

@@ -172,6 +172,21 @@
                     the row or column labels. For instance, double-clicking the NIH Reporter Grants column in Kinases view
                     and zooming into the top of the clustergram reveals that EGFR is the kinase associated with the most grants.
 
+                <a name="expression"></a><h2>Expression Data</h2>
+                <ul>
+                    <li><a name="expression_idg"></a><i>How are the IDG expression results computed?</i>
+                        <p>
+                        The function which computes consensus expression level first determines consensus for specific
+                            tissues as defined by <a href="https://bioportal.bioontology.org/ontologies/BTO">BTO</a>,
+                            aggregating data by mode (most frequent) and if none, by average.
+                            Confidence is computed at tissue level considering both the number and consistency of supporting
+                            data.  Confidence for Low and Medium levels should be interpreted to mean confidence for that
+                            level of expression or higher.  Consensus for tissue types depicted in the homunculus are
+                            simply the maximum level among the constituent tissues.  Confidence for the tissue types
+                            depicted in the homunculus are averages from constituent tissues.
+                    </p></li>
+
+                </ul>
             <h2>Frequently Asked Questions</h2>
                 <ul>
                     <li><i>How can I download all the data from Pharos?</i> <br>Currently we do not allow full downloads of the database.
