@@ -5,15 +5,19 @@ function showDataSources(selector, dsUrl) {
             dataType: "json",
             success: function (data) {
                 $(selector).empty();
-                for (var i = 0; i < data.ds.length; i++) {
+                // sort the data sources by whether they have a URL or not
+                var hasurl = _.filter(data.ds, function(x) {return(x.ds_url != "")});
+                var nourl =_.filter(data.ds, function(x) {return(x.ds_url == "")});
+                var dss = hasurl.concat(nourl);
+                for (var i = 0; i < dss.length; i++) {
                     var bgcolor = '#FFFFFF';
                     if (i % 2 == 0) bgcolor = '#E6E6E6';
 
                     var txt = "<div style='background: " + bgcolor + ";'>";
-                    if (data.ds[i].ds_url != "")
-                        txt = txt + "<a href='"+data.ds[i].ds_url+"' target='_blank'>"+data.ds[i].ds_name + "</a></div><br>";
+                    if (dss[i].ds_url != "")
+                        txt = txt + "<a href='"+dss[i].ds_url+"' target='_blank'>"+dss[i].ds_name + "</a></div><br>";
                     else
-                        txt = txt + data.ds[i].ds_name + "</a></div><br>";
+                        txt = txt + dss[i].ds_name + "</a></div><br>";
                     $(selector).append(txt);
                 }
             }

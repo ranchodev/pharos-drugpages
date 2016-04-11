@@ -172,6 +172,20 @@
                     the row or column labels. For instance, double-clicking the NIH Reporter Grants column in Kinases view
                     and zooming into the top of the clustergram reveals that EGFR is the kinase associated with the most grants.
 
+                <a name="expression"></a><h2>Expression Data</h2>
+                <ul>
+                    <li><a name="expression_idg"></a><i>How are the IDG expression results computed?</i>
+                        <p>
+                        The function which computes consensus expression level aggregates expression values from
+                            GTEx, HPM and HPA into 11 tissue types (E.g. Digestive Tract, Endocrine System, etc.).
+                            A consensus expression value for a given target is simply the mode (most frequent) of
+                            the qualitative expression values in the aggregated set. The confidence value associated
+                            with a consensus expression value is derived taking into consideration both the number and
+                            consistency of supporting data. Confidence for Low and Medium levels should be interpreted
+                            to mean confidence for that level of expression or higher.
+                    </p></li>
+
+                </ul>
             <h2>Frequently Asked Questions</h2>
                 <ul>
                     <li><i>How can I download all the data from Pharos?</i> <br>Currently we do not allow full downloads of the database.
@@ -200,6 +214,16 @@
                             amount of knowledge about a gene compared to other genes in a given dataset.  Genes with
                             relatively high numbers of associations get assigned values near 1 and genes with relatively
                             low numbers of associations get assigned values near 0.</p>
+                    </li>
+                    <li><a name="faq_sunburst"></a> <i>How do I read a sunburst visualization?</i>
+                        <p>From the Wikipedia <a href="https://en.wikipedia.org/wiki/Pie_chart#Ring_chart_.2F_Sunburst_chart_.2F_Multilevel_pie_chart">entry</a>,
+                            A ring chart, also known as a sunburst chart or a multilevel pie chart, is used to visualize
+                            hierarchical data, depicted by concentric circles. The circle in the centre
+                            represents the root node, with the hierarchy moving outward from the center. A segment of the
+                            inner circle bears a hierarchical relationship to those segments of the outer circle which
+                            lie within the angular sweep of the parent segment.Also see this <a href="http://www.neoformix.com/2006/MultiLevelPieChart.html">
+                            discussion.
+                        </a></p>
                     </li>
                 </ul>
 

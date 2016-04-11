@@ -465,13 +465,14 @@ public class IDGApp extends App implements Commons {
         public long getStart () { return start.get(); }
         public long getStop () { return stop.get(); }
     }
-    
+
     public static final String[] TARGET_FACETS = {
-        IDG_DEVELOPMENT,
-        IDG_FAMILY,
-        IDG_DISEASE,
-        IDG_LIGAND,
-        CONSENSUS_TISSUE
+            IDG_DEVELOPMENT,
+            IDG_FAMILY,
+            IDG_DISEASE,
+            CONSENSUS_TISSUE,
+            "R01 Grant Count",
+            "Jensen Score"
     };
 
     public static final String[] ALL_TARGET_FACETS = {
@@ -849,8 +850,8 @@ public class IDGApp extends App implements Commons {
             if (value < 0.001)
                 return String.format("%1$.5f", value);
             if (value < 10.)
-                return String.format("%1$.1f", value);
-            return String.format("%1$.0f", value);
+                return String.format("%1$.2f", value);
+            return String.format("%1$.1f", value);
         }
         return "";
     }
@@ -3323,5 +3324,21 @@ public class IDGApp extends App implements Commons {
             ex.printStackTrace();
             return _internalServerError (ex);
         }
+    }
+
+    public static Result compareTargets(final String q) throws Exception {
+        if (q == null || q.trim().equals(""))
+            return _badRequest("Must specify comma separated list of Uniprot IDs");
+        final String key = "targets/compare/" + q + "/" + Util.sha1(request());
+        return getOrElse(key, new Callable<Result>() {
+            public Result call() throws Exception {
+                String[] ids = q.split(",");
+                List<Target> targets = new ArrayList<>();
+                for (String id : ids) {
+                    targets.addAll(TargetFactory.finder.where().eq("synonyms.term", id).findList());
+                }
+                return ok(ix.idg.views.html.targetcompare.render(targets));
+            }
+        });
     }
 }

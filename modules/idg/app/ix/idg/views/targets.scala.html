@@ -18,6 +18,7 @@ facets: Array[FacetDecorator], targets: List[Target], ctx: String )
         <td>@t.idgFamily</td>
         <td>@IDGApp.format(t.novelty)</td>
         <td>@t.pubmedCount</td>
+        <td>@IDGApp.format(t.jensenScore)</td>
         <td>@t.grantCount</td>
         <td>@t.antibodyCount</td>
         <td>@t.patentCount</td>
@@ -43,9 +44,9 @@ facets: Array[FacetDecorator], targets: List[Target], ctx: String )
 @faceturl() = {
     @defining(App.queryString("facet","q","type")) { uri =>
         @if(uri.length > 0) {
-            <a style='width:100%;' class="btn btn-info" href='@HtmlFormat.raw(ix.idg.controllers.routes.IDGApp.targetfacets(ctx) + "&"+uri.substring(1))'>All Facets...</a>
+            <a style='width:100%;' class="btn btn-info" href='@HtmlFormat.raw(ix.idg.controllers.routes.IDGApp.targetfacets(ctx) + "&"+uri.substring(1))'>All Filters...</a>
         } else {
-            <a style='width:100%;' class="btn btn-info" href='@ix.idg.controllers.routes.IDGApp.targetfacets(ctx)'>All Facets...</a>
+            <a style='width:100%;' class="btn btn-info" href='@ix.idg.controllers.routes.IDGApp.targetfacets(ctx)'>All Filters...</a>
         }
     }
 }
@@ -97,6 +98,7 @@ facets: Array[FacetDecorator], targets: List[Target], ctx: String )
             <th>Target Family</th>
 	    @HtmlFormat.raw(IDGApp.getTargetTableHeader("Log Novelty", "novelty"))
 	    @HtmlFormat.raw(IDGApp.getTargetTableHeader("PubMed Count", "pubmedCount"))
+            @HtmlFormat.raw(IDGApp.getTargetTableHeader("Jensen Score", "jensenScore"))
 	    @HtmlFormat.raw(IDGApp.getTargetTableHeader("Grant Count", "grantCount"))
 	    @HtmlFormat.raw(IDGApp.getTargetTableHeader("Antibody Count", "antibodyCount"))
 	    @HtmlFormat.raw(IDGApp.getTargetTableHeader("Patent", "patentCount"))
@@ -118,7 +120,11 @@ facets: Array[FacetDecorator], targets: List[Target], ctx: String )
 	<i class="fa fa-bar-chart"></i>
       </button>
     </div>
-*@    
+*@
+
+    <a id="compare-selected" class="btn btn-default" href="#" role="button" style="margin-right:1px; margin-left:1px;">
+        <i class="fa fa-exchange fa-lg "></i></a>
+
     <div class="dropdown pull-right">
       <button type="button" class="btn btn-default dropdown-toggle"
 	      data-toggle="dropdown" style="margin-right:1px">
@@ -136,9 +142,10 @@ facets: Array[FacetDecorator], targets: List[Target], ctx: String )
       style="margin-right: 1px">
         <i class="fa fa-eye"></i>
       </button>
-      <ul class="dropdown-menu pull-left">
-        <li><a  href="#hgramModal" data-toggle="modal" ><i class="fa fa-cubes"></i>&nbsp;Harmonogram</a></li>
-      </ul>
+        <ul class="dropdown-menu pull-left">
+            <li><a href="#modal-kinome" data-toggle="modal" ><i class="fa fa-pagelines"></i>&nbsp;Kinome Tree</a></li>
+            <li><a href="#hgramModal" data-toggle="modal" ><i class="fa fa-cubes"></i>&nbsp;Harmonogram</a></li>
+        </ul>
     </div>
 } {
  @targetcarousel(ctx)
@@ -176,6 +183,7 @@ role="dialog" aria-labelledby="modalLabelFolder" aria-hidden="true">
 </div>
 
 @modalradar(null,null)
+@modalkinome("The Human Kinome")
 
 <div class="modal fade" id="hgramModal" tabindex="-1"
      role="dialog" aria-labelledby="hgramModalLabel" aria-hidden="true" >
@@ -279,6 +287,15 @@ $(document).ready(function () {
    $('#loadmodal').on('shown.bs.modal', function (e) {
       console.log('loadmodal is shown...');
    });
+
+    $('#modal-kinome').on('shown.bs.modal', function (e) {
+        console.log('kinome tree modal shown...');
+        new Kinome('kinome-canvas',
+            '@routes.Assets.at("images/kinome200.png")',
+        '@HtmlFormat.raw(ix.idg.controllers.routes.IDGApp.getKinases(null)+App.queryString("q", "facet"))'
+        );
+    });
+
    $('#hgramModal').on('shown.bs.modal', function (e) {
       console.log('hgram modal is shown...');
       load_clustergram ('@ix.idg.controllers.routes.HarmonogramApp.hgForTarget(null, ctx, null)');
@@ -431,6 +448,11 @@ $(document).ready(function () {
             $("#modalLabelRadar" ).text("Data type summary for "+target);
             renderChart(chartData, chartConfig);
         });
+    });
+
+    $("#compare-selected" ).click(function(e) {
+        var ents = _.map(selectEntities("#target-table  input:checked"), function(x) {return(x);});
+        window.location.href = "@ix.idg.controllers.routes.IDGApp.compareTargets()?q="+ents.join();
     });
 
     $("#sc-empty").click(function (e) {

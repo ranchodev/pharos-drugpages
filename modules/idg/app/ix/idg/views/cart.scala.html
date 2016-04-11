@@ -70,6 +70,9 @@
             <div class="btn-group pull-right" role="group">
                 <a class="btn btn-default" href="@HtmlFormat.raw(request.uri)?folder=@currentFolder&action=download" role="button" style="margin-right: 5px">
                     <i class="fa fa-download fa-lg "></i></a>
+                <a id="compare-selected" class="btn btn-default" href="#" role="button" style="margin-right:1px; margin-left:1px;">
+                    <i class="fa fa-exchange fa-lg "></i></a>
+
                 <div class="dropdown pull-right">
                     <button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                         <i class="fa fa-eye"></i>
@@ -358,6 +361,12 @@ $(document).ready(function () {
             renderChart(chartData, chartConfig);
         });
     });
+
+    $("#compare-selected" ).click(function(e) {
+        var ents = _.map(selectEntities("#target-table  input:checked"), function(x) {return(x);});
+        window.location.href = "@ix.idg.controllers.routes.IDGApp.compareTargets()?q="+ents.join();
+    });
+
 
 });
 

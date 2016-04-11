@@ -20,6 +20,7 @@ GET /help   ix.idg.controllers.IDGApp.help
 GET	/index	ix.idg.controllers.IDGApp.index
 GET	/kinome	ix.idg.controllers.IDGApp.kinome
 GET	/targets	ix.idg.controllers.IDGApp.targets(q: String ?= null, rows: Int ?= 10, page: Int ?= 1)
+GET /targets/compare ix.idg.controllers.IDGApp.compareTargets(q: String ?= null)
 GET	/targets/facets	ix.idg.controllers.IDGApp.targetfacets(ctx: String ?= null)
 GET	/targets/:name	ix.idg.controllers.IDGApp.target(name: String)
 GET	/targets/:name/publications	ix.idg.controllers.IDGApp.publicationsForTarget(name: String, top: Int ?= -1, skip: Int ?= 0)
@@ -50,6 +51,7 @@ GET	/dossier/empty	ix.idg.controllers.DossierApp.emptyCart
 GET	/dto		ix.idg.controllers.DTOHier.dto(node: String ?= null)
 GET	/dtoviz		ix.idg.controllers.DTOHier.dtoViz(node: String ?= null)
 GET	/dto/:label	ix.idg.controllers.DTOHier.dtoNode(label: String)
+
 
 GET /sitemap.txt ix.idg.controllers.IDGApp.sitemap()
 
