@@ -174,8 +174,8 @@
 	 </div>
       </div>
       
-      @item(IDG_TISSUE, HtmlFormat.raw("UniProtKB Tissue"))
       @item(IDG_LIGAND, HtmlFormat.raw("Ligand"))
+      @wordcloud(CONSENSUS_TISSUE, HtmlFormat.raw("Consensus Tissue"))      
       @wordcloud(GTEx_TISSUE, HtmlFormat.raw("<a href='http://www.gtexportal.org'>GTEx Tissue</a>"))
       @wordcloud(HPA_RNA_TISSUE, HtmlFormat.raw("HPA RNA Tissue"))
       @wordcloud(HPA_PROTEIN_TISSUE, HtmlFormat.raw("HPA Protein Tissue"))      
@@ -274,8 +274,8 @@ function wordcloud (id, width, height, facetName, data) {
 $(document).ready(function () {
   @donut(IDG_DEVELOPMENT)
   @donut(IDG_FAMILY)
-  @donut(IDG_TISSUE)
   @donut(IDG_LIGAND)
+  @cloud(CONSENSUS_TISSUE)			     
   @cloud(GTEx_TISSUE)
   @cloud(HPA_RNA_TISSUE)
   @cloud(HPA_PROTEIN_TISSUE)
