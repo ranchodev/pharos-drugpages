@@ -156,7 +156,7 @@ public class TcrdRegistry extends Controller implements Commons {
             pstm5, pstm6, pstm7, pstm8, pstm9, pstm10,
             pstm11, pstm12, pstm13, pstm14, pstm15,
             pstm16, pstm17, pstm18, pstm19, pstm20,
-            pstm21, pstm22, pstm23, pstm24;
+            pstm21, pstm22, pstm23, pstm24, pstm25;
         Map<String, Keyword> datasources = new HashMap<String, Keyword>();
 
         // xrefs for the current target
@@ -257,6 +257,9 @@ public class TcrdRegistry extends Controller implements Commons {
             pstm24 = con.prepareStatement
                 ("select distinct cmpd_name_in_ref "
                  +"from chembl_activity where cmpd_chemblid = ?");
+
+            pstm25 = con.prepareStatement
+                ("select * from pmscore where protein_id = ? order by year");
 
             this.chembl = chembl;
         }
@@ -374,7 +377,7 @@ public class TcrdRegistry extends Controller implements Commons {
             pstm22.close();
             pstm23.close();
             pstm24.close();
-            
+            pstm25.close();
             chembl.shutdown();
         }
 
@@ -512,6 +515,30 @@ public class TcrdRegistry extends Controller implements Commons {
                 Event event = new Event ();
                 event.start = year;
                 event.end = count; // abusing notation
+                event.unit = Event.Resolution.YEARS;
+                timeline.events.add(event);
+            }
+            rset.close();
+            
+            if (timeline != null) {
+                timeline.save();
+                target.links.add(new XRef (timeline));
+            }
+        }
+
+        void addPMScore (Target target, long protein) throws Exception {
+            pstm25.setLong(1, protein);
+            ResultSet rset = pstm25.executeQuery();
+            Timeline timeline = null;
+            while (rset.next()) {
+                long year = rset.getLong("year");
+                double score = rset.getDouble("score");
+                if (timeline == null) {
+                    timeline = new Timeline ("PubMed Score");
+                }
+                Event event = new Event ();
+                event.start = year;
+                event.end = (long)(score * 1000 + 0.5); // abusing notation
                 event.unit = Event.Resolution.YEARS;
                 timeline.events.add(event);
             }
@@ -1968,7 +1995,8 @@ public class TcrdRegistry extends Controller implements Commons {
             addGO (target, t.protein);
             addPathway (target, t.protein);
             addPanther (target, t.protein);
-            //  addPatent (target, t.protein);
+            addPatent (target, t.protein);
+            addPMScore (target, t.protein);
             addGrant (target, t.id);
             addDrugs (target, t.id, t.source);
             addAssay (target, t.protein);
@@ -2728,7 +2756,7 @@ public class TcrdRegistry extends Controller implements Commons {
                  //+"where c.id in (11521)\n"
                  //+"where a.target_id in (12241)\n"
                  //+"where c.uniprot = 'Q9H3Y6'\n"
-                 //+"where b.tdl in ('Tclin','Tchem')\n"
+                 +"where b.tdl in ('Tclin','Tchem')\n"
                  //+"where b.idgfam = 'kinase'\n"
                  //+" where c.uniprot = 'Q8N568'\n"
                  //+"where c.uniprot = 'Q9Y5X4'\n"

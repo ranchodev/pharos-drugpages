@@ -1,0 +1,52 @@
+@import ix.idg.models.Target
+@import ix.idg.controllers.IDGApp
+
+@(targets: Array[Array[Target]])
+
+@frame(t: Target) = {
+<div class="panel panel-@t.idgTDL.label">
+  <div class="panel-heading">
+     <h3 class="panel-title"><a href='@ix.idg.controllers.routes.IDGApp.target(IDGApp.getId(t))'>@IDGApp.getId(t)</a></h3>
+  </div>
+  <div class="panel-body">
+     <iframe sandbox="allow-scripts allow-forms allow-same-origin allow-popups allow-top-navigation allow-popups-to-escape-sandbox allow-modals"
+         src='@ix.idg.controllers.routes.IDGApp.target(IDGApp.getId(t))'
+         marginwidth="0" marginheight="0"
+         frameBorder="0"
+         style="height:500px; width:100%">
+           <p>Your browser does not support iframes.</p>	 
+     </iframe>
+   </div>
+</div>
+}
+
+@ix.ncats.views.html.main("Target Comparison"){
+@targetmenu(null)
+}(HtmlFormat.empty){
+<div class="container-fluid">
+  <div class="page-header">
+    <h1>Target Comparison</a>
+      <div class="pull-right">
+         <a href="@ix.idg.controllers.routes.IDGApp.targets()"
+           class="btn btn-primary btn-lg">Browse</a>
+      </div>
+    </h1>
+  </div>
+  @for(row <- targets) {
+     <div class="row">
+        <div class="col-md-6">
+	  @frame(row(0))
+	</div>
+        <div class="col-md-6">
+	   @if(row(1) != null) {
+	      @frame(row(1))
+	   }
+	</div>
+     </div>
+  }
+</div>
+
+<head>
+  <link type="text/css" rel="stylesheet" href='@routes.Assets.at("stylesheets/main.css")'/>
+</head>
+}

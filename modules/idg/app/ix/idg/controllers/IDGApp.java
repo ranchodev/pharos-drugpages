@@ -3104,7 +3104,7 @@ public class IDGApp extends App implements Commons {
         return nodes;
     }
 
-    public static String getPatentInfo(Target target) {
+    public static String getPatentSparkline (Target target) {
         ArrayList<Long> ent = new ArrayList<Long>();
         for (XRef ref : target.links) {
             if (Timeline.class.getName().equals(ref.kind)) {
@@ -3127,6 +3127,32 @@ public class IDGApp extends App implements Commons {
         //strip the brackets '[', ']' for sparkline
         String res = StringUtils.join(ent, ",");
         return res;
+    }
+    
+    public static String getPubMedScoreSparkline (Target target) {
+        StringBuilder sb = new StringBuilder ();
+        for (XRef ref : target.links) {
+            if (Timeline.class.getName().equals(ref.kind)) {
+                try {
+                    Timeline tl = (Timeline)ref.deRef();
+                    if ("PubMed Score".equals(tl.name)) {
+                        for (Event e : tl.events) {
+                            if (sb.length() > 0)
+                                sb.append(",");
+                            sb.append(String.format("%1$d:%2$.3f", e.start,
+                                                    e.end/1000.));
+                        }
+                    }
+                }
+                catch (Exception ex) {
+                    ex.printStackTrace();
+                    Logger.error("Can't dereference link "
+                            +ref.kind+":"+ref.refid);
+                }
+            }
+        }
+        
+        return sb.toString();
     }
 
     public static VNum getActivity (Target target, Ligand ligand) {
@@ -3340,5 +3366,39 @@ public class IDGApp extends App implements Commons {
                 return ok(ix.idg.views.html.targetcompare.render(targets));
             }
         });
+    }
+
+    public static Result compareTargets2 (final String q) {
+        if (q == null || q.trim().equals(""))
+            return _badRequest
+                ("Must specify comma separated list of Uniprot IDs");
+        try {
+            final String key = "targets/compare/"
+                + q + "/" + Util.sha1(request());
+            
+            return getOrElse (key, new Callable<Result> () {
+                    public Result call () throws Exception {
+                        return _compareTargets (q);
+                    }
+                });
+        }
+        catch (Exception ex) {
+            ex.printStackTrace();
+            return _internalServerError (ex);
+        }
+    }
+
+    static Result _compareTargets (final String q) throws Exception {
+        String[] ids = q.split(",");
+        List<Target> all = new ArrayList<>();
+        for (String id : ids) {
+            all.addAll(TargetResult.find(id));
+        }
+        int rows = (all.size()+1)/2; // a row has at most 2 targets
+        Target[][] targets = new Target[rows][2];
+        for (int i = 0; i < all.size(); ++i) {
+            targets[i/2][i%2] = all.get(i);
+        }
+        return ok (ix.idg.views.html.targetcompare2.render(targets));
     }
 }

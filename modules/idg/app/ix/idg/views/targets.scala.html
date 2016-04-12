@@ -17,11 +17,10 @@ facets: Array[FacetDecorator], targets: List[Target], ctx: String )
         <td><span class="label label-@t.idgTDL.label" data-toggle="tooltip" data-html="true" title="<p align='left'>@t.idgTDL.desc</p>">@t.idgTDL.name</span></td>
         <td>@t.idgFamily</td>
         <td>@IDGApp.format(t.novelty)</td>
-        <td>@t.pubmedCount</td>
         <td>@IDGApp.format(t.jensenScore)</td>
-        <td>@t.grantCount</td>
+@*        <td>@t.grantCount</td>*@
         <td>@t.antibodyCount</td>
-        <td>@t.patentCount</td>
+        <td>@t.patentCount@**<span class="inlinesparkline">@IDGApp.getPatentSparkline(t)</span>**@</td>
         @*<td><div style="display: inline;" id="radar-@IDGApp.getId(t)" class="radar-div"></div></td>*@
         <td><div id="radar-@IDGApp.getId(t)" class="radar-div" genesym="@IDGApp.getGeneSymbol(t)"
                  tdlLabel="@t.idgTDL.label" tdl="@t.idgTDL" tname="@t.name"></div></td>
@@ -97,9 +96,8 @@ facets: Array[FacetDecorator], targets: List[Target], ctx: String )
             <th>Development Level</th>
             <th>Target Family</th>
 	    @HtmlFormat.raw(IDGApp.getTargetTableHeader("Log Novelty", "novelty"))
-	    @HtmlFormat.raw(IDGApp.getTargetTableHeader("PubMed Count", "pubmedCount"))
             @HtmlFormat.raw(IDGApp.getTargetTableHeader("Jensen Score", "jensenScore"))
-	    @HtmlFormat.raw(IDGApp.getTargetTableHeader("Grant Count", "grantCount"))
+@**	    @HtmlFormat.raw(IDGApp.getTargetTableHeader("Grant Count", "grantCount")) **@
 	    @HtmlFormat.raw(IDGApp.getTargetTableHeader("Antibody Count", "antibodyCount"))
 	    @HtmlFormat.raw(IDGApp.getTargetTableHeader("Patent", "patentCount"))
 	    @*HtmlFormat.raw(IDGApp.getTargetTableHeader("Monoclonal Antibody Count", "monoclonalCount"))*@
@@ -156,6 +154,22 @@ facets: Array[FacetDecorator], targets: List[Target], ctx: String )
   <div class="modal-dialog modal-sm">
     <div class="modal-content">
       <center><img src='@routes.Assets.at("ncats/images/spinners/294.GIF")'></center>
+    </div>
+  </div>
+</div>
+
+<div class="modal fade" tabindex="-1" role="dialog" id="compare-selection-modal"
+     aria-labelledby="modalLabelSelection" aria-hidden="true">
+  <div class="modal-dialog modal-md">
+    <div class="modal-content">
+      <div class="modal-header">
+         <button type="button" class="close"
+                data-dismiss="modal" aria-label="Close">
+             <span aria-hidden="true">&times;</span></button>
+         <h4 class="modal-title" id="modalLabelSelection">Please select at least two targets to compare.</h4>
+      </div>
+      <div class="modal-body">
+      </div>
     </div>
   </div>
 </div>
@@ -451,8 +465,14 @@ $(document).ready(function () {
     });
 
     $("#compare-selected" ).click(function(e) {
-        var ents = _.map(selectEntities("#target-table  input:checked"), function(x) {return(x);});
-        window.location.href = "@ix.idg.controllers.routes.IDGApp.compareTargets()?q="+ents.join();
+       var ents = _.map(selectEntities("#target-table  input:checked"),
+	      function(x) {return(x);});
+       if (ents.length > 1) {  
+          window.location.href = "@ix.idg.controllers.routes.IDGApp.compareTargets2()?q="+ents.join();
+       }
+       else {
+         $('#compare-selection-modal').modal('show');
+       }
     });
 
     $("#sc-empty").click(function (e) {

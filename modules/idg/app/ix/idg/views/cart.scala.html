@@ -364,7 +364,7 @@ $(document).ready(function () {
 
     $("#compare-selected" ).click(function(e) {
         var ents = _.map(selectEntities("#target-table  input:checked"), function(x) {return(x);});
-        window.location.href = "@ix.idg.controllers.routes.IDGApp.compareTargets()?q="+ents.join();
+        window.location.href = "@ix.idg.controllers.routes.IDGApp.compareTargets2()?q="+ents.join();
     });
 
 

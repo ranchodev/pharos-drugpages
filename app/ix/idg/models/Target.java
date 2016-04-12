@@ -101,14 +101,14 @@ public class Target extends EntityModel {
     public Integer patentCount;
 
     @Indexable(sortable=true,name="Grant Count",
-               ranges={0,10,20,50,200,300,500,1000,2000,3000})
+               ranges={0,1,2,3,4,5,6,7,8,9})
     public Integer grantCount;
 
     @Indexable(sortable=true,name="Grant Total Cost")
     public Double grantTotalCost;
 
     @Indexable(sortable=true,name="R01 Grant Count",
-               ranges={0,10,20,30,40,50,100})
+               ranges={0,1,2,3,4,5,6,7,8,9})
     public Integer r01Count;
 
     @JsonView(BeanViews.Full.class)

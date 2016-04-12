@@ -376,6 +376,14 @@
     <li class="active">@target.name</li>
 </ol>
 }{
+@defining(target.getSynonym(IDG_TARGET)) { keyword =>
+  @if(keyword != null) {
+<!--
+This is TCRD target @keyword.term
+--!>
+  }
+}
+
 <div class="container-fluid">
   <div class="col-md-12">
     <div class="page-header">
@@ -574,12 +582,14 @@
 			 title="<p align='left'>Number of NIH funded R01 grants for 2010-2014 based on text mining of application titles and abstracts, due to nature of text mining results might be inaccurate</p>">R01 Count</span></td>
 		     <td>@target.r01Count</td>
 		   </tr>
+		   @**
                <tr>
                    <td><span data-toggle="tooltip" data-html="true"
                    title="Patent Count">Patent Count</span>
                    </td>
                    <td>@target.patentCount</td>
                </tr>
+	         **@
 		   <tr>
 		     <td><span data-toggle="tooltip"
 			 data-html="true"
@@ -592,9 +602,9 @@
 		   </tr>
 	           <tr>
 		     <td><a href="@ix.idg.controllers.routes.IDGApp.pmscore()">JensenLab PubMed Score</a></td>
-		     <td>@{"%.2f".format(target.jensenScore)}</td>
+		     <td>@{"%.2f".format(target.jensenScore)}
+		        <p><span id="pmscore-sparkline">@IDGApp.getPubMedScoreSparkline(target)</span></td>
 		   </tr>
-
 	           </table>
 		 </div>
 	       </div>
@@ -1294,6 +1304,7 @@ role="dialog" aria-labelledby="modalLabelFolder" aria-hidden="true">
     <script type="text/javascript" src='@routes.Assets.at("javascripts/cart.js")'></script>
     <script type="text/javascript" src='@routes.Assets.at("javascripts/d3.layout.cloud.js")'></script>
     <script type="text/javascript" src='@routes.Assets.at("javascripts/wordcloud.js")'></script>
+    <script type="text/javascript" src='@routes.Assets.at("javascripts/jquery.sparkline.js")'></script>    
     <link type="text/css" rel="stylesheet" href='@routes.Assets.at("stylesheets/d3-tip.css")' />
     <link type="text/css" rel="stylesheet" href='@routes.Assets.at("stylesheets/radar-chart.css")' />
     <link type="text/css" rel="stylesheet" href='@routes.WebJarAssets.at(WebJarAssets.locate("morris.css"))' />
@@ -1499,8 +1510,8 @@ $('.tree').treegrid({
       @*labels: ['Count']*@
    @*});*@
 
-
-  tinx_target_plot("#tinx-plot", "@IDGApp.getId(target)");
+   $('#pmscore-sparkline').sparkline('html', {width:'100px'});
+   tinx_target_plot("#tinx-plot", "@IDGApp.getId(target)");
 });
 
 function showLoadModal () {
