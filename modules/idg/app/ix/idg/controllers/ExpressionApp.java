@@ -168,11 +168,22 @@ public class ExpressionApp extends App {
                 // may need to update mapping
                 String ds = Commons.GTEx_EXPR;
                 if (source != null) {
-                    if ("idg".equalsIgnoreCase(source)) ds = Commons.IDG_EXPR;
-                    else if ("hpm".equalsIgnoreCase(source)) ds = Commons.HPM_EXPR;
-                    else if ("gtex".equalsIgnoreCase(source)) ds = Commons.GTEx_EXPR;
-                    else if ("hpa".equalsIgnoreCase(source)) ds = Commons.HPA_RNA_EXPR;
-                    else if ("consensus".equalsIgnoreCase(source)) ds = Commons.CONSENSUS_EXPR;
+                    if ("uniprot".equalsIgnoreCase(source))
+                        ds = Commons.UNIPROT_EXPR;
+                    else if ("hpm".equalsIgnoreCase(source))
+                        ds = Commons.HPM_EXPR;
+                    else if ("gtex".equalsIgnoreCase(source))
+                        ds = Commons.GTEx_EXPR;
+                    else if ("hpa".equalsIgnoreCase(source))
+                        ds = Commons.HPA_RNA_EXPR;
+                    else if ("uniprot".equalsIgnoreCase(source))
+                        ds = Commons.UNIPROT_EXPR;
+                    else if ("jensen-tm".equalsIgnoreCase(source))
+                        ds = Commons.JENSEN_TM_EXPR;
+                    else if ("jensen-kb".equalsIgnoreCase(source))
+                        ds = Commons.JENSEN_KB_EXPR;
+                    else if ("idg".equalsIgnoreCase(source))
+                        ds = Commons.IDG_EXPR;
                 }
 
                 HashMap<String, Integer> organsLevel = new HashMap<>();
@@ -231,8 +242,11 @@ public class ExpressionApp extends App {
                 };
 
                 String suffix = "";
-                if (ds.equals(Commons.CONSENSUS_EXPR)) suffix = "-cons";
-                else if (!ds.equals(Commons.IDG_EXPR)) suffix = "-qual";
+                if (ds.equals(Commons.IDG_EXPR)) suffix = "-cons";
+                else if (!ds.equals(Commons.UNIPROT_EXPR)
+                         && !ds.equals(Commons.JENSEN_TM_EXPR)
+                         && !ds.equals(Commons.JENSEN_KB_EXPR))
+                    suffix = "-qual";
 
                 Document doc;
                 if (Play.isProd()) {
@@ -259,28 +273,30 @@ public class ExpressionApp extends App {
                     }
                     String color = "";
                     switch (ds) {
-                        case Commons.IDG_EXPR:
-                            color = confidenceColorsIDG[organsConf.get(tissue)];
+                    case Commons.UNIPROT_EXPR:
+                    case Commons.JENSEN_KB_EXPR:
+                    case Commons.JENSEN_TM_EXPR:
+                        color = confidenceColorsIDG[organsConf.get(tissue)];
+                        break;
+                    case Commons.IDG_EXPR:
+                        int level = organsLevel.get(tissue);
+                        int conf = organsConf.get(tissue);
+                        
+                        switch (level) {
+                        case 0: // low
+                            color = colorsConsLow[conf];
                             break;
-                        case Commons.CONSENSUS_EXPR:
-                            int level = organsLevel.get(tissue);
-                            int conf = organsConf.get(tissue);
-
-                            switch (level) {
-                                case 0: // low
-                                    color = colorsConsLow[conf];
-                                    break;
-                                case 1: // medium
-                                    color = colorsConsMedium[conf];
-                                    break;
-                                case 2: //high
-                                    color = colorsConsHigh[conf];
-                                    break;
-                            }
+                        case 1: // medium
+                            color = colorsConsMedium[conf];
                             break;
-                        default:
-                            color = confidenceColorsOther[organsLevel.get(tissue)];
+                        case 2: //high
+                            color = colorsConsHigh[conf];
                             break;
+                        }
+                        break;
+                    default:
+                        color = confidenceColorsOther[organsLevel.get(tissue)];
+                        break;
                     }
                     attrNode.setNodeValue("fill:" + color + ";");
                     attributes.setNamedItem(attrNode);

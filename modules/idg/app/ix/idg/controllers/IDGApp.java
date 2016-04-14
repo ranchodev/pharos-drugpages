@@ -233,7 +233,7 @@ public class IDGApp extends App implements Commons {
         @Override
         public String name () {
             return super.name().replaceAll("IDG", "")
-                .replaceAll("UniProt","").trim();
+                .replaceAll("Consensus", "IDG").trim();
         }
 
         @Override
@@ -470,7 +470,7 @@ public class IDGApp extends App implements Commons {
             IDG_DEVELOPMENT,
             IDG_FAMILY,
             IDG_DISEASE,
-            CONSENSUS_TISSUE,
+            IDG_TISSUE,
             "R01 Grant Count",
             "Jensen Score"
     };
@@ -483,8 +483,9 @@ public class IDGApp extends App implements Commons {
         IDG_LIGAND,
         IDG_DRUG,
 
-        CONSENSUS_TISSUE,
         IDG_TISSUE,
+        UNIPROT_TISSUE,
+        JENSEN_TM_TISSUE,
         GTEx_TISSUE,
         HPM_TISSUE,
         HPA_RNA_TISSUE,
@@ -553,7 +554,7 @@ public class IDGApp extends App implements Commons {
         IDG_DISEASE,
         UNIPROT_GENE,
         IDG_DRUG,
-        CONSENSUS_TISSUE,
+        IDG_TISSUE,
         SOURCE
     };
 
@@ -3169,7 +3170,8 @@ public class IDGApp extends App implements Commons {
         return null;
     }
 
-    public static List<Publication> getPublications (final Target target) throws Exception {
+    public static List<Publication> getPublications (final Target target)
+        throws Exception {
         List<Publication> pubs = new ArrayList<Publication>();
         
         final String key = "targets/"+target.id+"/publications";
@@ -3197,7 +3199,8 @@ public class IDGApp extends App implements Commons {
         return pubs;
     }
 
-    public static List<Target> getTargetsByPMID (final long pmid) throws Exception {
+    public static List<Target> getTargetsByPMID (final long pmid)
+        throws Exception {
         final String key = "publications/"+pmid+"/targets";
         return getOrElse (key, new Callable<List<Target>> () {
                 public List<Target> call () throws Exception {

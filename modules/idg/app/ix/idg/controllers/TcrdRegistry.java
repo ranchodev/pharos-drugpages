@@ -207,10 +207,7 @@ public class TcrdRegistry extends Controller implements Commons {
             pstm7 = con.prepareStatement
                 ("select * from phenotype where protein_id = ?");
             pstm8 = con.prepareStatement
-                ("select * from expression where protein_id = ? "
-                 +"and (qual_value != 'Not detected'"
-                 +"or evidence = 'CURATED')"
-                 );
+                ("select * from expression where protein_id = ? ");
             pstm9 = con.prepareStatement
                 ("select a.*, uniprot from goa a, protein b where a.protein_id = ? and a.protein_id = b.id");
             pstm10 = con.prepareStatement
@@ -349,7 +346,8 @@ public class TcrdRegistry extends Controller implements Commons {
                     ex.printStackTrace();
                 }
             }
-            Logger.debug("#### PERSISTENCE COMPLETE! #####");
+            Logger.debug("#### PERSISTENCE COMPLETE AT "
+                         +new java.util.Date()+"! #####");
         }
 
         public void shutdown () throws SQLException {
@@ -738,28 +736,33 @@ public class TcrdRegistry extends Controller implements Commons {
             ResultSet rset = pstm8.executeQuery();
             Map<String, Keyword> sources = new HashMap<String, Keyword>();
             while (rset.next()) {
+                String qv = rset.getString("qual_value");
+                if ("Not detected".equalsIgnoreCase(qv))
+                    continue;
+
                 Expression expr = new Expression();
                 expr.proteinId = protein;
                 expr.source = rset.getString("etype");
                 expr.tissue = rset.getString("tissue");
                 expr.confidence = rset.getDouble("conf");
-                expr.qualValue = rset.getString("qual_value"); 
+                expr.qualValue = qv;
                 expr.numberValue = rset.getDouble("number_value");
                 expr.evidence = rset.getString("evidence");
 
                 String sourceUrl = "";
+                Keyword tissue = null;
                 if (expr.source.startsWith("GTEx")) {
                     sourceUrl = "http://www.gtexportal.org/";
                     expr.sourceid = GTEx_EXPR;
-                    Keyword tissue = KeywordFactory.registerIfAbsent
+                    tissue = KeywordFactory.registerIfAbsent
                         (GTEx_TISSUE, expr.tissue, null);
                     target.addIfAbsent((Value)tissue);
                 }
                 else if (expr.source.startsWith("Consensus")) {
-                    sourceUrl = "http://www.unm.edu/";
-                    expr.sourceid = CONSENSUS_EXPR;
-                    Keyword tissue = KeywordFactory.registerIfAbsent
-                            (CONSENSUS_TISSUE, expr.tissue, null);
+                    sourceUrl = "http://targetcentral.ws";
+                    expr.sourceid = IDG_EXPR;
+                    tissue = KeywordFactory.registerIfAbsent
+                            (IDG_TISSUE, expr.tissue, null);
                     target.addIfAbsent((Value)tissue);
                 }
                 else if (expr.source.startsWith("HPM Gene")) {
@@ -767,30 +770,35 @@ public class TcrdRegistry extends Controller implements Commons {
                 else if (expr.source.startsWith("HPM Protein")) {
                     sourceUrl = "http://www.humanproteomemap.org";
                     expr.sourceid = HPM_EXPR;
-                    Keyword tissue = KeywordFactory.registerIfAbsent
+                    tissue = KeywordFactory.registerIfAbsent
                         (HPM_TISSUE, expr.tissue, null);
                     target.addIfAbsent((Value)tissue);
                 }
                 else if (expr.source.startsWith("JensenLab Text Mining")) {
-                    sourceUrl = "http://jensenlab.org";
+                    sourceUrl = "http://tissues.jensenlab.org";
+                    expr.sourceid = JENSEN_TM_EXPR;
+                    tissue = KeywordFactory.registerIfAbsent
+                        (JENSEN_TM_TISSUE, expr.tissue, null);
+                    target.addIfAbsent((Value)tissue);
                 }
                 else if (expr.source.startsWith
                            ("JensenLab Knowledge UniProtKB-RC")) {
                     sourceUrl = "http://tissues.jensenlab.org";
-                    expr.sourceid = IDG_EXPR;
-                    Keyword tissue = KeywordFactory.registerIfAbsent
-                        (IDG_TISSUE, expr.tissue, null);
+                    expr.sourceid = JENSEN_KB_EXPR;
+                    tissue = KeywordFactory.registerIfAbsent
+                        (JENSEN_KB_TISSUE, expr.tissue, null);
                     target.addIfAbsent((Value)tissue);
                 }
                 else if (expr.source.equals("UniProt Tissue")) {
-                    Keyword tissue = KeywordFactory.registerIfAbsent
+                    tissue = KeywordFactory.registerIfAbsent
                         (expr.source, expr.tissue, null);
+                    expr.sourceid = UNIPROT_EXPR;
                     target.addIfAbsent((Value)tissue);              
                 }
                 else if (expr.source.startsWith("HPA")) {
                     sourceUrl = "http://tissues.jensenlab.org";
                     expr.sourceid = expr.source+" Expression";
-                    Keyword tissue = KeywordFactory.registerIfAbsent
+                    tissue = KeywordFactory.registerIfAbsent
                         (expr.source+" Tissue", expr.tissue, null);
                     target.addIfAbsent((Value)tissue);
                 }
@@ -805,6 +813,9 @@ public class TcrdRegistry extends Controller implements Commons {
 
                 expr.save();
                 XRef ref = target.addIfAbsent(new XRef(expr));
+                if (tissue != null)
+                    ref.properties.add(tissue);
+                
                 if (ref.id == null)
                     ref.save();
                 
@@ -2756,10 +2767,11 @@ public class TcrdRegistry extends Controller implements Commons {
                  //+"where c.id in (11521)\n"
                  //+"where a.target_id in (12241)\n"
                  //+"where c.uniprot = 'Q9H3Y6'\n"
-                 +"where b.tdl in ('Tclin','Tchem')\n"
+                 //+"where b.tdl in ('Tclin','Tchem')\n"
                  //+"where b.idgfam = 'kinase'\n"
                  //+" where c.uniprot = 'Q8N568'\n"
                  //+"where c.uniprot = 'Q9Y5X4'\n"
+                 //+"where c.uniprot = 'Q9Y691'\n"
                  //+" where c.uniprot = 'Q6NV75'\n"
                  //+"where c.uniprot in ('O00444', 'P07333')\n"
                  //+"where c.uniprot in ('Q8NE63','O14976')\n"

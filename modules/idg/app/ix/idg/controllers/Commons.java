@@ -9,7 +9,6 @@ public interface Commons {
     public static final String IDG_DEVELOPMENT = Target.IDG_DEVELOPMENT;
     public static final String IDG_FAMILY = Target.IDG_FAMILY;
     public static final String IDG_DRUG = "IDG Drug";
-    public static final String IDG_EXPR = "IDG Expression";
     public static final String IDG_ZSCORE = "IDG Z-score";
     public static final String IDG_CONF = "IDG Confidence";
     public static final String IDG_EVIDENCE = "IDG Evidence";
@@ -17,6 +16,7 @@ public interface Commons {
     public static final String IDG_TARGET = "IDG Target";
     public static final String IDG_SMILES = "IDG SMILES";
     public static final String IDG_TISSUE = "IDG Tissue";
+    public static final String IDG_EXPR = "IDG Expression";    
     public static final String IDG_LIGAND = "IDG Ligand";
     public static final String IDG_TISSUE_REF = "IDG Tissue Ref";
     public static final String IDG_TOOLS = "IDG Tools";
@@ -43,8 +43,6 @@ public interface Commons {
     
     public static final String REACTOME_REF = "Reactome Pathway Ref";
 
-    public static final String CONSENSUS_EXPR = "Consensus Expression";
-    public static final String CONSENSUS_TISSUE = "Consensus Tissue";
     public static final String GTEx_TISSUE = "GTEx Tissue";
     public static final String GTEx_EXPR = "GTEx Expression";
     public static final String HPM_TISSUE = "HPM Tissue";
@@ -53,6 +51,10 @@ public interface Commons {
     public static final String HPA_RNA_EXPR = "HPA RNA Expression";
     public static final String HPA_PROTEIN_TISSUE = "HPA Protein Tissue";
     public static final String HPA_PROTEIN_EXPR = "HPA Protein Expression";
+    public static final String JENSEN_TM_EXPR = "Jensen-TM Expression";
+    public static final String JENSEN_TM_TISSUE = "Jensen-TM Tissue";
+    public static final String JENSEN_KB_EXPR = "Jensen-KB Expression";
+    public static final String JENSEN_KB_TISSUE = "Jensen-KB Tissue";
 
     public static final String KEGG_PATHWAY = "KEGG Pathway";
     public static final String PATENT_COUNT = "Patent Count";
@@ -104,6 +106,7 @@ public interface Commons {
     public static final String UNIPROT_FULLNAME = "UniProt Fullname";
     public static final String UNIPROT_NAME = "UniProt Name";
     public static final String UNIPROT_TISSUE = "UniProt Tissue";
+    public static final String UNIPROT_EXPR = "UniProt Expression";
     public static final String UNIPROT_SEQUENCE = "UniProt Sequence";
 
     public static final String ENTREZ_GENE = "Entrez Gene";

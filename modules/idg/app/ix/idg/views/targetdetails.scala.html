@@ -379,7 +379,7 @@
 @defining(target.getSynonym(IDG_TARGET)) { keyword =>
   @if(keyword != null) {
 <!--
-This is TCRD target @keyword.term
+This is TCRD target <a href='@ix.core.controllers.v1.routes.RouteFactory.get("targets", target.id, null)'>@keyword.term</a>
 --!>
   }
 }
@@ -815,23 +815,20 @@ This is TCRD target @keyword.term
                            data-html="true"
                            title="<p align='left'>Tissue expression data from The Genotype-Tissue Expression (GTEx) project</p>">
                                GTEx</span></a></li>
+			       
                        <li role="presentation"><a href="#hpm-tab" role="tab" data-toggle="tab">
                            <span data-toggle="tooltip"
                            data-html="true"
                            title="<p align='left'>Tissue expression data from The Human Proteome Map (HPM)</p>">
                                HPM</span></a></li>
+			       
                        <li role="presentation"><a href="#hpa-tab" role="tab" data-toggle="tab">
                            <span data-toggle="tooltip"
                            data-html="true"
                            title="<p align='left'>Tissue expression data from The Human Protein Atlas</p>">
                                HPA</span></a></li>
-                       <li role="presentation"><a href="#idg-tab" aria-controls="idg" data-toggle="tab">
-                           <span data-toggle="tooltip"
-                           data-html="true"
-                           title="<p align='left'>Text mined tissue expression data from the Jensen Lab</p>">
-                               Jensen-TM
-                           </span></a></li>
-                       <li role="presentation"><a href="#consensus-tab" role="tab" aria-controls="consensus" data-toggle="tab">
+			       
+                       <li role="presentation"><a href="#idg-tab" role="tab" aria-controls="idg" data-toggle="tab">
                            <span data-toggle="tooltip"
                            data-html="true"
                            title="<p align='left'>Consolidated tissue expression (combining GTEx, HPM and HPA)</p>">
@@ -839,6 +836,24 @@ This is TCRD target @keyword.term
 
                        </li>
 
+<li role="presentation"><a href="#uniprot-tab" aria-controls="uniprot" data-toggle="tab">
+                           <span data-toggle="tooltip"
+                           data-html="true"
+                           title="<p align='left'>UniProt tissue expression data</p>">
+                               UniProt
+                           </span></a></li>
+                       <li role="presentation"><a href="#jensen-kb-tab" aria-controls="jensen-kb" data-toggle="tab">
+                           <span data-toggle="tooltip"
+                           data-html="true"
+                           title="<p align='left'>Tissue expression data from the Jensen Lab UniProtKB</p>">
+                               Jensen-KB
+                           </span></a></li>
+                       <li role="presentation"><a href="#jensen-tm-tab" aria-controls="jensen-tm" data-toggle="tab">
+                           <span data-toggle="tooltip"
+                           data-html="true"
+                           title="<p align='left'>Text mined tissue expression data from the Jensen Lab</p>">
+                               Jensen-TM
+                           </span></a></li>			   
                    </ul>
                    <div class="tab-content">
                        <div role="tabpanel" class="tab-pane active" id="gtex-tab">
@@ -853,8 +868,14 @@ This is TCRD target @keyword.term
                        <div role="tabpanel" class="tab-pane" id="idg-tab">
                        @expression(IDG_EXPR, "idg")
                        </div>
-                       <div role="tabpanel" class="tab-pane" id="consensus-tab">
-                       @expression(CONSENSUS_EXPR, "consensus")
+                       <div role="tabpanel" class="tab-pane" id="uniprot-tab">
+                       @expression(UNIPROT_EXPR, "uniprot")
+                       </div>
+                       <div role="tabpanel" class="tab-pane" id="jensen-kb-tab">
+                       @expression(JENSEN_KB_EXPR, "jensen-kb")
+                       </div>		       		       
+                       <div role="tabpanel" class="tab-pane" id="jensen-tm-tab">
+                       @expression(JENSEN_TM_EXPR, "jensen-tm")
                        </div>
                    </div>
                </div>
@@ -1330,6 +1351,8 @@ $(document).ready(function () {
     _.each(tocs, function(o, idx, l) {
         $("#toc" ).append("<li><a href='#"+ o.aname+"'>"+ o.tname+"</a></li>");
     });
+    $('#toc').append('<li role="separator" class="divider"></li>');
+    $('#toc').append('<li><a href="@ix.core.controllers.v1.routes.RouteFactory.get("targets", target.id, null)">View JSON</li>');
 
     /* Word cloud for text mined pubs */
     @defining(WordCloud.textHistogram(target, "title", "sqrt")) { counts =>
