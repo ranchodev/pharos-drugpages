@@ -5,8 +5,9 @@ import ix.idg.models.Disease;
 import ix.idg.models.Expression;
 import ix.idg.models.Ligand;
 import ix.idg.models.Target;
+import play.Play;
 
-import java.io.ByteArrayOutputStream;
+import java.io.*;
 import java.util.List;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
@@ -292,6 +293,20 @@ public class DownloadEntities {
         else return s;
     }
 
+    static byte[] getREADME() throws IOException {
+        BufferedReader reader;
+        if (Play.isProd()) {
+            reader = new BufferedReader(new InputStreamReader(Play.application().resourceAsStream("public/assets/README.txt")));
+        } else {
+            reader = new BufferedReader(new FileReader(Play.application().getFile("app/assets/README.txt")));
+        }
+        StringBuilder readme = new StringBuilder();
+        String line;
+        while ( (line = reader.readLine()) != null) readme.append(line).append("\n");
+        reader.close();
+        return readme.toString().getBytes();
+    }
+
     static byte[] downloadTargets(List<Target> targets) throws Exception {
 
         StringBuilder sb = new StringBuilder();
@@ -442,6 +457,11 @@ public class DownloadEntities {
         entry = new ZipEntry("diseases.csv");
         zip.putNextEntry(entry);
         zip.write(diseaseFile);
+        zip.closeEntry();
+
+        entry = new ZipEntry("README.txt");
+        zip.putNextEntry(entry);
+        zip.write(getREADME());
         zip.closeEntry();
 
         zip.finish();
