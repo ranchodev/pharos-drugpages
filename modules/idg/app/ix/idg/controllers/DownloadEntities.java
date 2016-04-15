@@ -296,7 +296,7 @@ public class DownloadEntities {
     static byte[] getREADME() throws IOException {
         BufferedReader reader;
         if (Play.isProd()) {
-            reader = new BufferedReader(new InputStreamReader(Play.application().resourceAsStream("public/assets/README.txt")));
+            reader = new BufferedReader(new InputStreamReader(Play.application().resourceAsStream("public/README.txt")));
         } else {
             reader = new BufferedReader(new FileReader(Play.application().getFile("app/assets/README.txt")));
         }
