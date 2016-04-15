@@ -1753,6 +1753,17 @@ public class App extends Authentication {
         return ups;
     }
 
+    public static Result getUptime () {
+        ObjectMapper mapper = new ObjectMapper ();
+        ObjectNode json = mapper.createObjectNode();
+        int[] uptime = uptime ();
+        json.put("time", new java.util.Date().toString());
+        json.put("hour", uptime[0]);
+        json.put("minute", uptime[1]);
+        json.put("second", uptime[2]);
+        return ok (json);
+    }
+
     @BodyParser.Of(value = BodyParser.Text.class, maxLength = 1024 * 1024)
     public static Result molinstrument () {
         //String mime = request().getHeader("Content-Type");

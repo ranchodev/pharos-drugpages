@@ -26,6 +26,7 @@ DELETE	/cache/*key	ix.ncats.controllers.App.cacheDelete(key: String)
 
 # return cache statistics
 GET	/statistics/:kind	ix.ncats.controllers.App.statistics(kind: String)
+GET	/uptime		ix.ncats.controllers.App.getUptime
 
 # authentication
 GET /login	ix.ncats.controllers.auth.Authentication.login(url: String ?= null)
