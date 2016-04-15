@@ -299,12 +299,13 @@ public class ExpressionApp extends App {
                         break;
                     default:
                         Integer index = organsLevel.get(tissue);
-                        if (index != null
+                        if (index != null && index >= 0
                             && index < confidenceColorsOther.length)
                             color = confidenceColorsOther[index];
-                        else if (index != null)
+                        else 
                             Logger.warn(acc+": invalid index "+index
-                                        +" for source \""+source+"\"!");
+                                        +" for source \""+source
+                                        +"\" and tissue \""+tissue+"\"!");
                         break;
                     }
                     attrNode.setNodeValue("fill:" + color + ";");
