@@ -24,7 +24,7 @@ public interface Commons {
     public static final String IDG_TOOLS_SELECTIVE_COMPOUNDS = "Selective compounds";
     public static final String IDG_TOOLS_PHENOTYPES = "Phenotypes";
     public static final String TARGET_PUBLICATIONS = "Publications";
-    public static final String TARGET_PPI = "Protein Protein Interaction";
+    public static final String TARGET_PPI = "Protein-Protein Interactions";
     
     public static final String PHARMALOGICAL_ACTION = "Pharmalogical Action";
     public static final String PUBMED_ID = "PubMed ID";

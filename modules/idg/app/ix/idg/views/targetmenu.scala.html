@@ -114,7 +114,7 @@
 	<li><a href="@ix.idg.controllers.routes.DTOHier.dto(null)">Explore</a></li>
 	@defining(App.queryString("facet","q","type")) { uri =>
 	  @if(uri.length > 0) {
-	     <li><a href='@HtmlFormat.raw(ix.idg.controllers.routes.IDGApp.targetfacets(ctx) + "&"+uri.substring(1))'>Facets...</a></li>
+	     <li><a href='@HtmlFormat.raw(ix.idg.controllers.routes.IDGApp.targetfacets(ctx) + "&"+uri.substring(1))'>Filters...</a></li>
 	  } else {
 	     <li><a href='@ix.idg.controllers.routes.IDGApp.targetfacets(ctx)'>Facets...</a></li>
 	  }

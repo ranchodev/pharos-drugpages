@@ -241,15 +241,18 @@
      }
 }
 
-@expression(name: String, skull: String) = {
+@expression(name: String, skull: String, ext: Keyword = null) = {
    <div class="row">
       <div class="col-md-6">
          @defining(ExpressionApp.getLinkedExpr(target, name)){ exprs =>
 	 <div class="panel-body">
 	    @for(expr <- exprs) {
-            @if(expr.sourceid.equals(name)) {
-                @facet(expr.sourceid.replaceAll("Expression", "Tissue"), expr.tissue)
-            }
+               @if(expr.sourceid.equals(name)) {
+                  @facet(expr.sourceid.replaceAll("Expression", "Tissue"), expr.tissue)
+               }
+	    }
+	    @if(ext != null) {
+	        <a class="label label-danger" href="@ext.href">See source... <i class="fa fa-external-link"></i></a>
 	    }
 	 </div>
 	 }
@@ -705,6 +708,21 @@ This is TCRD target <a href='@ix.core.controllers.v1.routes.RouteFactory.get("ta
 	      </button>
 	    </div>
 	</div>
+	@defining(IDGApp.getPPI(target)) { ppi =>
+	  @if(!ppi.isEmpty) {
+	     <div class="panel panel-default">
+	        <div class="panel-heading">
+		   <h3 class="panel-title">Protein-protein Interaction</h3>
+		</div>
+		<div class="panel-body">
+		   @for(p <- ppi) {
+		      <a class="label label-primary" onclick="showLoadModal()"
+		        href='@ix.idg.controllers.routes.IDGApp.target(IDGApp.getId(p))'>@p.getSynonym(UNIPROT_GENE).term</a>
+		   }
+		</div>
+	     </div>
+	  }
+	}
        </div>
     </div> <!-- row -->
     <!--
@@ -871,12 +889,14 @@ This is TCRD target <a href='@ix.core.controllers.v1.routes.RouteFactory.get("ta
                        <div role="tabpanel" class="tab-pane" id="uniprot-tab">
                        @expression(UNIPROT_EXPR, "uniprot")
                        </div>
-                       <div role="tabpanel" class="tab-pane" id="jensen-kb-tab">
-                       @expression(JENSEN_KB_EXPR, "jensen-kb")
-                       </div>		       		       
-                       <div role="tabpanel" class="tab-pane" id="jensen-tm-tab">
-                       @expression(JENSEN_TM_EXPR, "jensen-tm")
-                       </div>
+		       @defining(target.getProperty(IDG_TISSUE_REF)) { ref =>
+                           <div role="tabpanel" class="tab-pane" id="jensen-kb-tab">
+                                @expression(JENSEN_KB_EXPR, "jensen-kb", ref.asInstanceOf[Keyword])
+                           </div>		       		       
+                           <div role="tabpanel" class="tab-pane" id="jensen-tm-tab">
+                               @expression(JENSEN_TM_EXPR, "jensen-tm", ref.asInstanceOf[Keyword])
+                           </div>
+		       }
                    </div>
                </div>
 	       </div>

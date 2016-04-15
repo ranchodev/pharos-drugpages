@@ -108,7 +108,26 @@ ga('send', 'pageview');
 	</div>
       </div>	
       <div id="footer">
-	<pre>Build: @ix.BuildInfo.TIME (commit: @ix.BuildInfo.COMMIT)</pre>
+	<pre>Build: @ix.BuildInfo.TIME (commit: @ix.BuildInfo.COMMIT<span id="uptime"></span>)</pre>
       </div>
     </body>
 </html>
+
+<script>
+function uptime () {
+     $.get('@ix.ncats.controllers.routes.App.getUptime', function (d) {
+        $('#uptime').html(', uptime: '+d.hour+'h '+d.minute+'m');
+     });
+}
+
+var loaded;
+
+$(document).ready(function () {
+  if (!loaded) {
+     loaded = true;
+     uptime ();
+  }
+  
+  setInterval (uptime, 60000);
+});
+</script>

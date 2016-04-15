@@ -9,6 +9,7 @@ import ix.idg.models.Target;
 import ix.ncats.controllers.App;
 import org.w3c.dom.*;
 import play.Play;
+import play.Logger;
 import play.libs.XML;
 import play.libs.XPath;
 import play.mvc.Result;
@@ -244,8 +245,7 @@ public class ExpressionApp extends App {
 
                 String suffix = "";
                 if (ds.equals(Commons.IDG_EXPR)) suffix = "-cons";
-                else if (!ds.equals(Commons.UNIPROT_EXPR)
-                         && !ds.equals(Commons.JENSEN_TM_EXPR)
+                else if (!ds.equals(Commons.JENSEN_TM_EXPR)
                          && !ds.equals(Commons.JENSEN_KB_EXPR))
                     suffix = "-qual";
 
@@ -274,10 +274,12 @@ public class ExpressionApp extends App {
                     }
                     String color = "";
                     switch (ds) {
-                    case Commons.UNIPROT_EXPR:
                     case Commons.JENSEN_KB_EXPR:
                     case Commons.JENSEN_TM_EXPR:
                         color = confidenceColorsIDG[organsConf.get(tissue)];
+                        break;
+                    case Commons.UNIPROT_EXPR:
+                        color = "#006D2C"; // this is curated data
                         break;
                     case Commons.IDG_EXPR:
                         int level = organsLevel.get(tissue);
@@ -296,7 +298,13 @@ public class ExpressionApp extends App {
                         }
                         break;
                     default:
-                        color = confidenceColorsOther[organsLevel.get(tissue)];
+                        Integer index = organsLevel.get(tissue);
+                        if (index != null
+                            && index < confidenceColorsOther.length)
+                            color = confidenceColorsOther[index];
+                        else if (index != null)
+                            Logger.warn(acc+": invalid index "+index
+                                        +" for source \""+source+"\"!");
                         break;
                     }
                     attrNode.setNodeValue("fill:" + color + ";");

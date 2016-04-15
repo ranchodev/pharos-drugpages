@@ -54,8 +54,8 @@ public class TcrdRegistry extends Controller implements Commons {
     
     static final ConcurrentMap<String, Disease> DISEASES =
         new ConcurrentHashMap<String, Disease>();
-    static final List<Target> TARGETS = new ArrayList<Target>();
-    //static final List<Ligand> LIGS = new ArrayList<Ligand>();
+    static final ConcurrentMap<Long, Target> TARGETS =
+        new ConcurrentHashMap<Long, Target>();
     static final ConcurrentMap<String, Ligand> LIGS =
         new ConcurrentHashMap<String, Ligand>();
     
@@ -156,7 +156,8 @@ public class TcrdRegistry extends Controller implements Commons {
             pstm5, pstm6, pstm7, pstm8, pstm9, pstm10,
             pstm11, pstm12, pstm13, pstm14, pstm15,
             pstm16, pstm17, pstm18, pstm19, pstm20,
-            pstm21, pstm22, pstm23, pstm24, pstm25;
+            pstm21, pstm22, pstm23, pstm24, pstm25,
+            pstm26;
         Map<String, Keyword> datasources = new HashMap<String, Keyword>();
 
         // xrefs for the current target
@@ -258,6 +259,9 @@ public class TcrdRegistry extends Controller implements Commons {
             pstm25 = con.prepareStatement
                 ("select * from pmscore where protein_id = ? order by year");
 
+            pstm26 = con.prepareStatement
+                ("select * from ppi where protein1_id = ?");
+
             this.chembl = chembl;
         }
 
@@ -301,10 +305,11 @@ public class TcrdRegistry extends Controller implements Commons {
                 persists (t);
             }
             
-            for (Target t : TARGETS) {
+            for (Map.Entry<Long, Target> me : TARGETS.entrySet()) {
                 try {
-                    //t.update();
-                    INDEXER.update(t);
+                    long protein = me.getKey();
+                    addPPI (me.getValue(), protein);
+                    INDEXER.update(me.getValue());
                 }
                 catch (Exception ex) {
                     ex.printStackTrace();
@@ -376,6 +381,7 @@ public class TcrdRegistry extends Controller implements Commons {
             pstm23.close();
             pstm24.close();
             pstm25.close();
+            pstm26.close();
             chembl.shutdown();
         }
 
@@ -1964,6 +1970,57 @@ public class TcrdRegistry extends Controller implements Commons {
             }
         }
 
+        void addPPI (Target target, long protein) throws Exception {
+            pstm26.setLong(1, protein);
+            ResultSet rset = pstm26.executeQuery();
+            try {
+                Predicate pred = new Predicate (TARGET_PPI);
+                pred.subject = new XRef (target);
+                while (rset.next()) {
+                    long p2 = rset.getLong("protein2_id");
+                    if (p2 != protein) {
+                        // don't store self-link
+                        Target t = TARGETS.get(p2);
+                        if (t == null) {
+                            Logger.error
+                                ("Can't find target with protein id="+p2);
+                        }
+                        else {
+                            String type = rset.getString("ppitype");
+                            Keyword source = datasources.get(type);
+                            if (source == null) {
+                                source = KeywordFactory.registerIfAbsent
+                                    (SOURCE, type, null);
+                                datasources.put(type, source);
+                            }
+                            target.addIfAbsent((Value)source);
+
+                            XRef ref = new XRef (t);
+                            ref.properties.add
+                                (new VNum ("p_int", rset.getDouble("p_int")));
+                            ref.properties.add
+                                (new VNum ("p_ni", rset.getDouble("p_ni")));
+                            ref.properties.add
+                                (new VNum ("p_wrong",
+                                           rset.getDouble("p_wrong")));
+                            ref.save();
+                            pred.addIfAbsent(ref);
+                        }
+                    }
+                }
+                
+                if (!pred.objects.isEmpty()) {
+                    pred.save();
+                    Logger.debug("Target "+target.id+" has "
+                                 +pred.objects.size()
+                                 +" protein-protein interactions!");
+                }
+            }
+            finally {
+                rset.close();
+            }
+        }
+
         void persists (TcrdTarget t) throws Exception {
             Http.Context.current.set(ctx);
             Logger.debug(t.family+" "+t.tdl+" "+t.acc+" "+t.id);
@@ -2026,8 +2083,8 @@ public class TcrdRegistry extends Controller implements Commons {
                              +IDGApp.getId(target)+")", ex);
                 ex.printStackTrace();
             }
-            
-            TARGETS.add(target);
+
+            TARGETS.put(t.protein, target);
 
             /*
             Logger.debug("...disease linking");
@@ -2773,6 +2830,7 @@ public class TcrdRegistry extends Controller implements Commons {
                  //+"where c.uniprot = 'Q9Y5X4'\n"
                  //+"where c.uniprot = 'Q9Y691'\n"
                  //+" where c.uniprot = 'Q6NV75'\n"
+                 //+"where c.uniprot = 'P31749'\n"
                  //+"where c.uniprot in ('O00444', 'P07333')\n"
                  //+"where c.uniprot in ('Q8NE63','O14976')\n"
                  //+"where c.uniprot in ('O14976','O43293','O75385','O75582','P07949','P09619')\n"
