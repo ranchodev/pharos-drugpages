@@ -13,14 +13,20 @@ facets: Array[FacetDecorator], targets: List[Target], ctx: String )
         <td><input type="checkbox" class="cb-table-row" id="cb-@IDGApp.getId(t)" /></td>
         <td><a id='load' onclick="showLoadModal()" 
 	   href="@ix.idg.controllers.routes.IDGApp.target(IDGApp.getId(t))">@t.name</a></td>
-
+	<td>@defining(t.getSynonym(UNIPROT_GENE)) { gene =>
+	  @if(gene != null) {
+	     <a onclick="showLoadModal()" href="@ix.idg.controllers.routes.IDGApp.target(gene.term)">@gene.term</a>
+	  }
+	}</td>
         <td><span class="label label-@t.idgTDL.label" data-toggle="tooltip" data-html="true" title="<p align='left'>@t.idgTDL.desc</p>">@t.idgTDL.name</span></td>
         <td>@t.idgFamily</td>
         <td>@IDGApp.format(t.novelty)</td>
         <td>@IDGApp.format(t.jensenScore)</td>
 @*        <td>@t.grantCount</td>*@
         <td>@t.antibodyCount</td>
+	<!--
         <td>@t.patentCount@**<span class="inlinesparkline">@IDGApp.getPatentSparkline(t)</span>**@</td>
+	-->
         @*<td><div style="display: inline;" id="radar-@IDGApp.getId(t)" class="radar-div"></div></td>*@
         <td><div id="radar-@IDGApp.getId(t)" class="radar-div" genesym="@IDGApp.getGeneSymbol(t)"
                  tdlLabel="@t.idgTDL.label" tdl="@t.idgTDL" tname="@t.name"></div></td>
@@ -93,13 +99,16 @@ facets: Array[FacetDecorator], targets: List[Target], ctx: String )
 	  	      class="btn btn-default" type="button">
 	      <i class="fa fa-check fa-fw"></i></button></th>
             <th>Name</th>
+	    <th>Gene</th>
             <th>Development Level</th>
             <th>Target Family</th>
 	    @HtmlFormat.raw(IDGApp.getTargetTableHeader("Log Novelty", "novelty"))
             @HtmlFormat.raw(IDGApp.getTargetTableHeader("Jensen Score", "jensenScore"))
 @**	    @HtmlFormat.raw(IDGApp.getTargetTableHeader("Grant Count", "grantCount")) **@
 	    @HtmlFormat.raw(IDGApp.getTargetTableHeader("Antibody Count", "antibodyCount"))
+	    <!--
 	    @HtmlFormat.raw(IDGApp.getTargetTableHeader("Patent", "patentCount"))
+	    -->
 	    @*HtmlFormat.raw(IDGApp.getTargetTableHeader("Monoclonal Antibody Count", "monoclonalCount"))*@
             <th>Data Types</th>
         </tr>
@@ -120,7 +129,9 @@ facets: Array[FacetDecorator], targets: List[Target], ctx: String )
     </div>
 *@
 
-    <a id="compare-selected" class="btn btn-default" href="#" role="button" style="margin-right:1px; margin-left:1px;">
+    <a id="compare-selected" class="btn btn-default" href="#"
+       data-toggle="tooltip" title="Target comparison"
+       role="button" style="margin-right:1px; margin-left:1px;">
         <i class="fa fa-exchange fa-lg "></i></a>
 
     <div class="dropdown pull-right">

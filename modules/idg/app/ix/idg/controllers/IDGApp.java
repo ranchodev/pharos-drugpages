@@ -485,6 +485,7 @@ public class IDGApp extends App implements Commons {
 
         IDG_TISSUE,
         UNIPROT_TISSUE,
+        JENSEN_KB_TISSUE,
         JENSEN_TM_TISSUE,
         GTEx_TISSUE,
         HPM_TISSUE,
@@ -3197,6 +3198,46 @@ public class IDGApp extends App implements Commons {
             }
         }
         return pubs;
+    }
+
+    public static List<Target> getPPI (Target target) {
+        return getTargetsByPredicate (target, TARGET_PPI);
+    }
+
+    public static List<Target> getTargetsByPredicate
+        (final Target target, final String predicate) {
+        try {
+            final String key = "targets/"+target.id+"/predicate/"+predicate;
+            return getOrElse (key, new Callable<List<Target>> () {
+                    public List<Target> call () throws Exception {
+                        List<Predicate> preds = PredicateFactory.finder.where
+                            (Expr.and(Expr.eq("subject.refid", target.id),
+                                      Expr.eq("predicate", predicate)))
+                            .findList();
+                        List<Target> targets = new ArrayList<Target>();
+                        for (Predicate p : preds) {
+                            for (XRef ref : p.objects) {
+                                try {
+                                    // should use cache here
+                                    targets.add((Target)ref.deRef());
+                                }
+                                catch (Exception ex) {
+                                    ex.printStackTrace();
+                                    Logger.trace("Can't dereference XRef "+
+                                                 ref.kind+":"+ref.refid, ex);
+                                }
+                            }
+                        }
+                        return targets;
+                    }
+                });
+        }
+        catch (Exception ex) {
+            ex.printStackTrace();
+            Logger.trace("Can't retrieve "+predicate+" targets for target "
+                         +target.id, ex);
+        }
+        return new ArrayList<Target>();
     }
 
     public static List<Target> getTargetsByPMID (final long pmid)
