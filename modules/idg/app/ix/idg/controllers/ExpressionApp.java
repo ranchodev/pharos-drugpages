@@ -32,6 +32,7 @@ public class ExpressionApp extends App {
         onm = new LinkedHashMap<>();
         onm.put("bone", "bone");
         onm.put("nervous_system", "nervous_system");
+        onm.put("nervous system", "nervous_system");
         onm.put("blood", "blood");
         onm.put("skin", "skin");
         onm.put("gall_bladder", "gall_bladder");
@@ -54,6 +55,7 @@ public class ExpressionApp extends App {
 
         onm.put("spinal", "nervous_system");
         onm.put("brain", "brain");
+        onm.put("amygdala", "brain");
         onm.put("cortex", "brain");
         onm.put("pituitary", "brain");
         onm.put("cerebra", "brain");
@@ -197,7 +199,6 @@ public class ExpressionApp extends App {
 
                     // map to canonical organ terms
                     for (String key : onm.keySet()) {
-
                         if (expr.getTissue().toLowerCase().contains(key)) {
 
                             // derive the expr level or confidence
