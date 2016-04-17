@@ -13,7 +13,7 @@
 targets: List[Target], totalTargets: Int,
 ligands: List[Ligand], totalLigands: Int,
 diseases: List[Disease], totalDiseases: Int,
-publications: List[Publication], totalPubs: Int)
+publications: List[Publication], totalPubs: Int, ctx: String)
 
 @tabrow(t: Target) = {
 <tr>
@@ -56,11 +56,11 @@ publications: List[Publication], totalPubs: Int)
 	<span><h4>Query:<code>@query</code></h4></span>
       </div>
       <div class="btn-group" role="group">
-	@if(total == 1) {
-	<h3><span class="label label-default">@total result found.</span> <a class="btn btn-default" href='@if(!request.uri.contains("download")) {@request.uri&action=download}' role="button">Download</a> </h3>
-	} else {
-        <h3><span class="label label-default">@total results found.</span> <a class="btn btn-default" href='@if(!request.uri.contains("download")) {@request.uri&action=download}' role="button">Download</a> </h3>
-	}
+          @total match {
+              case 0 => {<h3><span class="label label-default">@total results found.</span> <a class="btn btn-default disabled" href='@if(!request.uri.contains("download")) {@request.uri&action=download&ctx=@ctx}' role="button">Download</a> </h3>}
+              case 1 => {<h3><span class="label label-default">@total result found.</span> <a class="btn btn-default" href='@if(!request.uri.contains("download")) {@request.uri&action=download&ctx=@ctx}' role="button">Download</a> </h3>}
+              case _ => {<h3><span class="label label-default">@total results found.</span> <a class="btn btn-default" href='@if(!request.uri.contains("download")) {@request.uri&action=download&ctx=@ctx}' role="button">Download</a> </h3>}
+          }
       </div>
       <div class="panel panel-default" id="panel-targets">
           <div class="panel-heading"><h3>Targets</h3></div>

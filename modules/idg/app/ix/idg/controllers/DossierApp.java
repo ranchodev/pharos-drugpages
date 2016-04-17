@@ -19,15 +19,12 @@ import play.db.ebean.Model;
 import play.mvc.BodyParser;
 import play.mvc.Result;
 
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.Callable;
-import java.util.zip.ZipEntry;
-import java.util.zip.ZipOutputStream;
 
 public class DossierApp extends App implements Commons {
     public static final String IDG_BUCKET = "IDG BUCKET";
@@ -327,31 +324,9 @@ public class DossierApp extends App implements Commons {
         if (action == null) action = "";
         if (action.toLowerCase().equals("download")) {
             // All entities get bundled into a single ZIP file
-            ByteArrayOutputStream baos = new ByteArrayOutputStream();
-            ZipOutputStream zip = new ZipOutputStream(baos);
-
-            String mimetype = DownloadEntities.getDownloadMimeType(Target.class);
-            String suffix = mimetype.endsWith("zip") ? ".zip" : ".csv";
-            ZipEntry entry = new ZipEntry("targets"+suffix);
-            zip.putNextEntry(entry);
-            zip.write(DownloadEntities.downloadEntities(targets));
-            zip.closeEntry();
-
-            entry = new ZipEntry("ligands.csv");
-            zip.putNextEntry(entry);
-            zip.write(DownloadEntities.downloadEntities(ligands));
-            zip.closeEntry();
-
-            entry = new ZipEntry("diseases.csv");
-            zip.putNextEntry(entry);
-            zip.write(DownloadEntities.downloadEntities(diseases));
-            zip.closeEntry();
-
-
-            zip.finish();
-            zip.close();
+            byte[] bytes = DownloadEntities.downloadEntities(targets, diseases, ligands);
             response().setHeader("Content-Disposition", "attachment;filename=dossier-"+folderName+".zip");
-            return ok(baos.toByteArray()).as("application/zip");
+            return ok(bytes).as("application/zip");
         } else
             return ok(ix.idg.views.html.cart.render(folderName, folderNames, targets, diseases, ligands, null));
     }

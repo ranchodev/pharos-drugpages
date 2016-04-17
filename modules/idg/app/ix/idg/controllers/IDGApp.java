@@ -1612,6 +1612,23 @@ public class IDGApp extends App implements Commons {
     }
 
     public static Result search (String kind) {
+        String ctx = request().getQueryString("ctx");
+        if (ctx != null) {
+            SearchResult result = getSearchContext(ctx);
+            if (result != null) {
+                List<Target> targets = filter(Target.class, result.getMatches(), 999);
+                List<Disease> diseases = filter(Disease.class, result.getMatches(), 999);
+                List<Ligand> ligands = filter(Ligand.class, result.getMatches(), 999);
+                try {
+                    byte[] bytes = DownloadEntities.downloadEntities(targets, diseases, ligands);
+                    response().setHeader("Content-Disposition", "attachment;filename=search-results.zip");
+                    return ok(bytes).as("application/zip");
+                } catch (Exception e) {
+                    return _internalServerError(e);
+                }
+            }
+        }
+
         try {
             String q = request().getQueryString("q");
             String t = request().getQueryString("type");
@@ -1687,6 +1704,7 @@ public class IDGApp extends App implements Commons {
     static Result _search (int rows) throws Exception {
         final String query = request().getQueryString("q");
         Logger.debug("Query: \""+query+"\"");
+        String searchkey = null;
 
         TextIndexer.SearchResult result = null;            
         if (query.indexOf('/') > 0) { // use mesh facet
@@ -1705,7 +1723,8 @@ public class IDGApp extends App implements Commons {
             queryString.put("facet", f.toArray(new String[0]));
             long start = System.currentTimeMillis();
             final String key =
-                "search/facet/"+Util.sha1(queryString.get("facet")); 
+                "search/facet/"+Util.sha1(queryString.get("facet"));
+            searchkey = key;
             result = getOrElse
                 (key, new Callable<TextIndexer.SearchResult>() {
                         public TextIndexer.SearchResult
@@ -1724,6 +1743,7 @@ public class IDGApp extends App implements Commons {
             long start = System.currentTimeMillis();
             final String key =
                 "search/facet/q/"+Util.sha1(request(), "facet", "q");
+            searchkey = key;
             result = getOrElse
                 (key, new Callable<TextIndexer.SearchResult>() {
                         public TextIndexer.SearchResult
@@ -1737,7 +1757,7 @@ public class IDGApp extends App implements Commons {
             Logger.debug
                 ("2. Ellapsed time "+String.format("%1$.3fs", ellapsed));
         }
-        
+
         TextIndexer.Facet[] facets = filter (result.getFacets(), ALL_FACETS);
         final int max = Math.min(rows, Math.max(1, result.count()));
         
@@ -1777,14 +1797,14 @@ public class IDGApp extends App implements Commons {
         List<Disease> diseases = filter (Disease.class, result.getMatches(), max);
 
         result = getSearchResult (Ligand.class, query, max);    
-        List<Ligand> ligands = filter (Ligand.class, result.getMatches(), max); 
+        List<Ligand> ligands = filter (Ligand.class, result.getMatches(), max);
 
         return ok(ix.idg.views.html.search.render
                 (query, total, decorate(facets),
                         targets, totalTargets,
                         ligands, totalLigands,
                         diseases, totalDiseases,
-                        publications, totalPubs));
+                        publications, totalPubs,searchkey));
     }
 
     public static Keyword getATC (final String term) throws Exception {

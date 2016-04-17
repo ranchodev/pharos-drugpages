@@ -488,6 +488,44 @@ public class DownloadEntities {
         return sb.toString().getBytes();
     }
 
+    public static byte[] downloadEntities(List<Target> t, List<Disease> d, List<Ligand> l) throws Exception {
+        if (t == null && d == null && l == null)
+            throw new IllegalArgumentException("All entities cannot be null");
+
+        // All entities get bundled into a single ZIP file
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        ZipOutputStream zip = new ZipOutputStream(baos);
+
+        ZipEntry entry = null;
+
+        if (t != null) {
+            String mimetype = DownloadEntities.getDownloadMimeType(Target.class);
+            String suffix = mimetype.endsWith("zip") ? ".zip" : ".csv";
+            entry = new ZipEntry("targets" + suffix);
+            zip.putNextEntry(entry);
+            zip.write(DownloadEntities.downloadEntities(t));
+            zip.closeEntry();
+        }
+
+        if (l != null) {
+            entry = new ZipEntry("ligands.csv");
+            zip.putNextEntry(entry);
+            zip.write(DownloadEntities.downloadEntities(l));
+            zip.closeEntry();
+        }
+
+        if (d != null) {
+            entry = new ZipEntry("diseases.csv");
+            zip.putNextEntry(entry);
+            zip.write(DownloadEntities.downloadEntities(d));
+            zip.closeEntry();
+        }
+
+        zip.finish();
+        zip.close();
+        return baos.toByteArray();
+    }
+
     public static <T extends EntityModel> byte[] downloadEntities(List<T> entities) throws Exception {
         if (entities.size() == 0) return new byte[]{};
         Class eclass = entities.get(0).getClass();
