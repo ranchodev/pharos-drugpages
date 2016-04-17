@@ -94,6 +94,9 @@ public class DownloadEntities {
         return sb2.toString();
     }
 
+    static String csvFromPublication(Publication pub) {
+        return String.valueOf(pub.pmid) + "," + pub.pmcid + "," + pub.doi + "," + csvQuote(pub.title) + "," + csvQuote(pub.abstractText);
+    }
     static String pubsFromTarget(Target t) throws Exception {
         StringBuilder sb2 = new StringBuilder();
         String turl = routes.IDGApp.target(csvQuote(IDGApp.getId(t))).toString();
@@ -488,8 +491,16 @@ public class DownloadEntities {
         return sb.toString().getBytes();
     }
 
-    public static byte[] downloadEntities(List<Target> t, List<Disease> d, List<Ligand> l) throws Exception {
-        if (t == null && d == null && l == null)
+    static byte[] downloadPublications(List<Publication> pubs) throws ClassNotFoundException {
+        StringBuilder sb = new StringBuilder();
+        sb.append("Pubmed ID,PMC ID,DOI,Title,Abstract\n");
+        for (Publication p : pubs) sb.append(csvFromPublication(p)).append("\n");
+        return sb.toString().getBytes();
+    }
+
+
+    public static byte[] downloadEntities(List<Target> t, List<Disease> d, List<Ligand> l, List<Publication> p) throws Exception {
+        if (t == null && d == null && l == null && p == null)
             throw new IllegalArgumentException("All entities cannot be null");
 
         // All entities get bundled into a single ZIP file
@@ -521,6 +532,13 @@ public class DownloadEntities {
             zip.closeEntry();
         }
 
+        if (p != null) {
+            entry = new ZipEntry("publications.csv");
+            zip.putNextEntry(entry);
+            zip.write(DownloadEntities.downloadPublications(p));
+            zip.closeEntry();
+        }
+
         zip.finish();
         zip.close();
         return baos.toByteArray();
@@ -535,7 +553,7 @@ public class DownloadEntities {
             return downloadLigands((List<Ligand>) entities);
         else if (Disease.class.isAssignableFrom(eclass))
             return downloadDiseases((List<Disease>) entities);
-        else throw new IllegalArgumentException("Must supply disease, ligand or target entities for download");
+        else throw new IllegalArgumentException("Must supply disease, ligand, publication or target entities for download");
     }
 
     public static String getDownloadMimeType(Class klass) {

@@ -324,7 +324,7 @@ public class DossierApp extends App implements Commons {
         if (action == null) action = "";
         if (action.toLowerCase().equals("download")) {
             // All entities get bundled into a single ZIP file
-            byte[] bytes = DownloadEntities.downloadEntities(targets, diseases, ligands);
+            byte[] bytes = DownloadEntities.downloadEntities(targets, diseases, ligands, null);
             response().setHeader("Content-Disposition", "attachment;filename=dossier-"+folderName+".zip");
             return ok(bytes).as("application/zip");
         } else

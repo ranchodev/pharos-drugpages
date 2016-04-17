@@ -1619,8 +1619,9 @@ public class IDGApp extends App implements Commons {
                 List<Target> targets = filter(Target.class, result.getMatches(), 999);
                 List<Disease> diseases = filter(Disease.class, result.getMatches(), 999);
                 List<Ligand> ligands = filter(Ligand.class, result.getMatches(), 999);
+                List<Publication> pubs = filter(Publication.class, result.getMatches(), 999);
                 try {
-                    byte[] bytes = DownloadEntities.downloadEntities(targets, diseases, ligands);
+                    byte[] bytes = DownloadEntities.downloadEntities(targets, diseases, ligands, pubs);
                     response().setHeader("Content-Disposition", "attachment;filename=search-results.zip");
                     return ok(bytes).as("application/zip");
                 } catch (Exception e) {
