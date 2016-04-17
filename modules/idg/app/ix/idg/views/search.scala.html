@@ -57,9 +57,9 @@ publications: List[Publication], totalPubs: Int, ctx: String)
       </div>
       <div class="btn-group" role="group">
           @total match {
-              case 0 => {<h3><span class="label label-default">@total results found.</span> <a class="btn btn-default disabled" href='@if(!request.uri.contains("download")) {@request.uri&action=download&ctx=@ctx}' role="button">Download</a> </h3>}
-              case 1 => {<h3><span class="label label-default">@total result found.</span> <a class="btn btn-default" href='@if(!request.uri.contains("download")) {@request.uri&action=download&ctx=@ctx}' role="button">Download</a> </h3>}
-              case _ => {<h3><span class="label label-default">@total results found.</span> <a class="btn btn-default" href='@if(!request.uri.contains("download")) {@request.uri&action=download&ctx=@ctx}' role="button">Download</a> </h3>}
+              case 0 => {<h3><span class="label label-default">@total results found.</span> <a class="btn btn-default disabled" href='@if(!request.uri.contains("download")) {@request.uri&action=download&ctx=@ctx}' role="button"><i class="fa fa-download fa-lg "></i></a> </h3>}
+              case 1 => {<h3><span class="label label-default">@total result found.</span> <a class="btn btn-default" href='@if(!request.uri.contains("download")) {@request.uri&action=download&ctx=@ctx}' role="button"><i class="fa fa-download fa-lg "></i></a> </h3>}
+              case _ => {<h3><span class="label label-default">@total results found.</span> <a class="btn btn-default" href='@if(!request.uri.contains("download")) {@request.uri&action=download&ctx=@ctx}' role="button"><i class="fa fa-download fa-lg "></i></a> </h3>}
           }
       </div>
       <div class="panel panel-default" id="panel-targets">
