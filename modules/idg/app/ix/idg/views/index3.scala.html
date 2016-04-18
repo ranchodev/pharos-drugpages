@@ -100,7 +100,27 @@ ga('send', 'pageview');
 			   href="@ix.idg.controllers.routes.IDGApp.about()">About</a></li>
 		    <li><a class="navbar-link"
 			   href="@ix.idg.controllers.routes.IDGApp.help()">Help</a></li>
+		    <li><a data-trigger="click"
+			   data-html="true"
+			   data-toggle="collapse"
+			   data-target="#getting-started"
+			   data-placement="top"
+			   href="#">Getting started...</a></li>
 		  </ol>
+		</div>
+	      </div>
+	      <div class="row">
+		<div class="col-sm-8 col-md-6 col-md-offset-3 col-sm-offset-2">
+		  <div id="getting-started" class="collapse panel panel-default">
+		    <div class="panel-body">
+		      <div class="pull-center embed-responsive embed-responsive-4by3">
+			<iframe sandbox='allow-scripts allow-forms allow-same-origin allow-popups allow-top-navigation allow-popups-to-escape-sandbox allow-modals'
+				class='embed-responsive-item'
+				src='https://www.youtube.com/embed/0qk4DKJptN8' allowfullscreen><p>Sorry, your browser does not support <code>iframe</code>
+			</iframe>
+		      </div>
+		    </div>
+		  </div>
 		</div>
 	      </div>
             </div>
@@ -110,7 +130,7 @@ ga('send', 'pageview');
       <div id="footer">
 	<pre>Build: @ix.BuildInfo.TIME (commit: @ix.BuildInfo.COMMIT<span id="uptime"></span>)</pre>
       </div>
-    </body>
+  </body>  
 </html>
 
 <script>
@@ -123,6 +143,8 @@ function uptime () {
 var loaded;
 
 $(document).ready(function () {
+   $('[data-toggle="popover"]').popover();
+
   if (!loaded) {
      loaded = true;
      uptime ();

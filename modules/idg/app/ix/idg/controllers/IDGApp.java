@@ -715,6 +715,7 @@ public class IDGApp extends App implements Commons {
 
     @Cached(key="_index", duration = Integer.MAX_VALUE)
     public static Result index () {
+        response().setHeader("X-Frame-Options", "SAMEORIGIN");
         return ok (ix.idg.views.html.index3.render
                    ("Illuminating the Druggable Genome",
                     DiseaseFactory.finder.findRowCount(),
