@@ -114,9 +114,11 @@ ga('send', 'pageview');
 		  <div id="getting-started" class="collapse panel panel-default">
 		    <div class="panel-body">
 		      <div class="pull-center embed-responsive embed-responsive-4by3">
-			<iframe sandbox='allow-scripts allow-forms allow-same-origin allow-popups allow-top-navigation allow-popups-to-escape-sandbox allow-modals'
-				class='embed-responsive-item'
-				src='https://www.youtube.com/embed/0qk4DKJptN8' allowfullscreen><p>Sorry, your browser does not support <code>iframe</code>
+			<iframe id="getting-started-iframe"
+				sandbox="allow-scripts allow-forms allow-same-origin allow-popups allow-top-navigation allow-popups-to-escape-sandbox allow-modals"
+				class="embed-responsive-item"
+				src="https://www.youtube.com/embed/rAu6D0-Fanw"
+				allowfullscreen><p>Sorry, your browser does not support <code>iframe</code>
 			</iframe>
 		      </div>
 		    </div>
@@ -134,20 +136,34 @@ ga('send', 'pageview');
 </html>
 
 <script>
+var loaded;
+var video;
+
 function uptime () {
      $.get('@ix.ncats.controllers.routes.App.getUptime', function (d) {
         $('#uptime').html(', uptime: '+d.hour+'h '+d.minute+'m');
      });
+
+     $.ajax({
+        url: 'https://pharos.nih.gov/idg/getting-started-video', 
+        success: function(d, status, xhr) {
+	    if (video !== d) {
+	       console.log('new video '+d);
+	       $('#getting-started-iframe').attr('src', d);
+	       video = d;	       
+	    }
+        }
+     });
 }
 
-var loaded;
 
 $(document).ready(function () {
-   $('[data-toggle="popover"]').popover();
+  $('[data-toggle="popover"]').popover();
 
   if (!loaded) {
      loaded = true;
      uptime ();
+     video = $('#getting-started-iframe').attr('src');
   }
   
   setInterval (uptime, 60000);
