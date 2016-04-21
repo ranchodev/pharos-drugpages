@@ -223,16 +223,41 @@ public class HarmonogramApp extends App {
         if (theQuery.equals("all")) {
             hgs = HarmonogramFactory.finder.all();
             ntarget = TargetFactory.finder.findRowCount();
-        } else if (("tdark tclin tchem tbio").contains(theQuery)) {
+        } else if (("tdark tclin tchem tbio gpcr kinase ionchannel nuclearreceptor ogpcr").contains(theQuery)) {
             List<Target> ts;
-            if (theQuery.equals("tdark"))
-                ts = TargetFactory.finder.where().eq("idgTDL", Target.TDL.Tdark).findList();
-            else if (theQuery.equals("tclin"))
-                ts = TargetFactory.finder.where().eq("idgTDL", Target.TDL.Tclin).findList();
-            else if (theQuery.equals("tchem"))
-                ts = TargetFactory.finder.where().eq("idgTDL", Target.TDL.Tchem).findList();
-            else
-                ts = TargetFactory.finder.where().eq("idgTDL", Target.TDL.Tbio).findList();
+            switch (theQuery) {
+                case "tdark":
+                    ts = TargetFactory.finder.where().eq("idgTDL", Target.TDL.Tdark).findList();
+                    break;
+                case "tclin":
+                    ts = TargetFactory.finder.where().eq("idgTDL", Target.TDL.Tclin).findList();
+                    break;
+                case "tchem":
+                    ts = TargetFactory.finder.where().eq("idgTDL", Target.TDL.Tchem).findList();
+                    break;
+                case "tbio":
+                    ts = TargetFactory.finder.where().eq("idgTDL", Target.TDL.Tbio).findList();
+                    break;
+                case "gpcr":
+                    ts = TargetFactory.finder.where().eq("idgFamily", "GPCR").findList();
+                    break;
+                case "ogpcr":
+                    ts = TargetFactory.finder.where().eq("idgFamily", "oGPCR").findList();
+                    break;
+                case "kinase":
+                    ts = TargetFactory.finder.where().eq("idgFamily", "Kinase").findList();
+                    break;
+                case "ic":
+                    ts = TargetFactory.finder.where().eq("idgFamily", "Ion Channel").findList();
+                    break;
+                case "nr":
+                    ts = TargetFactory.finder.where().eq("idgFamily", "Nuclear Receptor").findList();
+                    break;
+                default:
+                    ts = new ArrayList<>();
+                    break;
+            }
+
             ntarget = ts.size();
             List<String> uniprots = new ArrayList<>();
             for (Target t : ts) uniprots.add(getId(t));
@@ -257,8 +282,7 @@ public class HarmonogramApp extends App {
         }
 
         // need to scale in case we were aggregating over target sets (all, Tdark, Tclin, etc)
-        double factor = 1.0;
-        if (theQuery.toLowerCase().equals("all")) factor = 1.0 / ntarget;
+        double factor = 1.0/ntarget;
         for (String mkey : attrMap.keySet()) {
             Double val = attrMap.get(mkey);
             val *= factor;
