@@ -675,11 +675,13 @@ public class TcrdRegistry extends Controller implements Commons {
             pstm18.setLong(1, protein);
             ResultSet rset = pstm18.executeQuery();
             int n = 0;
+            double cdfSum = 0;
             while (rset.next()) {
                 HarmonogramCDF hg = new HarmonogramCDF();
                 hg.attrGroup = rset.getString("attribute_group");
                 hg.attrType = rset.getString("attribute_type");
                 hg.cdf = rset.getDouble("attr_cdf");
+                cdfSum += hg.cdf;
                 hg.dataSource = rset.getString("name");
                 hg.dataSourceUrl = rset.getString("url");
                 //hg.dataSourceDescription = rset.getString("description");
@@ -691,6 +693,8 @@ public class TcrdRegistry extends Controller implements Commons {
                 hg.save();
                 n++;
             }
+            target.knowledgeAvailability = cdfSum;
+
             rset.close();
             Logger.debug(n+" harmonogram entries for "+target.id);
         }
