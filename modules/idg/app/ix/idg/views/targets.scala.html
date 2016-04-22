@@ -110,7 +110,7 @@ facets: Array[FacetDecorator], targets: List[Target], ctx: String )
 	    @HtmlFormat.raw(IDGApp.getTargetTableHeader("Patent", "patentCount"))
 	    -->
 	    @*HtmlFormat.raw(IDGApp.getTargetTableHeader("Monoclonal Antibody Count", "monoclonalCount"))*@
-            <th>Data Types</th>
+            @HtmlFormat.raw(IDGApp.getTargetTableHeader("Knowledge Availability", "knowledgeAvailability"))
         </tr>
         @for(t <- targets) {
             @tabrow(t)
