@@ -264,7 +264,7 @@ public class Global extends GlobalSettings {
         try {
             Http.Request req = Controller.request();
             String h = _instance.ctx.host();
-            if (h == null) {
+            if (h == null || "".equals(h)) {
                 h = (req.secure()? "https":"http") + "://"+req.host();
             }
             return h;

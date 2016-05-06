@@ -48,14 +48,20 @@
     });
     </script>
   </head>
-  <body>
-    @header
+<body>
+    @if(!"embedded".equals(request.getQueryString("v"))) {
+      @header
+    } else {
+    <br>
+    }
     <div class="container-fluid">
       <div id="visit-alert"></div>
       @breadcrumb
     </div>      
     @content
-    @footer()
+    @if(!"embedded".equals(request.getQueryString("v"))) {
+       @footer()
+    }
 
   <div class="modal fade" id="modal-disclaimer" tabindex="-1" role="dialog" aria-labelledby="disclaimer-title" aria-hidden="true">
       <div class="modal-dialog modal-lg" style="width : 40 % ; ">

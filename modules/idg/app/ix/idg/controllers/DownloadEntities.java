@@ -5,17 +5,107 @@ import ix.idg.models.Disease;
 import ix.idg.models.Expression;
 import ix.idg.models.Ligand;
 import ix.idg.models.Target;
+
 import play.Play;
+import play.Logger;
+import play.mvc.Controller;
+import play.mvc.Result;
 
 import java.io.*;
 import java.util.List;
+import java.util.ArrayList;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
+import java.util.concurrent.Callable;
+
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ArrayNode;
+import com.fasterxml.jackson.databind.node.ObjectNode;
+
+import ix.utils.Global;
+import ix.core.plugins.IxCache;
+import ix.core.plugins.IxContext;
+import ix.core.plugins.ThreadPoolPlugin;
+import static ix.core.search.TextIndexer.SearchResult;
 
 /**
  * @author Rajarshi Guha
  */
-public class DownloadEntities {
+public class DownloadEntities extends Controller {
+    public static final IxContext _ix =
+        Play.application().plugin(IxContext.class);
+    public static final ThreadPoolPlugin _pool =
+        Play.application().plugin(ThreadPoolPlugin.class);
+
+    static class DownloadStatus {
+        public String key;
+        public Integer count;
+        public String status;
+        public String query;
+        public String url;
+    }
+
+    static class DownloadWorker implements Runnable {
+        public final DownloadStatus status;
+        final SearchResult result;
+
+        DownloadWorker (String query, SearchResult result) {
+            this.result = result;
+            status = new DownloadStatus ();
+            status.key = result.getKey();
+            status.query = query;
+            status.status = "PENDING";
+        }
+
+        void save () throws Exception {
+            List matches = result.getMatches();
+            status.count = matches.size();
+            List<Target> targets = new ArrayList<>();
+            if (!matches.isEmpty()) {
+                for (int i = 0; i < matches.size(); i++)
+                    targets.add((Target) matches.get(i));
+
+                String suffix = getDownloadMimeType(Target.class)
+                    .endsWith("zip") ? ".zip" : ".csv";
+                File file = getDownloadFile (status.key+suffix);
+                if (!file.exists()) {
+                    FileOutputStream fos = new FileOutputStream (file);
+                    downloadTargets (fos, targets);
+                    fos.close();
+                }
+                status.url = routes.DownloadEntities.download
+                    (file.getName()).url();
+                status.status = "DONE";
+            }
+            else {
+                status.status = "EMPTY";
+            }
+        }
+
+        public void run () {
+            try {
+                long sleep = 0;
+                while (!result.finished() || sleep > 120000l) {
+                    Thread.sleep(1000);
+                    sleep += 1000;
+                }
+                save ();
+            }
+            catch (Throwable ex) {
+                Logger.error(status.query+": Can't save search result!", ex);
+                ex.printStackTrace();
+                status.status = "ERROR: "+ex.getMessage();
+            }
+        }
+    }
+
+    static File getDownloadFile (String name) {
+        File file = new File (_ix.home(), "download");
+        file.mkdirs();
+        return new File (file, name);
+    }
 
     static String csvFromLigand(Ligand l) throws ClassNotFoundException {
 
@@ -305,12 +395,20 @@ public class DownloadEntities {
         }
         StringBuilder readme = new StringBuilder();
         String line;
-        while ( (line = reader.readLine()) != null) readme.append(line).append("\n");
+        while ( (line = reader.readLine()) != null)
+            readme.append(line).append("\n");
         reader.close();
         return readme.toString().getBytes();
     }
 
     static byte[] downloadTargets(List<Target> targets) throws Exception {
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        downloadTargets (baos, targets);
+        return baos.toByteArray();
+    }
+
+    static void downloadTargets(OutputStream os, List<Target> targets)
+        throws Exception {
 
         StringBuilder sb = new StringBuilder();
 
@@ -414,9 +512,7 @@ public class DownloadEntities {
         byte[] diseaseFile = sb.toString().getBytes();
 
         // Generate zip file with the components
-        ByteArrayOutputStream baos = new ByteArrayOutputStream();
-        ZipOutputStream zip = new ZipOutputStream(baos);
-
+        ZipOutputStream zip = new ZipOutputStream(os);
         ZipEntry entry = new ZipEntry("targets.csv");
         zip.putNextEntry(entry);
         zip.write(targetFile);
@@ -469,11 +565,10 @@ public class DownloadEntities {
 
         zip.finish();
         zip.close();
-
-        return baos.toByteArray();
     }
 
     static byte[] downloadDiseases(List<Disease> diseases) throws ClassNotFoundException {
+    
         StringBuilder sb = new StringBuilder();
         sb.append("URL,DOID,Name,Description,Targets\n");
         for (Disease d : diseases) {
@@ -498,15 +593,24 @@ public class DownloadEntities {
         return sb.toString().getBytes();
     }
 
-
-    public static byte[] downloadEntities(List<Target> t, List<Disease> d, List<Ligand> l, List<Publication> p) throws Exception {
+    public static byte[] downloadEntities (List<Target> t,
+                                           List<Disease> d,
+                                           List<Ligand> l,
+                                           List<Publication> p)
+        throws Exception {
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        downloadEntities (baos, t, d, l, p);
+        return baos.toByteArray();
+    }
+    
+    public static void downloadEntities(OutputStream os, List<Target> t,
+                                        List<Disease> d, List<Ligand> l,
+                                        List<Publication> p) throws Exception {
         if (t == null && d == null && l == null && p == null)
             throw new IllegalArgumentException("All entities cannot be null");
 
         // All entities get bundled into a single ZIP file
-        ByteArrayOutputStream baos = new ByteArrayOutputStream();
-        ZipOutputStream zip = new ZipOutputStream(baos);
-
+        ZipOutputStream zip = new ZipOutputStream (os);
         ZipEntry entry = null;
 
         if (t != null) {
@@ -514,21 +618,21 @@ public class DownloadEntities {
             String suffix = mimetype.endsWith("zip") ? ".zip" : ".csv";
             entry = new ZipEntry("targets" + suffix);
             zip.putNextEntry(entry);
-            zip.write(DownloadEntities.downloadEntities(t));
+            zip.write(downloadEntities (t));
             zip.closeEntry();
         }
 
         if (l != null) {
             entry = new ZipEntry("ligands.csv");
             zip.putNextEntry(entry);
-            zip.write(DownloadEntities.downloadEntities(l));
+            zip.write(downloadEntities (l));
             zip.closeEntry();
         }
 
         if (d != null) {
             entry = new ZipEntry("diseases.csv");
             zip.putNextEntry(entry);
-            zip.write(DownloadEntities.downloadEntities(d));
+            zip.write(downloadEntities (d));
             zip.closeEntry();
         }
 
@@ -541,7 +645,6 @@ public class DownloadEntities {
 
         zip.finish();
         zip.close();
-        return baos.toByteArray();
     }
 
     public static <T extends EntityModel> byte[] downloadEntities(List<T> entities) throws Exception {
@@ -564,5 +667,36 @@ public class DownloadEntities {
         else if (Disease.class.isAssignableFrom(klass))
             return "text/csv";
         else throw new IllegalArgumentException("Must supply objects of class Target, Disease or Ligand");
+    }
+
+    public static Result download (final SearchResult result) {
+        try {
+            DownloadWorker worker = IxCache.getOrElse
+                ("download/"+result.getKey(), new Callable<DownloadWorker> () {
+                        public DownloadWorker call () throws Exception {
+                            Logger.debug("Downloading '"+result.getKey()+"'...");
+                            DownloadWorker worker = new DownloadWorker
+                            (request().uri(), result);
+                            _pool.submit(worker);
+                            return worker;
+                        }
+                    });
+            ObjectMapper mapper = new ObjectMapper ();
+            return ok (mapper.valueToTree(worker.status));
+        }
+        catch (Exception ex) {
+            ex.printStackTrace();
+            return internalServerError
+                ("Can't check status for result: "+result.getKey());
+        }
+    }
+
+    public static Result download (String  name) {
+        File file = getDownloadFile (name);
+        if (file.exists()) {
+            return ok (file);
+        }
+        return ok (ix.idg.views.html.error.render
+                   (404, "Unknown download: "+name));
     }
 }

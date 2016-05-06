@@ -52,7 +52,7 @@ GET	/dto		ix.idg.controllers.DTOHier.dto(node: String ?= null)
 GET	/dtoviz		ix.idg.controllers.DTOHier.dtoViz(node: String ?= null)
 GET	/dto/:label	ix.idg.controllers.DTOHier.dtoNode(label: String)
 
-
+GET	/download/:name	ix.idg.controllers.DownloadEntities.download(name)
 GET /sitemap.txt ix.idg.controllers.IDGApp.sitemap()
 
 ->	/	ix.ncats.Routes

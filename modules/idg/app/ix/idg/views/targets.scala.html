@@ -118,21 +118,31 @@ facets: Array[FacetDecorator], targets: List[Target], ctx: String )
     </table>
     </form>
 } {  @* viz *@
-@*    
-    <div class="pull-right">
-      <button type="button" class="btn btn-default"
-	      id="graphics-well-btn" data-toggle="collapse"
-	      data-target="#graphics-well" aria-expanded="false"
-	      aria-controls="graphics-well">
-	<i class="fa fa-bar-chart"></i>
-      </button>
-    </div>
-*@
+   <button class="btn btn-default" type="button"
+	      id="carousel-toggle"
+	      data-toggle="collapse"
+	      data-target="#carousel-highlight"
+	      aria-expanded="true"
+	      aria-controls="carousel-highlight"
+	      style="margin-right:1px">
+	<i class="fa fa-dashboard"></i></button>
 
     <a id="compare-selected" class="btn btn-default" href="#"
        data-toggle="tooltip" title="Target comparison"
        role="button" style="margin-right:1px; margin-left:1px;">
         <i class="fa fa-exchange fa-lg "></i></a>
+
+    <button type="button"
+    	    @if(request.getQueryString("q") != null || request.getQueryString("facet") != null) {
+    	    class="btn btn-default"
+	    } else {
+	    class="btn btn-default disabled"
+	    }
+            data-toggle="tooltip" title="Download data"
+    	    id="download-all"
+	    style="margin-right:1px; margin-left:1px;">
+        <i class="fa fa-download fa-lg "></i></a>
+    </button>
 
     <div class="dropdown pull-right">
       <button type="button" class="btn btn-default dropdown-toggle"
@@ -184,6 +194,29 @@ facets: Array[FacetDecorator], targets: List[Target], ctx: String )
     </div>
   </div>
 </div>
+
+<iframe id="download-iframe" style="display:none;"></iframe>
+
+<div class="modal fade" tabindex="-1" role="dialog" id="download-modal"
+     aria-labelledby="download-modal-header" aria-hidden="true">
+  <div class="modal-dialog modal-md">
+    <div class="modal-content">
+      <div class="modal-header">
+         <button type="button" class="close"
+                data-dismiss="modal" aria-label="Close">
+             <span aria-hidden="true">&times;</span></button>
+           <h4 class="modal-title" id="download-modal-header">Downloading...</h4>
+      </div>
+      <div class="modal-body" id="download-console-body"></div>
+      <div class="modal-footer">
+	<button type="button" class="btn btn-primary"
+		data-dismiss="modal"
+		id="download-modal-download-btn">...</button>
+      </div>
+    </div>
+  </div>
+</div>
+
 
 <div class="modal fade" id="modal-folder" tabindex="-1"
 role="dialog" aria-labelledby="modalLabelFolder" aria-hidden="true">
@@ -290,6 +323,48 @@ $(function() {
    $('[data-toggle="tooltip"]').tooltip ();
 });
 
+function download () {
+   $('#download-modal-download-btn')
+	.attr('disabled','true')
+	.html('<i class="fa fa-lg fa-spinner fa-spin"></i>');
+	
+   var url = '@request.uri';
+   url += (url.indexOf('?') < 0 ? '?' : '&')+'action=download';
+   console.log('downloading '+url+'...');
+
+   var check;
+   var timer;
+   var delay = 0;
+   var status;
+   check = function () {
+      $.get(url, function(data) {
+         if (delay == 0) {
+	    window.clearInterval(timer);
+	    delay = 1000;
+	    timer = window.setInterval(check, delay);
+	 }
+
+	 status = data.status;
+	 console.log('download...'+data.status);
+	 $('#download-modal-header').html('Downloading...'+data.count);
+         if (data.url) {
+	    $('#download-iframe').attr('src', data.url);
+      	    window.clearInterval(timer);
+	    $('#download-modal-header').html('Downloading...done!');	  
+     	    $('#download-modal-download-btn').removeAttr('disabled')
+		.html('Close');
+	 }
+      }).error(function (){
+      	  window.clearInterval(timer);
+	  $('#download-console-body').html('<code>'+status+'</done>');
+     	  $('#download-modal-download-btn').removeAttr('disabled')
+		.html('Close');
+      });
+   };
+
+   timer = window.setInterval(check, delay);
+}
+
 var _cart_selectType = "selected";
 
 $(document).ready(function () {
@@ -393,6 +468,12 @@ $(document).ready(function () {
         $('#modal-folder').modal('show');
     });
 
+    $("#download-all").click(function (e) {
+        $('#download-modal').modal('show');
+    });
+    $("#download-modal").on('shown.bs.modal', function () {
+        download ();
+    });
 
     // iterate over all .radar-XXX elements and draw the radar chart
     // currently we pull chart data dynamically, but really should be

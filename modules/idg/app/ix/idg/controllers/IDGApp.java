@@ -1352,16 +1352,8 @@ public class IDGApp extends App implements Commons {
                 getSearchResult (Target.class, q, total, query);
             
             String action = request().getQueryString("action");
-            if (action == null) action = "";
-            if (action.toLowerCase().equals("download")) {
-                List<Target> targets = new ArrayList<>();
-                if (result.count() > 0) {
-                    for (int i = 0; i < result.count(); i++) targets.add((Target) result.getMatches().get(i));
-                    byte[] targetDownload = DownloadEntities.downloadEntities(targets);
-                    String suffix = DownloadEntities.getDownloadMimeType(Target.class).endsWith("zip") ? ".zip" : ".csv";
-                    response().setHeader("Content-Disposition", "attachment;filename=export-target"+suffix);
-                    return ok(targetDownload).as(DownloadEntities.getDownloadMimeType(Target.class));
-                }
+            if (action != null && action.equalsIgnoreCase("download")) {
+                return DownloadEntities.download(result);
             }
 
             if (result.finished()) {
@@ -1576,6 +1568,7 @@ public class IDGApp extends App implements Commons {
         List<Keyword> ancestry = new ArrayList<Keyword>();
         String[] toks = facet.split("/");
         if (toks[0].equals(WHO_ATC)) {
+            Keyword kw;
             String atc = toks[1];
             try {
                 int len = atc.length();
@@ -1584,21 +1577,32 @@ public class IDGApp extends App implements Commons {
                     break;
                     
                 case 7:
-                    ancestry.add(getATC (atc.substring(0,5)));
+                    kw = getATC (atc.substring(0,5));
+                    if (kw != null)
+                        ancestry.add(kw);
                     // fall through
                 case 5:
-                    ancestry.add(getATC (atc.substring(0,4)));
+                    kw = getATC (atc.substring(0,4));
+                    if (kw != null)
+                        ancestry.add(kw);
                     // fall through
                 case 4:
-                    ancestry.add(getATC (atc.substring(0,3)));
+                    kw = getATC (atc.substring(0,3));
+                    if (kw != null)
+                        ancestry.add(kw);
                     // fall through
                 case 3:
-                    ancestry.add(getATC (atc.substring(0,1)));
-                    Collections.sort(ancestry, new Comparator<Keyword>() {
-                            public int compare (Keyword kw1, Keyword kw2) {
-                                return kw1.label.compareTo(kw2.label);
-                            }
-                        });
+                    kw = getATC (atc.substring(0,1));
+                    if (kw != null)
+                        ancestry.add(kw);
+
+                    if (!ancestry.isEmpty())
+                        Collections.sort(ancestry, new Comparator<Keyword>() {
+                                public int compare (Keyword kw1, Keyword kw2) {
+                                    return kw1.label.compareTo(kw2.label);
+                                }
+                            });
+                    
                     break;
                 default:
                     Logger.warn("Not a valid ATC facet value: "+ atc);
