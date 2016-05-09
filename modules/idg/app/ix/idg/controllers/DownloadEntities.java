@@ -69,7 +69,8 @@ public class DownloadEntities extends Controller {
 
                 String suffix = getDownloadMimeType(Target.class)
                     .endsWith("zip") ? ".zip" : ".csv";
-                File file = getDownloadFile (status.key+suffix);
+                File file = getDownloadFile
+                    ("export-target-"+status.key+suffix);
                 if (!file.exists()) {
                     FileOutputStream fos = new FileOutputStream (file);
                     downloadTargets (fos, targets);

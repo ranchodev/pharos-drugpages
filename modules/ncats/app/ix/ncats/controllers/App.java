@@ -113,7 +113,7 @@ public class App extends Authentication {
         play.Play.application()
         .configuration().getString("ix.structure.renderer.format");
     
-    public static final int FACET_DIM = 20;
+    public static final int FACET_DIM = 100;
     public static final int MAX_SEARCH_RESULTS = 1000;
 
     public static final TextIndexer _textIndexer = 
@@ -714,7 +714,7 @@ public class App extends Authentication {
     }
         
     public static SearchResult getSearchFacets (final Class kind) {
-        return getSearchFacets (kind, 100);
+        return getSearchFacets (kind, FACET_DIM);
     }
     
     public static SearchResult getSearchFacets (final Class kind,

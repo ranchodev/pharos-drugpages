@@ -108,6 +108,7 @@ public class DTOParser {
         return nodes.get(name);
     }
 
+    public Collection<Node> nodes () { return nodes.values(); }
     public int size () { return nodes.size(); }
 
     public Node parse (InputStream is) throws IOException {

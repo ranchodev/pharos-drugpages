@@ -227,7 +227,7 @@ public class IDGApp extends App implements Commons {
 
     static class IDGFacetDecorator extends FacetDecorator {
         IDGFacetDecorator (Facet facet) {
-            super (facet, true, 6);
+            super (facet, true, FACET_DIM);
         }
 
         @Override
@@ -559,7 +559,7 @@ public class IDGApp extends App implements Commons {
         SOURCE
     };
 
-    static FacetDecorator[] decorate (Class kind, Facet... facets) {
+    static public FacetDecorator[] decorate (Class kind, Facet... facets) {
         List<FacetDecorator> decors = new ArrayList<FacetDecorator>();
         // override decorator as needed here
         for (int i = 0; i < facets.length; ++i) {
@@ -622,7 +622,7 @@ public class IDGApp extends App implements Commons {
         return decors.toArray(new FacetDecorator[0]);
     }
 
-    static FacetDecorator[] decorate (Facet... facets) {
+    public static FacetDecorator[] decorate (Facet... facets) {
         return decorate (null, facets);
     }
 
