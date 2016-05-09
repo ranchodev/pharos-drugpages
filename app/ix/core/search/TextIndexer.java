@@ -55,6 +55,7 @@ import java.util.*;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
+import java.util.concurrent.locks.*;
 
 import static org.apache.lucene.document.Field.Store.NO;
 import static org.apache.lucene.document.Field.Store.YES;
@@ -206,6 +207,9 @@ public class TextIndexer {
         final long timestamp = System.currentTimeMillis();
         AtomicLong stop = new AtomicLong ();
 
+        final ReentrantLock lock = new ReentrantLock ();
+        final Condition finished = lock.newCondition();
+
         SearchResult () {}
         SearchResult (SearchOptions options, String query) {
             this.options = options;
@@ -249,6 +253,22 @@ public class TextIndexer {
         public List getMatches () {
             return new ArrayList (matches);
         }
+        public List getMatchesAndWaitIfNotFinished () {
+            lock.lock();
+            try {
+                while (!finished())
+                    finished.await();
+                return new ArrayList (matches);
+            }
+            catch (InterruptedException ex) {
+                ex.printStackTrace();
+                return new ArrayList (matches);
+            }
+            finally {
+                lock.unlock();
+            }
+        }
+        
         public boolean isEmpty () { return matches.isEmpty(); }
         public int count () { return count; }
         public long getTimestamp () { return timestamp; }
@@ -277,7 +297,14 @@ public class TextIndexer {
         }
         
         protected void done () {
-            stop.set(System.currentTimeMillis());
+            lock.lock();
+            try {
+                stop.set(System.currentTimeMillis());
+                finished.signal();
+            }
+            finally {
+                lock.unlock();
+            }
         }
     }
 

@@ -1,17 +1,24 @@
 @import ix.ncats.controllers.App
 @import ix.ncats.controllers.App._
 
-@(node: String, facets: Array[FacetDecorator])
+@(ctx: String, facets: Array[FacetDecorator])
 
 @ix.ncats.views.html.main("Drug Target Ontology"){
-@targetmenu(null)
+@targetmenu(ctx)
 }(HtmlFormat.empty){
 <div class="container-fluid">
   <div class="page-header">
     <h1><a href="http://drugtargetontology.org/">Drug Target Ontology <i class="fa fa-external-link"></i></a>
       <div class="pull-right">
-        <a href="@ix.idg.controllers.routes.IDGApp.targets()"
-           class="btn btn-primary btn-lg">Browse</a>
+	@defining(App.queryString("facet")) { uri =>
+	  @if(uri.length > 0) {
+            <a href='@{ix.idg.controllers.routes.IDGApp.targets() +uri}'
+               class="btn btn-primary btn-lg">Browse</a>
+	  } else {
+            <a href='@ix.idg.controllers.routes.IDGApp.targets()'
+               class="btn btn-primary btn-lg">Browse</a>
+	  }
+	}
       </div>
     </h1>
   </div>
@@ -22,7 +29,7 @@
     </div>
     <div class="col-md-9">
       <iframe sandbox="allow-scripts allow-forms allow-same-origin allow-popups allow-top-navigation allow-popups-to-escape-sandbox allow-modals"
-	      src='@ix.idg.controllers.routes.DTOHier.dtoViz(node)'
+	      src='@ix.idg.controllers.routes.DTOHier.dtoViz(ctx)'
 	      marginwidth="0" marginheight="0"
 	      frameBorder="0"
 	      style="height:100%; width:100%" scrolling="no">
@@ -31,7 +38,7 @@
     } else {
       <div class="col-md-12">
 	<iframe sandbox="allow-scripts allow-forms allow-same-origin allow-popups allow-top-navigation allow-popups-to-escape-sandbox allow-modals"
-	      src='@ix.idg.controllers.routes.DTOHier.dtoViz(node)'
+	      src='@ix.idg.controllers.routes.DTOHier.dtoViz(ctx)'
 	      marginwidth="0" marginheight="0"
 	      frameBorder="0"
 	      style="height:100%; width:100%" scrolling="no">
@@ -44,3 +51,10 @@
   <link type="text/css" rel="stylesheet" href='@routes.Assets.at("stylesheets/main.css")'/>
 </head>
 }
+
+<script>
+$(function () {
+  $('[data-toggle="popover"]').popover();
+  $('[data-toggle="tooltip"]').tooltip();
+});
+</script>  

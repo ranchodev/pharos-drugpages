@@ -88,7 +88,8 @@ public class DTOHier extends IDGApp {
         if (query.containsKey("facet")) {
             int total = TargetFactory.finder.findRowCount();
             result = getSearchResult (Target.class, null, total, query);
-            List matches = result.getMatches();
+
+            List matches = result.getMatchesAndWaitIfNotFinished();
             Set<DTOParser.Node> keep = new HashSet<DTOParser.Node>();
             for (int i = 0; i < matches.size(); ++i) {
                 Target t = (Target)matches.get(i);

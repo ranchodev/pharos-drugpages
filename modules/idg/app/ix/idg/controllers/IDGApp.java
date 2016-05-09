@@ -251,7 +251,32 @@ public class IDGApp extends App implements Commons {
                 assert false: "Unknown TDL label: "+label;
             }
             else if (name.equals(IDG_DRUG) || name.equals(IDG_LIGAND)) {
-                return "<a href='"+routes.IDGApp.ligand(label)+"'>"+label+"</a>";
+                StringBuilder url = new StringBuilder
+                    ("<a href='"+routes.IDGApp.ligand(label)+"'");
+                try {
+                    List<Ligand> ligands = LigandResult.find(label);
+                    if (!ligands.isEmpty()) {
+                        Structure struc = getStructure (ligands.get(0));
+                        url.append(" tabindex='-1'");
+                        url.append(" data-toggle='popover'");
+                        url.append(" data-animation='true'");
+                        url.append(" data-placement='top'");
+                        url.append(" data-trigger='hover'");
+                        url.append(" data-html='true'");
+                        url.append(" data-content=\"<img src='");
+                        url.append(ix.ncats.controllers.routes.App.structure
+                                   (struc.getId(),"svg",200,null).toString());
+                        url.append("'>\"");
+                    }
+                }
+                catch (Exception ex) {
+                    ex.printStackTrace();
+                    Logger.warn("Can't retrieve structure for ligand \""
+                                +label+"\"!");
+                }
+                url.append(">"+label+"</a>");
+                
+                return url.toString();
             }
             else if (name.equals(IDG_TARGET) || name.equals(UNIPROT_GENE)) {
                 return "<a href='"+routes.IDGApp.target(label)+"'>"+label+"</a>";

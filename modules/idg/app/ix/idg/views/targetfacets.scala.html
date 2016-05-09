@@ -15,10 +15,10 @@
     <div class="panel-heading">
       <h3 class="panel-title">@f.name</h3>
     </div>
-    <div class="panel-body" style="max-height: 300px;overflow-y: scroll;">
+    <div class="panel-body" style="max-height: 400px;overflow-y: auto;">
      <table class="table table-condensed table-striped">
       @** first show all selected facets **@
-      @for(i <- 0 until f.max) {
+      @for(i <- 0 until f.size) {
         @if(f.selection(i)) {
 	<tr>
 	  @defining(App.sha1(f.facet,i)) { id =>
@@ -52,7 +52,7 @@
         </tr>
         }
       }
-      @for(i <- 0 until Math.min(10, f.max)) {
+      @for(i <- 0 until f.size) {
         @if(!f.selection(i)) {
 	<tr>
 	  @defining(App.sha1(f.facet,i)) { id =>

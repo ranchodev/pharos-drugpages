@@ -205,9 +205,11 @@ facets: Array[FacetDecorator], targets: List[Target], ctx: String )
          <button type="button" class="close"
                 data-dismiss="modal" aria-label="Close">
              <span aria-hidden="true">&times;</span></button>
-           <h4 class="modal-title" id="download-modal-header">Downloading...</h4>
+           <h4 class="modal-title" id="download-modal-header">Target Download</h4>
       </div>
-      <div class="modal-body" id="download-console-body"></div>
+      <div class="modal-body" id="download-console-body">
+	Please wait; this might take a few minutes...
+      </div>
       <div class="modal-footer">
 	<button type="button" class="btn btn-primary"
 		data-dismiss="modal"
@@ -345,12 +347,14 @@ function download () {
 	 }
 
 	 status = data.status;
-	 console.log('download...'+data.status);
-	 $('#download-modal-header').html('Downloading...'+data.count);
+	 //console.log('download...'+data.count+'/'+data.total);
+	 //$('#download-console-body').html("downloading..."+data.count);
          if (data.url) {
 	    $('#download-iframe').attr('src', data.url);
       	    window.clearInterval(timer);
-	    $('#download-modal-header').html('Downloading...done!');	  
+	    //$('#download-modal-header').html('Downloading...done!');
+	    $('#download-console-body').html
+	      ("Download complete! Your download is also available here: <a href='"+data.url+"'>"+data.url+"</a>.");
      	    $('#download-modal-download-btn').removeAttr('disabled')
 		.html('Close');
 	 }
