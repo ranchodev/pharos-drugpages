@@ -22,6 +22,7 @@ public class DTOParser {
         public String url;
         public String tdl;
         public String fullname;
+        public boolean visible = true;
 
         public Node () {
         }

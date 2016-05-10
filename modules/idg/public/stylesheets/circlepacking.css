@@ -33,12 +33,13 @@
 
 /* danger */
 .node--leaf-Tdark {
-    fill: #a94442;
-    /*fill: #ff0000;*/
+    /*fill: #a94442;*/
+    fill: #cc0000;
 }
 
 .node--leaf {
     fill: white;
+    opacity: .5;
 }
 
 .label {

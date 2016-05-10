@@ -114,7 +114,7 @@ public class DTOHier extends IDGApp {
             all.removeAll(keep);
             // remove the tdl so that it doesn't hightlight
             for (DTOParser.Node n : all) {
-                n.tdl = null;
+                n.visible = false;
             }
             Logger.debug(result.getKey()+": "+matches.size()
                          +" matches filtered!");

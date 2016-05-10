@@ -46,7 +46,8 @@ function circlepacking (source, base) {
 	    .data(nodes)
 	    .enter().append("circle")
 	    .attr("class", function(d) {
-		var leaf = d.tdl ? "node--leaf-"+d.tdl : "node--leaf";
+		var leaf = d.tdl && d.visible
+		    ? "node--leaf-"+d.tdl : "node--leaf";
 		return d.parent ? d.children && d.children.length > 0
 		    ? "node" : "node "+leaf : "node node--root"; })
 	    .style("fill", function(d) {

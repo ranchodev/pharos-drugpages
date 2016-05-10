@@ -61,7 +61,7 @@ public class DownloadEntities extends Controller {
         }
 
         void save () throws Exception {
-            List matches = result.getMatches();
+            List matches = result.getMatchesAndWaitIfNotFinished();
             status.total = matches.size();
             List<Target> targets = new ArrayList<>();
             if (!matches.isEmpty()) {
@@ -88,12 +88,6 @@ public class DownloadEntities extends Controller {
 
         public void run () {
             try {
-                long sleep = 0;
-                while (!result.finished() || sleep > 120000l) {
-                    status.count = result.size();                   
-                    Thread.sleep(1000);
-                    sleep += 1000;
-                }
                 save ();
             }
             catch (Throwable ex) {
