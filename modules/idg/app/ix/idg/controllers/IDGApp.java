@@ -724,7 +724,7 @@ public class IDGApp extends App implements Commons {
                             getFacets (Disease.class, "Namespace");
                         TextIndexer.Facet[] ligand =
                             getFacets (Ligand.class, "Namespace");
-                        return ok (ix.idg.views.html.about.render
+                        return ok (ix.idg.views.html.about2.render
                                    ("Pharos: Illuminating the Druggable Genome",
                                     target.length > 0 ? target[0] : null,
                                     disease.length > 0 ? disease[0] : null,
