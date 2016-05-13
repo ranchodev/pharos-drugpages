@@ -12,11 +12,23 @@
 @facet(f: FacetDecorator) = {
 <div class="col-md-4" facetname="@f.name">
   <div class="panel panel-default" id="@Util.sha1(App.encode(f.facet))" >
-    <div class="panel-heading">
-      <h3 class="panel-title">@f.name</h3>
-    </div>
-    <div class="panel-body" style="max-height: 400px;overflow-y: auto;">
-     <table class="table table-condensed table-striped">
+      <div class="panel-heading">
+          <h3 class="panel-title">
+          @f.name
+          @if(f.size() > 6) {  <a href="#"><i class="fa fa-caret-down" aria-hidden="true"></i></a> }
+          </h3>
+
+          @if(f.size() > 6){
+          <form class="form-inline">
+              <div class="form-group facetfilterdiv" style="width:100%;">
+                  <input type="text"  style="width:100%;" id="facetfilter-@Util.sha1(App.encode(f.facet))"
+                  class="form-control facetfilter" placeholder="Find ...">
+              </div>
+          </form>
+          }
+      </div>
+      <div class="panel-body" style="max-height: 400px;overflow-y: auto;">
+     <table class="table table-condensed table-striped" forfacet="@f.name">
       @** first show all selected facets **@
       @for(i <- 0 until f.size) {
         @if(f.selection(i)) {
@@ -38,9 +50,9 @@
 	     </script>
           }
           @if(f.raw) {
-            <td>@HtmlFormat.raw(f.label(i))</td>
+            <td class="flabel">@HtmlFormat.raw(f.label(i))</td>
           } else {
-            <td class = "text-capitalize">@f.label(i)</td>
+            <td class = "text-capitalize flabel">@f.label(i)</td>
           }
 	 <td>
            @if(f.raw) {
@@ -71,9 +83,9 @@
 	     </script>
           }
           @if(f.raw) {
-            <td>@HtmlFormat.raw(f.label(i))</td>
+            <td class="flabel">@HtmlFormat.raw(f.label(i))</td>
           } else {
-            <td class = "text-capitalize">@f.label(i)</td>
+            <td class = "text-capitalize flabel">@f.label(i)</td>
           }
 	 <td>
            @if(f.raw) {
@@ -213,6 +225,39 @@ $(document).ready(function() {
             else $(this ).show();
         });
     });
+
+    $(".facetfilterdiv" ).each(function() {
+        $(this ).toggle();
+    });
+    $(".panel-title a" ).on('click', function(){
+        var startElem = $(this ).parent( ).parent();
+        var elem = $(startElem ).find(".form-group");
+        $(elem ).toggle();
+        elem = $(this ).find ('.fa-caret-down');
+        if (elem == undefined || elem.length == 0) {
+            elem = $(this ).find ('.fa-caret-up');
+            elem.removeClass('fa-caret-up' ).addClass('fa-caret-down');
+        } else {
+            elem.removeClass('fa-caret-down' ).addClass('fa-caret-up');
+        }
+        return false;
+    });
+    $(".facetfilter" ).on('input', function() {
+        var str = $(this).val( ).toLowerCase();
+        var startElem = $(this ).parent( ).parent( ).parent( ).parent();
+        $(startElem ).find("tr" ).each(function() {
+            if (str.trim() == "") {
+                $ (this).show () ;
+                return;
+            }
+            var label = $(this ).find("td a")[0 ];
+            if (label == undefined || label.length == 0)
+                label = $(this ).find("td.flabel")[0 ];
+            label = $(label).text();
+            if (label.toLowerCase( ).indexOf(str) == -1) $(this ).hide();
+            else $(this ).show();
+        });
+    }) ;
 });
 </script>
 
