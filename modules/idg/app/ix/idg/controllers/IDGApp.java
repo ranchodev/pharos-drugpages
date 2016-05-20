@@ -711,6 +711,11 @@ public class IDGApp extends App implements Commons {
         return ok(ix.idg.views.html.pmscore.render("Jensen Pubmed Score"));
     }
 
+    @Cached(key="_impc", duration = Integer.MAX_VALUE)
+    public static Result impc() {
+        return ok(ix.idg.views.html.impc.render("IMPC Associated Data in IDG"));
+    }
+
 
     @Cached(key="_about", duration = Integer.MAX_VALUE)
     public static Result about() {
@@ -724,11 +729,11 @@ public class IDGApp extends App implements Commons {
                             getFacets (Disease.class, "Namespace");
                         TextIndexer.Facet[] ligand =
                             getFacets (Ligand.class, "Namespace");
-                        return ok (ix.idg.views.html.about2.render
-                                   ("Pharos: Illuminating the Druggable Genome",
-                                    target.length > 0 ? target[0] : null,
-                                    disease.length > 0 ? disease[0] : null,
-                                    ligand.length > 0 ? ligand[0]: null));
+                        return ok(ix.idg.views.html.about2.render
+                                ("Pharos: Illuminating the Druggable Genome",
+                                        target.length > 0 ? target[0] : null,
+                                        disease.length > 0 ? disease[0] : null,
+                                        ligand.length > 0 ? ligand[0] : null));
                     }
                 });
         }
