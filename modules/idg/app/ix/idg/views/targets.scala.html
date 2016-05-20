@@ -14,8 +14,10 @@ facets: Array[FacetDecorator], targets: List[Target], ctx: String )
         <td><a id='load' onclick="showLoadModal()" 
 	   href="@ix.idg.controllers.routes.IDGApp.target(IDGApp.getId(t))">@t.name</a></td>
 	<td>@defining(t.getSynonym(UNIPROT_GENE)) { gene =>
-	  @if(gene != null) {
+	  @if(gene != null && gene.term != null) {
 	     <a onclick="showLoadModal()" href="@ix.idg.controllers.routes.IDGApp.target(gene.term)">@gene.term</a>
+	  } else {
+	     N/A
 	  }
 	}</td>
         <td><span class="label label-@t.idgTDL.label" data-toggle="tooltip" data-html="true" title="<p align='left'>@t.idgTDL.desc</p>">@t.idgTDL.name</span></td>
