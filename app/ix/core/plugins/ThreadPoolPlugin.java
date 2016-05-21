@@ -29,7 +29,8 @@ public class ThreadPoolPlugin extends Plugin {
 
     public void onStop () {
         Logger.info("Plugin "+getClass().getName()+" stopped!");
-        threadPool.shutdown();
+        if (threadPool != null)
+            threadPool.shutdown();
     }
 
     public boolean enabled () { return true; }

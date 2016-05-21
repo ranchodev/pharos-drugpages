@@ -20,6 +20,7 @@ import ix.core.controllers.PublicationFactory;
 import ix.core.controllers.search.SearchFactory;
 import ix.core.models.*;
 import ix.core.plugins.IxCache;
+import ix.core.plugins.ThreadPoolPlugin;
 import ix.core.search.SearchOptions;
 import ix.core.search.TextIndexer;
 import ix.idg.models.Disease;
@@ -54,6 +55,9 @@ import static ix.core.search.TextIndexer.SearchResult;
 public class IDGApp extends App implements Commons {
     static final int MAX_SEARCH_RESULTS = 1000;
     public static final String IDG_RESOLVER = "IDG Resolver";
+
+    public static final ThreadPoolPlugin _threadPool =
+        Play.application().plugin(ThreadPoolPlugin.class);
 
     private static AssetsBuilder delegate = new AssetsBuilder();
     public static Action<AnyContent> asset(String path, String file) {
@@ -128,6 +132,76 @@ public class IDGApp extends App implements Commons {
             }
             
             return target;
+        }
+    }
+
+    public static class IDGTargetFilterProcessor
+        extends SearchResultProcessor<Target> implements Enumeration<Target> {
+        static final Target POISON = new Target ();
+        BlockingQueue<Target> queue = new LinkedBlockingQueue<Target>();
+        Target next;
+
+        IDGTargetFilterProcessor (final String filter) {
+            final String key = Util.sha1(filter);
+            try {
+                final List<Target> targets = getOrElse
+                    (key, new Callable<List<Target>> () {
+                            public List<Target> call () throws Exception {
+                                return TargetFactory.getTargets
+                                (Integer.MAX_VALUE, 0, filter);
+                            }
+                        });
+                if (!targets.isEmpty()) {
+                    _threadPool.submit(new Runnable () {
+                            public void run () {
+                                Logger.debug(Thread.currentThread()+": key="+key
+                                             +" "+targets.size()+" target(s)!");
+                                try {                           
+                                    for (Target t : targets) {
+                                        queue.put(t);
+                                    }
+                                    queue.put(POISON);
+                                }
+                                catch (Exception ex) {
+                                    ex.printStackTrace();
+                                }
+                            }
+                        });
+                    next ();
+                }
+                else {
+                    next = POISON;
+                }
+            }
+            catch (Exception ex) {
+                ex.printStackTrace();
+                Logger.error("Can't retrieve targets for filter '"
+                             +filter+"'", ex);
+            }
+        }
+        
+        void next () {
+            try {
+                next = queue.take();
+            }
+            catch (Exception ex) {
+                ex.printStackTrace();
+                next = POISON; // terminate
+            }
+        }
+
+        public boolean hasMoreElements () {
+            return next != POISON;
+        }
+
+        public Target nextElement () {
+            Target current = next;
+            next ();
+            return current;
+        }
+
+        protected Object instrument (Target t) throws Exception {
+            return t;
         }
     }
 
@@ -1344,7 +1418,11 @@ public class IDGApp extends App implements Commons {
                     return batchSearch (q, rows, page);
                 }
                 else if (type.equalsIgnoreCase("pmid")) {
-                    return targetsForPublication (Long.parseLong(q), rows, page);
+                    return targetsForPublication
+                        (Long.parseLong(q), rows, page);
+                }
+                else if (type.equalsIgnoreCase("filter")) {
+                    return filter (q, rows, page);
                 }
             }
             
@@ -1472,6 +1550,43 @@ public class IDGApp extends App implements Commons {
             Logger.error("Can't perform sequence search", ex);
             return _internalServerError (ex);
         }
+    }
+
+    public static Result filter (final String q,
+                                 final int rows, final int page) {
+        try {
+            final String key = "filter/result/"+Util.sha1(q);
+            SearchResultContext context = getOrElse
+                (key, new Callable<SearchResultContext> () {
+                        public SearchResultContext call () throws Exception {
+                            IDGTargetFilterProcessor processor =
+                            new IDGTargetFilterProcessor (q);
+                            processor.setResults(rows, processor);
+                            return processor.getContext();
+                        }
+                    });
+            
+            return App.fetchResult
+                (context, rows, page, new DefaultResultRenderer<Target> () {
+                        public Result render (SearchResultContext context,
+                                              int page, int rows,
+                                              int total, int[] pages,
+                                              List<Facet> facets,
+                                              List<Target> targets) {
+                            return ok (ix.idg.views.html.targets.render
+                                       (page, rows, total,
+                                        pages, decorate
+                                        (Target.class,
+                                         filter (facets, TARGET_FACETS)),
+                                        targets, context.getId()));
+                        }
+                    });
+        }
+        catch (Exception ex) {
+            ex.printStackTrace();
+            Logger.error("Can't perform filter '"+q+"'", ex);
+            return _internalServerError (ex);
+        }           
     }
 
     @BodyParser.Of(value = BodyParser.FormUrlEncoded.class,
