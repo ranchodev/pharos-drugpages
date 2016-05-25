@@ -711,9 +711,53 @@ public class IDGApp extends App implements Commons {
         return ok(ix.idg.views.html.pmscore.render("Jensen Pubmed Score"));
     }
 
-    @Cached(key="_impc", duration = Integer.MAX_VALUE)
+    //@Cached(key="_impc", duration = Integer.MAX_VALUE)
     public static Result impc() {
-        return ok(ix.idg.views.html.impc.render("IMPC Associated Data in IDG"));
+        List<Target> targets = TargetFactory.getTargets(100000, 0, "properties.label='IMPC Term'");
+        // get count of each IMPC term
+        Map<String,Integer> termCounts = new HashMap<String,Integer>();
+        for (Target t : targets) {
+            List<Value> values = t.getProperties();
+            for (Value v : values) {
+                if (v.label.equals(IMPC_TERM)) {
+                    String term = (String) v.getValue();
+                    int n = 1;
+                    if (termCounts.containsKey(term))
+                      n = termCounts.get(term)+1;
+                    termCounts.put(term, n);
+                }
+            }
+        }
+
+        // count terms for each target
+        QueryIterator<Target> it = TargetFactory.finder.findIterate();
+        List<Object[]> tmp = new ArrayList<Object[]>();
+        while (it.hasNext()) {
+            Target t = it.next();
+            int nt = 0;
+            for (Value v : t.getProperties()) {
+                if (v.label.equals(IMPC_TERM)) nt++;
+            }
+            tmp.add(new Object[]{t, nt});
+        }
+        Collections.sort(tmp, new Comparator<Object[]>() {
+            @Override
+            public int compare(Object[] o1, Object[] o2) {
+                Integer c1 = (Integer) o1[1];
+                Integer c2 = (Integer) o2[1];
+                return -1*c1.compareTo(c2);
+            }
+        });
+        Map<Target,Integer> targetCounts = new HashMap<>();
+        int n = 0;
+        for (Object[] o : tmp) {
+            targetCounts.put((Target) o[0], (Integer) o[1]);
+            if (n++ > 10) break;
+        }
+
+
+        return ok(ix.idg.views.html.impc.render("IMPC Associated Data in IDG",
+                termCounts, targetCounts, new ArrayList<Target>(targetCounts.keySet())));
     }
 
 
