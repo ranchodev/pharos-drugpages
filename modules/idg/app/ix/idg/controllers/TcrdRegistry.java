@@ -118,6 +118,11 @@ public class TcrdRegistry extends Controller implements Commons {
         TcrdTarget (String acc, String family, String tdl,
                     Long id, Long protein, Double novelty,
                     Keyword source) {
+            if (family == null || family.equals("")) 
+                family = "Unknown";
+            if (tdl == null || tdl.equals(""))
+                tdl = "Other";
+
             this.acc = acc;
             if ("nr".equalsIgnoreCase(family))
                 this.family = "Nuclear Receptor";
@@ -125,6 +130,7 @@ public class TcrdRegistry extends Controller implements Commons {
                 this.family = "Ion Channel";
             else 
                 this.family = family;
+
             this.tdl = tdl;
             this.id = id;
             this.protein = protein;
@@ -887,7 +893,9 @@ public class TcrdRegistry extends Controller implements Commons {
                         String pheno = disorder.substring(pos+1);
                         if (disorder.charAt(0) == '{') {
                             pos = disorder.indexOf('}');
-                            disorder = disorder.substring(1, pos);
+                            disorder = pos < 0
+                                ? disorder.substring(1)
+                                : disorder.substring(1, pos);
                         }
                         else {
                             disorder = disorder.substring(0, pos);
@@ -2060,24 +2068,31 @@ public class TcrdRegistry extends Controller implements Commons {
                     }
                 }
             }
-            addDTO (target, t.protein, t.dtoNode);
-            addTDL (target, t.protein);
-            addPhenotype (target, t.protein);
-            addExpression (target, t.protein);
-            addGO (target, t.protein);
-            addPathway (target, t.protein);
-            addPanther (target, t.protein);
-            addPatent (target, t.protein);
-            addPMScore (target, t.protein);
-            addGrant (target, t.id);
-            addDrugs (target, t.id, t.source);
-            addAssay (target, t.protein);
-            addChembl (target, t.id, t.source);
-            addDisease (target, t.id, t.source);
-            addHarmonogram (target, t.protein);
-            addGeneRIF (target, t.protein);
-            addTINX (target, t.id);
-            addPublication (target, t.protein);
+
+            try {
+                addDTO (target, t.protein, t.dtoNode);
+                addTDL (target, t.protein);
+                addPhenotype (target, t.protein);
+                addExpression (target, t.protein);
+                addGO (target, t.protein);
+                addPathway (target, t.protein);
+                addPanther (target, t.protein);
+                addPatent (target, t.protein);
+                addPMScore (target, t.protein);
+                addGrant (target, t.id);
+                addDrugs (target, t.id, t.source);
+                addAssay (target, t.protein);
+                addChembl (target, t.id, t.source);
+                addDisease (target, t.id, t.source);
+                addHarmonogram (target, t.protein);
+                addGeneRIF (target, t.protein);
+                addTINX (target, t.id);
+                addPublication (target, t.protein);
+            }
+            catch (Exception ex) {
+                Logger.error("Can't parse target "+IDGApp.getId(target)+"!");
+                ex.printStackTrace();
+            }
 
             try {
                 target.update();

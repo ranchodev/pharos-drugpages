@@ -34,7 +34,9 @@ public class Target extends EntityModel {
 "These are targets about which virtually nothing is known. They do not have known drug or small molecule activities that satisfy the activity thresholds detailed below AND satisfy two or more of the following criteria:"+
 "<ul><li><p align='left'>A PubMed text-mining score from Jensen Lab &lt; 5"+
 "<li><p align='left'>&le; 3 Gene RIFs"+
-"<li><p align='left'>&le; 50 Antibodies available according to http://antibodypedia.com</ul>","danger");
+               "<li><p align='left'>&le; 50 Antibodies available according to http://antibodypedia.com</ul>","danger"),
+
+        Other ("Other", "Uncategorized targets", "default");
 
         final public String name;
         final public String desc;
