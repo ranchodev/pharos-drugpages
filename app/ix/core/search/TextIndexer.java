@@ -597,6 +597,11 @@ public class TextIndexer {
     static ConcurrentMap<File, TextIndexer> indexers = 
         new ConcurrentHashMap<File, TextIndexer>();
 
+
+    public IndexReader getIndexReader() {
+        return indexReader;
+    }
+
     public static TextIndexer getInstance (File baseDir) throws IOException {
         if (indexers.containsKey(baseDir)) 
             return indexers.get(baseDir);
@@ -744,6 +749,24 @@ public class TextIndexer {
             (taxon, NoLockFactory.getNoLockFactory());
         
         return config (indexer);
+    }
+
+    public Map<String,Integer> getFacetLabelCounts(String facetName) throws IOException {
+        IndexSearcher searcher = new IndexSearcher(indexReader);
+        TaxonomyReader taxoReader = new DirectoryTaxonomyReader(taxonDir);
+        FacetsCollector fc = new FacetsCollector();
+        FacetsCollector.search(searcher, new MatchAllDocsQuery(), 1000000, fc);
+        Facets facets = new FastTaxonomyFacetCounts(taxoReader, facetsConfig, fc);
+        List<FacetResult> frs = facets.getAllDims(999999);
+        Map<String,Integer> facetValues = new HashMap<>();
+        for (FacetResult fr : frs) {
+            if (fr.dim.equals(facetName)) {
+                LabelAndValue[] lavs = fr.labelValues;
+                for (LabelAndValue lav : lavs)
+                    facetValues.put(lav.label, lav.value.intValue());
+            }
+        }
+        return facetValues;
     }
 
     protected TextIndexer config (TextIndexer indexer) throws IOException {
