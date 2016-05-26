@@ -85,7 +85,7 @@
 
         <script type='text/javascript'>
 
-            var makeBarChart = function(selector, dataset, title) {
+            var makeBarChart = function(selector, dataset, title, ytitle) {
                 $(selector ).highcharts({
                     chart: {
                         type: 'column'
@@ -93,13 +93,14 @@
                     title: {
                         text: title
                     },
-                    xaxis: {
+                    xAxis: {
                         categories: _.pluck(dataset, 'term')
                     },
-                    yaxis: {
-                        title: {text: 'Frequency'}
+                    yAxis: {
+                        title: {text: ytitle}
                     },
                     series: [{
+                        showInLegend: false,
                         name:'',
                         data: _.pluck(dataset, 'count')
                     }],
@@ -119,7 +120,7 @@
 
         var targetset = [
             @for(key <- targetCounts.keySet()) {
-                { term : '@key', count: @targetCounts.get(key) },
+                { term : '@IDGApp.getGeneSymbol(key)', count: @targetCounts.get(key) },
             }
         ];
         targetset = _.first(_.sortBy ( targetset, function(x) { return -1* x.count; } ), 10) ;
@@ -131,8 +132,8 @@
         ] ;
         dataset = _.first(_.sortBy ( dataset, function(x) { return -1* x.count; } ), 10);
 
-        makeBarChart("#hist-term", dataset, 'IMPC Phenotype Frequencies');
-        makeBarChart("#hist-targets", targetset, 'IMPC Phenotypes by Target');
+        makeBarChart("#hist-term", dataset, 'IMPC Phenotype Frequencies', 'Frequency');
+        makeBarChart("#hist-targets", targetset, 'IMPC Phenotypes by Target', 'Number of phenotypes');
 
         });
         </script>

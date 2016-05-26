@@ -804,8 +804,10 @@ public class IDGApp extends App implements Commons {
         }
 
         // count terms for each target
-        QueryIterator<Target> it = TargetFactory.finder.findIterate();
+//        QueryIterator<Target> it = TargetFactory.finder.findIterate();
         List<Object[]> tmp = new ArrayList<Object[]>();
+        targets = TargetFactory.finder.all();
+        Iterator<Target> it = targets.iterator();
         while (it.hasNext()) {
             Target t = it.next();
             int nt = 0;
@@ -828,6 +830,7 @@ public class IDGApp extends App implements Commons {
             targetCounts.put((Target) o[0], (Integer) o[1]);
             if (n++ > 10) break;
         }
+
 
 
         return ok(ix.idg.views.html.impc.render("IMPC Associated Data in IDG",
