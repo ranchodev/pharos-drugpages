@@ -1,7 +1,9 @@
 @import ix.idg.models.Target
+@import ix.idg.controllers.Commons
 @import ix.idg.controllers.IDGApp
+@import ix.core.models.Keyword
 
-@(title: String, termCounts: Map[String,Integer], targetCounts: Map[Target,Integer], targets: List[Target])
+@(title: String, termCounts: Map[Keyword,Integer], targetCounts: Map[Target,Integer])
 
 <!DOCTYPE html>
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
@@ -88,13 +90,28 @@
             var makeBarChart = function(selector, dataset, title, ytitle) {
                 $(selector ).highcharts({
                     chart: {
-                        type: 'column'
+                        type: 'bar'
                     },
+                    credits: { enabled: false },
                     title: {
                         text: title
                     },
                     xAxis: {
-                        categories: _.pluck(dataset, 'term')
+                        categories: _.pluck(dataset, 'term'),
+                        labels: {
+                            formatter: function() {
+                                var obj = _.findWhere(dataset, {term:this.value} );
+                                var link = undefined;
+                                if (obj.kind == 'phenotype')
+                                    link =  obj.href;
+                                else if (obj.kind == 'target')
+                                    link = '/idg/targets/'+obj.tid;
+                                return '<a href="'+link+'" target="_top">'+ this.value +'</a>';
+                            },
+                            useHTML:true,
+                            overflow:'justify',
+                        //align: 'center'
+                        }
                     },
                     yAxis: {
                         title: {text: ytitle}
@@ -104,6 +121,17 @@
                         name:'',
                         data: _.pluck(dataset, 'count')
                     }],
+                    tooltip: {
+                        formatter: function() {
+                            var obj = _.findWhere(dataset, {term:this.x});
+                            if (obj.kind == 'target') {
+                                return '<a href="/idg/targets/'+obj.tid+'"><b>' + this.x + "</b>" ;
+                            } else if (obj.kind == 'phenotype') {
+                                return '<b>' + this.x + "</b>" ;
+                            } else return '<b>' + this.x + "</b>" ;
+                            return 'XXX';
+                        }
+                    },
                     plotOptions:{
                         column: {
                             animation:false
@@ -120,20 +148,27 @@
 
         var targetset = [
             @for(key <- targetCounts.keySet()) {
-                { term : '@key.getSynonym(Commons.UNIPROT_GENE).term', count: @targetCounts.get(key) },
+                { term : '@key.getSynonym(Commons.UNIPROT_GENE).term',
+                  count: @targetCounts.get(key),
+                  tid: '@IDGApp.getId(key)',
+                  kind: 'target'
+                },
             }
         ];
-        targetset = _.first(_.sortBy ( targetset, function(x) { return -1* x.count; } ), 10) ;
+        targetset = _.chain(targetset ).sortBy('term' ).sortBy ( function(x) { return -1* x.count; } ).value() ;
 
         var dataset =[
-            @for(entry <- termCounts.entrySet()) {
-                { term : '@entry.getKey()', count: @entry.getValue() },
+            @for(key <- termCounts.keySet()) {
+                { term : '@key.term',
+                  count: @termCounts.get(key),
+                  href: '@key.href',
+                  kind: 'phenotype' },
             }
         ] ;
-        dataset = _.first(_.sortBy ( dataset, function(x) { return -1* x.count; } ), 10);
+        dataset = _.first(_.chain(dataset ).sortBy('term' ).sortBy ( function(x) { return -1* x.count; } ).value(), 10);
 
-        makeBarChart("#hist-term", dataset, 'IMPC Phenotype Frequencies', 'Frequency');
-        makeBarChart("#hist-targets", targetset, 'IMPC Phenotypes by Target', 'Number of phenotypes');
+        makeBarChart("#hist-term", dataset, 'No. Targets by Phenotype', 'Number of Targets');
+        makeBarChart("#hist-targets", targetset, 'No. Phenotypes by Target', 'Number of phenotypes');
 
         });
         </script>

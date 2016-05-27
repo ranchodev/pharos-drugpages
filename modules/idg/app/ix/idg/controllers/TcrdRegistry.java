@@ -923,7 +923,7 @@ public class TcrdRegistry extends Controller implements Commons {
         void addPhenotype (Target target, long protein) throws Exception {
             pstm7.setLong(1, protein);
             ResultSet rset = pstm7.executeQuery();
-            Set<String> terms = new TreeSet<String>();
+            Set<Keyword> terms = new HashSet<>();
             Map<String, Keyword> sources = new TreeMap<String, Keyword>();
             int phenoCount = 0;
             while (rset.next()) {
@@ -938,10 +938,12 @@ public class TcrdRegistry extends Controller implements Commons {
                     }
                     sources.put(type, source);
                     String term = rset.getString("term_name");
+                    String termId = rset.getString("term_id");
                     if (term != null) {
-                        for (String t : term.split(",")) {
-                            terms.add(t);
-                        }
+                        Keyword kw = KeywordFactory.registerIfAbsent
+                                (IMPC_TERM, term.replaceAll("/","-"),
+                                        "http://www.informatics.jax.org/searches/Phat.cgi?id=" + termId);
+                        terms.add(kw);
                     }
                 }
                 else if ("gwas catalog".equalsIgnoreCase(type)) {
@@ -1044,14 +1046,10 @@ public class TcrdRegistry extends Controller implements Commons {
             rset.close();
 
             if (!terms.isEmpty()) {
-                for (String term : terms) {
-                    Keyword t = KeywordFactory.registerIfAbsent
-                        (IMPC_TERM, term.replaceAll("/","-"), null);
-                    target.properties.add(t);
+                for (Keyword term : terms) {
+                    target.properties.add(term);
                 }
-                
-                Logger.debug("Target "+target.id+" has "+terms.size()
-                             +" phenotype(s)!");
+                Logger.debug("Target "+target.id+" has "+terms.size() +" phenotype(s)!");
             }
             
             for (Keyword source: sources.values()) {
@@ -2839,6 +2837,7 @@ public class TcrdRegistry extends Controller implements Commons {
                  +"on (a.target_id = b.id and a.protein_id = c.id)\n"
                  +"left join tinx_novelty d\n"
                  +"    on d.protein_id = a.protein_id \n"
+                 //+"where d.protein_id in (9671,9849,11534,15077,658,11534)"
                  //+"where d.protein_id in (8721)\n"
                  //+"where c.id in (11521)\n"
                  //+"where a.target_id in (12241)\n"

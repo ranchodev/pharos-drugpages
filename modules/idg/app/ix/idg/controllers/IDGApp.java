@@ -784,41 +784,44 @@ public class IDGApp extends App implements Commons {
     @Cached(key="_impc", duration = Integer.MAX_VALUE)
     public static Result impc() throws IOException {
 
-        Map<String, Integer> termCounts = _textIndexer.getFacetLabelCounts(IMPC_TERM);
+        TextIndexer.TermVectors tvs = _textIndexer.getTermVectors(Target.class, IMPC_TERM);
+        List<Map> terms = tvs.getTerms();
+        Map<Keyword,Integer> termCounts = new HashMap<>();
+        for (Map term : terms) {
+            termCounts.put(getKeywordByTerm((String) term.get("term")), ((Object[]) term.get("docs")).length);
+        }
 
-        // count terms for each target
-//        QueryIterator<Target> it = TargetFactory.finder.findIterate();
-        List<Object[]> tmp = new ArrayList<Object[]>();
-        List<Target> targets = TargetFactory.finder.all();
-        Iterator<Target> it = targets.iterator();
-        while (it.hasNext()) {
-            Target t = it.next();
-            int nt = 0;
-            for (Value v : t.getProperties()) {
-                if (v.label.equals(IMPC_TERM)) nt++;
-            }
-            t.getSynonyms();
-            tmp.add(new Object[]{t, nt});
+        List<Map> docs = tvs.getDocs();
+        List<Object[]> tmp = new ArrayList<>();
+        for (Map doc : docs) {
+            tmp.add(new Object[]{doc.get("doc"), ((Object[])doc.get("terms")).length});
         }
         Collections.sort(tmp, new Comparator<Object[]>() {
             @Override
             public int compare(Object[] o1, Object[] o2) {
                 Integer c1 = (Integer) o1[1];
                 Integer c2 = (Integer) o2[1];
-                return -1*c1.compareTo(c2);
+                int r = -1*c1.compareTo(c2);
+                if (r == 0) {
+                    Long l1 = (Long) o1[0];
+                    Long l2 = (Long) o2[0];
+                    r = l1.compareTo(l2);
+                }
+                return r;
             }
         });
         Map<Target,Integer> targetCounts = new HashMap<>();
-        int n = 0;
-        for (Object[] o : tmp) {
-            targetCounts.put((Target) o[0], (Integer) o[1]);
-            if (n++ > 10) break;
+        if (tmp.size() > 0) {
+            int n = 0;
+            while (true) {
+                Target t = TargetFactory.finder.byId((Long) tmp.get(n)[0]);
+                targetCounts.put(t, (Integer) tmp.get(n)[1]);
+                n++;
+                if (n == tmp.size() || n == 10) break;
+            }
         }
 
-
-
-        return ok(ix.idg.views.html.impc.render("IMPC Associated Data in IDG",
-                termCounts, targetCounts, new ArrayList<Target>(targetCounts.keySet())));
+        return ok(ix.idg.views.html.impc.render("IMPC Associated Data in IDG", termCounts, targetCounts));
     }
 
 
@@ -1001,6 +1004,12 @@ public class IDGApp extends App implements Commons {
     public static String getId (Target t) {
         Keyword kw = t.getSynonym(UNIPROT_ACCESSION);
         return kw != null ? kw.term : null;
+    }
+
+    public static Keyword getKeywordByTerm(String t) {
+        List<Keyword> kwds = KeywordFactory.finder.where().eq("term", t).findList();
+        if (kwds.size() == 0) return null;
+        return kwds.get(0);
     }
 
     /**
@@ -2986,7 +2995,7 @@ public class IDGApp extends App implements Commons {
             if (payload != null) {
                 payload.addIfAbsent
                     (KeywordFactory.registerIfAbsent
-                     (IDG_RESOLVER, kind, null));
+                            (IDG_RESOLVER, kind, null));
                 payload.update();
                 Logger.debug("resolver: kind="+kind
                              +" => payload "+payload.id);
@@ -3032,7 +3041,7 @@ public class IDGApp extends App implements Commons {
                     || Disease.class.getName().equalsIgnoreCase(kind)) {
                     payload.addIfAbsent
                         (KeywordFactory.registerIfAbsent
-                         (IDG_RESOLVER, kind, null));
+                                (IDG_RESOLVER, kind, null));
                     payload.update();
                 }
                 else {
