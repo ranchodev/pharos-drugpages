@@ -199,6 +199,27 @@ public class SearchFactory extends EntityFactory {
         }
     }
 
+    public static Result facetFields () {
+        return ok (_indexer.getFacetsConfig());
+    }
+
+    public static Result termVectors (Class kind, String field) {
+        try {
+            TextIndexer.TermVectors tv = _indexer.getTermVectors(kind, field);
+            EntityMapper mapper = new EntityMapper ();
+
+            File f = new File ("tv.json");
+            PrintStream ps = new PrintStream (new FileOutputStream (f));
+            ps.print(mapper.toJson(tv, true));
+            ps.close();
+
+            return ok (mapper.valueToTree(tv));
+        }
+        catch (IOException ex) {
+            return internalServerError (ex.getMessage());
+        }
+    }
+    
     public static Result suggest (String q, int max) {
         return suggestField (null, q, max);
     }

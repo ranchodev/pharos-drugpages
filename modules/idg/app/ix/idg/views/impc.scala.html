@@ -152,7 +152,7 @@
 
         var targetset = [
             @for(key <- targetCounts.keySet()) {
-                { term : '@IDGApp.getGeneSymbol(key)', count: @targetCounts.get(key) },
+                { term : '@key.getSynonym(Commons.UNIPROT_GENE).term', count: @targetCounts.get(key) },
             }
         ];
         targetset = _.first(_.sortBy ( targetset, function(x) { return -1* x.count; } ), 10) ;

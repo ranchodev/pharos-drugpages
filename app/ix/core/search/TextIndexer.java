@@ -98,6 +98,125 @@ public class TextIndexer {
     static final DateFormat YEAR_DATE_FORMAT = new SimpleDateFormat ("yyyy");
     static final SearchResultPayload POISON_PAYLOAD = new SearchResultPayload ();
     static final Object POISON_PILL = new Object ();
+
+    static final FieldType TermVectorFieldType = new FieldType ();
+    static {
+        TermVectorFieldType.setIndexed(true);
+        TermVectorFieldType.setTokenized(false);
+        TermVectorFieldType.setStoreTermVectors(true);
+        TermVectorFieldType.setStoreTermVectorPositions(false);
+        TermVectorFieldType.freeze();
+    }
+
+    static class TermVectorField extends org.apache.lucene.document.Field {
+        TermVectorField (String field, String value) {
+            super (field, value, TermVectorFieldType);
+        }
+    }
+
+    public class TermVectors extends Collector {
+        private int docBase;
+        private TermsEnum termsEnum;
+        private Class kind;     
+        private String field;
+        private IndexReader reader;
+        private int numDocs;
+        private Map<String, Set> counts;
+        private List<Map> docs;
+        private List<Map> terms;
+        private Class idType;
+        
+        TermVectors (Class kind, String field) throws IOException {
+            this.kind = kind;
+            this.field = field;
+
+            idType = String.class;
+            for (Field f : kind.getFields()) {
+                if (null != f.getAnnotation(Id.class)) {
+                    idType = f.getType();
+                    break;
+                }
+            }
+            
+            IndexSearcher searcher = getSearcher ();        
+            this.reader = searcher.getIndexReader();
+
+            docs = new ArrayList<Map>();            
+            counts = new TreeMap<String, Set>();                    
+            TermQuery tq = new TermQuery
+                (new Term (FIELD_KIND, kind.getName()));            
+            searcher.search(tq, this);
+            
+            terms = new ArrayList<Map>();
+            for (Map.Entry<String, Set> me : counts.entrySet()) {
+                Map map = new HashMap ();
+                map.put("term", me.getKey());
+                map.put("docs", me.getValue().toArray(new Object[0]));
+                terms.add(map);
+            }
+            counts = null;
+        }
+        
+        public void setScorer (Scorer scorer) {
+        }
+        
+        public boolean acceptsDocsOutOfOrder () { return true; }
+        public void collect (int doc) {
+            int docId = docBase + doc;
+            try {
+                Terms docterms = reader.getTermVector(docId, field);
+                if (docterms != null) {
+                    Document d = reader.document(docId);                    
+                    Object id = d.get(kind.getName()+"._id");
+                    if (Long.class.isAssignableFrom(idType)) {
+                        try {
+                            id = Long.parseLong(id.toString());
+                        }
+                        catch (NumberFormatException ex) {
+                            Logger.error("Bogus id: "+id, ex);
+                        }
+                    }
+                    
+                    //Logger.debug("+++++ doc "+docId+" +++++");
+                    List<String> terms = new ArrayList<String>();
+                    for (TermsEnum en = docterms.iterator(termsEnum);
+                         en.next() != null;) {
+                        String term = en.term().utf8ToString();
+                        Set docs = counts.get(term);
+                        if (docs == null) {
+                            counts.put(term, docs = new HashSet ());
+                        }
+                        docs.add(id);
+                        terms.add(term);
+                    }
+                    
+                    Map map = new HashMap ();
+                    map.put("doc", id);
+                    map.put("terms", terms.toArray(new String[0]));
+                    docs.add(map);
+                }
+                else {
+                    //Logger.debug("No term vector for field \""+field+"\"!");
+                }
+                ++numDocs;
+            }
+            catch (IOException ex) {
+                ex.printStackTrace();
+            }
+        }
+        
+        public void setNextReader (AtomicReaderContext ctx) {
+            docBase = ctx.docBase;
+        }
+        
+        public Class getKind () { return kind; }
+        public List<Map> getTerms () { return terms; }
+        public List<Map> getDocs () { return docs; }    
+        public String getField () { return field; }
+        public int getNumDocs () { return numDocs; }
+        public int getNumDocsWithTerms () { return docs.size(); }
+        public int getNumTerms () { return terms.size(); }
+    }
     
     public static class FV {
         String label;
@@ -884,6 +1003,11 @@ public class TextIndexer {
         return filter (options, getTermsFilter (subset));
     }
 
+    public TermVectors getTermVectors (Class kind, String field)
+        throws IOException {
+        return new TermVectors (kind, field);
+    }
+    
     public SearchResult range (SearchOptions options, String field,
                                Integer min, Integer max)
         throws IOException {
@@ -1475,7 +1599,8 @@ public class TextIndexer {
                 facetsConfig.setRequireDimCount(facetLabel, true);
                 ixFields.add(new FacetField (facetLabel, facetValue));
                 // allow searching of this field
-                ixFields.add(new TextField (facetLabel, facetValue, NO));
+                //ixFields.add(new TextField (facetLabel, facetValue, NO));
+                ixFields.add(new TermVectorField (facetLabel, facetValue));
                 // all dynamic facets are suggestable???
                 suggestField (facetLabel, facetValue);
             }
@@ -1648,12 +1773,18 @@ public class TextIndexer {
                 else {
                     fields.add(new FacetField (dim, text));
                 }
+                fields.add(new TermVectorField (dim, text));
             }
 
             if (indexable.suggest()) {
                 // also index the corresponding text field with the 
                 //   dimension name
-                fields.add(new TextField (dim, text, NO));
+                //fields.add(new TextField (dim, text, NO));
+                if (indexable.facet() || indexable.taxonomy()) {
+                }
+                else {
+                    fields.add(new TermVectorField (dim, text));
+                }
                 suggestField (dim, text);
             }
 
@@ -1753,6 +1884,10 @@ public class TextIndexer {
             }
         }
         return sb.toString();
+    }
+
+    public JsonNode getFacetsConfig () {
+        return setFacetsConfig (facetsConfig);
     }
 
     static FacetsConfig getFacetsConfig (JsonNode node) {

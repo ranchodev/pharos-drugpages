@@ -812,6 +812,7 @@ public class IDGApp extends App implements Commons {
             for (Value v : t.getProperties()) {
                 if (v.label.equals(IMPC_TERM)) nt++;
             }
+            t.getSynonyms();
             tmp.add(new Object[]{t, nt});
         }
         Collections.sort(tmp, new Comparator<Object[]>() {
@@ -2130,9 +2131,11 @@ public class IDGApp extends App implements Commons {
         };
 
     public static String getGeneSymbol(Target t) {
-        for (Keyword kw : t.getSynonyms()) {
-            if (kw.label.equals(UNIPROT_GENE))
-                return kw.term;
+        if (t != null) {
+            for (Keyword kw : t.synonyms) {
+                if (kw.label.equals(UNIPROT_GENE))
+                    return kw.term;
+            }
         }
         return null;
     }

@@ -113,7 +113,8 @@ public class App extends Authentication {
         play.Play.application()
         .configuration().getString("ix.structure.renderer.format");
     
-    public static final int FACET_DIM = 100;
+    public static final int FACET_DIM = Play.application()
+        .configuration().getInt("ix.text.facet.dim", 100);
     public static final int MAX_SEARCH_RESULTS = 1000;
 
     public static final TextIndexer _textIndexer = 
@@ -714,7 +715,19 @@ public class App extends Authentication {
     }
         
     public static SearchResult getSearchFacets (final Class kind) {
-        return getSearchFacets (kind, FACET_DIM);
+        Http.Request req = request ();
+        int fdim = FACET_DIM;
+        if (req != null) {
+            String q = req.getQueryString("fdim");
+            if (q != null) {
+                try {
+                    fdim = Integer.parseInt(q);
+                }
+                catch (NumberFormatException ex) {
+                }
+            }
+        }
+        return getSearchFacets (kind, fdim);
     }
     
     public static SearchResult getSearchFacets (final Class kind,

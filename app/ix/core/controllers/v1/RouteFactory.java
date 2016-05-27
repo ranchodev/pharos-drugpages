@@ -148,7 +148,7 @@ public class RouteFactory extends Controller {
         Logger.warn("Context {} has not method count()",context);
         return badRequest ("Unknown Context: \""+context+"\"");
     }
-
+    
     public static Result search (String context, String q, 
                                  int top, int skip, int fdim) {
         Class factory = _registry.get(context);
@@ -160,6 +160,16 @@ public class RouteFactory extends Controller {
         return badRequest ("Unknown Context: \""+context+"\"");
     }
 
+    public static Result termVectors (String context, String field) {
+        Class factory = _registry.get(context);
+        if (factory != null) {
+            NamedResource res = 
+                (NamedResource)factory.getAnnotation(NamedResource.class);
+            return SearchFactory.termVectors(res.type(), field);
+        }
+        return badRequest ("Unknown Context: \""+context+"\"");
+    }
+    
     public static Result get (String context, Long id, String expand) {
         try {
             Method m = getMethod (context, "get", Long.class, String.class);
