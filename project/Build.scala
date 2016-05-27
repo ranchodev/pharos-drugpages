@@ -144,7 +144,9 @@ public class BuildInfo {
       libraryDependencies += "org.webjars" % "fabric.js" % "1.4.12",
       libraryDependencies += "org.webjars" % "datatables" % "1.10.10",
       libraryDependencies += "org.webjars" % "datatables-plugins" % "1.10.9-1",
-      javacOptions ++= javaBuildOptions
+      libraryDependencies += "org.webjars" % "highcharts" % "4.2.5",
+
+        javacOptions ++= javaBuildOptions
       //javaOptions in Runtime += "-Dconfig.resource=pharos.conf"
   ).dependsOn(ncats).aggregate(ncats)
 

@@ -12,21 +12,17 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import controllers.AssetsBuilder;
-import ix.core.controllers.EntityFactory;
-import ix.core.controllers.KeywordFactory;
-import ix.core.controllers.PayloadFactory;
-import ix.core.controllers.PredicateFactory;
-import ix.core.controllers.PublicationFactory;
+import ix.core.controllers.*;
 import ix.core.controllers.search.SearchFactory;
 import ix.core.models.*;
 import ix.core.plugins.IxCache;
 import ix.core.plugins.ThreadPoolPlugin;
 import ix.core.search.SearchOptions;
 import ix.core.search.TextIndexer;
+import ix.idg.models.Assay;
 import ix.idg.models.Disease;
 import ix.idg.models.Ligand;
 import ix.idg.models.Target;
-import ix.idg.models.Assay;
 import ix.ncats.controllers.App;
 import ix.seqaln.SequenceIndexer;
 import ix.utils.Util;
@@ -785,27 +781,16 @@ public class IDGApp extends App implements Commons {
         return ok(ix.idg.views.html.pmscore.render("Jensen Pubmed Score"));
     }
 
-    //@Cached(key="_impc", duration = Integer.MAX_VALUE)
-    public static Result impc() {
-        List<Target> targets = TargetFactory.getTargets(100000, 0, "properties.label='IMPC Term'");
-        // get count of each IMPC term
-        Map<String,Integer> termCounts = new HashMap<String,Integer>();
-        for (Target t : targets) {
-            List<Value> values = t.getProperties();
-            for (Value v : values) {
-                if (v.label.equals(IMPC_TERM)) {
-                    String term = (String) v.getValue();
-                    int n = 1;
-                    if (termCounts.containsKey(term))
-                      n = termCounts.get(term)+1;
-                    termCounts.put(term, n);
-                }
-            }
-        }
+    @Cached(key="_impc", duration = Integer.MAX_VALUE)
+    public static Result impc() throws IOException {
+
+        Map<String, Integer> termCounts = _textIndexer.getFacetLabelCounts(IMPC_TERM);
 
         // count terms for each target
-        QueryIterator<Target> it = TargetFactory.finder.findIterate();
+//        QueryIterator<Target> it = TargetFactory.finder.findIterate();
         List<Object[]> tmp = new ArrayList<Object[]>();
+        List<Target> targets = TargetFactory.finder.all();
+        Iterator<Target> it = targets.iterator();
         while (it.hasNext()) {
             Target t = it.next();
             int nt = 0;
@@ -829,6 +814,7 @@ public class IDGApp extends App implements Commons {
             targetCounts.put((Target) o[0], (Integer) o[1]);
             if (n++ > 10) break;
         }
+
 
 
         return ok(ix.idg.views.html.impc.render("IMPC Associated Data in IDG",
