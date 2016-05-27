@@ -1,5 +1,6 @@
 @import ix.idg.models.Target
 @import ix.idg.controllers.IDGApp
+@import ix.idg.controllers.Commons._
 
 @(title: String, termCounts: Map[String,Integer], targetCounts: Map[Target,Integer], targets: List[Target])
 
@@ -120,7 +121,7 @@
 
         var targetset = [
             @for(key <- targetCounts.keySet()) {
-                { term : '@key.getSynonym(Commons.UNIPROT_GENE).term', count: @targetCounts.get(key) },
+                { term : '@key.getSynonym(UNIPROT_GENE).term', count: @targetCounts.get(key) },
             }
         ];
         targetset = _.first(_.sortBy ( targetset, function(x) { return -1* x.count; } ), 10) ;

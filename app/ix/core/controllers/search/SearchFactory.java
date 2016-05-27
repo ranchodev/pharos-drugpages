@@ -207,12 +207,12 @@ public class SearchFactory extends EntityFactory {
         try {
             TextIndexer.TermVectors tv = _indexer.getTermVectors(kind, field);
             EntityMapper mapper = new EntityMapper ();
-
+            /*
             File f = new File ("tv.json");
             PrintStream ps = new PrintStream (new FileOutputStream (f));
             ps.print(mapper.toJson(tv, true));
             ps.close();
-
+            */
             return ok (mapper.valueToTree(tv));
         }
         catch (IOException ex) {
