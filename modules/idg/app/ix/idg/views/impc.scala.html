@@ -103,7 +103,7 @@
                                 var obj = _.findWhere(dataset, {term:this.value} );
                                 var link = undefined;
                                 if (obj.kind == 'phenotype')
-                                    link =  obj.href;
+                                    link =  '/idg/targets?facet=IMPC+Term/'+this.value.replace(/ /g, "+");
                                 else if (obj.kind == 'target')
                                     link = '/idg/targets/'+obj.tid;
                                 return '<a href="'+link+'" target="_top">'+ this.value +'</a>';
