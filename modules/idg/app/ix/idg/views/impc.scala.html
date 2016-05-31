@@ -106,7 +106,12 @@
                                     link =  '/idg/targets?facet=IMPC+Term/'+this.value.replace(/ /g, "+");
                                 else if (obj.kind == 'target')
                                     link = '/idg/targets/'+obj.tid;
-                                return '<a href="'+link+'" target="_top">'+ this.value +'</a>';
+                                else if (obj.kind == 'tdl')
+                                    link = '/idg/targets?facet=Data+Source/IMPC&facet=IDG+Development+Level/'+obj.term;
+                                else if (obj.kind == 'tfam')
+                                    link = '/idg/targets?facet=Data+Source/IMPC&facet=IDG+Target+Family/'+obj.term;
+
+                            return '<a href="'+link+'" target="_top">'+ this.value +'</a>';
                             },
                             useHTML:true,
                             overflow:'justify',
@@ -151,11 +156,26 @@
                 { term : '@key.getSynonym(Commons.UNIPROT_GENE).term',
                   count: @targetCounts.get(key),
                   tid: '@IDGApp.getId(key)',
+                  tdl: '@key.idgTDL',
+                  family: '@key.idgFamily',
                   kind: 'target'
                 },
             }
         ];
         targetset = _.chain(targetset ).sortBy('term' ).sortBy ( function(x) { return -1* x.count; } ).value() ;
+
+        var tdlset = _.map(_.groupBy(targetset, 'tdl'), function(o,k){
+            var fullCount = _.reduce(o, function(memo,value) {
+                return value.count + memo;
+            }, 0);
+            return {term: k, count: fullCount, kind: 'tdl'};
+        });
+        var tfamset = _.map(_.groupBy(targetset, 'family'), function(o,k){
+            var fullCount = _.reduce(o, function(memo,value) {
+                return value.count + memo;
+            }, 0);
+            return {term: k, count: fullCount, kind: 'tfam'};
+        });
 
         var dataset =[
             @for(key <- termCounts.keySet()) {
@@ -167,8 +187,11 @@
         ] ;
         dataset = _.first(_.chain(dataset ).sortBy('term' ).sortBy ( function(x) { return -1* x.count; } ).value(), 10);
 
+
         makeBarChart("#hist-term", dataset, 'No. Targets by Phenotype', 'Number of Targets');
         makeBarChart("#hist-targets", targetset, 'No. Phenotypes by Target', 'Number of phenotypes');
+        makeBarChart("#hist-tdl", tdlset, 'No. Phenotypes by TDL', 'Number of phenotypes');
+        makeBarChart("#hist-tfam", tfamset, 'No. Phenotypes by Target Family', 'Number of phenotypes');
 
         });
         </script>
@@ -198,6 +221,15 @@
                 <div class="col-md-6" id="hist-targets">
 
                 </div>
+            </div>
+            <div class="row">
+                <div class="col-md-6" id="hist-tdl">
+
+                </div>
+                <div class="col-md-6" id="hist-tfam">
+
+                </div>
+
             </div>
         </div>
     </body>
