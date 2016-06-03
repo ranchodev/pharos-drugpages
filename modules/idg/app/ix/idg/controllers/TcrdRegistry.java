@@ -481,6 +481,11 @@ public class TcrdRegistry extends Controller implements Commons {
                                 "http://www.ncbi.nlm.nih.gov/gene/"+value);
                 target.addIfAbsent(kw);
 
+                kw = KeywordFactory.registerIfAbsent
+                        (DTO_ID, value = rset.getString("dtoid"),
+                                "http://drugtargetontology.org/"+value);
+                target.addIfAbsent(kw);
+
                 Text seq = new Text (UNIPROT_SEQUENCE, rset.getString("seq"));
                 seq.save();
                 
