@@ -1689,7 +1689,7 @@ public class IDGApp extends App implements Commons {
         }
         return new Keyword[0];
     }
-    
+
     public static Keyword[] _getAncestry (String facet, String predicate) {
         List<Keyword> ancestry = new ArrayList<Keyword>();
         String[] toks = facet.split("/");
@@ -2124,6 +2124,16 @@ public class IDGApp extends App implements Commons {
                 return _getLigandResult (ligands);
             }
         };
+
+    public static String getDTOId(Target t) {
+        if (t != null) {
+            for (Keyword kw : t.synonyms) {
+                if (kw.label.equals(DTO_ID))
+                    return kw.term;
+            }
+        }
+        return null;
+    }
 
     public static String getGeneSymbol(Target t) {
         if (t != null) {
