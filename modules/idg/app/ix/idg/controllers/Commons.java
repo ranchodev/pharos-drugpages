@@ -66,7 +66,8 @@ public interface Commons {
     public static final String PANTHER_PROTEIN_CLASS = "PANTHER Protein Class";
     public static final String PANTHER_PROTEIN_ANCESTRY =
         "PANTHER Protein Ancestry";
-    
+
+    public static final String DTO_ID = "DTO ID";
     public static final String DTO_PROTEIN_CLASS = "DTO Protein Class";
     public static final String DTO_PROTEIN_ANCESTRY = "DTO Protein Ancestry";
     

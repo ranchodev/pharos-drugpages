@@ -736,7 +736,10 @@ This is TCRD target <a href='@ix.core.controllers.v1.routes.RouteFactory.get("ta
          <div class="panel panel-default">
              <a name="tinx" tocname="TINX"></a>
             <div class="panel-heading">
-                <h3 class="panel-title">TINX Plot</h3>
+                <h3 class="panel-title">TINX Plot <a href="http://dev.newdrugtargets.org/?target=@IDGApp.getDTOId(target).replace("_","")">
+                    <span class="fa fa-external-link pull-right" aria-hidden="true"></span></a>
+
+                </h3>
             </div>
             <div class="panel-body">
                 <div id="tinx-plot"></div>
@@ -803,8 +806,8 @@ This is TCRD target <a href='@ix.core.controllers.v1.routes.RouteFactory.get("ta
              <a name="expression" tocname="Gene/Protein Expression"></a>
             <div class="panel-heading">
                <h3 class="panel-title">Expression
-                       <a class="btn btn-default" href="@ix.idg.controllers.routes.IDGApp.help()#expression" role="button" style="margin-right:1px; margin-left:1px;">
-                           <i class="fa fa-info-circle fa-sm "></i></a>
+                       <a href="@ix.idg.controllers.routes.IDGApp.help()#expression"  style="margin-right:1px; margin-left:1px;">
+                           <span class="fa fa-info-circle fa-sm pull-right"></span></a>
                </h3>
             </div>
 	    <div class="panel-body">
@@ -1336,6 +1339,7 @@ role="dialog" aria-labelledby="modalLabelFolder" aria-hidden="true">
     visibility:inherit;
     }
     </style>
+    <script src='@routes.WebJarAssets.at(WebJarAssets.locate("highcharts.js"))' type='text/javascript'></script>
     <script type="text/javascript" src='@routes.Assets.at("javascripts/d3.js")'></script>
     <script type="text/javascript" src='@routes.Assets.at("javascripts/tinx.js")'></script>
     <script type="text/javascript" src='@routes.Assets.at("javascripts/d3-tip.js")'></script>

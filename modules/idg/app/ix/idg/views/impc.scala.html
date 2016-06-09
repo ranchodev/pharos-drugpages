@@ -1,8 +1,9 @@
 @import ix.idg.models.Target
+@import ix.idg.controllers.Commons
 @import ix.idg.controllers.IDGApp
-@import ix.idg.controllers.Commons._
+@import ix.core.models.Keyword
 
-@(title: String, termCounts: Map[String,Integer], targetCounts: Map[Target,Integer], targets: List[Target])
+@(title: String, termCounts: Map[Keyword,Integer], targetCounts: Map[Target,Integer])
 
 <!DOCTYPE html>
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
@@ -89,13 +90,33 @@
             var makeBarChart = function(selector, dataset, title, ytitle) {
                 $(selector ).highcharts({
                     chart: {
-                        type: 'column'
+                        type: 'bar'
                     },
+                    credits: { enabled: false },
                     title: {
                         text: title
                     },
                     xAxis: {
-                        categories: _.pluck(dataset, 'term')
+                        categories: _.pluck(dataset, 'term'),
+                        labels: {
+                            formatter: function() {
+                                var obj = _.findWhere(dataset, {term:this.value} );
+                                var link = undefined;
+                                if (obj.kind == 'phenotype')
+                                    link =  '/idg/targets?facet=IMPC+Term/'+this.value.replace(/ /g, "+");
+                                else if (obj.kind == 'target')
+                                    link = '/idg/targets/'+obj.tid;
+                                else if (obj.kind == 'tdl')
+                                    link = '/idg/targets?facet=Data+Source/IMPC&facet=IDG+Development+Level/'+obj.term;
+                                else if (obj.kind == 'tfam')
+                                    link = '/idg/targets?facet=Data+Source/IMPC&facet=IDG+Target+Family/'+obj.term;
+
+                            return '<a href="'+link+'" target="_top">'+ this.value +'</a>';
+                            },
+                            useHTML:true,
+                            overflow:'justify',
+                        //align: 'center'
+                        }
                     },
                     yAxis: {
                         title: {text: ytitle}
@@ -105,6 +126,17 @@
                         name:'',
                         data: _.pluck(dataset, 'count')
                     }],
+                    tooltip: {
+                        formatter: function() {
+                            var obj = _.findWhere(dataset, {term:this.x});
+                            if (obj.kind == 'target') {
+                                return '<a href="/idg/targets/'+obj.tid+'"><b>' + this.x + "</b>" ;
+                            } else if (obj.kind == 'phenotype') {
+                                return '<b>' + this.x + "</b>" ;
+                            } else return '<b>' + this.x + "</b>" ;
+                            return 'XXX';
+                        }
+                    },
                     plotOptions:{
                         column: {
                             animation:false
@@ -121,20 +153,45 @@
 
         var targetset = [
             @for(key <- targetCounts.keySet()) {
-                { term : '@key.getSynonym(UNIPROT_GENE).term', count: @targetCounts.get(key) },
+                { term : '@key.getSynonym(Commons.UNIPROT_GENE).term',
+                  count: @targetCounts.get(key),
+                  tid: '@IDGApp.getId(key)',
+                  tdl: '@key.idgTDL',
+                  family: '@key.idgFamily',
+                  kind: 'target'
+                },
             }
         ];
-        targetset = _.first(_.sortBy ( targetset, function(x) { return -1* x.count; } ), 10) ;
+        targetset = _.chain(targetset ).sortBy('term' ).sortBy ( function(x) { return -1* x.count; } ).value() ;
+
+        var tdlset = _.map(_.groupBy(targetset, 'tdl'), function(o,k){
+            var fullCount = _.reduce(o, function(memo,value) {
+                return value.count + memo;
+            }, 0);
+            return {term: k, count: fullCount, kind: 'tdl'};
+        });
+        var tfamset = _.map(_.groupBy(targetset, 'family'), function(o,k){
+            var fullCount = _.reduce(o, function(memo,value) {
+                return value.count + memo;
+            }, 0);
+            return {term: k, count: fullCount, kind: 'tfam'};
+        });
 
         var dataset =[
-            @for(entry <- termCounts.entrySet()) {
-                { term : '@entry.getKey()', count: @entry.getValue() },
+            @for(key <- termCounts.keySet()) {
+                { term : '@key.term',
+                  count: @termCounts.get(key),
+                  href: '@key.href',
+                  kind: 'phenotype' },
             }
         ] ;
-        dataset = _.first(_.sortBy ( dataset, function(x) { return -1* x.count; } ), 10);
+        dataset = _.first(_.chain(dataset ).sortBy('term' ).sortBy ( function(x) { return -1* x.count; } ).value(), 10);
 
-        makeBarChart("#hist-term", dataset, 'IMPC Phenotype Frequencies', 'Frequency');
-        makeBarChart("#hist-targets", targetset, 'IMPC Phenotypes by Target', 'Number of phenotypes');
+
+        makeBarChart("#hist-term", dataset, 'No. Targets by Phenotype', 'Number of Targets');
+        makeBarChart("#hist-targets", targetset, 'No. Phenotypes by Target', 'Number of phenotypes');
+        makeBarChart("#hist-tdl", tdlset, 'No. Phenotypes by TDL', 'Number of phenotypes');
+        makeBarChart("#hist-tfam", tfamset, 'No. Phenotypes by Target Family', 'Number of phenotypes');
 
         });
         </script>
@@ -164,6 +221,15 @@
                 <div class="col-md-6" id="hist-targets">
 
                 </div>
+            </div>
+            <div class="row">
+                <div class="col-md-6" id="hist-tdl">
+
+                </div>
+                <div class="col-md-6" id="hist-tfam">
+
+                </div>
+
             </div>
         </div>
     </body>
