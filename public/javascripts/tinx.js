@@ -9,6 +9,8 @@ function unhighlightTargetTable(elem) {
 
 
 function _tinx_target_plot2(json, selector) {
+    if (!json) return;
+    
     console.log(json);
     var seriesData = _.map(json.importances, function (elem) {
         return ({

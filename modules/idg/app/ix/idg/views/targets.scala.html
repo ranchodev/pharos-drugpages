@@ -11,7 +11,7 @@ facets: Array[FacetDecorator], targets: List[Target], ctx: String )
 @tabrow(t: Target) = {
     <tr id="row-@IDGApp.getId(t)">
         <td><input type="checkbox" class="cb-table-row" id="cb-@IDGApp.getId(t)" /></td>
-        <td><a id='load' onclick="showLoadModal()" 
+        <td><a id='load' onclick="showLoadModal()"
 	   href="@ix.idg.controllers.routes.IDGApp.target(IDGApp.getId(t))">@t.name</a></td>
 	<td>@defining(t.getSynonym(UNIPROT_GENE)) { gene =>
 	  @if(gene != null && gene.term != null) {
@@ -171,7 +171,7 @@ facets: Array[FacetDecorator], targets: List[Target], ctx: String )
 } {
  @targetcarousel(ctx)
 }
-
+<div id="page-loader"></div>
 <div class="modal fade" tabindex="-1" role="dialog" id="loadmodal"
      aria-labelledby="mySmallModalLabel" aria-hidden="true">
   <div class="modal-dialog modal-sm">
@@ -318,10 +318,11 @@ role="dialog" aria-labelledby="modalLabelFolder" aria-hidden="true">
     <link type="text/css" rel="stylesheet" href='@routes.Assets.at("stylesheets/clustergram.css")' />
     <link type="text/css" rel="stylesheet" href='@routes.Assets.at("stylesheets/radar-chart.css")' />
     <link type="text/css" rel="stylesheet" href='@routes.WebJarAssets.at(WebJarAssets.locate("morris.css"))' />
-    <link type="text/css" rel="stylesheet" href='@routes.Assets.at("stylesheets/main.css")'/>
+    <link type="text/css" rel="stylesheet" href='@routes.Assets.at("ncats/css/loader.css")'/>        
+    <link type="text/css" rel="stylesheet" href='@routes.Assets.at("stylesheets/main.css")'/>    
 </head>
-
 <script>
+
 $(function() {
    $('[data-toggle="popover"]').popover();
    $('[data-toggle="tooltip"]').tooltip ();
@@ -370,11 +371,16 @@ function download () {
 
    timer = window.setInterval(check, delay);
 }
-
+			      
+			      
 var _cart_selectType = "selected";
 
 $(document).ready(function () {
-
+    $(window).load(function() {
+       // Animate loader off screen
+    
+    });
+	
     /*
     $(".facet-panel-body" ).each(function() {
         $(this ).toggle();
@@ -584,12 +590,15 @@ $(document).ready(function () {
 });
 
 function showLoadModal () {
-  console.log('showing modal...');
+   //console.log('showing modal...');
+   $('#page-loader').addClass('loader-wait');
+  /*
   $('#loadmodal').modal({
       keyboard: false,
       show: true,
       backdrop: 'static'
-    });
+			      });
+  */
 }
 
 $(window).unload(function () {

@@ -34,6 +34,7 @@ current, rows, total, pages, facets){ @ligandmenu() }{
 </ol>
     @inprogress("ligands")
 }{
+<div id="page-loader"></div>
 <div id="grid-gallery" class="grid-gallery">
   <section class="grid-wrap">
     <ul class="grid">
@@ -101,6 +102,7 @@ current, rows, total, pages, facets){ @ligandmenu() }{
   <link rel="stylesheet" type="text/css" href='@routes.Assets.at("GridGallery/css/demo.css")'/>
   *@
   <link rel="stylesheet" type="text/css" href='@routes.Assets.at("GridGallery/css/component.css")'/>
+  <link type="text/css" rel="stylesheet" href='@routes.Assets.at("ncats/css/loader.css")'/>          
   <link type="text/css" rel="stylesheet" href='@routes.Assets.at("stylesheets/main.css")'/>  
   <script src='@routes.Assets.at("GridGallery/js/modernizr.custom.js")'></script>
   <script src='@routes.Assets.at("GridGallery/js/imagesloaded.pkgd.min.js")'></script>
@@ -115,4 +117,8 @@ $(function () {
   $('[data-toggle="popover"]').popover();
   $('[data-toggle="tooltip"]').tooltip();
 });
+
+function showLoadModal () {
+   $('#page-loader').addClass('loader-wait');
+}
 </script>

@@ -349,7 +349,7 @@ public class IDGApp extends App implements Commons {
                 return url.toString();
             }
             else if (name.equals(IDG_TARGET) || name.equals(UNIPROT_GENE)) {
-                return "<a href='"+routes.IDGApp.target(label)+"'>"+label+"</a>";
+                return "<a href='"+routes.IDGApp.target(label)+"' onclick='showLoadModal()'>"+label+"</a>";
             }
             else if (name.equals(IDG_DISEASE)) {
                 return "<a href='"+routes.IDGApp.disease(label)+"'>"
