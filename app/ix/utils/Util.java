@@ -1,5 +1,6 @@
 package ix.utils;
 
+import java.io.*;
 import java.util.*;
 import java.util.zip.GZIPInputStream;
 import java.util.zip.ZipEntry;
@@ -91,6 +92,14 @@ public class Util {
         return null;
     }
 
+    public static byte[] serialize (Object obj) throws IOException {
+        ByteArrayOutputStream bos = new ByteArrayOutputStream ();
+        ObjectOutputStream oos = new ObjectOutputStream (bos);
+        oos.writeObject(obj);
+        oos.close();
+        return bos.toByteArray();
+    }
+    
     private Util () {
     }
 

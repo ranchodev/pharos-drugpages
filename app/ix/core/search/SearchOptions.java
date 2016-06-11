@@ -6,7 +6,7 @@ import java.util.Map;
 import java.util.ArrayList;
 import java.util.Iterator;
 
-public class SearchOptions {
+public class SearchOptions implements java.io.Serializable {
     public static final int DEFAULT_TOP = 10;
     public static final int DEFAULT_FDIM = 10;
     // default number of elements to fetch while blocking

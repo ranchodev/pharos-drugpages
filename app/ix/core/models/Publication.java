@@ -16,7 +16,7 @@ import java.util.List;
 
 @Entity
 @Table(name="ix_core_publication")
-public class Publication extends Model {
+public class Publication extends Model implements java.io.Serializable {
     @Id
     public Long id; // internal id
 

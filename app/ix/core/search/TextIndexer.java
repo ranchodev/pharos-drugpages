@@ -218,7 +218,7 @@ public class TextIndexer {
         public int getNumTerms () { return terms.size(); }
     }
     
-    public static class FV {
+    public static class FV implements java.io.Serializable {
         String label;
         Integer count;
 
@@ -234,7 +234,7 @@ public class TextIndexer {
         boolean accepted (FV fv);
     }
 
-    public static class Facet {
+    public static class Facet implements java.io.Serializable {
         String name;
         List<FV> values = new ArrayList<FV>();
 
@@ -313,8 +313,7 @@ public class TextIndexer {
         }
     }
 
-    public static class SearchResult {
-        SearchContextAnalyzer searchAnalyzer = new GinasSearchAnalyzer();
+    public static class SearchResult implements java.io.Serializable {
 
         String key;
         String query;
@@ -396,23 +395,11 @@ public class TextIndexer {
         public boolean finished () { return stop.get() >= timestamp; }
         
         public SearchContextAnalyzer getSearchContextAnalyzer(){
-            return searchAnalyzer;
+            return null;
         }
 
         protected void add (Object obj) {
             matches.add(obj);
-            //Logger.debug("added" + matches.size());
-            //          long start=System.currentTimeMillis();
-            if(query!=null && query.length()>0){
-                if (matches.size() < Play.application().configuration()
-                    .getInt("ix.ginas.maxanalyze", 100)) {
-                    if (Play.application().configuration()
-                        .getBoolean("ix.ginas.textanalyzer", false)) {
-                        searchAnalyzer.updateFieldQueryFacets(obj, query);
-                    }
-                }
-            }
-            //          Logger.debug("############## analyzed:" + (System.currentTimeMillis()-start) + " ms");
         }
         
         protected void done () {

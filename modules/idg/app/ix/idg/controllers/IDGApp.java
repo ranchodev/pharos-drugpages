@@ -201,7 +201,7 @@ public class IDGApp extends App implements Commons {
         }
     }
 
-    public static class GeneRIF implements Comparable<GeneRIF> {
+    public static class GeneRIF implements Comparable<GeneRIF>, Serializable {
         public Long pmid;       
         public String text;
 
@@ -218,7 +218,7 @@ public class IDGApp extends App implements Commons {
     }
     
     public static class DiseaseRelevance
-        implements Comparable<DiseaseRelevance> {
+        implements Comparable<DiseaseRelevance>, Serializable {
         public Disease disease;
         public Double zscore;
         public Double conf;
@@ -242,7 +242,7 @@ public class IDGApp extends App implements Commons {
         }
     }
 
-    public static class LigandActivity {
+    public static class LigandActivity implements Serializable {
         public final Target target;
         public final List<VNum> activities = new ArrayList<VNum>();
         public String mechanism;
@@ -260,7 +260,7 @@ public class IDGApp extends App implements Commons {
         }
     }
 
-    public static class DataSource {
+    public static class DataSource implements Serializable {
         final public String name;
         public Integer targets;
         public Integer diseases;
@@ -460,14 +460,15 @@ public class IDGApp extends App implements Commons {
                     });
             double elapsed = (System.currentTimeMillis()-start)*1e-3;
             Logger.debug("Elapsed time "+String.format("%1$.3fs", elapsed)
-                         +" to retrieve "+e.size()+" matches for "+name);
+                         +" to retrieve "+(e!=null?e.size():-1)
+                         +" matches for "+name);
             return e;
         }
         
         public Result get (final String name) {
             try {
                 List<T> e = find (name);
-                if (e.isEmpty()) {
+                if (e == null || e.isEmpty()) {
                     return _notFound ("Unknown name: "+name);
                 }
                 return result (e);

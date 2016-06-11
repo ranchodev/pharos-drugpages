@@ -1,6 +1,8 @@
 package ix.core.plugins;
 
+import java.io.*;
 import java.util.List;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.ArrayList;
 import java.util.concurrent.Callable;
@@ -14,9 +16,38 @@ import net.sf.ehcache.CacheManager;
 import net.sf.ehcache.Element;
 import net.sf.ehcache.config.CacheConfiguration;
 import net.sf.ehcache.Statistics;
+import net.sf.ehcache.Status;
+import net.sf.ehcache.Ehcache;
+import net.sf.ehcache.CacheEntry;
+import net.sf.ehcache.config.Configuration;
+import net.sf.ehcache.config.CacheConfiguration;
+import net.sf.ehcache.config.PersistenceConfiguration;
+import net.sf.ehcache.writer.CacheWriter;
+import net.sf.ehcache.writer.AbstractCacheWriter;
+import net.sf.ehcache.loader.CacheLoader;
+import net.sf.ehcache.constructs.blocking.CacheEntryFactory;
+import net.sf.ehcache.constructs.blocking.SelfPopulatingCache;
+import net.sf.ehcache.writer.writebehind.operations.SingleOperationType;
+import net.sf.ehcache.event.CacheEventListenerAdapter;
 
-public class IxCache extends Plugin {
+import org.apache.lucene.index.*;
+import org.apache.lucene.store.*;
+import org.apache.lucene.search.*;
+import org.apache.lucene.analysis.core.KeywordAnalyzer;
+import org.apache.lucene.analysis.standard.StandardAnalyzer;
+import org.apache.lucene.util.Version;
+import org.apache.lucene.document.Field;
+import org.apache.lucene.document.StringField;
+import org.apache.lucene.document.Document;
+
+import ix.utils.Util;
+
+public class IxCache extends Plugin
+    implements CacheWriter, CacheEntryFactory {
+    
     public static final String CACHE_NAME = "IxCache";
+    static final String KEY = "__key";
+    static final String VALUE = "__value";
     
     static final int MAX_ELEMENTS = 10000;
     static final int TIME_TO_LIVE = 60*60; // 1hr
@@ -27,8 +58,12 @@ public class IxCache extends Plugin {
     public static final String CACHE_TIME_TO_IDLE = "ix.cache.timeToIdle";
 
     private final Application app;
-    private Cache cache;
+    private Ehcache cache;
     private IxContext ctx;
+    
+    protected IndexWriter indexWriter;
+    protected DirectoryReader indexReader;
+    protected IndexSearcher indexSearcher;
 
     static private IxCache _instance;
     
@@ -40,20 +75,50 @@ public class IxCache extends Plugin {
     public void onStart () {
         Logger.info("Loading plugin "+getClass().getName()+"...");
         ctx = app.plugin(IxContext.class);
-        
+
         int maxElements = app.configuration()
             .getInt(CACHE_MAX_ELEMENTS, MAX_ELEMENTS);
-        CacheConfiguration config =
-            new CacheConfiguration (CACHE_NAME, maxElements)
+        cache = new SelfPopulatingCache
+            (CacheManager.getInstance().addCacheIfAbsent(CACHE_NAME), this);
+        cache.getCacheConfiguration()
+            .overflowToOffHeap(true)
+            .maxElementsOnDisk(0)
+            .maxEntriesLocalHeap(maxElements)
             .timeToLiveSeconds(app.configuration()
                                .getInt(CACHE_TIME_TO_LIVE, TIME_TO_LIVE))
             .timeToIdleSeconds(app.configuration()
                                .getInt(CACHE_TIME_TO_IDLE, TIME_TO_IDLE));
-        cache = new Cache (config);
-        CacheManager.getInstance().addCache(cache);     
+        /*
+        cache.getCacheEventNotificationService()
+            .registerListener(new CacheEventListenerAdapter () {
+                    @Override
+                    public void notifyElementPut (Ehcache cache, Element elm) {
+                        Logger.debug("PUT: element="+elm);
+                    }
+                });
+        */
+        cache.registerCacheWriter(this);
+        
+        //CacheManager.getInstance().addCache(cache);     
         cache.setSampledStatisticsEnabled(true);
         _instance = this;
     }
+
+    protected synchronized IndexSearcher getIndexSearcher ()
+        throws IOException {
+        if (indexWriter.hasUncommittedChanges()) {
+            indexWriter.commit();
+            DirectoryReader reader =
+                DirectoryReader.openIfChanged(indexReader, indexWriter, true);
+            if (reader != null) {
+                indexReader.close();
+                indexReader = reader;
+                indexSearcher = new IndexSearcher (reader);
+            }
+        }
+        return indexSearcher;
+    }
+    
 
     @Override
     public void onStop () {
@@ -64,6 +129,16 @@ public class IxCache extends Plugin {
         }
         catch (Exception ex) {
             Logger.trace("Disposing cache", ex);
+        }
+    }
+
+    static protected void put (Element elm) {
+        if (elm.isSerializable()) {
+            _instance.cache.putWithWriter(elm);
+        }
+        else {
+            // not serializable
+            _instance.cache.put(elm);
         }
     }
 
@@ -109,11 +184,15 @@ public class IxCache extends Plugin {
         throws Exception {
         if (_instance == null)
             throw new IllegalStateException ("Cache hasn't been initialized!");
+
         Element elm = _instance.cache.get(key);
-        if (elm == null || elm.getCreationTime() < epoch) {
+        if (elm == null || elm.getObjectValue() == null
+            || elm.getCreationTime() < epoch) {
             T v = generator.call();
-            elm = new Element (key, v);
-            _instance.cache.put(elm);
+            if (v != null || elm == null) {
+                elm = new Element (key, v);
+                IxCache.put (elm);
+            }
         }
         return (T)elm.getObjectValue();
     }
@@ -128,7 +207,7 @@ public class IxCache extends Plugin {
             if (_instance.ctx.debug(2))
                 Logger.debug("IxCache missed: "+key);
             T v = generator.call();
-            _instance.cache.put(new Element (key, v));
+            IxCache.put(new Element (key, v));
             return v;
         }
         return (T)value;
@@ -145,8 +224,7 @@ public class IxCache extends Plugin {
             if (_instance.ctx.debug(2))
                 Logger.debug("IxCache missed: "+key);
             T v = generator.call();
-            _instance.cache.put
-                (new Element (key, v, seconds <= 0, seconds, seconds));
+            IxCache.put(new Element (key, v, seconds <= 0, seconds, seconds));
             return v;
         }
         return (T)value;
@@ -173,14 +251,14 @@ public class IxCache extends Plugin {
     public static void set (String key, Object value) {
         if (_instance == null)
             throw new IllegalStateException ("Cache hasn't been initialized!");
-        _instance.cache.put(new Element (key, value));
+        IxCache.put(new Element (key, value));
     }
 
     public static void set (String key, Object value, int expiration) {
         if (_instance == null)
             throw new IllegalStateException ("Cache hasn't been initialized!");
-        _instance.cache.put
-            (new Element (key, value, expiration <= 0, expiration, expiration));
+        IxCache.put(new Element (key, value,
+                                 expiration <= 0, expiration, expiration));
     }
 
     public static boolean remove (String key) {
@@ -199,5 +277,149 @@ public class IxCache extends Plugin {
         if (_instance == null)
             throw new IllegalStateException ("Cache hasn't been initialized!");
         return _instance.cache.isKeyInCache(key);
+    }
+
+    static String getKey (Serializable key) throws IOException {
+        return Util.toHex(Util.serialize(key));
+    }
+    
+    static Object getValue (Document doc) throws Exception {
+        byte[] data = doc.getBinaryValue(VALUE).bytes;
+        ObjectInputStream ois = new ObjectInputStream
+            (new ByteArrayInputStream (data));
+        return ois.readObject();
+    }
+    
+    /**
+     * CacheEntryFactory interface
+     */
+    public Object createEntry (Object key) throws Exception {
+        if (!(key instanceof Serializable)) {
+            throw new IllegalArgumentException
+                ("Cache key "+key+" is not serliazable!");
+        }
+        
+        String id = getKey ((Serializable)key);
+        IndexSearcher searcher = getIndexSearcher ();
+        TermQuery query = new TermQuery (new Term (KEY, id));           
+        TopDocs hits = searcher.search(query, 1);
+        /*
+        Logger.debug("Retrieving cache for "+id+"..."
+                     +(hits.totalHits > 0)+" key="+key);
+        */
+        Element elm = null;
+        if (hits.totalHits > 0) {
+            try {
+                Document doc = searcher.doc(hits.scoreDocs[0].doc);
+                elm = new Element (key, getValue (doc));
+                cache.put(elm);
+            }
+            catch (Exception ex) {
+                Logger.error("Can't recreate entry for "+key, ex);
+            }
+        }
+        return elm;
+    }
+    
+    /**
+     * CacheWriter interface
+     */
+    static IndexWriter initIndex (File path) throws IOException {
+        Directory dir = new NIOFSDirectory (path);
+        IndexWriterConfig config = new IndexWriterConfig
+            (Version.LATEST, new KeywordAnalyzer ());
+        IndexWriter indexWriter = new IndexWriter (dir, config);
+        Logger.debug("##### initializing cache: "+path
+                     +"; "+indexWriter.numDocs()+" entries! ######");
+        return indexWriter;
+    }
+
+    @Override
+    public void init () {
+        try {
+            indexWriter = initIndex (new File (ctx.cache(), "ix"));
+            indexReader = DirectoryReader.open(indexWriter, true);
+            indexSearcher = new IndexSearcher (indexReader);
+        }
+        catch (IOException ex) {
+            Logger.error("Can't initialize lucene for "+ctx.cache(), ex);
+        }
+    }
+    
+    @Override
+    public void dispose () {
+        try {
+            Logger.debug("#### closing cache writer "+cache.getName()
+                         +"; "+indexWriter.numDocs()+" entries #####");
+            indexReader.close();
+            indexWriter.close();
+        }
+        catch (IOException ex) {
+            Logger.error("Can't close lucene index!", ex);
+        }
+    }
+    
+    @Override
+    public void delete (CacheEntry entry) {
+        Object key = entry.getKey();
+        if (!(key instanceof Serializable))
+            return;
+
+        try {
+            String id = getKey ((Serializable)key);         
+            Term term = new Term (KEY, id);
+            indexWriter.deleteDocuments(term);
+        }
+        catch (Exception ex) {
+            Logger.error("Deleting cache "+key+" from persistence!", ex);
+        }
+    }
+    
+    @Override
+    public void write (Element elm) {
+        Serializable key = elm.getKey();
+        if (key != null) {
+            //Logger.debug("Persisting cache key="+key+" value="+elm.getObjectValue());
+            try {
+                Document doc = new Document ();
+                String id = getKey (key);
+                Field f = new StringField (KEY, id, Field.Store.NO);
+                doc.add(f);
+                doc.add(new Field
+                        (VALUE, Util.serialize(elm.getObjectValue())));
+                indexWriter.addDocument(doc);
+            }
+            catch (Exception ex) {
+                Logger.error("Can't write cache element: key="
+                             +key+" value="+elm.getObjectValue(), ex);
+            }
+        }
+        else {
+            Logger.warn("Key "+elm.getObjectKey()+" isn't serializable!");
+        }
+    }
+
+    @Override
+    public void deleteAll (Collection<CacheEntry> entries) {
+        for (CacheEntry e : entries)
+            delete (e);
+    }
+    
+    @Override
+    public void writeAll (Collection<Element> entries) {
+        for (Element elm : entries)
+            write (elm);
+    }
+
+    @Override
+    public void throwAway (Element elm,
+                           SingleOperationType op, RuntimeException ex) {
+        Logger.error("Throwing away cache element "+elm.getKey(), ex);
+    }
+
+    @Override
+    public CacheWriter clone (Ehcache cache) {
+        throw new UnsupportedOperationException
+            ("This implementation doesn't support clone operation!");
     }
 }
