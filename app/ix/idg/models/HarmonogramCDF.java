@@ -7,7 +7,8 @@ import javax.persistence.Table;
 
 @Entity
 @Table(name = "ix_idg_harmonogram")
-public class HarmonogramCDF extends play.db.ebean.Model {
+public class HarmonogramCDF extends play.db.ebean.Model
+    implements java.io.Serializable {
     @Id
     public Long id;
 

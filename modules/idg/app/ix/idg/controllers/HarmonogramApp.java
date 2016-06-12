@@ -194,6 +194,52 @@ public class HarmonogramApp extends App {
         return kw != null ? kw.term : null;
     }
 
+    static List<Target> getTargets (final String theQuery) {
+        List<Target> ts;
+        switch (theQuery) {
+        case "tdark":
+            ts = TargetFactory.finder
+                .where().eq("idgTDL", Target.TDL.Tdark).findList();
+            break;
+        case "tclin":
+            ts = TargetFactory.finder
+                .where().eq("idgTDL", Target.TDL.Tclin).findList();
+            break;
+        case "tchem":
+            ts = TargetFactory.finder
+                .where().eq("idgTDL", Target.TDL.Tchem).findList();
+                    break;
+        case "tbio":
+            ts = TargetFactory.finder
+                .where().eq("idgTDL", Target.TDL.Tbio).findList();
+            break;
+        case "gpcr":
+            ts = TargetFactory.finder
+                .where().eq("idgFamily", "GPCR").findList();
+            break;
+        case "ogpcr":
+            ts = TargetFactory.finder
+                .where().eq("idgFamily", "oGPCR").findList();
+            break;
+        case "kinase":
+            ts = TargetFactory.finder
+                .where().eq("idgFamily", "Kinase").findList();
+            break;
+        case "ic":
+            ts = TargetFactory.finder
+                .where().eq("idgFamily", "Ion Channel").findList();
+            break;
+        case "nr":
+            ts = TargetFactory.finder
+                .where().eq("idgFamily", "Nuclear Receptor").findList();
+            break;
+        default:
+            ts = new ArrayList<>();
+            break;
+        }
+        return ts;
+    }   
+
     // only valid for single target
     public static Result _hgForRadar(final String q, String type) throws Exception {
         if (q == null || q.contains(",") || !type.contains("-"))
@@ -224,46 +270,36 @@ public class HarmonogramApp extends App {
             hgs = HarmonogramFactory.finder.all();
             ntarget = TargetFactory.finder.findRowCount();
         } else if (("tdark tclin tchem tbio gpcr kinase ionchannel nuclearreceptor ogpcr").contains(theQuery)) {
-            List<Target> ts;
-            switch (theQuery) {
-                case "tdark":
-                    ts = TargetFactory.finder.where().eq("idgTDL", Target.TDL.Tdark).findList();
-                    break;
-                case "tclin":
-                    ts = TargetFactory.finder.where().eq("idgTDL", Target.TDL.Tclin).findList();
-                    break;
-                case "tchem":
-                    ts = TargetFactory.finder.where().eq("idgTDL", Target.TDL.Tchem).findList();
-                    break;
-                case "tbio":
-                    ts = TargetFactory.finder.where().eq("idgTDL", Target.TDL.Tbio).findList();
-                    break;
-                case "gpcr":
-                    ts = TargetFactory.finder.where().eq("idgFamily", "GPCR").findList();
-                    break;
-                case "ogpcr":
-                    ts = TargetFactory.finder.where().eq("idgFamily", "oGPCR").findList();
-                    break;
-                case "kinase":
-                    ts = TargetFactory.finder.where().eq("idgFamily", "Kinase").findList();
-                    break;
-                case "ic":
-                    ts = TargetFactory.finder.where().eq("idgFamily", "Ion Channel").findList();
-                    break;
-                case "nr":
-                    ts = TargetFactory.finder.where().eq("idgFamily", "Nuclear Receptor").findList();
-                    break;
-                default:
-                    ts = new ArrayList<>();
-                    break;
-            }
-
+            List<Target> ts = getOrElse
+                (HarmonogramApp.class.getName()+".hgForRadar.targets/"+theQuery,
+                 new Callable<List<Target>> () {
+                     public List<Target> call () {
+                         return getTargets (theQuery);
+                     }
+                 });
+            
             ntarget = ts.size();
-            List<String> uniprots = new ArrayList<>();
+            final List<String> uniprots = new ArrayList<>();
             for (Target t : ts) uniprots.add(getId(t));
-            hgs = HarmonogramFactory.finder.where().in("uniprotId", uniprots).findList();
-        } else
-            hgs = HarmonogramFactory.finder.where().in("uniprotId", q).findList();
+            hgs = getOrElse
+                (HarmonogramApp.class.getName()
+                 +"/"+Util.sha1(uniprots.toArray(new String[0])),
+                 new Callable<List<HarmonogramCDF>> () {
+                     public List<HarmonogramCDF> call () { 
+                         return HarmonogramFactory.finder
+                         .where().in("uniprotId", uniprots).findList();
+                     }
+                 });
+        } else {
+            hgs = getOrElse
+                (HarmonogramApp.class.getName()+"/"+Util.sha1(q),
+                 new Callable<List<HarmonogramCDF>> () {
+                     public List<HarmonogramCDF> call () {
+                         return HarmonogramFactory.finder
+                         .where().in("uniprotId", q).findList();
+                     }
+                 });
+        }
         Logger.debug("Working with " + hgs.size() + " CDF's from " + ntarget + " targets for q = " + q);
 
         HashMap<String, Double> attrMap = new HashMap<>();

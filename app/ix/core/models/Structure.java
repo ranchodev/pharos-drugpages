@@ -21,7 +21,7 @@ import play.db.ebean.Model;
 @MappedSuperclass
 @Entity
 @Table(name="ix_core_structure")
-public class Structure extends Model {
+public class Structure extends Model implements java.io.Serializable {
     @Id public UUID id;
     @Version public Long version;
 
@@ -152,7 +152,7 @@ public class Structure extends Model {
     public List<XRef> links = new ArrayList<XRef>();
     
     @Transient
-    private ObjectMapper mapper = new ObjectMapper ();
+    private transient ObjectMapper mapper = new ObjectMapper ();
 
     /*
     @Transient

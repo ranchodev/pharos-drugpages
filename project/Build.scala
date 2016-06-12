@@ -69,6 +69,7 @@ object ApplicationBuild extends Build {
       ,"org.freehep" % "freehep-graphics2d" % "2.4"
       //,"ws.securesocial" %% "securesocial" % "master-SNAPSHOT"
       ,"org.webjars.bower" % "spin.js" % "2.0.2"
+      ,"com.sleepycat" % "je" % "5.0.73"
   )
 
   val scalaBuildOptions = Seq(

@@ -1,11 +1,8 @@
 package ix.core.plugins;
 
 import java.io.*;
-import java.util.List;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.ArrayList;
-import java.util.concurrent.Callable;
+import java.util.*;
+import java.util.concurrent.*;
 
 import play.Logger;
 import play.Plugin;
@@ -30,24 +27,13 @@ import net.sf.ehcache.constructs.blocking.SelfPopulatingCache;
 import net.sf.ehcache.writer.writebehind.operations.SingleOperationType;
 import net.sf.ehcache.event.CacheEventListenerAdapter;
 
-import org.apache.lucene.index.*;
-import org.apache.lucene.store.*;
-import org.apache.lucene.search.*;
-import org.apache.lucene.analysis.core.KeywordAnalyzer;
-import org.apache.lucene.analysis.standard.StandardAnalyzer;
-import org.apache.lucene.util.Version;
-import org.apache.lucene.document.Field;
-import org.apache.lucene.document.StringField;
-import org.apache.lucene.document.Document;
-
+import com.sleepycat.je.*;
 import ix.utils.Util;
 
 public class IxCache extends Plugin
     implements CacheWriter, CacheEntryFactory {
     
     public static final String CACHE_NAME = "IxCache";
-    static final String KEY = "__key";
-    static final String VALUE = "__value";
     
     static final int MAX_ELEMENTS = 10000;
     static final int TIME_TO_LIVE = 60*60; // 1hr
@@ -60,10 +46,8 @@ public class IxCache extends Plugin
     private final Application app;
     private Ehcache cache;
     private IxContext ctx;
-    
-    protected IndexWriter indexWriter;
-    protected DirectoryReader indexReader;
-    protected IndexSearcher indexSearcher;
+    protected Environment env;
+    protected Database db;
 
     static private IxCache _instance;
     
@@ -103,22 +87,6 @@ public class IxCache extends Plugin
         cache.setSampledStatisticsEnabled(true);
         _instance = this;
     }
-
-    protected synchronized IndexSearcher getIndexSearcher ()
-        throws IOException {
-        if (indexWriter.hasUncommittedChanges()) {
-            indexWriter.commit();
-            DirectoryReader reader =
-                DirectoryReader.openIfChanged(indexReader, indexWriter, true);
-            if (reader != null) {
-                indexReader.close();
-                indexReader = reader;
-                indexSearcher = new IndexSearcher (reader);
-            }
-        }
-        return indexSearcher;
-    }
-    
 
     @Override
     public void onStop () {
@@ -264,7 +232,7 @@ public class IxCache extends Plugin
     public static boolean remove (String key) {
         if (_instance == null)
             throw new IllegalStateException ("Cache hasn't been initialized!");
-        return _instance.cache.remove(key);
+        return _instance.cache.removeWithWriter(key);
     }
     
     public static Statistics getStatistics () {
@@ -280,14 +248,12 @@ public class IxCache extends Plugin
     }
 
     static String getKey (Serializable key) throws IOException {
-        return Util.toHex(Util.serialize(key));
+        //return Util.toHex(Util.serialize(key));
+        return key.toString();
     }
-    
-    static Object getValue (Document doc) throws Exception {
-        byte[] data = doc.getBinaryValue(VALUE).bytes;
-        ObjectInputStream ois = new ObjectInputStream
-            (new ByteArrayInputStream (data));
-        return ois.readObject();
+
+    static DatabaseEntry getKeyEntry (Object value) {
+        return new DatabaseEntry (value.toString().getBytes());
     }
     
     /**
@@ -298,25 +264,27 @@ public class IxCache extends Plugin
             throw new IllegalArgumentException
                 ("Cache key "+key+" is not serliazable!");
         }
-        
-        String id = getKey ((Serializable)key);
-        IndexSearcher searcher = getIndexSearcher ();
-        TermQuery query = new TermQuery (new Term (KEY, id));           
-        TopDocs hits = searcher.search(query, 1);
-        /*
-        Logger.debug("Retrieving cache for "+id+"..."
-                     +(hits.totalHits > 0)+" key="+key);
-        */
+
         Element elm = null;
-        if (hits.totalHits > 0) {
-            try {
-                Document doc = searcher.doc(hits.scoreDocs[0].doc);
-                elm = new Element (key, getValue (doc));
-                cache.put(elm);
+        try {
+            DatabaseEntry dkey = getKeyEntry (key);
+            DatabaseEntry data = new DatabaseEntry ();
+            OperationStatus status = db.get(null, dkey, data, null);
+            if (status == OperationStatus.SUCCESS) {
+                ObjectInputStream ois = new ObjectInputStream
+                    (new ByteArrayInputStream (data.getData()));
+                elm = new Element (key, ois.readObject());
+                ois.close();
             }
-            catch (Exception ex) {
-                Logger.error("Can't recreate entry for "+key, ex);
+            else if (status == OperationStatus.NOTFOUND) {
+                // 
             }
+            else {
+                Logger.warn("Unknown status for key "+key+": "+status);
+            }
+        }
+        catch (Exception ex) {
+            Logger.error("Can't recreate entry for "+key, ex);
         }
         return elm;
     }
@@ -324,38 +292,34 @@ public class IxCache extends Plugin
     /**
      * CacheWriter interface
      */
-    static IndexWriter initIndex (File path) throws IOException {
-        Directory dir = new NIOFSDirectory (path);
-        IndexWriterConfig config = new IndexWriterConfig
-            (Version.LATEST, new KeywordAnalyzer ());
-        IndexWriter indexWriter = new IndexWriter (dir, config);
-        Logger.debug("##### initializing cache: "+path
-                     +"; "+indexWriter.numDocs()+" entries! ######");
-        return indexWriter;
-    }
-
     @Override
     public void init () {
         try {
-            indexWriter = initIndex (new File (ctx.cache(), "ix"));
-            indexReader = DirectoryReader.open(indexWriter, true);
-            indexSearcher = new IndexSearcher (indexReader);
+            File dir = new File (ctx.cache(), "ix");
+            dir.mkdirs();
+            EnvironmentConfig envconf = new EnvironmentConfig ();
+            envconf.setAllowCreate(true);
+            env = new Environment (dir, envconf);
+            DatabaseConfig dbconf = new DatabaseConfig ();
+            dbconf.setAllowCreate(true);
+            db = env.openDatabase(null, CACHE_NAME, dbconf);
         }
-        catch (IOException ex) {
+        catch (Exception ex) {
             Logger.error("Can't initialize lucene for "+ctx.cache(), ex);
         }
     }
     
     @Override
     public void dispose () {
-        try {
-            Logger.debug("#### closing cache writer "+cache.getName()
-                         +"; "+indexWriter.numDocs()+" entries #####");
-            indexReader.close();
-            indexWriter.close();
-        }
-        catch (IOException ex) {
-            Logger.error("Can't close lucene index!", ex);
+        if (db != null) {       
+            try {
+                Logger.debug("#### closing cache writer "+cache.getName()
+                             +"; "+db.count()+" entries #####");
+                db.close();
+            }
+            catch (Exception ex) {
+                Logger.error("Can't close lucene index!", ex);
+            }
         }
     }
     
@@ -366,9 +330,8 @@ public class IxCache extends Plugin
             return;
 
         try {
-            String id = getKey ((Serializable)key);         
-            Term term = new Term (KEY, id);
-            indexWriter.deleteDocuments(term);
+            DatabaseEntry dkey = getKeyEntry (key);
+            OperationStatus status = db.delete(null, dkey);
         }
         catch (Exception ex) {
             Logger.error("Deleting cache "+key+" from persistence!", ex);
@@ -381,13 +344,13 @@ public class IxCache extends Plugin
         if (key != null) {
             //Logger.debug("Persisting cache key="+key+" value="+elm.getObjectValue());
             try {
-                Document doc = new Document ();
-                String id = getKey (key);
-                Field f = new StringField (KEY, id, Field.Store.NO);
-                doc.add(f);
-                doc.add(new Field
-                        (VALUE, Util.serialize(elm.getObjectValue())));
-                indexWriter.addDocument(doc);
+                DatabaseEntry dkey = getKeyEntry (key);
+                DatabaseEntry data = new DatabaseEntry
+                    (Util.serialize(elm.getObjectValue()));
+                OperationStatus status = db.put(null, dkey, data);
+                if (status != OperationStatus.SUCCESS)
+                    Logger.warn
+                        ("** PUT for key "+key+" returns status "+status);
             }
             catch (Exception ex) {
                 Logger.error("Can't write cache element: key="

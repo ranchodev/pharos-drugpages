@@ -10,9 +10,9 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import java.io.*;
 import java.util.*;
 
-public class DTOParser {
+public class DTOParser implements Serializable {
     
-    static public class Node {
+    static public class Node implements Serializable {
         public String id;
         public String name;
         @JsonIgnore

@@ -73,13 +73,20 @@ public class IDGApp extends App implements Commons {
         }
 
         @Override
-        protected Object instrument (StructureIndexer.Result r)
+        protected Object instrument (final StructureIndexer.Result r)
             throws Exception {
-            List<Ligand> ligands = LigandFactory.finder
-                .where(Expr.and(Expr.eq("links.refid", r.getId()),
-                                Expr.eq("links.kind",
-                                        Structure.class.getName())))
-                .findList();
+            List<Ligand> ligands = getOrElse
+                (getClass().getName()+"/structure/"+r.getId(),
+                 new Callable<List<Ligand>> () {
+                     public List<Ligand> call () {
+                         return LigandFactory.finder
+                         .where(Expr.and(Expr.eq("links.refid", r.getId()),
+                                         Expr.eq("links.kind",
+                                                 Structure.class.getName())))
+                         .findList();
+                     }
+                 });
+                 
             if (!ligands.isEmpty()) {
                 Ligand lig = ligands.iterator().next();
                 //Logger.debug("matched ligand: "+ligand.id+" "+r.getId());
@@ -112,12 +119,19 @@ public class IDGApp extends App implements Commons {
         IDGSequenceResultProcessor() {
         }
             
-        protected Object instrument(SequenceIndexer.Result r)
+        protected Object instrument (final SequenceIndexer.Result r)
             throws Exception {
-            List<Target> targets = TargetFactory.finder.where
-                (Expr.and(Expr.eq("properties.label", UNIPROT_SEQUENCE),
-                          Expr.eq("properties.id", r.id)))
-                .findList();
+            List<Target> targets = getOrElse
+                (getClass().getName()+"/sequence/"+r.id,
+                 new Callable<List<Target>> () {
+                     public List<Target> call () {
+                         return TargetFactory.finder.where
+                         (Expr.and(Expr.eq("properties.label",
+                                           UNIPROT_SEQUENCE),
+                                   Expr.eq("properties.id", r.id)))
+                         .findList();
+                     }
+                 });
             
             Target target = null;
             if (!targets.isEmpty()) {
