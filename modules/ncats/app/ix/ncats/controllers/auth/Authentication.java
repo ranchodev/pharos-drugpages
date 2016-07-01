@@ -30,6 +30,11 @@ public class Authentication extends Controller {
         .configuration().getString("ix.app", "MyApp");
     public static final int TIMEOUT = 1000*Play.application()
         .configuration().getInt(SESSION, 7200); // session idle
+    
+    public static final String ADMIN_USER = Play.application()
+        .configuration().getString("ix.admin.username", "admin");
+    public static final String ADMIN_PASS = Play.application()
+        .configuration().getString("ix.admin.password", "");
         
     static Model.Finder<UUID, Session> _sessions =
         new Model.Finder<UUID, Session>(UUID.class, Session.class);
@@ -44,7 +49,7 @@ public class Authentication extends Controller {
         
         @Override
         public Result onUnauthorized (Http.Context ctx) {
-            return redirect (routes.Authentication.login(null));
+            return redirect (routes.Authentication.login(ctx.request().uri()));
         }
     }
     
@@ -53,12 +58,16 @@ public class Authentication extends Controller {
         String username = requestData.get("username");
         String password = requestData.get("password");
         Logger.debug("username: "+username);
-        
-        Principal cred; 
-        if (username.equalsIgnoreCase("caodac")
-            && password.equalsIgnoreCase("foobar")) {
-            cred = new Principal ();
-            cred.username = username;
+
+        Principal cred = null;
+        if (username.equalsIgnoreCase(ADMIN_USER)) {
+            if ("".equals(ADMIN_PASS)) {
+                Logger.error("No admin password set via ix.admin.password!");
+            }
+            else if (ADMIN_PASS.equals(password)) {
+                cred = new Principal ();
+                cred.username = username;
+            }
         }
         else {
             cred = NIHLdapConnector.getEmployee(username, password);
@@ -134,9 +143,6 @@ public class Authentication extends Controller {
         return redirect (routes.Authentication.login(null));
     }
 
-    static ix.core.plugins.SchedulerPlugin scheduler =
-        Play.application().plugin(ix.core.plugins.SchedulerPlugin.class);
-    
     @Security.Authenticated(Secured.class)    
     public static Result secured () {
         Session session = getSession ();
@@ -145,10 +151,12 @@ public class Authentication extends Controller {
             return redirect (routes.Authentication.login(null));
         }
 
-        scheduler.submit(session.id.toString());
-        
-        ObjectMapper mapper = new ObjectMapper ();
-        return ok (mapper.valueToTree(session));
+        String ctx = Play.application().configuration()
+            .getString("application.context", "/");
+        return redirect (ctx);
+
+        //ObjectMapper mapper = new ObjectMapper ();
+        //return ok (mapper.valueToTree(session));
     }
 
     public static UserProfile getUserProfile () {

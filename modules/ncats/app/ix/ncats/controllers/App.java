@@ -15,6 +15,7 @@ import play.Logger;
 import play.api.mvc.Action;
 import play.api.mvc.AnyContent;
 import play.mvc.Controller;
+import play.mvc.Security;
 import play.mvc.Result;
 import play.mvc.Call;
 import play.mvc.BodyParser;
@@ -1685,6 +1686,7 @@ public class App extends Authentication {
         return node;
     }
 
+    @Security.Authenticated(Secured.class)    
     public static Result cache (String key) {
         try {
             Element elm = IxCache.getElm(key);
@@ -1695,15 +1697,18 @@ public class App extends Authentication {
             return ok (toJson (elm));
         }
         catch (Exception ex) {
-            return internalServerError (ex.getMessage());
+            ex.printStackTrace();
+            return internalServerError ("No such cache key: "+key);
         }
     }
 
-    public static Result cacheSummary () {
-        return ok (ix.ncats.views.html.cachestats.render
+    @Security.Authenticated(Secured.class)    
+    public static Result serverStatistics () {
+        return ok (ix.ncats.views.html.serverstats.render
                    (IxCache.getStatistics()));
     }
 
+    @Security.Authenticated(Secured.class)    
     public static Result cacheList (int top, int skip) {
         List keys = IxCache.getKeys(top, skip);
         if (keys != null) {
@@ -1726,6 +1731,7 @@ public class App extends Authentication {
         return ok ("No cache available!");
     }
 
+    @Security.Authenticated(Secured.class)        
     public static Result cacheDelete (String key) {
         try {
             Element elm = IxCache.getElm(key);
@@ -1744,14 +1750,6 @@ public class App extends Authentication {
         }
     }
     
-    public static Result statistics (String kind) {
-        if (kind.equalsIgnoreCase("cache")) {
-            return ok (ix.ncats.views.html.cachestats.render
-                       (IxCache.getStatistics()));
-        }
-        return badRequest ("Unknown statistics: "+kind);
-    }
-
     public static int[] uptime () {
         int[] ups = null;
         if (Global.epoch != null) {
