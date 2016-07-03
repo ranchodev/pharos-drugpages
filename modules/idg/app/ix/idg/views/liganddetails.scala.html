@@ -12,7 +12,7 @@
 
 @actrow(act: LigandActivity) = {
 <tr class="treegrid-@act.target.id">
-  <td><a onclick="showLoadModal()" href="@ix.idg.controllers.routes.IDGApp.target(IDGApp.getId(act.target))">@act.target.getName()</a></td>
+  <td><a class="loader" href="@ix.idg.controllers.routes.IDGApp.target(IDGApp.getId(act.target))">@act.target.getName()</a></td>
   <td><span class="label label-@act.target.idgTDL.label"
 	    data-toggle="tooltip" data-html="true"
 	    title="<p align='left'>@act.target.idgTDL.desc</p>">@act.target.idgTDL</span></td>
@@ -136,7 +136,7 @@
 	  </div>
 	  @if(activities.size > 20) {
 	     <div class="panel-footer">
-	        <a href='@{ix.idg.controllers.routes.IDGApp.targets() + "?facet=" + IDG_LIGAND+"/"+IDGApp.getId(ligand)}'>See all @activities.size targets...</a>
+	        <a class='loader' href='@{ix.idg.controllers.routes.IDGApp.targets() + "?facet=" + IDG_LIGAND+"/"+IDGApp.getId(ligand)}'>See all @activities.size targets...</a>
 	     </div>
 	  }
          </div>
@@ -237,26 +237,17 @@ $(function () {
   $('[data-toggle="tooltip"]').tooltip();
 });
 
-$(document).ready(function () { 
-  $('.tree').treegrid({
-   expanderExpandedClass: 'fa fa-angle-down',
-   expanderCollapsedClass: 'fa fa-angle-right',
-   @if(activities.length > 3) {
-     initialState: 'collapsed'
-   } else {
-     initialState: 'expanded'
-   }
-  });
-});
-
-function showLoadModal () {
-  console.log('showing modal...');
-  $('#loadmodal').modal({
-      keyboard: false,
-      show: true,
-      backdrop: 'static'
+$(document).ready(function () {
+   $('.tree').treegrid({
+      expanderExpandedClass: 'fa fa-angle-down',
+      expanderCollapsedClass: 'fa fa-angle-right',
+      @if(activities.length > 3) {
+        initialState: 'collapsed'
+      } else {
+        initialState: 'expanded'
+      }
     });
-}
+});
 
 $(window).unload(function () {
     $('#loadmodal').modal('hide');    

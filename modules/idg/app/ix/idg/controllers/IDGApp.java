@@ -363,10 +363,10 @@ public class IDGApp extends App implements Commons {
                 return url.toString();
             }
             else if (name.equals(IDG_TARGET) || name.equals(UNIPROT_GENE)) {
-                return "<a href='"+routes.IDGApp.target(label)+"' onclick='showLoadModal()'>"+label+"</a>";
+                return "<a class='loader' href='"+routes.IDGApp.target(label)+"'>"+label+"</a>";
             }
             else if (name.equals(IDG_DISEASE)) {
-                return "<a href='"+routes.IDGApp.disease(label)+"'>"
+                return "<a class='loader' href='"+routes.IDGApp.disease(label)+"'>"
                     +label+"</a>";
             }
             else if (name.equals(WHO_ATC)) {

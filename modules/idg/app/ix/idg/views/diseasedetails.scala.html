@@ -31,7 +31,7 @@
 
 @tabrow(t: Target) = {
     <tr>
-        <td><a href="@ix.idg.controllers.routes.IDGApp.target(IDGApp.getId(t))">@t.name</a></td>
+        <td><a class='loader' href="@ix.idg.controllers.routes.IDGApp.target(IDGApp.getId(t))">@t.name</a></td>
         <td>@t.idgTDL</td>
         <td>@t.idgFamily</td>
     </tr>
@@ -39,7 +39,7 @@
 
 @ligandrow(l: Ligand) = {
     <tr>
-        <td><a href="@ix.idg.controllers.routes.IDGApp.ligand(IDGApp.getId(l))">@l.name</a></td>
+        <td><a class='loader' href="@ix.idg.controllers.routes.IDGApp.ligand(IDGApp.getId(l))">@l.name</a></td>
         <td>@l.getDescription</td>
     </tr>
 }
