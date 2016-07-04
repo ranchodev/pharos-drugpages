@@ -2706,7 +2706,7 @@ public class IDGApp extends App implements Commons {
         if (url.indexOf('?') > 0) url += '&';
         else url += '?';
         
-        return "<th><a href='"+url+"order="+order+"'>"+name
+        return "<th><a class='loader' href='"+url+"order="+order+"'>"+name
             +"</a>&nbsp;<i class='fa fa-sort"+sort+"'></i></th>";
     }
 

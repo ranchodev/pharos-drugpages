@@ -398,7 +398,7 @@ $(document).ready(function () {
     $('#modal-kinome').on('shown.bs.modal', function (e) {
         console.log('kinome tree modal shown...');
         new Kinome('kinome-canvas',
-            '@routes.Assets.at("images/kinome200.png")',
+            '@routes.Assets.at("images/kinome400.png")',
         '@HtmlFormat.raw(ix.idg.controllers.routes.IDGApp.getKinases(null)+App.queryString("q", "facet"))'
         );
     });
