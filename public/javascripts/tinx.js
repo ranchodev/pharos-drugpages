@@ -23,6 +23,7 @@ function _tinx_target_plot2(json, selector) {
 
     $(selector).highcharts({
         chart: {
+	    height: 270,
             type: 'scatter',
             zoomType: 'xy'
         },

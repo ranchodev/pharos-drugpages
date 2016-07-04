@@ -447,7 +447,9 @@ public class IDGApp extends App implements Commons {
                             }
                             
                             // also cache all the synonyms
+                            List<T> valid = new ArrayList<T>();
                             for (T v : values) {
+                                Set<String> labels = new HashSet<String>();
                                 for (Keyword kw : v.getSynonyms()) {
                                     if (kw.term == null) {
                                         Logger.warn("NULL term for synonym"
@@ -455,21 +457,36 @@ public class IDGApp extends App implements Commons {
                                                     +kw.label);
                                         continue;
                                     }
+                                    else if (kw.term.equalsIgnoreCase(name)) {
+                                        labels.add(kw.label);
+                                    }
+                                }
+                                
+                                if (matchedLabelsValid (labels)) {
+                                    valid.add(v);
+                                }
+                            }
+                            
+                            if (valid.isEmpty())
+                                valid.addAll(values);
 
+                            for (T v : valid) {
+                                for (Keyword kw : v.getSynonyms()) {
                                     if (!kw.term.equals(name))
                                         IxCache.set(cls.getName()+"/"
-                                                    +kw.term, values);
+                                                    +kw.term, valid);
                                     if (!kw.term.toUpperCase().equals(name))
                                         IxCache.set(cls.getName()+"/"
                                                     +kw.term.toUpperCase(),
-                                                    values);
+                                                    valid);
                                     if (!kw.term.toLowerCase().equals(name))
                                         IxCache.set(cls.getName()+"/"
                                                     +kw.term.toLowerCase(),
-                                                    values);
+                                                    valid);
                                 }
                             }
-                            return values;
+                            
+                            return valid;
                         }
                     });
             double elapsed = (System.currentTimeMillis()-start)*1e-3;
@@ -478,7 +495,12 @@ public class IDGApp extends App implements Commons {
                          +" matches for "+name);
             return e;
         }
-        
+
+        // override by subclass
+        protected boolean matchedLabelsValid (Set<String> labels) {
+            return true;
+        }
+
         public Result get (final String name) {
             try {
                 List<T> e = find (name);
@@ -1095,6 +1117,10 @@ public class IDGApp extends App implements Commons {
         new GetResult<Target>(Target.class, TargetFactory.finder) {
             public Result getResult (List<Target> targets) throws Exception {
                 return _getTargetResult (targets);
+            }
+            @Override
+            protected boolean matchedLabelsValid (Set<String> labels) {
+                return !labels.contains(UNIPROT_SHORTNAME);
             }
         };
 
@@ -2640,7 +2666,7 @@ public class IDGApp extends App implements Commons {
     }
 
     public static String getSequence (Target target) {
-        return getSequence (target, 80);
+        return getSequence (target, 70);
     }
     
     public static String getSequence (Target target, int wrap) {
@@ -2651,6 +2677,61 @@ public class IDGApp extends App implements Commons {
         
         String text = ((Text)val).text;
         return formatSequence (text, wrap);
+    }
+
+    static final char[] AA = {
+        'A', // Ala
+        'R', // Arg
+        'N', // Asn
+        'D', // Asp
+        'C', // Cys
+        'E', // Glu
+        'Q', // Gln
+        'G', // Gly
+        'H', // His
+        'I', // Ile
+        'L', // Leu
+        'K', // Lys
+        'M', // Met
+        'F', // Phe
+        'P', // Pro
+        'S', // Ser
+        'T', // Thr
+        'W', // Trp
+        'Y', // Tyr
+        'V'  // Val
+    };
+    public static JsonNode getAminoAcidProfile (Target target) {
+        Value val = target.getProperty(UNIPROT_SEQUENCE);
+        JsonNode json = null;
+        if (val != null) {
+            String text = ((Text)val).text;
+            Map<Character, Integer> aa = new TreeMap<Character, Integer>();
+            for (int i = 0; i < text.length(); ++i) {
+                char ch = text.charAt(i);
+                Integer c = aa.get(ch);
+                aa.put(ch, c == null ? 1 : (c+1));
+            }
+            ObjectMapper mapper = new ObjectMapper ();              
+            ArrayNode node = mapper.createArrayNode();
+            for (int i = 0; i < AA.length; ++i) {
+                Integer c = aa.get(AA[i]);
+                ObjectNode n = mapper.createObjectNode();
+                n.put("name", ""+AA[i]);
+                ArrayNode a = mapper.createArrayNode();
+                a.add(c != null ? c : 0);
+                n.put("data", a);
+                ObjectNode l = mapper.createObjectNode();
+                l.put("enabled", true);
+                l.put("rotation", -90);
+                l.put("y",-20);
+                l.put("format", "<b>{point.series.name}</b>: {point.y}");
+                n.put("dataLabels", l);
+                node.add(n);
+            }
+            json = node;
+        }
+        return json;
     }
 
     public static SequenceIndexer.Result
@@ -2668,13 +2749,21 @@ public class IDGApp extends App implements Commons {
 
     public static String formatSequence (String text, int wrap) {
         StringBuilder seq = new StringBuilder ();
-        for (int len = text.length(), i = 1, j = 1; i <= len; ++i) {
+        int j = 1;
+        for (int len = text.length(), i = 1; i <= len; ++i) {
             seq.append(text.charAt(i-1));           
             if (i % wrap == 0) {
                 seq.append(String.format("%1$7d - %2$d\n", j, i));
                 j = i+1;
             }
         }
+        
+        int r = wrap - (text.length() % wrap);
+        if (r != 0) {
+            seq.append(String.format
+                       ("%1$"+(r+7)+"d - %2$d\n", j, text.length()));
+        }
+        seq.append("//");        
         return seq.toString();
     }
 

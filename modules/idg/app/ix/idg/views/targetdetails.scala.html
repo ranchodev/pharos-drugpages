@@ -513,7 +513,7 @@ This is TCRD target <a href='@ix.core.controllers.v1.routes.RouteFactory.get("ta
           @defining(target.getSynonyms(PDB_ID)) { pdbids =>
               @if(pdbids.size() > 0) {
                   <div class="panel panel-default" 
-                       style="max-height: 400px;overflow-y: auto;">
+                       style="max-height: 300px; overflow-y: auto;">
                       <a name="pdb" tocname="PDB"></a>
                       <div class="panel-heading">
                           <h3 class="panel-title">PDB <i class="fa fa-external-link"></i></h3>
@@ -641,7 +641,7 @@ This is TCRD target <a href='@ix.core.controllers.v1.routes.RouteFactory.get("ta
                        <h3 class="panel-title"><a class="loader" href='@{ix.idg.controllers.routes.IDGApp.ligands() + "?facet=" + IDG_TARGET+"/"+target.getSynonym(UNIPROT_GENE).term}'>Ligand (@ligands.size)</a></h3>
                     </div>
                     <div class="panel-body"
-                         style="max-height: 300px;overflow-y: scroll;">
+                         style="max-height: 300px;overflow-y: auto;">
                       <table class="table">
                         @if(ligands.size > 20) {
                            @for(l <- ligands.subList(0, 20)) {
@@ -743,7 +743,7 @@ This is TCRD target <a href='@ix.core.controllers.v1.routes.RouteFactory.get("ta
                   }
                 </h3>
             </div>
-            <div class="panel-body">
+            <div class="panel-body" style="max-height:300px;">
                 <div id="tinx-plot"></div>
             </div>
          </div>
@@ -756,7 +756,7 @@ This is TCRD target <a href='@ix.core.controllers.v1.routes.RouteFactory.get("ta
                         data-html="true"
                         title="<p align='left'>Disease-gene associations mined from Medline Franklid et al, Methods, 2015, 83-89</p>">Disease Relevance (@diseases.size())</h3>
           </div>
-          <div class="panel-body">
+          <div class="panel-body" style="max-height:300px;overflow-y:auto;">
                <table class="tree table">
                           <tr>
                               <th>Disease</th>
@@ -770,27 +770,8 @@ This is TCRD target <a href='@ix.core.controllers.v1.routes.RouteFactory.get("ta
                               data-toggle="tooltip" data-placement="top" data-html="true"
                               title="<p align='left'>A score characterizing the importance of the target, based on occurences in the published literature.</p>"></i></th>
                           </tr>
-                          @defining(request().getQueryString("view")) { view =>
-                              @view match {
-                                  case "full" => {
-                                      @for(dr <- diseases) {
-                                          @diseaserow(dr)
-                                      }
-                                  }
-                                  case _ => {
-                                      @for(i <- 0 until Math.min(10, diseases.size())) {
-                                          @diseaserow(diseases(i))
-                                      }
-                                      @if(diseases.size() > 10) {
-                                          <tr>
-                                              <td><a href="@request().uri?view=full">More...</a></td>
-                                              <td></td>
-                                              <td></td>
-                                              <td></td>
-                                          </tr>
-                                      }
-                                  }
-                              }
+                          @for(dr <- diseases) {
+                               @diseaserow(dr)
                           }
                </table>
           </div>  @* panel-body *@
@@ -1182,17 +1163,18 @@ This is TCRD target <a href='@ix.core.controllers.v1.routes.RouteFactory.get("ta
     @defining(IDGApp.getSequence(target)) { seq =>
        @if(seq != null) {
          <div class="row">
-            <div class="col-md-12">
-                 <div class="panel panel-default">
-                     <a name="seq" tocname="Sequence"></a>
-                      <div class="panel-heading">
-                           <h3 class="panel-title">Sequence</h3>
-                      </div>
-                      <div class="panel-body">
-                        <pre class="pre-scrollable">@seq</pre>
-                      </div>
-                 </div>
-            </div>
+           <div class="col-md-12">
+             <div class="panel panel-default">
+               <a name="seq" tocname="Sequence"></a>
+               <div class="panel-heading">
+                 <h3 class="panel-title">AA Sequence</h3>
+               </div>
+               <div class="panel-body">
+		 <div id="aa-profile" style="max-height:200px; width:100%;"></div>
+                 <pre class="pre-scrollable">@seq</pre>
+               </div>
+             </div>
+           </div>
          </div>
        }
     }
@@ -1549,7 +1531,7 @@ $('.tree').treegrid({
         });
     });
 
-
+   plotAAProfile('#aa-profile');
 
    @*new Morris.Line({*@
       @*element: 'patent-line-plot',*@
@@ -1562,6 +1544,41 @@ $('.tree').treegrid({
    $('#pmscore-sparkline').sparkline('html', {width:'100px'});
    tinx_target_plot("#tinx-plot", "@IDGApp.getId(target)");
 });
+
+function plotAAProfile (container) {
+   $(container).highcharts({
+        chart: {
+            type: 'column',
+	    height: 150
+        },
+        title: {
+            text: null
+        },
+        credits: {enabled: false},
+	xAxis: {
+	/*
+ 	   categories:['A','R','N','D','C','E','Q','G','H','I',
+		        'L','K','M','F','P','S','T','W','Y','V'],*/
+	    categories: ['@target.name'],
+	    title: {
+	       text: null
+	    },
+	    labels: {
+    	       enabled: false,
+	    }
+	},
+        yAxis: {
+            min: 0,
+	    title: {
+	       text: null
+	    }
+        },
+        legend: {
+            enabled: false
+        },
+        series: @HtmlFormat.raw(IDGApp.getAminoAcidProfile(target).toString)
+    });
+}
 
 function showLoadModal () {
    $('#page-loader').addClass('loader-wait');    
