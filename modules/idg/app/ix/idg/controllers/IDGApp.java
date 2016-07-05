@@ -2758,8 +2758,8 @@ public class IDGApp extends App implements Commons {
 
     public static String formatSequence (String text, int wrap) {
         StringBuilder seq = new StringBuilder ();
-        int j = 1;
-        for (int len = text.length(), i = 1; i <= len; ++i) {
+        int j = 1, len = text.length();
+        for (int i = 1; i <= len; ++i) {
             seq.append(text.charAt(i-1));           
             if (i % wrap == 0) {
                 seq.append(String.format("%1$7d - %2$d\n", j, i));
@@ -2767,10 +2767,10 @@ public class IDGApp extends App implements Commons {
             }
         }
         
-        int r = wrap - (text.length() % wrap);
-        if (r != 0) {
+        int r = wrap - (len % wrap);
+        if (r > 0 && j < len) {
             seq.append(String.format
-                       ("%1$"+(r+7)+"d - %2$d\n", j, text.length()));
+                       ("%1$"+(r+7)+"d - %2$d\n", j, len));
         }
         seq.append("//");        
         return seq.toString();

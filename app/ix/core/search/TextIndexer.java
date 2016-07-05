@@ -618,13 +618,15 @@ public class TextIndexer {
                         }
                         
                         try {
+                            /*
                             Object value = IxCache.getOrElse
                                 (field+":"+id.stringValue(), new Callable () {
                                         public Object call () throws Exception {
                                             return findObject (kind, id);
                                         }
                                     });
-                            
+                            */
+                            Object value = findObject (kind, id);
                             if (value != null)
                                 result.add(value);
                         }

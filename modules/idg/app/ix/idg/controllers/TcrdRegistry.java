@@ -163,7 +163,7 @@ public class TcrdRegistry extends Controller implements Commons {
             pstm11, pstm12, pstm13, pstm14, pstm15,
             pstm16, pstm17, pstm18, pstm19, pstm20,
             pstm21, pstm22, pstm23, pstm24, pstm25,
-            pstm26;
+            pstm26, pstm27;
         Map<String, Keyword> datasources = new HashMap<String, Keyword>();
 
         // xrefs for the current target
@@ -267,6 +267,9 @@ public class TcrdRegistry extends Controller implements Commons {
 
             pstm26 = con.prepareStatement
                 ("select * from ppi where protein1_id = ?");
+
+            pstm27 = con.prepareStatement
+                ("select * from compartment where protein_id = ?");
 
             this.chembl = chembl;
         }
@@ -388,6 +391,7 @@ public class TcrdRegistry extends Controller implements Commons {
             pstm24.close();
             pstm25.close();
             pstm26.close();
+            pstm27.close();
             chembl.shutdown();
         }
 
@@ -798,9 +802,11 @@ public class TcrdRegistry extends Controller implements Commons {
                 else if (expr.source.startsWith("JensenLab Text Mining")) {
                     sourceUrl = "http://tissues.jensenlab.org";
                     expr.sourceid = JENSEN_TM_EXPR;
-                    tissue = KeywordFactory.registerIfAbsent
-                        (JENSEN_TM_TISSUE, expr.tissue, null);
-                    target.addIfAbsent((Value)tissue);
+                    // this is specific to each protein
+                    tissue = new Keyword (JENSEN_TM_TISSUE, expr.tissue);
+                    tissue.href = rset.getString("url");
+                    tissue.save();
+                    target.properties.add(tissue);
                 }
                 else if (expr.source.startsWith
                            ("JensenLab Knowledge UniProtKB-RC")) {
@@ -825,7 +831,8 @@ public class TcrdRegistry extends Controller implements Commons {
                 }
                 else if (expr.source.startsWith("JensenLab Experiment")) {
                     sourceUrl = "http://tissues.jensenlab.org";
-                    String t = expr.source.substring("JensenLab Experiment".length()+1).trim();
+                    String t = expr.source
+                        .substring("JensenLab Experiment".length()+1).trim();
                     expr.sourceid = t+" Expression";
                 }
                 else
@@ -1941,6 +1948,36 @@ public class TcrdRegistry extends Controller implements Commons {
             }
         }
 
+        void addCompartment (Target target, long protein) throws Exception {
+            pstm27.setLong(1, protein);
+            ResultSet rset = pstm27.executeQuery();
+            try {
+                List<Compartment> comps = new ArrayList<Compartment>();
+                while (rset.next()) {
+                    Compartment comp = new Compartment ();
+                    comp.type = rset.getString("ctype");
+                    comp.goId = rset.getString("go_id");
+                    comp.goTerm = rset.getString("go_term");
+                    comp.zscore = rset.getDouble("zscore");
+                    if (rset.wasNull())
+                        comp.zscore = null;
+                    comp.evidence = rset.getString("evidence");
+                    comp.conf = rset.getDouble("conf");
+                    if (rset.wasNull())
+                        comp.conf = null;
+                    comp.url = rset.getString("url");
+                    comp.target = target;
+                    comp.save();
+                    comps.add(comp);
+                }
+                Logger.debug("Target "+target.id+" has "
+                             +comps.size()+" compartments!");
+            }
+            finally {
+                rset.close();
+            }
+        }
+
         void addPublication (Target target, long protein) throws Exception {
             pstm22.setLong(1, protein);
             ResultSet rset = pstm22.executeQuery();
@@ -2091,6 +2128,7 @@ public class TcrdRegistry extends Controller implements Commons {
                 addGeneRIF (target, t.protein);
                 addTINX (target, t.id);
                 addPublication (target, t.protein);
+                addCompartment (target, t.protein);
             }
             catch (Exception ex) {
                 Logger.error("Can't parse target "+IDGApp.getId(target)+"!");

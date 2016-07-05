@@ -9,7 +9,8 @@ import javax.persistence.Table;
 
 @Entity
 @Table(name = "ix_idg_expression")
-public class Expression extends play.db.ebean.Model {
+public class Expression extends play.db.ebean.Model 
+    implements java.io.Serializable {
     public static final String EXPR_QUAL = "Expression Qualitative";
 
     @Id public Long id;
