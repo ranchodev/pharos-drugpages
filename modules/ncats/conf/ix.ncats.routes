@@ -19,13 +19,12 @@ POST	/structure	ix.ncats.controllers.App.molinstrument
 GET	/status/*key	ix.ncats.controllers.App.status(key: String)
 
 # cache methods
-GET	/cache/@summary	ix.ncats.controllers.App.cacheSummary
 GET	/cache/@list	ix.ncats.controllers.App.cacheList(top: Int ?= 100, skip: Int ?= 0)
 GET	/cache/*key	ix.ncats.controllers.App.cache(key: String)
 DELETE	/cache/*key	ix.ncats.controllers.App.cacheDelete(key: String)
 
 # return cache statistics
-GET	/statistics/:kind	ix.ncats.controllers.App.statistics(kind: String)
+GET	/statistics/@server	ix.ncats.controllers.App.serverStatistics
 GET	/uptime		ix.ncats.controllers.App.getUptime
 
 # authentication

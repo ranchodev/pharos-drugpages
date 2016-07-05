@@ -106,8 +106,9 @@
 
 <script>
 function filterToggle (el) {
+  $('#page-loader').addClass('loader-wait');  
   filters[el.id].checked = el.checked;
-  /*console.clear();*/
+
   var facet = "";
   for (var f in filters) {
     console.log(f+': '+filters[f].checked);
@@ -118,14 +119,23 @@ function filterToggle (el) {
       facet += "facet="+filters[f].name + '/' + filters[f].value;
     }
   }
-  console.log(el.id+' '+facet);
+  //console.log(el.id+' '+facet);
   var url = '@HtmlFormat.raw(App.url(facets, "page"))';
   if (facet.length > 0) {
     url += url.indexOf('?') < 0 ? '?' : '&';
     url += facet;
   }
   console.log('>> '+url);
-  location.href = url;
+  $.ajax({
+     'url': url,
+     success: function () {
+	  window.location.href = url;
+     }
+  }).done(function () {
+     $('#page-loader').removeClass('loader-wait');
+  });
+  
+  //location.href = url;
 }
 
 $(".panel-heading" ).on("click", function(e){

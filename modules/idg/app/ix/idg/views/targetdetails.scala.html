@@ -25,17 +25,16 @@
 
 @facet(label: String, value: String, href: String = null, max: Int = 40) = {
   @if(max > 0 && value.length > max) {
-    <a id="keyword" class="label label-primary"
+    <a id="keyword" class="label label-primary loader"
        data-toggle="popover"
        data-html="true"
        data-trigger="hover"
        data-placement="top"
        title="@label"
        data-content="<p align='left'>@value</p>"
-       onclick="showLoadModal()"
        href='@{ix.idg.controllers.routes.IDGApp.targets()+"?facet="+URLEncoder.encode(label,"utf8")+"/"}@URLEncoder.encode(value, "utf8")'>@{value.substring(0, max)}...</a>&nbsp;
   } else {
-    <a id="keyword" class="label label-primary" onclick="showLoadModal()"
+    <a id="keyword" class="label label-primary loader" 
        href='@{ix.idg.controllers.routes.IDGApp.targets()+"?facet="+URLEncoder.encode(label,"utf8")+"/"}@URLEncoder.encode(value, "utf8")'>@value</a>
   }
   @if(href != null) {
@@ -194,7 +193,7 @@
 
 @label(x: Value, title: String, label: String) = {
   @if(x.getValue().toString().length() > 50) {
-       <a class="label label-@label"
+       <a class="label label-@label loader"
            href="#@Util.sha1(x.getValue().toString()).substring(0,6)"
            tabindex="0"
            data-toggle="popover"
@@ -215,7 +214,7 @@
 
 @diseaserow(dr: DiseaseRelevance) = {
      <tr @*class="treegrid-@dr.disease.id"*@>
-       <td><a class="label label-primary" href="@{ix.idg.controllers.routes.IDGApp.targets()+"?facet="+URLEncoder.encode(IDG_DISEASE,"utf8")+"/"+URLEncoder.encode(dr.disease.name, "utf8")}">@dr.disease.name</a></td>
+       <td><a class="label label-primary loader" href="@{ix.idg.controllers.routes.IDGApp.targets()+"?facet="+URLEncoder.encode(IDG_DISEASE,"utf8")+"/"+URLEncoder.encode(dr.disease.name, "utf8")}">@dr.disease.name</a></td>
        <td>@diseasedblink(dr.disease,dr.zscore)</td>
        <td>@diseasedblink(dr.disease,dr.conf)</td>
        @if(dr.tinxScore != null) {
@@ -228,7 +227,7 @@
      @for(i <- 0 until dr.lineage.size()) {
        @defining(dr.lineage(i)) { x =>      
          <tr class="treegrid-@x.disease.id treegrid-parent-@dr.disease.id">
-            <td><a href="@ix.idg.controllers.routes.IDGApp.disease(IDGApp.getId(x.disease))">@x.disease.name</a></td>
+            <td><a class="loader" href="@ix.idg.controllers.routes.IDGApp.disease(IDGApp.getId(x.disease))">@x.disease.name</a></td>
             <td>@diseasedblink(x.disease,x.zscore)</td>
             <td>@diseasedblink(x.disease,x.conf)</td>
             @if(x.tinxScore != null) {
@@ -353,7 +352,7 @@
    }
    </td>
    <td class="valign-center">
-       <a class="label label-primary" href='@ix.idg.controllers.routes.IDGApp.ligand(IDGApp.getId(lig))'>@lig.getName()</a>
+       <a class="label label-primary loader" href='@ix.idg.controllers.routes.IDGApp.ligand(IDGApp.getId(lig))'>@lig.getName()</a>
    </td>
    @defining(IDGApp.getActivity(target, lig)) { act =>
       @if(act != null) {
@@ -374,7 +373,7 @@
   <li><a href="@ix.idg.controllers.routes.IDGApp.index()"><span class="fa fa-home"></span> Home</a></li>
     <li><a href="@ix.idg.controllers.routes.IDGApp.targets()">Targets</a></li>
     @for(kw <- breadcrumb) {
-    <li><a href="@kw.href">@kw.term</a></li>
+    <li><a class="loader" href="@kw.href">@kw.term</a></li>
     }
     <li class="active">@target.name</li>
 </ol>
@@ -411,7 +410,7 @@ This is TCRD target <a href='@ix.core.controllers.v1.routes.RouteFactory.get("ta
                     </ul>
                 </div>
 
-                <a class="btn btn-default" href="@HtmlFormat.raw(request.uri)?action=download" role="button" style="margin-right:1px; margin-left:1px;">
+                <a class="btn btn-default loader" href="@HtmlFormat.raw(request.uri)?action=download" role="button" style="margin-right:1px; margin-left:1px;">
                     <i class="fa fa-download fa-lg "></i></a>
 
                 <div class="dropdown pull-right">
@@ -514,7 +513,7 @@ This is TCRD target <a href='@ix.core.controllers.v1.routes.RouteFactory.get("ta
           @defining(target.getSynonyms(PDB_ID)) { pdbids =>
               @if(pdbids.size() > 0) {
                   <div class="panel panel-default" 
-                       style="max-height: 400px;overflow-y: auto;">
+                       style="max-height: 300px; overflow-y: auto;">
                       <a name="pdb" tocname="PDB"></a>
                       <div class="panel-heading">
                           <h3 class="panel-title">PDB <i class="fa fa-external-link"></i></h3>
@@ -639,10 +638,10 @@ This is TCRD target <a href='@ix.core.controllers.v1.routes.RouteFactory.get("ta
                  <div class="panel panel-default">
                  <a name="ligands" tocname="Ligands"></a>
                     <div class="panel-heading">
-                       <h3 class="panel-title"><a href='@{ix.idg.controllers.routes.IDGApp.ligands() + "?facet=" + IDG_TARGET+"/"+target.getSynonym(UNIPROT_GENE).term}'>Ligand (@ligands.size)</a></h3>
+                       <h3 class="panel-title"><a class="loader" href='@{ix.idg.controllers.routes.IDGApp.ligands() + "?facet=" + IDG_TARGET+"/"+target.getSynonym(UNIPROT_GENE).term}'>Ligand (@ligands.size)</a></h3>
                     </div>
                     <div class="panel-body"
-                         style="max-height: 300px;overflow-y: scroll;">
+                         style="max-height: 300px;overflow-y: auto;">
                       <table class="table">
                         @if(ligands.size > 20) {
                            @for(l <- ligands.subList(0, 20)) {
@@ -657,7 +656,7 @@ This is TCRD target <a href='@ix.core.controllers.v1.routes.RouteFactory.get("ta
                    </div>
                    @if(ligands.size > 20) {
                    <div class="panel-footer">
-                      <a href='@{ix.idg.controllers.routes.IDGApp.ligands() + "?facet=" + IDG_TARGET+"/"+target.getSynonym(UNIPROT_GENE).term}'>See all @ligands.size ligands...</a>
+                      <a class="loader" href='@{ix.idg.controllers.routes.IDGApp.ligands() + "?facet=" + IDG_TARGET+"/"+target.getSynonym(UNIPROT_GENE).term}'>See all @ligands.size ligands...</a>
                    </div>
                    }
                 </div>
@@ -717,8 +716,7 @@ This is TCRD target <a href='@ix.core.controllers.v1.routes.RouteFactory.get("ta
                 </div>
                 <div class="panel-body">
                    @for(p <- ppi) {
-                     <a class="label label-@p.idgTDL.label"
-                        onclick="showLoadModal()"
+                     <a class="label label-@p.idgTDL.label loader"
                         href='@ix.idg.controllers.routes.IDGApp.target(IDGApp.getId(p))'>@p.getSynonym(UNIPROT_GENE).term</a>
                    }
                 </div>
@@ -745,7 +743,7 @@ This is TCRD target <a href='@ix.core.controllers.v1.routes.RouteFactory.get("ta
                   }
                 </h3>
             </div>
-            <div class="panel-body">
+            <div class="panel-body" style="max-height:300px;">
                 <div id="tinx-plot"></div>
             </div>
          </div>
@@ -758,7 +756,7 @@ This is TCRD target <a href='@ix.core.controllers.v1.routes.RouteFactory.get("ta
                         data-html="true"
                         title="<p align='left'>Disease-gene associations mined from Medline Franklid et al, Methods, 2015, 83-89</p>">Disease Relevance (@diseases.size())</h3>
           </div>
-          <div class="panel-body">
+          <div class="panel-body" style="max-height:300px;overflow-y:auto;">
                <table class="tree table">
                           <tr>
                               <th>Disease</th>
@@ -772,27 +770,8 @@ This is TCRD target <a href='@ix.core.controllers.v1.routes.RouteFactory.get("ta
                               data-toggle="tooltip" data-placement="top" data-html="true"
                               title="<p align='left'>A score characterizing the importance of the target, based on occurences in the published literature.</p>"></i></th>
                           </tr>
-                          @defining(request().getQueryString("view")) { view =>
-                              @view match {
-                                  case "full" => {
-                                      @for(dr <- diseases) {
-                                          @diseaserow(dr)
-                                      }
-                                  }
-                                  case _ => {
-                                      @for(i <- 0 until Math.min(10, diseases.size())) {
-                                          @diseaserow(diseases(i))
-                                      }
-                                      @if(diseases.size() > 10) {
-                                          <tr>
-                                              <td><a href="@request().uri?view=full">More...</a></td>
-                                              <td></td>
-                                              <td></td>
-                                              <td></td>
-                                          </tr>
-                                      }
-                                  }
-                              }
+                          @for(dr <- diseases) {
+                               @diseaserow(dr)
                           }
                </table>
           </div>  @* panel-body *@
@@ -958,12 +937,11 @@ This is TCRD target <a href='@ix.core.controllers.v1.routes.RouteFactory.get("ta
                 @if(mesh.size > 20) {
                   @for(m <- mesh.subList(0, 20)) {
                     <a @if(m.majorTopic) {
-                      class="label label-warning"
+                      class="label label-warning loader"
                     } else {
-                      class="label label-primary"
+                      class="label label-primary loader"
                     }
                     id="keyword"
-                    onclick="showLoadModal()"   
                     href='@{ix.idg.controllers.routes.IDGApp.targets()+"?facet=MeSH/"}@URLEncoder.encode(m.heading,"utf8")'>@m.heading</a>
                     @if(m.majorTopic) {
                         <a href='http://www.ncbi.nlm.nih.gov/pubmed?term="@m.heading"[MAJR]'><i class="fa fa-external-link"></i></a>
@@ -977,12 +955,11 @@ This is TCRD target <a href='@ix.core.controllers.v1.routes.RouteFactory.get("ta
                 } else {
                   @for(m <- mesh) {
                     <a @if(m.majorTopic) {
-                      class="label label-warning"
+                      class="label label-warning loader"
                     } else {
-                      class="label label-primary"
+                      class="label label-primary loader"
                     }
                     id="keyword"
-                    onclick="showLoadModal()"
                     href='@{ix.idg.controllers.routes.IDGApp.targets()+"?facet=MeSH/"}@URLEncoder.encode(m.heading,"utf8")'>@m.heading</a>
                   }
                 }
@@ -1186,17 +1163,18 @@ This is TCRD target <a href='@ix.core.controllers.v1.routes.RouteFactory.get("ta
     @defining(IDGApp.getSequence(target)) { seq =>
        @if(seq != null) {
          <div class="row">
-            <div class="col-md-12">
-                 <div class="panel panel-default">
-                     <a name="seq" tocname="Sequence"></a>
-                      <div class="panel-heading">
-                           <h3 class="panel-title">Sequence</h3>
-                      </div>
-                      <div class="panel-body">
-                        <pre class="pre-scrollable">@seq</pre>
-                      </div>
-                 </div>
-            </div>
+           <div class="col-md-12">
+             <div class="panel panel-default">
+               <a name="seq" tocname="Sequence"></a>
+               <div class="panel-heading">
+                 <h3 class="panel-title">AA Sequence</h3>
+               </div>
+               <div class="panel-body">
+		 <div id="aa-profile" style="max-height:200px; width:100%;"></div>
+                 <pre class="pre-scrollable">@seq</pre>
+               </div>
+             </div>
+           </div>
          </div>
        }
     }
@@ -1370,7 +1348,6 @@ $(function () {
 });
 
 $(document).ready(function () {
-
     /* populate TOC menu */
     var tocs = [];
     $("a[tocname]" ).each(function(){
@@ -1446,9 +1423,9 @@ $('.tree').treegrid({
      initialState: 'collapsed'
   });
 
-  $('#keyword').on('click touchstart', function () {
-     showLoadModal();
-  });
+//  $('#keyword').on('click touchstart', function () {
+//     showLoadModal();
+//  });
 
   $.ajax({
      url: '@ix.idg.controllers.routes.IDGApp.targetTissue(IDGApp.getId(target))',
@@ -1554,7 +1531,7 @@ $('.tree').treegrid({
         });
     });
 
-
+   plotAAProfile('#aa-profile');
 
    @*new Morris.Line({*@
       @*element: 'patent-line-plot',*@
@@ -1568,6 +1545,41 @@ $('.tree').treegrid({
    tinx_target_plot("#tinx-plot", "@IDGApp.getId(target)");
 });
 
+function plotAAProfile (container) {
+   $(container).highcharts({
+        chart: {
+            type: 'column',
+	    height: 150
+        },
+        title: {
+            text: null
+        },
+        credits: {enabled: false},
+	xAxis: {
+	/*
+ 	   categories:['A','R','N','D','C','E','Q','G','H','I',
+		        'L','K','M','F','P','S','T','W','Y','V'],*/
+	    categories: ['@target.name'],
+	    title: {
+	       text: null
+	    },
+	    labels: {
+    	       enabled: false,
+	    }
+	},
+        yAxis: {
+            min: 0,
+	    title: {
+	       text: null
+	    }
+        },
+        legend: {
+            enabled: false
+        },
+        series: @HtmlFormat.raw(IDGApp.getAminoAcidProfile(target).toString)
+    });
+}
+
 function showLoadModal () {
    $('#page-loader').addClass('loader-wait');    
 /*            
@@ -1578,7 +1590,7 @@ function showLoadModal () {
         });
 */      
 }
-
+	      
 $(window).unload(function () {
     $('#loadmodal').modal('hide');    
 });

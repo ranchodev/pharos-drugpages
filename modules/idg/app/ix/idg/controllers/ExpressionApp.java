@@ -125,11 +125,16 @@ public class ExpressionApp extends App {
 
     public static List<Expression> getLinkedExpr(Target t, String sourceId) {
         List<Expression> ret = new ArrayList<>();
+        Set<String> tissues = new HashSet<>(); // make sure it's unique
         for (XRef xref : t.getLinks()) {
             if (!xref.kind.equals(Expression.class.getName())) continue;
             Expression expr = (Expression) xref.deRef();
-            if (expr.getSourceid() != null && expr.getSourceid().equals(sourceId))
+            if (expr.getSourceid() != null
+                && expr.getSourceid().equals(sourceId)
+                && !tissues.contains(expr.getTissue())) {
                 ret.add(expr);
+                tissues.add(expr.getTissue());
+            }
         }
 
         if (ret.size() > 0) {

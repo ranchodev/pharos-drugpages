@@ -11,11 +11,11 @@ facets: Array[FacetDecorator], targets: List[Target], ctx: String )
 @tabrow(t: Target) = {
     <tr id="row-@IDGApp.getId(t)">
         <td><input type="checkbox" class="cb-table-row" id="cb-@IDGApp.getId(t)" /></td>
-        <td><a id='load' onclick="showLoadModal()"
+        <td><a class="loader"
 	   href="@ix.idg.controllers.routes.IDGApp.target(IDGApp.getId(t))">@t.name</a></td>
 	<td>@defining(t.getSynonym(UNIPROT_GENE)) { gene =>
 	  @if(gene != null && gene.term != null) {
-	     <a onclick="showLoadModal()" href="@ix.idg.controllers.routes.IDGApp.target(gene.term)">@gene.term</a>
+	     <a class="loader" href="@ix.idg.controllers.routes.IDGApp.target(gene.term)">@gene.term</a>
 	  } else {
 	     N/A
 	  }
@@ -70,19 +70,19 @@ facets: Array[FacetDecorator], targets: List[Target], ctx: String )
                 @for(f <- facets) {
                     @if(f.startsWith(DTO_PROTEIN_CLASS)) {
                         @for(a <- IDGApp.getProteinAncestry(f)) {
-                            <li><a href="@a.href">@a.term</a></li>
+                            <li><a class="loader" href="@a.href">@a.term</a></li>
                         }
                         <li class="active">@f.substring(f.indexOf('/') + 1)</li>
 		    }
 		    @if(f.startsWith(PANTHER_PROTEIN_CLASS)) {
                         @for(a <- IDGApp.getAncestry(f, PANTHER_PROTEIN_ANCESTRY)) {
-                            <li><a href="@a.href">@a.term</a></li>
+                            <li><a class="loader" href="@a.href">@a.term</a></li>
                         }
                         <li class="active">@f.substring(f.indexOf('/') + 1)</li>
 		    }
 		    @if(f.startsWith(ChEMBL_PROTEIN_CLASS)) {
                         @for(a <- IDGApp.getAncestry(f, ChEMBL_PROTEIN_ANCESTRY)) {
-                            <li><a href="@a.href">@a.term</a></li>
+                            <li><a class="loader" href="@a.href">@a.term</a></li>
                         }
                         <li class="active">@f.substring(f.indexOf('/') + 1)</li>
 		    }
@@ -376,11 +376,6 @@ function download () {
 var _cart_selectType = "selected";
 
 $(document).ready(function () {
-    $(window).load(function() {
-       // Animate loader off screen
-    
-    });
-	
     /*
     $(".facet-panel-body" ).each(function() {
         $(this ).toggle();
@@ -403,7 +398,7 @@ $(document).ready(function () {
     $('#modal-kinome').on('shown.bs.modal', function (e) {
         console.log('kinome tree modal shown...');
         new Kinome('kinome-canvas',
-            '@routes.Assets.at("images/kinome200.png")',
+            '@routes.Assets.at("images/kinome400.png")',
         '@HtmlFormat.raw(ix.idg.controllers.routes.IDGApp.getKinases(null)+App.queryString("q", "facet"))'
         );
     });
@@ -427,7 +422,7 @@ $(document).ready(function () {
     var folderNames = ['Default'];
     @for(f <- ix.idg.controllers.DossierApp.getFolderNames()) {
          @if( !f.equals("")) {
-    folderNames.push('@f');
+	     folderNames.push('@f');
         }
     }
 
@@ -589,21 +584,9 @@ $(document).ready(function () {
      $('.inlinesparkline').sparkline('html', {width:'50px'});
 });
 
-function showLoadModal () {
-   //console.log('showing modal...');
-   $('#page-loader').addClass('loader-wait');
-  /*
-  $('#loadmodal').modal({
-      keyboard: false,
-      show: true,
-      backdrop: 'static'
-			      });
-  */
-}
-
-$(window).unload(function () {
+window.onbeforeunload = function () {
     $('#loadmodal').modal('hide');
     $('#hgramModal').modal('hide');
     $('#modal-folder').modal('hide');
-});
+}
 </script>

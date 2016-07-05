@@ -341,16 +341,19 @@ public class IDGApp extends App implements Commons {
                     List<Ligand> ligands = LigandResult.find(label);
                     if (!ligands.isEmpty()) {
                         Structure struc = getStructure (ligands.get(0));
-                        url.append(" tabindex='-1'");
-                        url.append(" data-toggle='popover'");
-                        url.append(" data-animation='true'");
-                        url.append(" data-placement='top'");
-                        url.append(" data-trigger='hover'");
-                        url.append(" data-html='true'");
-                        url.append(" data-content=\"<img src='");
-                        url.append(ix.ncats.controllers.routes.App.structure
-                                   (struc.getId(),"svg",200,null).toString());
-                        url.append("'>\"");
+                        if (struc != null) {
+                            url.append(" tabindex='-1'");
+                            url.append(" data-toggle='popover'");
+                            url.append(" data-animation='true'");
+                            url.append(" data-placement='top'");
+                            url.append(" data-trigger='hover'");
+                            url.append(" data-html='true'");
+                            url.append(" data-content=\"<img src='");
+                            url.append
+                                (ix.ncats.controllers.routes.App.structure
+                                 (struc.getId(),"svg",200,null).toString());
+                            url.append("'>\"");
+                        }
                     }
                 }
                 catch (Exception ex) {
@@ -363,10 +366,10 @@ public class IDGApp extends App implements Commons {
                 return url.toString();
             }
             else if (name.equals(IDG_TARGET) || name.equals(UNIPROT_GENE)) {
-                return "<a href='"+routes.IDGApp.target(label)+"' onclick='showLoadModal()'>"+label+"</a>";
+                return "<a class='loader' href='"+routes.IDGApp.target(label)+"'>"+label+"</a>";
             }
             else if (name.equals(IDG_DISEASE)) {
-                return "<a href='"+routes.IDGApp.disease(label)+"'>"
+                return "<a class='loader' href='"+routes.IDGApp.disease(label)+"'>"
                     +label+"</a>";
             }
             else if (name.equals(WHO_ATC)) {
@@ -440,36 +443,57 @@ public class IDGApp extends App implements Commons {
                                 values = finder.where()
                                     .eq("name", name).findList();
                             }
-                            
-                            if (values.size() > 1) {
-                                Logger.warn("\""+name+"\" yields "
-                                            +values.size()+" matches!");
-                            }
-                            
+                                                        
                             // also cache all the synonyms
+                            List<T> valid = new ArrayList<T>();
                             for (T v : values) {
+                                Set<String> labels = new HashSet<String>();
                                 for (Keyword kw : v.getSynonyms()) {
                                     if (kw.term == null) {
                                         Logger.warn("NULL term for synonym"
                                                     +" keyword label: "
                                                     +kw.label);
-                                        continue;
                                     }
-
-                                    if (!kw.term.equals(name))
-                                        IxCache.set(cls.getName()+"/"
-                                                    +kw.term, values);
-                                    if (!kw.term.toUpperCase().equals(name))
-                                        IxCache.set(cls.getName()+"/"
-                                                    +kw.term.toUpperCase(),
-                                                    values);
-                                    if (!kw.term.toLowerCase().equals(name))
-                                        IxCache.set(cls.getName()+"/"
-                                                    +kw.term.toLowerCase(),
-                                                    values);
+                                    else if (kw.term.equalsIgnoreCase(name)) {
+                                        labels.add(kw.label);
+                                    }
+                                }
+                                
+                                if (matchedLabelsValid (labels)) {
+                                    valid.add(v);
                                 }
                             }
-                            return values;
+
+                            if (values.size() > 1) {
+                                Logger.warn("\""+name+"\" yields "
+                                            +values.size()+" matches; "
+                                            +valid.size()+" after filter!");
+                            }
+                            
+                            if (valid.isEmpty())
+                                valid.addAll(values);
+
+                            for (T v : valid) {
+                                for (Keyword kw : v.getSynonyms()) {
+                                    if (kw.term == null) {
+                                    }
+                                    else {
+                                        if (!kw.term.equals(name))
+                                            IxCache.set(cls.getName()+"/"
+                                                        +kw.term, valid);
+                                        if (!kw.term.toUpperCase().equals(name))
+                                            IxCache.set(cls.getName()+"/"
+                                                        +kw.term.toUpperCase(),
+                                                        valid);
+                                        if (!kw.term.toLowerCase().equals(name))
+                                            IxCache.set(cls.getName()+"/"
+                                                        +kw.term.toLowerCase(),
+                                                        valid);
+                                    }
+                                }
+                            }
+                            
+                            return valid;
                         }
                     });
             double elapsed = (System.currentTimeMillis()-start)*1e-3;
@@ -478,7 +502,12 @@ public class IDGApp extends App implements Commons {
                          +" matches for "+name);
             return e;
         }
-        
+
+        // override by subclass
+        protected boolean matchedLabelsValid (Set<String> labels) {
+            return true;
+        }
+
         public Result get (final String name) {
             try {
                 List<T> e = find (name);
@@ -1095,6 +1124,10 @@ public class IDGApp extends App implements Commons {
         new GetResult<Target>(Target.class, TargetFactory.finder) {
             public Result getResult (List<Target> targets) throws Exception {
                 return _getTargetResult (targets);
+            }
+            @Override
+            protected boolean matchedLabelsValid (Set<String> labels) {
+                return !labels.contains(UNIPROT_SHORTNAME);
             }
         };
 
@@ -2640,7 +2673,7 @@ public class IDGApp extends App implements Commons {
     }
 
     public static String getSequence (Target target) {
-        return getSequence (target, 80);
+        return getSequence (target, 70);
     }
     
     public static String getSequence (Target target, int wrap) {
@@ -2651,6 +2684,61 @@ public class IDGApp extends App implements Commons {
         
         String text = ((Text)val).text;
         return formatSequence (text, wrap);
+    }
+
+    static final char[] AA = {
+        'A', // Ala
+        'R', // Arg
+        'N', // Asn
+        'D', // Asp
+        'C', // Cys
+        'E', // Glu
+        'Q', // Gln
+        'G', // Gly
+        'H', // His
+        'I', // Ile
+        'L', // Leu
+        'K', // Lys
+        'M', // Met
+        'F', // Phe
+        'P', // Pro
+        'S', // Ser
+        'T', // Thr
+        'W', // Trp
+        'Y', // Tyr
+        'V'  // Val
+    };
+    public static JsonNode getAminoAcidProfile (Target target) {
+        Value val = target.getProperty(UNIPROT_SEQUENCE);
+        JsonNode json = null;
+        if (val != null) {
+            String text = ((Text)val).text;
+            Map<Character, Integer> aa = new TreeMap<Character, Integer>();
+            for (int i = 0; i < text.length(); ++i) {
+                char ch = text.charAt(i);
+                Integer c = aa.get(ch);
+                aa.put(ch, c == null ? 1 : (c+1));
+            }
+            ObjectMapper mapper = new ObjectMapper ();              
+            ArrayNode node = mapper.createArrayNode();
+            for (int i = 0; i < AA.length; ++i) {
+                Integer c = aa.get(AA[i]);
+                ObjectNode n = mapper.createObjectNode();
+                n.put("name", ""+AA[i]);
+                ArrayNode a = mapper.createArrayNode();
+                a.add(c != null ? c : 0);
+                n.put("data", a);
+                ObjectNode l = mapper.createObjectNode();
+                l.put("enabled", true);
+                l.put("rotation", -90);
+                l.put("y",-20);
+                l.put("format", "<b>{point.series.name}</b>: {point.y}");
+                n.put("dataLabels", l);
+                node.add(n);
+            }
+            json = node;
+        }
+        return json;
     }
 
     public static SequenceIndexer.Result
@@ -2668,13 +2756,21 @@ public class IDGApp extends App implements Commons {
 
     public static String formatSequence (String text, int wrap) {
         StringBuilder seq = new StringBuilder ();
-        for (int len = text.length(), i = 1, j = 1; i <= len; ++i) {
+        int j = 1;
+        for (int len = text.length(), i = 1; i <= len; ++i) {
             seq.append(text.charAt(i-1));           
             if (i % wrap == 0) {
                 seq.append(String.format("%1$7d - %2$d\n", j, i));
                 j = i+1;
             }
         }
+        
+        int r = wrap - (text.length() % wrap);
+        if (r != 0) {
+            seq.append(String.format
+                       ("%1$"+(r+7)+"d - %2$d\n", j, text.length()));
+        }
+        seq.append("//");        
         return seq.toString();
     }
 
@@ -2706,7 +2802,7 @@ public class IDGApp extends App implements Commons {
         if (url.indexOf('?') > 0) url += '&';
         else url += '?';
         
-        return "<th><a href='"+url+"order="+order+"'>"+name
+        return "<th><a class='loader' href='"+url+"order="+order+"'>"+name
             +"</a>&nbsp;<i class='fa fa-sort"+sort+"'></i></th>";
     }
 

@@ -46,7 +46,6 @@ public class IxCache extends Plugin
     private final Application app;
     private Ehcache cache;
     private IxContext ctx;
-    protected Environment env;
     protected Database db;
 
     static private IxCache _instance;
@@ -247,11 +246,6 @@ public class IxCache extends Plugin
         return _instance.cache.isKeyInCache(key);
     }
 
-    static String getKey (Serializable key) throws IOException {
-        //return Util.toHex(Util.serialize(key));
-        return key.toString();
-    }
-
     static DatabaseEntry getKeyEntry (Object value) {
         return new DatabaseEntry (value.toString().getBytes());
     }
@@ -299,7 +293,7 @@ public class IxCache extends Plugin
             dir.mkdirs();
             EnvironmentConfig envconf = new EnvironmentConfig ();
             envconf.setAllowCreate(true);
-            env = new Environment (dir, envconf);
+            Environment env = new Environment (dir, envconf);
             DatabaseConfig dbconf = new DatabaseConfig ();
             dbconf.setAllowCreate(true);
             db = env.openDatabase(null, CACHE_NAME, dbconf);

@@ -38,15 +38,19 @@
 	    canvas.add(cir);
         }
     }
-    
+
+    /*
+     * TODO: these offset assumes specific sized kinome.. 400 at the moment.
+     * if kinome200.png is used, then remove the x2 factor.
+     */
     function annotateFamilies () {
         // draw the family names
         var tk = new fabric.Text('TK', {
             fontFamily: 'Comic Sans',
             //shadow: 'rgba(0,0,0,0.3) 5px 5px 5px',
             angle: 0,
-            top: 30,
-            left: 1,
+            top: ~~(30*2),
+            left: ~~(1*2),
             fontSize: 10,
             //fill: '#428bca'
 	    fill: 'gray'
@@ -58,8 +62,8 @@
             fontFamily: 'Comic Sans',
             //shadow: 'rgba(0,0,0,0.3) 5px 5px 5px',
             //angle: 45,
-            top: 32,
-            left: 120,
+            top: ~~(32*2),
+            left: ~~(120*2),
             fontSize: 10,
             //fill: '#428bca'
 	    fill: 'gray'
@@ -70,8 +74,8 @@
         var ste = new fabric.Text('STE', {
             fontFamily: 'Comic Sans',
             //angle: 45,
-            top: 50,
-            left: 130,
+            top: ~~(50*2),
+            left: ~~(130*2),
             fontSize: 10,
             //fill: '#428bca'
 	    fill: 'gray'
@@ -82,8 +86,8 @@
         var ck1 = new fabric.Text('CK1', {
             fontFamily: 'Comic Sans',
             //angle: 45,
-            top: 100,
-            left: 135,
+            top: ~~(100*2),
+            left: ~~(135*2),
             fontSize: 10,
             //fill: '#428bca'
 	    fill: 'gray'
@@ -94,8 +98,8 @@
         var agc = new fabric.Text('AGC', {
             fontFamily: 'Comic Sans',
             //angle: 45,
-            top: 170,
-            left: 130,
+            top: ~~(170*2),
+            left: ~~(130*2),
             fontSize: 10,
             //fill: '#428bca'
 	    fill: 'gray'
@@ -106,8 +110,8 @@
         var camk = new fabric.Text('CAMK', {
             fontFamily: 'Comic Sans',
             //angle: 45,
-            top: 185,
-            left: 90,
+            top: ~~(185*2),
+            left: ~~(90*2),
             fontSize: 10,
             //fill: '#428bca'
 	    fill: 'gray'
@@ -118,8 +122,8 @@
         var cmgc = new fabric.Text('CMGC', {
             fontFamily: 'Comic Sans',
             //angle: 45,
-            top: 135,
-            left: 5,
+            top: ~~(135*2),
+            left: ~~(5*2),
             fontSize: 10,
             //fill: '#428bca'
 	    fill: 'gray'
@@ -132,7 +136,9 @@
 	canvas = new fabric.StaticCanvas(id);
 	fabric.Image.fromURL(image, function (img) {
             canvas.setBackgroundImage(img);
-        
+            scaleX = img.width / 1591.0;
+	    scaleY = img.height / 1959.9;
+	    
 	    $.get(url, function (data) {
 		resetCanvas ();
 		var selections = {
