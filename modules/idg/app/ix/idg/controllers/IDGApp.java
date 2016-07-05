@@ -26,6 +26,7 @@ import ix.idg.models.Target;
 import ix.ncats.controllers.App;
 import ix.seqaln.SequenceIndexer;
 import ix.utils.Util;
+import ix.utils.Global;
 import org.apache.commons.lang3.StringUtils;
 import play.Logger;
 import play.Play;
@@ -742,17 +743,18 @@ public class IDGApp extends App implements Commons {
 
         if (kind != null) {
             SearchResult result = getSearchFacets (kind);
-            Logger.debug("+++");
+            //Logger.debug("+++");
             for (FacetDecorator f : decors) {
                 if (!f.hidden) {
-                    Logger.debug("Facet "+f.facet.getName());
+                    if (Global.DEBUG(2))
+                        Logger.debug("Facet "+f.facet.getName());
                     Facet full = result.getFacet(f.facet.getName());
                     for (int i = 0; i < f.facet.size(); ++i) {
                         TextIndexer.FV fv = f.facet.getValue(i);
                         f.total[i] = full.getCount(fv.getLabel());
-                        Logger.debug("  + "+fv.getLabel()+" "
-                                     +fv.getCount()
-                                     +"/"+f.total[i]);
+                        if (Global.DEBUG(2))
+                            Logger.debug("  + "+fv.getLabel()+" "
+                                         +fv.getCount()+"/"+f.total[i]);
                     }
                 }
             }
@@ -1541,7 +1543,7 @@ public class IDGApp extends App implements Commons {
             if (!query.containsKey("order") && q == null) {
                 // only implicitly order based on novelty if it's not a
                 // search
-                query.put("order", new String[]{"$novelty"});
+                //query.put("order", new String[]{"$novelty"});
             }
             
             final SearchResult result =

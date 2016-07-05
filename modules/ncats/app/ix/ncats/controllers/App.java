@@ -700,8 +700,11 @@ public class App extends Authentication {
         
         if (kind != null)
             args.add(kind.getName());
-        
-        return Util.sha1(args.toArray(new String[0]));
+
+        String sha1 = Util.sha1(args.toArray(new String[0]));
+        //Logger.debug("SIGNATURE: "+args+" => "+sha1);
+
+        return sha1;
     }
 
     public static SearchResult getSearchContext (String ctx) {
@@ -1384,6 +1387,10 @@ public class App extends Authentication {
      * finished in one way or another
      */
     public static Call checkStatus () {
+        return checkStatus (null);
+    }
+    
+    public static Call checkStatus (String kind) {
         String query = request().getQueryString("q");
         String type = request().getQueryString("type");
 
@@ -1431,7 +1438,17 @@ public class App extends Authentication {
             }
         }
         else {
-            String key = signature (query, getRequestQuery ());
+            Class klass = null;
+            if (kind != null) {
+                try {
+                    klass = Class.forName(kind);
+                }
+                catch (Exception ex) {
+                    Logger.warn("Bogus kind: "+kind, ex);
+                }
+            }
+            
+            String key = signature (klass, query, getRequestQuery ());
             Object value = IxCache.get(key);
             Logger.debug("checkStatus: key="+key+" value="+value);
             

@@ -266,7 +266,8 @@ public class IxCache extends Plugin
             OperationStatus status = db.get(null, dkey, data, null);
             if (status == OperationStatus.SUCCESS) {
                 ObjectInputStream ois = new ObjectInputStream
-                    (new ByteArrayInputStream (data.getData()));
+                    (new ByteArrayInputStream
+                     (data.getData(), data.getOffset(), data.getSize()));
                 elm = new Element (key, ois.readObject());
                 ois.close();
             }
@@ -326,6 +327,9 @@ public class IxCache extends Plugin
         try {
             DatabaseEntry dkey = getKeyEntry (key);
             OperationStatus status = db.delete(null, dkey);
+            if (status != OperationStatus.SUCCESS)
+                Logger.warn("Delete cache key '"
+                            +key+"' returns status "+status);
         }
         catch (Exception ex) {
             Logger.error("Deleting cache "+key+" from persistence!", ex);

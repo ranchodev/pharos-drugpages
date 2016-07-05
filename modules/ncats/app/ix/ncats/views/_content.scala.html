@@ -125,7 +125,7 @@ function dismissQuery () {
 }
 
 $(document).ready(function () {
-    @defining(App.checkStatus()) { status =>
+    @defining(App.checkStatus(kind)) { status =>
       @if(status != null) {
          $('#searching')
 		.html('<i class="fa fa-spinner fa-spin"></i> searching...');

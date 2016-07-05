@@ -358,11 +358,11 @@ public class TextIndexer {
             }
                 
             Iterator it = matches.iterator();
-            for (int i = 0; i < start && it.hasNext(); ++i)
-                it.next(); // skip
-            
             int i = 0;
-            for (; i < count && it.hasNext(); ++i) {
+            for (; i < start && it.hasNext(); ++i)
+                it.next(); // skip
+
+            for (i = 0; i < count && it.hasNext(); ++i) {
                 list.add(it.next());
             }
             return i;
@@ -598,7 +598,7 @@ public class TextIndexer {
                     (kind.stringValue()+":"+id
                      +" not available in persistence store!");
             }
-            
+
             return value;
         }
         
@@ -659,7 +659,6 @@ public class TextIndexer {
                                      +": fetching payload "
                                      +payload.hits.totalHits
                                      +" for "+payload.result);
-
                         payload.fetch();
                         Logger.debug(Thread.currentThread()+": ## fetched "
                                      +payload.result.size()
@@ -1109,12 +1108,12 @@ public class TextIndexer {
                 
                 for (FacetResult result : facetResults) {
                     Facet f = new Facet (result.dim);
-                    if (DEBUG (1)) {
+                    if (DEBUG (2)) {
                         Logger.info(" + ["+result.dim+"]");
                     }
                     for (int i = 0; i < result.labelValues.length; ++i) {
                         LabelAndValue lv = result.labelValues[i];
-                        if (DEBUG (1)) {
+                        if (DEBUG (2)) {
                             Logger.info("     \""+lv.label+"\": "+lv.value);
                         }
                         f.values.add(new FV (lv.label, lv.value.intValue()));
@@ -1171,7 +1170,7 @@ public class TextIndexer {
                 
                 for (FacetResult result : facetResults) {
                     if (result != null) {
-                        if (DEBUG (1)) {
+                        if (DEBUG (2)) {
                             Logger.info(" + ["+result.dim+"]");
                         }
                         Facet f = new Facet (result.dim);
@@ -1188,7 +1187,7 @@ public class TextIndexer {
                         
                         for (int i = 0; i < result.labelValues.length; ++i) {
                             LabelAndValue lv = result.labelValues[i];
-                            if (DEBUG (1)) {
+                            if (DEBUG (2)) {
                                 Logger.info
                                     ("     \""+lv.label+"\": "+lv.value);
                             }
