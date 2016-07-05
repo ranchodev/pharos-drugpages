@@ -341,16 +341,19 @@ public class IDGApp extends App implements Commons {
                     List<Ligand> ligands = LigandResult.find(label);
                     if (!ligands.isEmpty()) {
                         Structure struc = getStructure (ligands.get(0));
-                        url.append(" tabindex='-1'");
-                        url.append(" data-toggle='popover'");
-                        url.append(" data-animation='true'");
-                        url.append(" data-placement='top'");
-                        url.append(" data-trigger='hover'");
-                        url.append(" data-html='true'");
-                        url.append(" data-content=\"<img src='");
-                        url.append(ix.ncats.controllers.routes.App.structure
-                                   (struc.getId(),"svg",200,null).toString());
-                        url.append("'>\"");
+                        if (struc != null) {
+                            url.append(" tabindex='-1'");
+                            url.append(" data-toggle='popover'");
+                            url.append(" data-animation='true'");
+                            url.append(" data-placement='top'");
+                            url.append(" data-trigger='hover'");
+                            url.append(" data-html='true'");
+                            url.append(" data-content=\"<img src='");
+                            url.append
+                                (ix.ncats.controllers.routes.App.structure
+                                 (struc.getId(),"svg",200,null).toString());
+                            url.append("'>\"");
+                        }
                     }
                 }
                 catch (Exception ex) {
@@ -440,12 +443,7 @@ public class IDGApp extends App implements Commons {
                                 values = finder.where()
                                     .eq("name", name).findList();
                             }
-                            
-                            if (values.size() > 1) {
-                                Logger.warn("\""+name+"\" yields "
-                                            +values.size()+" matches!");
-                            }
-                            
+                                                        
                             // also cache all the synonyms
                             List<T> valid = new ArrayList<T>();
                             for (T v : values) {
@@ -455,7 +453,6 @@ public class IDGApp extends App implements Commons {
                                         Logger.warn("NULL term for synonym"
                                                     +" keyword label: "
                                                     +kw.label);
-                                        continue;
                                     }
                                     else if (kw.term.equalsIgnoreCase(name)) {
                                         labels.add(kw.label);
@@ -466,23 +463,33 @@ public class IDGApp extends App implements Commons {
                                     valid.add(v);
                                 }
                             }
+
+                            if (values.size() > 1) {
+                                Logger.warn("\""+name+"\" yields "
+                                            +values.size()+" matches; "
+                                            +valid.size()+" after filter!");
+                            }
                             
                             if (valid.isEmpty())
                                 valid.addAll(values);
 
                             for (T v : valid) {
                                 for (Keyword kw : v.getSynonyms()) {
-                                    if (!kw.term.equals(name))
-                                        IxCache.set(cls.getName()+"/"
-                                                    +kw.term, valid);
-                                    if (!kw.term.toUpperCase().equals(name))
-                                        IxCache.set(cls.getName()+"/"
-                                                    +kw.term.toUpperCase(),
-                                                    valid);
-                                    if (!kw.term.toLowerCase().equals(name))
-                                        IxCache.set(cls.getName()+"/"
-                                                    +kw.term.toLowerCase(),
-                                                    valid);
+                                    if (kw.term == null) {
+                                    }
+                                    else {
+                                        if (!kw.term.equals(name))
+                                            IxCache.set(cls.getName()+"/"
+                                                        +kw.term, valid);
+                                        if (!kw.term.toUpperCase().equals(name))
+                                            IxCache.set(cls.getName()+"/"
+                                                        +kw.term.toUpperCase(),
+                                                        valid);
+                                        if (!kw.term.toLowerCase().equals(name))
+                                            IxCache.set(cls.getName()+"/"
+                                                        +kw.term.toLowerCase(),
+                                                        valid);
+                                    }
                                 }
                             }
                             
