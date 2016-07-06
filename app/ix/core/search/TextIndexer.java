@@ -325,8 +325,9 @@ public class TextIndexer {
         final long timestamp = System.currentTimeMillis();
         AtomicLong stop = new AtomicLong ();
 
-        final ReentrantLock lock = new ReentrantLock ();
-        final Condition finished = lock.newCondition();
+        final transient ReentrantLock lock = new ReentrantLock ();
+        final transient Condition finished = lock.newCondition();
+        final transient Set<String> keys = new HashSet<String>();
 
         SearchResult () {}
         SearchResult (SearchOptions options, String query) {
@@ -386,6 +387,12 @@ public class TextIndexer {
                 lock.unlock();
             }
         }
+
+        public void updateCacheWhenComplete (String... keys) {
+            for (String key : keys) {
+                this.keys.add(key);
+            }
+        }
         
         public boolean isEmpty () { return matches.isEmpty(); }
         public int count () { return count; }
@@ -406,6 +413,9 @@ public class TextIndexer {
             lock.lock();
             try {
                 stop.set(System.currentTimeMillis());
+                for (String key : keys) {
+                    IxCache.set(key, this);
+                }
                 finished.signal();
             }
             finally {

@@ -798,6 +798,7 @@ public class App extends Authentication {
                                          ? null : Integer.parseInt(min),
                                          max.equals("")
                                          ? null : Integer.parseInt(max));
+                                    result.updateCacheWhenComplete(sha1);
                                     return cacheKey (result, sha1);
                                 }
                             });
@@ -810,6 +811,7 @@ public class App extends Authentication {
                                 SearchResult result = SearchFactory.search
                                 (kind, hasFacets ? null : q,
                                  total, 0, FACET_DIM, query);
+                                result.updateCacheWhenComplete(sha1);
                                 return cacheKey (result, sha1);
                             }
                         });

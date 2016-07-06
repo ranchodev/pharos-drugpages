@@ -511,11 +511,16 @@ public class IDGApp extends App implements Commons {
 
         public Result get (final String name) {
             try {
-                List<T> e = find (name);
-                if (e == null || e.isEmpty()) {
-                    return _notFound ("Unknown name: "+name);
-                }
-                return result (e);
+                final String key = getClass().getName()+"/"+cls.getName()+"/"+name+"/result";
+                return getOrElse (key, new Callable<Result> () {
+                        public Result call () throws Exception {
+                            List<T> e = find (name);
+                            if (e == null || e.isEmpty()) {
+                                return _notFound ("Unknown name: "+name);
+                            }
+                            return getResult (e);
+                        }
+                    });
             }
             catch (Exception ex) {
                 Logger.error("Unable to generate Result for \""+name+"\"", ex);
@@ -523,6 +528,7 @@ public class IDGApp extends App implements Commons {
             }
         }
         
+        /*
         public Result result (final List<T> e) {
             try {
                 final String key = cls.getName()
@@ -542,6 +548,7 @@ public class IDGApp extends App implements Commons {
                 return _internalServerError (ex);
             }
         }
+        */
 
         abstract Result getResult (List<T> e) throws Exception;
     }
