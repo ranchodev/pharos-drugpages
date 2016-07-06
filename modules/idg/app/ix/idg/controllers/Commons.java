@@ -35,6 +35,14 @@ public interface Commons {
     
     public static final String GRANT_FUNDING_IC = "Grant Funding IC";
     public static final String GRANT_ACTIVITY = "Grant Activity";
+    public static final String GRANT_APPLICATION = "Grant Application";
+
+    public static final String TECHDEV_PI = "TechDev PI";
+    public static final String TECHDEV_GRANT = "TechDev Grant";
+
+    public static final String COMPARTMENT_GOTERM = "Compartment GO Term";
+    public static final String COMPARTMENT_EVIDENCE = "Compartment Evidence";
+    public static final String COMPARTMENT_TYPE = "Compartment Type";
     
     public static final String OMIM_GENE = "OMIM Gene";
     public static final String GWAS_TRAIT = "GWAS Trait";

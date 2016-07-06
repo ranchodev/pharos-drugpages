@@ -27,11 +27,32 @@ public class Util {
         return UserAgents[rand.nextInt(UserAgents.length)];
     }
 
+    public static String randvar (int size, Http.Request req) {
+        Random r = rand;
+        if (req != null) {
+            r = new SecureRandom
+                (getSha1 (req, "q", "type", "facet", "filter", "order"));
+        }
+
+        char[] alpha = {'a','b','c','d','e','f','g','h','i','j','k',
+                        'l','m','n','o','p','q','r','s','t','u','v',
+                        'x','y','z'};
+        StringBuilder sb = new StringBuilder ();
+        for (int i = 0; i < size; ++i)
+            sb.append(alpha[rand.nextInt(alpha.length)]);
+        return sb.toString();
+    }
+
     public static String sha1 (Http.Request req) {
         return sha1 (req, (String[])null);
     }
     
     public static String sha1 (Http.Request req, String... params) {
+        byte[] sha1 = getSha1 (req, params);
+        return sha1 != null ? toHex (sha1) : "";
+    }
+
+    public static byte[] getSha1 (Http.Request req, String... params) {
         String path = req.method()+"/"+req.path();
         try {
             MessageDigest md = MessageDigest.getInstance("SHA1");
@@ -60,7 +81,7 @@ public class Util {
                 }
             }
 
-            return toHex (md.digest());
+            return md.digest();
         }
         catch (Exception ex) {
             Logger.trace("Can't generate hash for request: "+req.uri(), ex);

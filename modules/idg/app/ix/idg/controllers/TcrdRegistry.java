@@ -163,7 +163,7 @@ public class TcrdRegistry extends Controller implements Commons {
             pstm11, pstm12, pstm13, pstm14, pstm15,
             pstm16, pstm17, pstm18, pstm19, pstm20,
             pstm21, pstm22, pstm23, pstm24, pstm25,
-            pstm26, pstm27;
+            pstm26, pstm27, pstm28;
         Map<String, Keyword> datasources = new HashMap<String, Keyword>();
 
         // xrefs for the current target
@@ -270,6 +270,10 @@ public class TcrdRegistry extends Controller implements Commons {
 
             pstm27 = con.prepareStatement
                 ("select * from compartment where protein_id = ?");
+
+            pstm28 = con.prepareStatement
+                ("select * from techdev_contact a, techdev_info b where "
+                 +"a.id = b.contact_id and b.protein_id = ?");
 
             this.chembl = chembl;
         }
@@ -392,6 +396,7 @@ public class TcrdRegistry extends Controller implements Commons {
             pstm25.close();
             pstm26.close();
             pstm27.close();
+            pstm28.close();
             chembl.shutdown();
         }
 
@@ -636,6 +641,13 @@ public class TcrdRegistry extends Controller implements Commons {
                     }
                 }
                 cost += rset.getDouble("cost");
+                long appid = rset.getLong("appid");
+                if (!rset.wasNull()) {
+                    Keyword grant = new Keyword 
+                        (GRANT_APPLICATION, rset.getString("full_project_num"));
+                    grant.href = "https://projectreporter.nih.gov/project_info_details.cfm?aid="+appid;
+                    target.properties.add(grant);
+                }
                 ++count;
             }
             rset.close();
@@ -1952,7 +1964,7 @@ public class TcrdRegistry extends Controller implements Commons {
             pstm27.setLong(1, protein);
             ResultSet rset = pstm27.executeQuery();
             try {
-                List<Compartment> comps = new ArrayList<Compartment>();
+                int count = 0;
                 while (rset.next()) {
                     Compartment comp = new Compartment ();
                     comp.type = rset.getString("ctype");
@@ -1967,11 +1979,29 @@ public class TcrdRegistry extends Controller implements Commons {
                         comp.conf = null;
                     comp.url = rset.getString("url");
                     comp.target = target;
-                    comp.save();
-                    comps.add(comp);
+                    try {
+                        comp.save();
+                        XRef ref = new XRef (comp);
+                        ref.properties.add
+                            (KeywordFactory.registerIfAbsent
+                             (COMPARTMENT_GOTERM, comp.goTerm, 
+                              "http://amigo.geneontology.org/amigo/term/"+comp.goId));
+                        ref.properties.add
+                            (KeywordFactory.registerIfAbsent
+                             (COMPARTMENT_EVIDENCE, comp.evidence, comp.url));
+                        ref.properties.add
+                            (KeywordFactory.registerIfAbsent
+                             (COMPARTMENT_TYPE, comp.type, null));
+                        ref.save();
+                        target.links.add(ref);
+                    }
+                    catch (Exception ex) {
+                        Logger.error("Can't persist compartment for protein "+protein, ex);
+                    }
+                    ++count;
                 }
                 Logger.debug("Target "+target.id+" has "
-                             +comps.size()+" compartments!");
+                             +count+" compartments!");
             }
             finally {
                 rset.close();
@@ -2073,6 +2103,45 @@ public class TcrdRegistry extends Controller implements Commons {
             }
         }
 
+        void addTechdev (Target target, long protein) throws Exception {
+            pstm28.setLong(1, protein);
+            ResultSet rset = pstm28.executeQuery();
+            try {
+                while (rset.next()) {
+                    Techdev dev = new Techdev ();
+                    dev.pi = rset.getString("name");
+                    dev.grant = rset.getString("grant_number");
+                    dev.comment = rset.getString("comment");
+                    dev.pmcid = rset.getString("publication_pcmid");
+                    dev.pmid = rset.getLong("publication_pmid");
+                    if (rset.wasNull())
+                        dev.pmid = null;
+                    dev.resourceUrl = rset.getString("resource_url");
+                    dev.dataUrl = rset.getString("data_url");
+                    dev.target = target;
+                    try {
+                        dev.save();
+
+                        XRef ref = new XRef (dev);
+                        // add these for target facets
+                        ref.properties.add(KeywordFactory.registerIfAbsent
+                                           (TECHDEV_PI, dev.pi, null));
+                        ref.properties.add(KeywordFactory.registerIfAbsent
+                                           (TECHDEV_GRANT, dev.grant, null));
+                        ref.save();
+                        target.links.add(ref);
+                    }
+                    catch (Exception ex) {
+                        Logger.error("Can't persist Techdev "
+                                     +rset.getLong("a.id")+" for protein "+protein, ex);
+                    }
+                }
+            }
+            finally {
+                rset.close();
+            }
+        }
+
         void persists (TcrdTarget t) throws Exception {
             Http.Context.current.set(ctx);
             Logger.debug(t.family+" "+t.tdl+" "+t.acc+" "+t.id);
@@ -2129,6 +2198,7 @@ public class TcrdRegistry extends Controller implements Commons {
                 addTINX (target, t.id);
                 addPublication (target, t.protein);
                 addCompartment (target, t.protein);
+                addTechdev (target, t.protein);
             }
             catch (Exception ex) {
                 Logger.error("Can't parse target "+IDGApp.getId(target)+"!");

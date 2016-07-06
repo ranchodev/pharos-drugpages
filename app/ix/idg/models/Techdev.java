@@ -5,31 +5,37 @@ import com.fasterxml.jackson.annotation.JsonView;
 import ix.utils.Global;
 
 import javax.persistence.*;
+import java.util.*;
 import ix.core.models.Indexable;
 import ix.core.models.BeanViews;
 
 @Entity
-@Table(name = "ix_idg_compartment")
-public class Compartment extends play.db.ebean.Model
-    implements java.io.Serializable {
+@Table(name="ix_idg_techdev")
+public class Techdev extends play.db.ebean.Model implements java.io.Serializable {
     @Id public Long id;
-    
-    @Indexable(name="Compartment Type", facet=true)
-    public String type;
-    public String goId;
-    @Indexable(facet=true,name="GO Term",suggest=true)
-    public String goTerm;
-    @Indexable(name="Compartment Evidence",facet=true)
-    public String evidence;
-    public Double zscore;
-    public Double conf;
-    public String url;
+
+    // contact
+    @Indexable(name="TechDev PI", facet=true)
+    public String pi;
+    @Indexable(name="TechDev Grant", facet=true)
+    public String grant;
+
+    // resource info
+    @Lob
+    public String comment;
+    public String pmcid;
+    public Long pmid;
+
+    @Lob
+    public String resourceUrl;
+    @Lob
+    public String dataUrl;
 
     @ManyToOne(cascade=CascadeType.ALL)
     @JsonView(BeanViews.Full.class)
     public Target target;
 
-    public Compartment () {
+    public Techdev () {
     }
 
     @JsonView(BeanViews.Compact.class)

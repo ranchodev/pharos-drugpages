@@ -3663,29 +3663,30 @@ public class IDGApp extends App implements Commons {
                     public Result call () throws Exception {
                         SearchResultProcessor<Target> processor =
                             new SearchResultProcessor<Target>() {
-                                protected Object instrument (Target t) throws Exception {
-                                    return t;
-                                }
-                            };
+                            protected Object instrument (Target t) throws Exception {
+                                return t;
+                            }
+                        };
                         processor.setResults
                             (rows, Collections.enumeration(getTargetsByPMID (pmid)));
                         
                         return App.fetchResult
                             (processor.getContext(), rows, page,
                              new DefaultResultRenderer<Target> () {
-                                 public Result render (SearchResultContext context,
-                                                       int page, int rows,
-                                                       int total, int[] pages,
-                                                       List<Facet> facets,
-                                                       List<Target> targets) {
-                                     return ok (ix.idg.views.html.targets.render
-                                                (page, rows, total,
-                                                 pages, decorate(Target.class,
-                                                                 filter (facets,
-                                                                         TARGET_FACETS)),
-                                                 targets, context.getId()));
-                                 }
-                             });
+                                public Result render
+                                    (SearchResultContext context,
+                                     int page, int rows,
+                                     int total, int[] pages,
+                                     List<Facet> facets,
+                                     List<Target> targets) {
+                                    return ok (ix.idg.views.html.targets.render
+                                               (page, rows, total,
+                                                pages, decorate(Target.class,
+                                                                filter (facets,
+                                                                        TARGET_FACETS)),
+                                                targets, context.getId()));
+                                }
+                            });
                     }
                 });
         }
