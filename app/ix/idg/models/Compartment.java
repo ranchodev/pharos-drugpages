@@ -25,16 +25,6 @@ public class Compartment extends play.db.ebean.Model
     public Double conf;
     public String url;
 
-    @ManyToOne(cascade=CascadeType.ALL)
-    @JsonView(BeanViews.Full.class)
-    public Target target;
-
     public Compartment () {
-    }
-
-    @JsonView(BeanViews.Compact.class)
-    @JsonProperty("_target")
-    public String getJsonTarget () {
-        return Global.getRef(target);
     }
 }

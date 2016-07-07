@@ -314,6 +314,7 @@ public class TcrdRegistry extends Controller implements Commons {
         }
 
         public void persists () throws Exception {
+            java.util.Date start = new java.util.Date();
             for (TcrdTarget t : targets) {
                 persists (t);
             }
@@ -364,7 +365,8 @@ public class TcrdRegistry extends Controller implements Commons {
                     ex.printStackTrace();
                 }
             }
-            Logger.debug("#### PERSISTENCE COMPLETE AT "
+            Logger.debug("#### PERSISTENCE STARTED ON "+start
+                         +" AND COMPLETE AT "
                          +new java.util.Date()+"! #####");
         }
 
@@ -401,8 +403,7 @@ public class TcrdRegistry extends Controller implements Commons {
         }
 
         void instrument (Target target, TcrdTarget t) throws Exception {
-            Logger.debug("############# instrumenting target "
-                         +t.id+" ################");
+            //Logger.debug("... instrumenting target " +t.id);
             target.synonyms.add(new Keyword (IDG_TARGET, "TCRD:"+t.id));
             target.properties.add(t.source);
             
@@ -680,14 +681,17 @@ public class TcrdRegistry extends Controller implements Commons {
         void addPathway (Target target, long protein) throws Exception {
             pstm11.setLong(1, protein);
             ResultSet rset = pstm11.executeQuery();
+            Map<String, Integer> counts = new TreeMap<String, Integer>();
             while (rset.next()) {
                 String source = rset.getString("pwtype");
                 String name = rset.getString("name");
                 Keyword term = KeywordFactory.registerIfAbsent
                     (source+" Pathway", name, rset.getString("url"));
                 target.addIfAbsent((Value)term);
+                /*
                 Logger.debug("Target "+target.id
                              +" pathway ("+source+"): "+term.term);
+                */
                 
                 if ("Reactome".equals(source)) {
                     List<String> refs = xrefs.get("Reactome");
@@ -699,8 +703,11 @@ public class TcrdRegistry extends Controller implements Commons {
                         target.addIfAbsent((Value)kw);
                     }
                 }
+                Integer c = counts.get(source);
+                counts.put(source, c==null?1:(c+1));
             }
             rset.close();
+            Logger.debug("Target "+target.id+" pathway: "+counts);
         }
 
         void addHarmonogram(Target target, long protein) throws Exception {
@@ -734,6 +741,7 @@ public class TcrdRegistry extends Controller implements Commons {
         void addGO (Target target, long protein) throws Exception {
             pstm9.setLong(1, protein);
             ResultSet rset = pstm9.executeQuery();
+            Map<String, Integer> counts = new TreeMap<String, Integer>();
             while (rset.next()) {
                 String term = rset.getString("go_term");
                 String id = rset.getString("go_id");
@@ -767,10 +775,13 @@ public class TcrdRegistry extends Controller implements Commons {
 
                 if (go != null && !target.properties.contains(go)) {
                     target.properties.add(go);
-                    Logger.debug("Target "+target.id+" GO: "+term);
+                    //Logger.debug("Target "+target.id+" GO: "+term);
                 }
+                Integer c = counts.get(""+kind);
+                counts.put(""+kind,c==null?1:(c+1));
             }
             rset.close();
+            Logger.debug("Target "+target.id+" GO: "+counts);
         }
         
         void addExpression (Target target, long protein) throws Exception {
@@ -1757,14 +1768,18 @@ public class TcrdRegistry extends Controller implements Commons {
             }
             rset.close();
 
-            try {
-                target.update();
-                Logger.debug("Target "+target.id+" has "+count+" ligand(s)... "
-                             +(System.currentTimeMillis()-start)+"ms!");
+            /*
+            if (count > 0) {
+                try {
+                    target.update();
+                }
+                catch (Exception ex) {
+                    ex.printStackTrace();
+                }
             }
-            catch (Exception ex) {
-                ex.printStackTrace();
-            }
+            */
+            Logger.debug("Target "+target.id+" has "+count+" ligand(s)... "
+                         +(System.currentTimeMillis()-start)+"ms!");
         }
 
         Disease registerDiseaseIfAbsent
@@ -1978,6 +1993,7 @@ public class TcrdRegistry extends Controller implements Commons {
             ResultSet rset = pstm27.executeQuery();
             try {
                 int count = 0;
+                long start = System.currentTimeMillis();
                 while (rset.next()) {
                     Compartment comp = new Compartment ();
                     comp.type = rset.getString("ctype");
@@ -1991,30 +2007,34 @@ public class TcrdRegistry extends Controller implements Commons {
                     if (rset.wasNull())
                         comp.conf = null;
                     comp.url = rset.getString("url");
-                    comp.target = target;
                     try {
                         comp.save();
                         XRef ref = new XRef (comp);
-                        ref.properties.add
-                            (KeywordFactory.registerIfAbsent
-                             (COMPARTMENT_GOTERM, comp.goTerm, 
-                              "http://amigo.geneontology.org/amigo/term/"+comp.goId));
-                        ref.properties.add
-                            (KeywordFactory.registerIfAbsent
-                             (COMPARTMENT_EVIDENCE, comp.evidence, comp.url));
-                        ref.properties.add
-                            (KeywordFactory.registerIfAbsent
-                             (COMPARTMENT_TYPE, comp.type, null));
+                        Keyword kw = getKeyword
+                            (COMPARTMENT_GOTERM, comp.goTerm,
+                             "http://amigo.geneontology.org/amigo/term/"
+                             +comp.goId);
+                        ref.properties.add(kw);
+                              
+                        kw = getKeyword (COMPARTMENT_EVIDENCE, 
+                                         comp.evidence, comp.url);
+                        ref.properties.add(kw);
+
+                        kw = getKeyword (COMPARTMENT_TYPE, comp.type, null);
+                        ref.properties.add(kw);
+
                         ref.save();
                         target.links.add(ref);
                     }
                     catch (Exception ex) {
-                        Logger.error("Can't persist compartment for protein "+protein, ex);
+                        Logger.error("Can't persist compartment for protein "
+                                     +protein, ex);
                     }
                     ++count;
                 }
                 Logger.debug("Target "+target.id+" has "
-                             +count+" compartments!");
+                             +count+" compartments..."+String.format
+                             ("%1$dms!", System.currentTimeMillis()-start));
             }
             finally {
                 rset.close();
@@ -2026,6 +2046,7 @@ public class TcrdRegistry extends Controller implements Commons {
             ResultSet rset = pstm22.executeQuery();
             try {
                 int count = 0;
+                long start = System.currentTimeMillis();
                 while (rset.next()) {
                     long pmid = rset.getLong("id");
                     Publication pub = PublicationFactory.byPMID(pmid);
@@ -2060,7 +2081,9 @@ public class TcrdRegistry extends Controller implements Commons {
                 }
                 
                 Logger.debug("Target "+target.id+" has "
-                             +count+" publications!");
+                             +count+" publications..."
+                             +String.format("%1$dms!",
+                                            System.currentTimeMillis()-start));
             }
             finally {
                 rset.close();
@@ -2158,8 +2181,11 @@ public class TcrdRegistry extends Controller implements Commons {
         }
 
         void persists (TcrdTarget t) throws Exception {
+            long start = System.currentTimeMillis();
+
             Http.Context.current.set(ctx);
-            Logger.debug(t.family+" "+t.tdl+" "+t.acc+" "+t.id);
+            Logger.debug("####### Processing target... "+t.acc+" "+t.id
+                         +" \""+t.family+"\' "+t.tdl+" #######");
             
             final Target target = new Target ();
             target.idgFamily = t.family;
@@ -2256,6 +2282,11 @@ public class TcrdRegistry extends Controller implements Commons {
                 if (lig.id != null)
                     LIGANDS.put(lig.id, lig);
             */
+
+            Logger.debug("####### Target "+t.acc+" processed in "
+                         +String.format("%1$dms!", 
+                                        System.currentTimeMillis()-start)
+                         +" ########");
         }
     }
 

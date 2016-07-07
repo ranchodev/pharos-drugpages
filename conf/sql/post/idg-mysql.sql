@@ -54,3 +54,26 @@ add index doid_index (doid asc),
 add index importance_index (importance asc),
 add index novelty_index (disease_novelty asc)
 ;
+
+alter table ix_idg_compartment
+add index compart_type_index (type asc),
+add index compart_go_id_index (go_id asc),
+add index compart_go_term_index (go_term asc),
+add index compart_evidence_index (evidence asc)
+;
+
+alter table ix_idg_target_link
+add index targetlink_index (ix_idg_target_id asc)
+;
+
+alter table ix_idg_target_property
+add index targetprop_index (ix_idg_target_id asc)
+;
+
+alter table ix_idg_target_publication
+add index targetpub_index (ix_idg_target_id asc)
+;
+
+alter table ix_idg_target_synonym
+add index targetsyn_index (ix_idg_target_synonym_id asc)
+;
