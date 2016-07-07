@@ -401,7 +401,8 @@ public class TcrdRegistry extends Controller implements Commons {
         }
 
         void instrument (Target target, TcrdTarget t) throws Exception {
-            Logger.debug("... instrumenting target "+t.id);
+            Logger.debug("############# instrumenting target "
+                         +t.id+" ################");
             target.synonyms.add(new Keyword (IDG_TARGET, "TCRD:"+t.id));
             target.properties.add(t.source);
             
@@ -415,10 +416,13 @@ public class TcrdRegistry extends Controller implements Commons {
             xrefs.clear();
             pstm12.setLong(1, t.protein);
             ResultSet rset = pstm12.executeQuery();
+            Map<String, Integer> counts = new TreeMap<String, Integer>();
             while (rset.next()) {
                 String xtype = rset.getString("xtype");
                 value = rset.getString("value");
-                Logger.info("  + "+xtype+": "+value);
+                //Logger.info("  + "+xtype+": "+value);
+                Integer c = counts.get(xtype);
+                counts.put(xtype, c==null?1:(c+1));
                 if ("uniprot keyword".equalsIgnoreCase(xtype)) {
                     String term = rset.getString("xtra");
                     if (term != null) {
@@ -524,6 +528,7 @@ public class TcrdRegistry extends Controller implements Commons {
             rset.close();
             
             target.properties.add(source);
+            Logger.debug("Target "+target.id+" xtype: "+counts);
         }
                          
         void addPatent (Target target, long protein) throws Exception {
@@ -723,7 +728,7 @@ public class TcrdRegistry extends Controller implements Commons {
             target.knowledgeAvailability = cdfSum;
 
             rset.close();
-            Logger.debug(n+" harmonogram entries for "+target.id);
+            Logger.debug("Target "+target.id+" has "+n+" harmonogram entries!");
         }
 
         void addGO (Target target, long protein) throws Exception {
@@ -771,6 +776,7 @@ public class TcrdRegistry extends Controller implements Commons {
         void addExpression (Target target, long protein) throws Exception {
             pstm8.setLong(1, protein);
             ResultSet rset = pstm8.executeQuery();
+            Map<String, Integer> counts = new TreeMap<String, Integer>();
             Map<String, Keyword> sources = new HashMap<String, Keyword>();
             while (rset.next()) {
                 String qv = rset.getString("qual_value");
@@ -859,7 +865,9 @@ public class TcrdRegistry extends Controller implements Commons {
                 if (ref.id == null)
                     ref.save();
                 
-                Logger.debug("Target "+target.id+" "+expr.source+": "+expr.tissue);
+                //Logger.debug("Target "+target.id+" "+expr.source+": "+expr.tissue);
+                Integer c = counts.get(expr.source);
+                counts.put(expr.source, c==null?1:(c+1));
 
                 Keyword source = datasources.get(expr.source);
                 if (source == null) {
@@ -886,6 +894,7 @@ public class TcrdRegistry extends Controller implements Commons {
                     target.properties.add(kw);
                 }
             }
+            Logger.debug("Target "+target.id+" expression: "+counts);
         }
 
         static Pattern OmimRegex = Pattern.compile("([^\\s]+)\\s\\(([1-4])\\)");
@@ -1093,7 +1102,7 @@ public class TcrdRegistry extends Controller implements Commons {
             int selective = 0;
             Keyword mice = KeywordFactory.registerIfAbsent
                 ("IMPC Mice Produced", "YES", null);
-            
+            Map<String, Integer> counts = new TreeMap<String, Integer>();
             while (rset.next()) {
                 String type = rset.getString("itype");
                 
@@ -1131,7 +1140,9 @@ public class TcrdRegistry extends Controller implements Commons {
                 }
                 
                 if (val != null) {
-                    Logger.debug("Target "+target.id+": "+type);
+                    //Logger.debug("Target "+target.id+": "+type);
+                    Integer c = counts.get(type);
+                    counts.put(type, c==null?1:(c+1));
                     if (type.equalsIgnoreCase("UniProt Function")) {
                         target.description = (String)val.getValue();
                     }
@@ -1184,6 +1195,8 @@ public class TcrdRegistry extends Controller implements Commons {
                     (IDG_TOOLS, IDG_TOOLS_ANTIBODIES, null);
                 target.properties.add(kw);
             }
+
+            Logger.debug("Target "+target.id+" tdl info: "+counts);
         }
 
         void addPanther (Target target,long protein) throws Exception {
@@ -2012,12 +2025,7 @@ public class TcrdRegistry extends Controller implements Commons {
             pstm22.setLong(1, protein);
             ResultSet rset = pstm22.executeQuery();
             try {
-                Predicate pred = new Predicate (TARGET_PUBLICATIONS);
-                pred.subject = new XRef (target);
-                // add synonyms for search results              
-                for (Keyword kw : target.getSynonyms())
-                    pred.subject.properties.add(kw);
-
+                int count = 0;
                 while (rset.next()) {
                     long pmid = rset.getLong("id");
                     Publication pub = PublicationFactory.byPMID(pmid);
@@ -2037,15 +2045,22 @@ public class TcrdRegistry extends Controller implements Commons {
                     }
                     
                     XRef ref = new XRef (pub);
-                    for (Keyword kw : target.getSynonyms())
-                        ref.properties.add(kw);
-                    ref.save();
-                    pred.addIfAbsent(ref);
+                    ref.properties.add
+                        (new Text ("Publication Title", pub.title));
+                    ref.properties.add
+                        (new Text ("Publication Abstract", pub.abstractText));
+                    XRef r = target.addIfAbsent(ref);
+                    if (r != ref) {
+                        // dup xref
+                    }
+                    else {
+                        ref.save();
+                    }
+                    ++count;
                 }
-                pred.save();
                 
                 Logger.debug("Target "+target.id+" has "
-                             +pred.objects.size()+" publications!");
+                             +count+" publications!");
             }
             finally {
                 rset.close();

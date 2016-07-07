@@ -618,14 +618,15 @@ public class IDGApp extends App implements Commons {
             IDG_FAMILY,
             IDG_DISEASE,
             IDG_TISSUE,
-            "R01 Grant Count",
-            "Jensen Score"
+            //"R01 Grant Count",
+            //"Jensen Score"
     };
 
     public static final String[] ALL_TARGET_FACETS = {
         
         IDG_DEVELOPMENT,
         IDG_FAMILY,
+        TECHDEV_PI,
         IDG_DISEASE,
         IDG_LIGAND,
         IDG_DRUG,
