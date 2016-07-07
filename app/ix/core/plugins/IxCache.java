@@ -7,6 +7,7 @@ import java.util.concurrent.*;
 import play.Logger;
 import play.Plugin;
 import play.Application;
+import play.mvc.Result;
 
 import net.sf.ehcache.Cache;
 import net.sf.ehcache.CacheManager;

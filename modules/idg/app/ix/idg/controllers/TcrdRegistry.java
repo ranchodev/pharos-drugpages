@@ -645,7 +645,7 @@ public class TcrdRegistry extends Controller implements Commons {
                 if (!rset.wasNull()) {
                     Keyword grant = new Keyword 
                         (GRANT_APPLICATION, rset.getString("full_project_num"));
-                    grant.href = "https://projectreporter.nih.gov/project_info_details.cfm?aid="+appid;
+                    grant.href = "https://projectreporter.nih.gov/project_info_description.cfm?aid="+appid;
                     target.properties.add(grant);
                 }
                 ++count;
@@ -2110,7 +2110,7 @@ public class TcrdRegistry extends Controller implements Commons {
                 while (rset.next()) {
                     Techdev dev = new Techdev ();
                     dev.pi = rset.getString("name");
-                    dev.grant = rset.getString("grant_number");
+                    dev.grantNum = rset.getString("grant_number");
                     dev.comment = rset.getString("comment");
                     dev.pmcid = rset.getString("publication_pcmid");
                     dev.pmid = rset.getLong("publication_pmid");
@@ -2127,7 +2127,7 @@ public class TcrdRegistry extends Controller implements Commons {
                         ref.properties.add(KeywordFactory.registerIfAbsent
                                            (TECHDEV_PI, dev.pi, null));
                         ref.properties.add(KeywordFactory.registerIfAbsent
-                                           (TECHDEV_GRANT, dev.grant, null));
+                                           (TECHDEV_GRANT, dev.grantNum, null));
                         ref.save();
                         target.links.add(ref);
                     }
@@ -2951,7 +2951,7 @@ public class TcrdRegistry extends Controller implements Commons {
                  +"left join tinx_novelty d\n"
                  +"    on d.protein_id = a.protein_id \n"
                  //+"where d.protein_id in (9671,9849,11534,15077,658,11534)"
-                 //+"where d.protein_id in (8721)\n"
+                 //+"where d.protein_id in (137,734,6845)\n"
                  //+"where c.id in (11521)\n"
                  //+"where a.target_id in (12241)\n"
                  //+"where c.uniprot = 'Q9H3Y6'\n"

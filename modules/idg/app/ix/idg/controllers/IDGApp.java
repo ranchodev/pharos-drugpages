@@ -3787,6 +3787,7 @@ public class IDGApp extends App implements Commons {
         for (int i = 0; i < all.size(); ++i) {
             targets[i/2][i%2] = all.get(i);
         }
+
         return ok (ix.idg.views.html.targetcompare2.render(targets));
     }
 }

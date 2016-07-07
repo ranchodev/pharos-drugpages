@@ -18,7 +18,7 @@ public class Techdev extends play.db.ebean.Model implements java.io.Serializable
     @Indexable(name="TechDev PI", facet=true)
     public String pi;
     @Indexable(name="TechDev Grant", facet=true)
-    public String grant;
+    public String grantNum;
 
     // resource info
     @Lob
