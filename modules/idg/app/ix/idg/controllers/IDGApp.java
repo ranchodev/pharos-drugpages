@@ -2162,7 +2162,7 @@ public class IDGApp extends App implements Commons {
                             filter (getFacets (Ligand.class, FACET_DIM),
                                     LIGAND_FACETS);
             
-                        int _rows = Math.min(total, Math.max(1, rows));
+                        int _rows = Math.max(1, Math.min(total, rows));
                         int[] pages = paging (_rows, page, total);
             
                         List<Ligand> ligands = LigandFactory.getLigands

@@ -702,6 +702,7 @@ This is TCRD target <a href='@ix.core.controllers.v1.routes.RouteFactory.get("ta
                 <div class="col-md-2"></div>
               </div>
               <button type="button" class="btn btn-default"
+	      	      id="modal-radar-btn"
                       data-toggle="modal" data-target="#modal-radar"
                       aria-label="Left Align" style="float:right;">
                   <span class="fa fa-external-link" aria-hidden="true"></span>
@@ -972,7 +973,7 @@ This is TCRD target <a href='@ix.core.controllers.v1.routes.RouteFactory.get("ta
     <!-- 
       -- Publications
       -->
-   @if(!target.getPublications.isEmpty()) {
+   @if(false && !target.getPublications.isEmpty()) {
     <div class="row">
       <div class="col-md-12">
         <div class="panel panel-default">
@@ -1179,7 +1180,7 @@ This is TCRD target <a href='@ix.core.controllers.v1.routes.RouteFactory.get("ta
        }
     }
 
-    @defining(IDGApp.getPublications(target)) { pubs =>
+    @defining(target.getPublications) { pubs =>
        @if(!pubs.isEmpty) {
          <div class="row">
            <div class="col-md-12">
@@ -1444,6 +1445,7 @@ $('.tree').treegrid({
       }
   });
 
+  $('#attr-type-radar').html('<i class="fa fa-spinner fa-spin"></i>');
   $.ajax({
      url: '@ix.idg.controllers.routes.HarmonogramApp.hgForTarget(null,null,null,"radar-attr_type")&q=@IDGApp.getId(target)',
      dataType:"json",
@@ -1457,6 +1459,10 @@ $('.tree').treegrid({
            .attr("width", 150)
            .attr("height", 150)
            .append('g').classed('focus', 1).datum(data).call(chart);
+     },
+     error:function () {
+        $('#attr-type-radar').html('<h4><em>No data available</em></h4>');
+	$('#modal-radar-btn').attr('disabled','true');
      }
   });
 

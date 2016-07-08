@@ -219,7 +219,8 @@ public class App extends Authentication {
         //last page
         int max = (total+ rowsPerPage-1)/rowsPerPage;
         if (page < 0 || page > max) {
-            throw new IllegalArgumentException ("Bogus page "+page);
+            //throw new IllegalArgumentException ("Bogus page "+page);
+            return new int[0];
         }
         
         int[] pages;

@@ -365,8 +365,8 @@ public class TcrdRegistry extends Controller implements Commons {
                     ex.printStackTrace();
                 }
             }
-            Logger.debug("#### PERSISTENCE STARTED ON "+start
-                         +" AND COMPLETE AT "
+            Logger.debug("\n#### PERSISTENCE STARTED ON "+start+" ####"
+                         +"\n#### AND COMPLETE AT "
                          +new java.util.Date()+"! #####");
         }
 
@@ -469,36 +469,47 @@ public class TcrdRegistry extends Controller implements Commons {
             rset = pstm14.executeQuery();
             while (rset.next()) {
                 target.name = rset.getString("description");
+                value = rset.getString("uniprot");
+                
+                Keyword kw = new Keyword (UNIPROT_ACCESSION, value);
+                kw.href = "http://www.uniprot.org/uniprot/"+value;
+                Keyword _kw = target.addIfAbsent(kw);
+                if (_kw == kw)
+                    kw.save();
 
-                Keyword kw = KeywordFactory.registerIfAbsent
-                    (UNIPROT_ACCESSION, value = rset.getString("uniprot"),
-                     "http://www.uniprot.org/uniprot/"+value);
-                target.addIfAbsent(kw);
+                kw = new Keyword (STRING_ID, rset.getString("stringid"));
+                _kw = target.addIfAbsent(kw);
+                if (_kw == kw)
+                    kw.save();
 
-                kw = KeywordFactory.registerIfAbsent
-                        (STRING_ID, rset.getString("stringid"), null);
-                target.addIfAbsent(kw);
-
-                kw = KeywordFactory.registerIfAbsent
-                    (UNIPROT_NAME, rset.getString("name"), null);
-                target.addIfAbsent(kw);
+                kw = new Keyword (UNIPROT_NAME, rset.getString("name"));
+                _kw = target.addIfAbsent(kw);
+                if (_kw == kw)
+                    kw.save();
 
                 //Gene gene = GeneFactory.registerIfAbsent(rset.getString("sym"));
                 //target.links.add(new XRef (gene));
-                kw = KeywordFactory.registerIfAbsent
-                    (UNIPROT_GENE, value = rset.getString("sym"),
-                     "http://www.genenames.org/cgi-bin/gene_symbol_report?match="+value);
-                target.addIfAbsent(kw);
+                value = rset.getString("sym");
+                kw = new Keyword (UNIPROT_GENE, value);
+                kw.href = 
+                    "http://www.genenames.org/cgi-bin/gene_symbol_report?match="+value;
+                _kw = target.addIfAbsent(kw);
+                if (_kw == kw)
+                    kw.save();
+                
+                value = String.valueOf(rset.getLong("geneid"));
+                kw = new Keyword (ENTREZ_GENE, value);
+                kw.href = "http://www.ncbi.nlm.nih.gov/gene/"+value;
+                _kw = target.addIfAbsent(kw);
+                if (_kw == kw)
+                    kw.save();
 
-                kw = KeywordFactory.registerIfAbsent
-                        (ENTREZ_GENE, value = String.valueOf(rset.getLong("geneid")),
-                                "http://www.ncbi.nlm.nih.gov/gene/"+value);
-                target.addIfAbsent(kw);
-
-                kw = KeywordFactory.registerIfAbsent
-                        (DTO_ID, value = rset.getString("dtoid"),
-                                "http://drugtargetontology.org/"+value);
-                target.addIfAbsent(kw);
+                value = rset.getString("dtoid");
+                kw = new Keyword (DTO_ID, value);
+                kw.href = "http://drugtargetontology.org/"+value;
+                _kw = target.addIfAbsent(kw);
+                if (_kw == kw)
+                    kw.save();
 
                 Text seq = new Text (UNIPROT_SEQUENCE, rset.getString("seq"));
                 seq.save();
@@ -514,15 +525,17 @@ public class TcrdRegistry extends Controller implements Commons {
                 String type = rset.getString("type");
                 value = rset.getString("value");
                 if ("uniprot".equalsIgnoreCase(type)) {
-                    Keyword kw = KeywordFactory.registerIfAbsent
-                        (UNIPROT_ACCESSION, value,
-                         "http://www.uniprot.org/uniprot/"+value);
-                    target.addIfAbsent(kw);
+                    Keyword kw = new Keyword (UNIPROT_ACCESSION, value);
+                    kw.href = "http://www.uniprot.org/uniprot/"+value;
+                    Keyword _kw = target.addIfAbsent(kw);
+                    if (_kw == kw)
+                        kw.save();
                 }
                 else if ("symbol".equalsIgnoreCase(type)) {
-                    Keyword kw = KeywordFactory.registerIfAbsent
-                        (UNIPROT_SHORTNAME, value, null);
-                    target.addIfAbsent(kw);
+                    Keyword kw = new Keyword (UNIPROT_SHORTNAME, value);
+                    Keyword _kw = target.addIfAbsent(kw);
+                    if (_kw == kw)
+                        kw.save();
                 }
                 Logger.info("  + "+type+": "+value);
             }
@@ -2064,19 +2077,8 @@ public class TcrdRegistry extends Controller implements Commons {
                         pub.year = year;
                         pub.save();
                     }
-                    
-                    XRef ref = new XRef (pub);
-                    ref.properties.add
-                        (new Text ("Publication Title", pub.title));
-                    ref.properties.add
-                        (new Text ("Publication Abstract", pub.abstractText));
-                    XRef r = target.addIfAbsent(ref);
-                    if (r != ref) {
-                        // dup xref
-                    }
-                    else {
-                        ref.save();
-                    }
+
+                    target.addIfAbsent(pub);
                     ++count;
                 }
                 

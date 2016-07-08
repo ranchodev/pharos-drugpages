@@ -152,6 +152,7 @@ public class TextIndexer {
                 Map map = new HashMap ();
                 map.put("term", me.getKey());
                 map.put("docs", me.getValue().toArray(new Object[0]));
+                map.put("nDocs", me.getValue().size());
                 terms.add(map);
             }
             counts = null;
@@ -193,6 +194,7 @@ public class TextIndexer {
                     Map map = new HashMap ();
                     map.put("doc", id);
                     map.put("terms", terms.toArray(new String[0]));
+                    map.put("nTerms", terms.size());
                     docs.add(map);
                 }
                 else {
