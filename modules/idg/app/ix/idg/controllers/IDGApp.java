@@ -367,11 +367,25 @@ public class IDGApp extends App implements Commons {
                 return url.toString();
             }
             else if (name.equals(IDG_TARGET) || name.equals(UNIPROT_GENE)) {
-                return "<a class='loader' href='"+routes.IDGApp.target(label)+"'>"+label+"</a>";
+                try {
+                    return "<a class='loader' href='"+routes.IDGApp.target(URLEncoder.encode(label, "utf8"))+"'>"+label+"</a>";
+                }
+                catch (Exception ex) {
+                    Logger.error("Can't utf encode label: "+label, ex);
+                    return "<a class='loader' href='"+routes.IDGApp.target(label)+"'>"+label+"</a>";
+                }
             }
             else if (name.equals(IDG_DISEASE)) {
-                return "<a class='loader' href='"+routes.IDGApp.disease(label)+"'>"
-                    +label+"</a>";
+                try {
+                    return "<a class='loader' href='"
+                        +routes.IDGApp.disease(URLEncoder.encode(label, "utf8"))+"'>"
+                        +label+"</a>";
+                }
+                catch (Exception ex) {
+                    Logger.error("Can't utf encode label: "+label, ex);
+                    return "<a class='loader' href='"
+                        +routes.IDGApp.disease(label)+"'>"+label+"</a>";
+                }
             }
             else if (name.equals(WHO_ATC)) {
                 final String key = WHO_ATC+":"+label;
@@ -839,10 +853,11 @@ public class IDGApp extends App implements Commons {
     public static Result impc() throws IOException {
 
         TextIndexer.TermVectors tvs = _textIndexer.getTermVectors(Target.class, IMPC_TERM);
-        List<Map> terms = tvs.getTerms();
+        Map<String, Map> terms = tvs.getTerms();
         Map<Keyword,Integer> termCounts = new HashMap<>();
-        for (Map term : terms) {
-            termCounts.put(getKeywordByTerm((String) term.get("term")), ((Object[]) term.get("docs")).length);
+        for (Map.Entry<String, Map> term : terms.entrySet()) {
+            termCounts.put(getKeywordByTerm(term.getKey()),
+                           (Integer)term.getValue().get("nDocs"));
         }
 
         List<Map> docs = tvs.getDocs();

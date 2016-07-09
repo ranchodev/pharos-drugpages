@@ -257,7 +257,9 @@
          }
       </div>
       <div class="col-md-6">
+
          <img class="img-responsive" height="200" src='@ix.idg.controllers.routes.ExpressionApp.homunculus(IDGApp.getId(target), skull)' />
+	 
       </div>
   </div>
 }
@@ -1445,11 +1447,12 @@ $('.tree').treegrid({
       }
   });
 
-  $('#attr-type-radar').html('<i class="fa fa-spinner fa-spin"></i>');
+  $('#attr-type-radar').html('<i class="fa fa-spinner fa-spin fa-3x fa-fw"></i><span class="sr-only">Loading...</span>');
   $.ajax({
      url: '@ix.idg.controllers.routes.HarmonogramApp.hgForTarget(null,null,null,"radar-attr_type")&q=@IDGApp.getId(target)',
      dataType:"json",
      success:function(data) {
+        $('#attr-type-radar').html('');
         var chart = RadarChart.chart();
         chart.config({
             w:150, h:150,

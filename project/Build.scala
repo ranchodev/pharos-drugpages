@@ -31,7 +31,7 @@ object ApplicationBuild extends Build {
     javaEbean,
     cache,
     filters,
-    "com.zaxxer" % "HikariCP-java6" % "2.3.8"
+    "com.zaxxer" % "HikariCP" % "2.4.6"
       ,"com.edulify" %% "play-hikaricp" % "2.0.6"
       ,"mysql" % "mysql-connector-java" % "5.1.31"
       ,"org.postgresql" % "postgresql" % "9.4-1201-jdbc41"     

@@ -123,7 +123,7 @@ public class TextIndexer {
         private int numDocs;
         private Map<String, Set> counts;
         private List<Map> docs;
-        private List<Map> terms;
+        private Map<String, Map> terms;
         private Class idType;
         
         TermVectors (Class kind, String field) throws IOException {
@@ -147,13 +147,12 @@ public class TextIndexer {
                 (new Term (FIELD_KIND, kind.getName()));            
             searcher.search(tq, this);
             
-            terms = new ArrayList<Map>();
+            terms = new TreeMap<String, Map>();
             for (Map.Entry<String, Set> me : counts.entrySet()) {
                 Map map = new HashMap ();
-                map.put("term", me.getKey());
                 map.put("docs", me.getValue().toArray(new Object[0]));
                 map.put("nDocs", me.getValue().size());
-                terms.add(map);
+                terms.put(me.getKey(), map);
             }
             counts = null;
         }
@@ -212,7 +211,7 @@ public class TextIndexer {
         }
         
         public Class getKind () { return kind; }
-        public List<Map> getTerms () { return terms; }
+        public Map<String, Map> getTerms () { return terms; }
         public List<Map> getDocs () { return docs; }    
         public String getField () { return field; }
         public int getNumDocs () { return numDocs; }

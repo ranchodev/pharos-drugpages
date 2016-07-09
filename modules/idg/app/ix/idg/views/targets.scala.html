@@ -488,10 +488,11 @@ $(document).ready(function () {
     $("div[id^='radar-']" ).each(function() {
         var klass = $(this ).attr("id");
         var acc = klass.split("-")[1];
-        $.ajax({
-            url: '@ix.idg.controllers.routes.HarmonogramApp.hgForTarget(null,null,null,"radar-attr_type")'+'&q='+acc,
-            dataType:"json",
-            success:function(data) {
+	if (acc.length == 6) {
+          $.ajax({
+             url: '@ix.idg.controllers.routes.HarmonogramApp.hgForTarget(null,null,null,"radar-attr_type")'+'&q='+acc,
+             dataType:"json",
+             success:function(data) {
                 var chart = RadarChart.chart();
                 chart.config({
                     w:75, h:75,
@@ -501,8 +502,12 @@ $(document).ready(function () {
                 .attr("width", 75 )
                 .attr("height", 75)
                 .append('g').classed('focus', 1).datum(data).call(chart);
-            }
-        });
+             },
+	     error: function () {
+	        console.log('No harmonogram data for target '+acc);
+	     }
+          });
+	}
     });
 
     $("#target-table" ).on("click", ".radar-div", function() {
