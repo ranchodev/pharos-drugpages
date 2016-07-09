@@ -175,13 +175,16 @@ public class ExpressionApp extends App {
     public static String _getHomunculusXml (String acc, String source)
         throws Exception {
         long start = System.currentTimeMillis();
+        //Logger.debug("loading source="+source+" acc="+acc);
         List<Target> targets = TargetFactory.finder
             .where(Expr.and(Expr.eq("synonyms.label", Commons.UNIPROT_ACCESSION),
                             Expr.eq("synonyms.term", acc))).findList();
+        /*
         Logger.debug("source="+source+" acc="+acc+" => "+targets.size()
                      +" targets in "
                      +String.format("%1$dms!",
                                     System.currentTimeMillis()-start));
+        */
         if (targets.size() == 0) return null;
         Target t = targets.get(0);
 
