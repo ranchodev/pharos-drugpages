@@ -591,6 +591,24 @@ public class App extends Authentication {
         return unspec;
     }
 
+    public static List<String> getSpecifiedFacets (FacetDecorator[] decors) {
+        String[] facets = request().queryString().get("facet");
+        List<String> spec = new ArrayList<String>();
+        if (facets != null && facets.length > 0) {
+            for (String f : facets) {
+                int matches = 0;
+                for (FacetDecorator d : decors) {
+                    if (f.startsWith(d.facet.getName()))
+                        ++matches;
+                }
+                
+                if (matches > 0)
+                    spec.add(f);
+            }
+        }
+        return spec;
+    }
+
     public static Facet[] filter (List<Facet> facets, String... names) {
         if (names == null || names.length == 0)
             return facets.toArray(new Facet[0]);

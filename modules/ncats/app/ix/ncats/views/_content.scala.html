@@ -5,6 +5,32 @@
   resetAction: String, current: Int, rows: Int, total: Int,
   pages: Array[Int], facets: Array[FacetDecorator], furl:Html=HtmlFormat.empty)(header: Html)(breadcrumb: Html)(content: Html)(trailer: Html)(carousel: Html)
 
+@facetsummary(alert: Boolean) = {
+    @defining(App.getSpecifiedFacets(facets)) { spec =>
+       @if(!spec.isEmpty) {
+          @if(alert) {
+ 	     <div class="alert alert-success alert-dismissible"
+	     	  style="overflow:auto;" role="alert">
+		  <button type="button" class="close" data-dismiss="alert"
+		  		onclick="dismissQuery()" aria-label="Close">
+			<span aria-hidden="true">&times;</span>
+		  </button>
+	  }
+          @for(f <- spec) {
+	      <button style="margin-top:2px;" class="btn btn-primary"
+	      	      onclick="removeFacet('@f')">
+	         @f.substring(0,f.indexOf('/'))&nbsp;
+		 <span class="badge">@f.substring(f.indexOf('/')+1)</span>
+	         <span class="fa fa-remove" aria-hidden="true"></span>
+	      </button>
+	  }
+	  @if(alert) {
+	    </div>
+	  }
+       }
+    }
+}
+
 @main(title){ @header }{ @breadcrumb }{
 <div class="container-fluid">
     <div class="row">
@@ -27,6 +53,7 @@
       @if(total > 0) {	
          @carousel
       }
+      
       @defining(App.getUnspecifiedFacets(facets)) { unspecf =>
          @if(request().getQueryString("q") != null || !unspecf.isEmpty()) {
 	  <div style="overflow:auto;"
@@ -78,8 +105,9 @@
               @if(total == 0) {
                   <span  class="text-center" style="color: #000000;"><h4>Didn't find what you're looking for?
                       <a href="mailto:pharos@@mail.nih.gov?subject=Empty result for query '@request().uri'" class="alert-link">Contact us</a></h4></span>
-              }
-
+              } else {
+	         @facetsummary(false)
+	      }
           } else {
 	         @for(f <- unspecf) {
 	              <span><h4>@f.substring(0,f.indexOf('/')):&nbsp;<code>@f.substring(f.indexOf('/')+1)</code></h4></span>
@@ -88,6 +116,8 @@
 	    }
           }
         </div>
+        } else {
+	  @facetsummary(true) 
         }
       }
 
@@ -122,6 +152,38 @@
 <script>
 function dismissQuery () {
     location.assign('@resetAction');
+}
+
+function removeFacet (facet) {
+    var f = facet.split("/"), k=f[0], v = f[1];
+    //console.log('k='+k+' v='+v);
+    var q = [];
+    location.search.substr(1).split("&").forEach(function(item) {
+        var s = item.split("="),
+	    sk = decodeURIComponent(s[0]),
+	    sv = decodeURIComponent(s[1]).replace(/\+/g,' ');
+	//console.log('sk='+sk+' sv='+sv);
+	if (sk == 'facet' && sv.startsWith(k)) {
+           if (v == sv.split("/")[1]) {
+	      // remove
+	   }
+	   else {
+	      q.push(item);
+	   }
+        }
+	else {
+           q.push(item);
+	}
+    });
+    var url = location.href.split("?")[0];
+    if (q.length > 0) {
+       url = url + '?'+q[0];
+       for (var i = 1; i < q.length; ++i) {
+          url = url + '&'+q[i];
+       }
+    }
+    console.log(url);
+    location.href = url;
 }
 
 $(document).ready(function () {

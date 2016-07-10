@@ -427,6 +427,17 @@ public class IDGApp extends App implements Commons {
                     return "<a href=\"http://en.wikipedia.org/wiki/Nuclear_receptor\">"+label+"</a> <i class='fa fa-external-link'></i>";
                 }
             }
+            else if (name.equals(TECHDEV_PI)) {
+                if (label.equalsIgnoreCase("Bryan Roth")) {
+                    return "<a href=\"https://pdspdb.unc.edu/rothlab/\">"+label+"</a> <i class='fa fa-external-link'></i>";
+                }
+                else if (label.equalsIgnoreCase("Susumu Tomita")) {
+                    return "<a href=\"http://medicine.yale.edu/cnnr/people/susumu_tomita.profile\">"+label+"</a> <i class='fa fa-external-link'></i>";
+                }
+                else if (label.equalsIgnoreCase("Gaia Skibinski")) {
+                    return "<a href=\"https://labs.gladstone.org/finkbeiner/\">"+label+"</a> <i class='fa fa-external-link'></i>";
+                }
+            }
             
             if (label.length() > 30) {
                 return "<span data-toggle='tooltip' data-html='false'"
@@ -630,6 +641,7 @@ public class IDGApp extends App implements Commons {
     public static final String[] TARGET_FACETS = {
             IDG_DEVELOPMENT,
             IDG_FAMILY,
+            TECHDEV_PI,
             IDG_DISEASE,
             IDG_TISSUE,
             //"R01 Grant Count",
@@ -663,6 +675,10 @@ public class IDGApp extends App implements Commons {
         GO_PROCESS,
         GO_FUNCTION,
 
+        COMPARTMENT_GOTERM,
+        COMPARTMENT_EVIDENCE,
+        COMPARTMENT_TYPE,
+        
         "KEGG Pathway",
         "Reactome Pathway",
         "Wikipathways Pathway",
