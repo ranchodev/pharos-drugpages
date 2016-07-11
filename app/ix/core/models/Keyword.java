@@ -7,7 +7,7 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 @Entity
 @DiscriminatorValue("KEY")
 @DynamicFacet(label="label", value="term")
-public class Keyword extends Value {
+public class Keyword extends Value implements Comparable<Keyword> {
     @Column(length=255)
     public String term;
     @Lob
@@ -33,5 +33,12 @@ public class Keyword extends Value {
                 return label.equals(kw.label) && term.equals(kw.term);
         }
         return false;
+    }
+
+    public int compareTo (Keyword kw) {
+        int d = label.compareTo(kw.label);
+        if (d == 0)
+            d = term.compareTo(kw.term);
+        return d;
     }
 }

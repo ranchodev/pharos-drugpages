@@ -112,8 +112,7 @@
   }
 }
 
-@property(name: String, href: String = null, dir: Int = 0) = {
- @defining(IDGApp.getProperties(target, name, dir)) { props =>
+@propertyfacets(name: String, props: List[Value], href: String = null, dir: Int = 0) = {
     @if(!props.isEmpty()) {
        @if(props.length > 10) {
        <div class="modal fade" id="@Util.sha1(name).substring(0,5)"
@@ -188,6 +187,11 @@
        </div>
        }
      }
+}
+
+@property(name: String, href: String = null, dir: Int = 0) = {
+  @defining(IDGApp.getProperties(target, name, dir)) { props =>
+     @propertyfacets(name, props, href, dir)
   }
 }
 
@@ -635,35 +639,20 @@ This is TCRD target <a href='@ix.core.controllers.v1.routes.RouteFactory.get("ta
         @property(GO_COMPONENT)
         @property(GO_PROCESS)
 
-        @defining(IDGApp.getLigands(target)) { ligands =>
-              @if(!ligands.isEmpty()) {
-                 <div class="panel panel-default">
-                 <a name="ligands" tocname="Ligands"></a>
-                    <div class="panel-heading">
-                       <h3 class="panel-title"><a class="loader" href='@{ix.idg.controllers.routes.IDGApp.ligands() + "?facet=" + IDG_TARGET+"/"+target.getSynonym(UNIPROT_GENE).term}'>Ligand (@ligands.size)</a></h3>
-                    </div>
-                    <div class="panel-body"
-                         style="max-height: 300px;overflow-y: auto;">
-                      <table class="table">
-                        @if(ligands.size > 20) {
-                           @for(l <- ligands.subList(0, 20)) {
-                              @ligandrow(l)
-                           }
-                        } else {
-                           @for(lig <- ligands) {
-                              @ligandrow(lig)
-                           }
-                        }
-                      </table>
-                   </div>
-                   @if(ligands.size > 20) {
-                   <div class="panel-footer">
-                      <a class="loader" href='@{ix.idg.controllers.routes.IDGApp.ligands() + "?facet=" + IDG_TARGET+"/"+target.getSynonym(UNIPROT_GENE).term}'>See all @ligands.size ligands...</a>
-                   </div>
-                   }
-                </div>
-             }
-         }
+	@defining(IDGApp.getCompartmentGOTerms(target)) { terms =>
+	   @if(!terms.isEmpty) {
+              <div class="panel panel-default">
+                 <div class="panel-heading">
+	           <h3 class="panel-title">Compartment GO Term (@terms.size)</h3>
+		 </div>
+                 <div class="panel-body">
+		     @for(t <- terms) {
+		        @keyword(t)
+		     }
+		 </div>
+      	       </div>
+	   }
+	}
         
         @**
         @if(target.patentCount != null && target.patentCount > 0) {
@@ -726,6 +715,35 @@ This is TCRD target <a href='@ix.core.controllers.v1.routes.RouteFactory.get("ta
              </div>
           }
         }
+        @defining(IDGApp.getLigands(target)) { ligands =>
+              @if(!ligands.isEmpty()) {
+                 <div class="panel panel-default">
+                 <a name="ligands" tocname="Ligands"></a>
+                    <div class="panel-heading">
+                       <h3 class="panel-title"><a class="loader" href='@{ix.idg.controllers.routes.IDGApp.ligands() + "?facet=" + IDG_TARGET+"/"+target.getSynonym(UNIPROT_GENE).term}'>Ligand (@ligands.size)</a></h3>
+                    </div>
+                    <div class="panel-body"
+                         style="max-height: 300px;overflow-y: auto;">
+                      <table class="table table-striped">
+                        @if(ligands.size > 20) {
+                           @for(l <- ligands.subList(0, 20)) {
+                              @ligandrow(l)
+                           }
+                        } else {
+                           @for(lig <- ligands) {
+                              @ligandrow(lig)
+                           }
+                        }
+                      </table>
+                   </div>
+                   @if(ligands.size > 20) {
+                   <div class="panel-footer">
+                      <a class="loader" href='@{ix.idg.controllers.routes.IDGApp.ligands() + "?facet=" + IDG_TARGET+"/"+target.getSynonym(UNIPROT_GENE).term}'>See all @ligands.size ligands...</a>
+                   </div>
+                   }
+                </div>
+             }
+         }
        </div>
     </div> <!-- row -->
     <!--

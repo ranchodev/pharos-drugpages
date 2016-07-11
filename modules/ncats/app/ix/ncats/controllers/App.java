@@ -532,11 +532,11 @@ public class App extends Authentication {
         String[] facets = request().queryString().get("facet");
         if (facets != null) {
             for (String f : facets) {
-                String[] toks = f.split("/");
-                if (toks.length == 2) {
+                int pos = f.indexOf('/');
+                if (pos > 0) {
                     try {
-                        String name = toks[0];
-                        String value = toks[1];
+                        String name = f.substring(0, pos);
+                        String value = f.substring(pos+1);
                         /*
                         Logger.debug("Searching facet "+name+"/"+value+"..."
                                      +facet.getName()+"/"

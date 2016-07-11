@@ -1142,7 +1142,7 @@ public class TextIndexer {
                     if (pos > 0) {
                         String facet = dd.substring(0, pos);
                         String value = dd.substring(pos+1);
-                        ddq.add(facet, value.split("/"));
+                        ddq.add(facet, value/*.split("/")*/);
                     }
                     else {
                         Logger.warn("Bogus drilldown syntax: "+dd);

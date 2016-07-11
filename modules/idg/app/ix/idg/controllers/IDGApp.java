@@ -23,6 +23,7 @@ import ix.idg.models.Assay;
 import ix.idg.models.Disease;
 import ix.idg.models.Ligand;
 import ix.idg.models.Target;
+import ix.idg.models.Compartment;
 import ix.ncats.controllers.App;
 import ix.seqaln.SequenceIndexer;
 import ix.utils.Util;
@@ -536,7 +537,11 @@ public class IDGApp extends App implements Commons {
 
         public Result get (final String name) {
             try {
-                final String key = getClass().getName()+"/"+cls.getName()+"/"+name+"/result";
+                String view = request().getQueryString("view");
+                final String key = getClass().getName()
+                    +"/"+cls.getName()+"/"+name+"/result/"
+                    +(view != null?view:"");
+                
                 return getOrElse (key, new Callable<Result> () {
                         public Result call () throws Exception {
                             List<T> e = find (name);
@@ -552,28 +557,6 @@ public class IDGApp extends App implements Commons {
                 return _internalServerError (ex);
             }
         }
-        
-        /*
-        public Result result (final List<T> e) {
-            try {
-                final String key = cls.getName()
-                    +"/result/"+Util.sha1(request ());
-                return getOrElse (key, new Callable<Result> () {
-                            public Result call () throws Exception {
-                                long start = System.currentTimeMillis();
-                                Result r = getResult (e);
-                                Logger.debug("Cache missed: "+key+"..."
-                                             +(System.currentTimeMillis()-start)
-                                             +"ms");
-                                return r;
-                            }
-                        });
-            }
-            catch (Exception ex) {
-                return _internalServerError (ex);
-            }
-        }
-        */
 
         abstract Result getResult (List<T> e) throws Exception;
     }
@@ -1304,21 +1287,7 @@ public class IDGApp extends App implements Commons {
     }
 
     public static List<Ligand> getLigands (EntityModel e) {
-        List<Ligand> ligands = new ArrayList<Ligand>();
-        for (XRef xref : e.getLinks()) {
-            try {
-                Class cls = Class.forName(xref.kind);
-                if (Ligand.class.isAssignableFrom(cls)) {
-                    ligands.add((Ligand)xref.deRef());
-                }
-            }
-            catch (Exception ex) {
-                ex.printStackTrace();
-                Logger.error("Can't resolve XRef "
-                             +xref.kind+":"+xref.refid, ex);
-            }
-        }
-        return ligands;
+        return getLinkedObjects (e, Ligand.class);
     }
 
     public static List<Ligand> getLigandsWithActivity(EntityModel e) {
@@ -1377,6 +1346,56 @@ public class IDGApp extends App implements Commons {
         return props;
     }
 
+    public static List<XRef> getLinks (EntityModel e, Class klass) {
+        List<XRef> links = new ArrayList<XRef>();
+        for (XRef ref : e.getLinks()) {
+            try {
+                Class cls = Class.forName(ref.kind);
+                if (klass.isAssignableFrom(cls)) {
+                    links.add(ref);
+                }
+            }
+            catch (Exception ex) {
+                ex.printStackTrace();
+                Logger.error("Bogus XRef class: "+ref.kind, ex);
+            }
+        }
+        
+        return links;
+    }
+
+    public static <T> List<T> getLinkedObjects (EntityModel e, Class<T> klass) {
+        List<T> objects = new ArrayList<T>();
+        for (XRef xref : getLinks (e, klass)) {
+            try {
+                objects.add((T)xref.deRef());
+            }
+            catch (Exception ex) {
+                ex.printStackTrace();
+                Logger.error("Can't resolve XRef "
+                             +xref.kind+":"+xref.refid, ex);
+            }
+        }
+        
+        return objects;
+    }
+
+    public static List<Compartment> getCompartments (EntityModel e) {
+        return getLinkedObjects (e, Compartment.class);
+    }
+
+    public static List<Keyword> getCompartmentGOTerms (EntityModel e) {
+        Set<Keyword> terms = new TreeSet<Keyword>();
+        for (XRef ref : getLinks (e, Compartment.class)) {
+            for (Value v : ref.properties) {
+                if (COMPARTMENT_GOTERM.equals(v.label)) {
+                    terms.add((Keyword)v);
+                }
+            }
+        }
+        return new ArrayList<Keyword>(terms);
+    }
+    
     public static List<Mesh> getMesh (EntityModel e) {
         Map<String, Mesh> mesh = new TreeMap<String, Mesh>();
         for (Publication p : e.getPublications()) {
