@@ -143,11 +143,9 @@ public class BuildInfo {
     libraryDependencies ++= commonDependencies,
       libraryDependencies += "org.webjars" % "morrisjs" % "0.5.1",
       libraryDependencies += "org.webjars" % "fabric.js" % "1.4.12",
-      libraryDependencies += "org.webjars" % "datatables" % "1.10.10",
-      libraryDependencies += "org.webjars" % "datatables-plugins" % "1.10.9-1",
       libraryDependencies += "org.webjars" % "highcharts" % "4.2.5",
-
-        javacOptions ++= javaBuildOptions
+      javacOptions ++= javaBuildOptions,
+      unmanagedSourceDirectories in Compile += baseDirectory.value / "src"
       //javaOptions in Runtime += "-Dconfig.resource=pharos.conf"
   ).dependsOn(ncats).aggregate(ncats)
 
