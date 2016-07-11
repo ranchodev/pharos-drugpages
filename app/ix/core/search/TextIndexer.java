@@ -114,22 +114,50 @@ public class TextIndexer {
         }
     }
 
-    public class TermVectors extends Collector {
-        private int docBase;
-        private TermsEnum termsEnum;
-        private Class kind;     
-        private String field;
-        private IndexReader reader;
-        private int numDocs;
-        private Map<String, Set> counts;
-        private List<Map> docs;
-        private Map<String, Map> terms;
-        private Class idType;
+    public static class TermVectors implements java.io.Serializable {
+        static private final long serialVersionUID = 0x192464a5d08ea528l;
         
-        TermVectors (Class kind, String field) throws IOException {
+        Class kind;     
+        String field;
+        int numDocs;
+        List<Map> docs = new ArrayList<Map>();
+        Map<String, Map> terms = new TreeMap<String,Map>();
+
+        TermVectors (Class kind, String field) {
             this.kind = kind;
             this.field = field;
+        }
 
+        public Class getKind () { return kind; }
+        public String getField () { return field; }
+        
+        public Map<String, Map> getTerms () { return terms; }
+        public List<Map> getDocs () { return docs; }    
+        public int getNumDocs () { return numDocs; }
+        public int getNumDocsWithTerms () { return docs.size(); }
+        public int getNumTerms () { return terms.size(); }
+        public Integer getTermCount (String term) {
+            Map map = terms.get(term);
+            Integer count = null;
+            if (map != null) {
+                count = (Integer)map.get("nDocs");
+            }
+            return count;
+        }
+    }
+
+    class TermVectorsCollector extends Collector {
+        private int docBase;
+        private TermsEnum termsEnum;
+        private IndexReader reader;     
+        private Class idType;
+        private TermVectors tvec;
+        private Map<String, Set> counts;
+        
+        TermVectorsCollector (Class kind, String field) throws IOException {
+            tvec = new TermVectors (kind, field);
+            counts = new TreeMap<String, Set>();
+            
             idType = String.class;
             for (Field f : kind.getFields()) {
                 if (null != f.getAnnotation(Id.class)) {
@@ -141,18 +169,15 @@ public class TextIndexer {
             IndexSearcher searcher = getSearcher ();        
             this.reader = searcher.getIndexReader();
 
-            docs = new ArrayList<Map>();            
-            counts = new TreeMap<String, Set>();                    
             TermQuery tq = new TermQuery
                 (new Term (FIELD_KIND, kind.getName()));            
             searcher.search(tq, this);
-            
-            terms = new TreeMap<String, Map>();
+
             for (Map.Entry<String, Set> me : counts.entrySet()) {
                 Map map = new HashMap ();
                 map.put("docs", me.getValue().toArray(new Object[0]));
                 map.put("nDocs", me.getValue().size());
-                terms.put(me.getKey(), map);
+                tvec.terms.put(me.getKey(), map);
             }
             counts = null;
         }
@@ -164,10 +189,10 @@ public class TextIndexer {
         public void collect (int doc) {
             int docId = docBase + doc;
             try {
-                Terms docterms = reader.getTermVector(docId, field);
+                Terms docterms = reader.getTermVector(docId, tvec.field);
                 if (docterms != null) {
                     Document d = reader.document(docId);                    
-                    Object id = d.get(kind.getName()+"._id");
+                    Object id = d.get(tvec.kind.getName()+"._id");
                     if (Long.class.isAssignableFrom(idType)) {
                         try {
                             id = Long.parseLong(id.toString());
@@ -194,12 +219,12 @@ public class TextIndexer {
                     map.put("doc", id);
                     map.put("terms", terms.toArray(new String[0]));
                     map.put("nTerms", terms.size());
-                    docs.add(map);
+                    tvec.docs.add(map);
                 }
                 else {
                     //Logger.debug("No term vector for field \""+field+"\"!");
                 }
-                ++numDocs;
+                ++tvec.numDocs;
             }
             catch (IOException ex) {
                 ex.printStackTrace();
@@ -209,14 +234,8 @@ public class TextIndexer {
         public void setNextReader (AtomicReaderContext ctx) {
             docBase = ctx.docBase;
         }
-        
-        public Class getKind () { return kind; }
-        public Map<String, Map> getTerms () { return terms; }
-        public List<Map> getDocs () { return docs; }    
-        public String getField () { return field; }
-        public int getNumDocs () { return numDocs; }
-        public int getNumDocsWithTerms () { return docs.size(); }
-        public int getNumTerms () { return terms.size(); }
+
+        public TermVectors termVectors () { return tvec; }
     }
     
     public static class FV implements java.io.Serializable {
@@ -1027,7 +1046,7 @@ public class TextIndexer {
 
     public TermVectors getTermVectors (Class kind, String field)
         throws IOException {
-        return new TermVectors (kind, field);
+        return new TermVectorsCollector(kind, field).termVectors();
     }
     
     public SearchResult range (SearchOptions options, String field,

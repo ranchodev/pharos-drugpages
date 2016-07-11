@@ -763,16 +763,17 @@ public class IDGApp extends App implements Commons {
         }
 
         if (kind != null) {
-            SearchResult result = getSearchFacets (kind);
             //Logger.debug("+++");
             for (FacetDecorator f : decors) {
                 if (!f.hidden) {
+                    TextIndexer.TermVectors tvs = SearchFactory.getTermVectors
+                        (kind, f.facet.getName());
+                    
                     if (Global.DEBUG(2))
                         Logger.debug("Facet "+f.facet.getName());
-                    Facet full = result.getFacet(f.facet.getName());
                     for (int i = 0; i < f.facet.size(); ++i) {
                         TextIndexer.FV fv = f.facet.getValue(i);
-                        f.total[i] = full.getCount(fv.getLabel());
+                        f.total[i] = tvs.getTermCount(fv.getLabel());
                         if (Global.DEBUG(2))
                             Logger.debug("  + "+fv.getLabel()+" "
                                          +fv.getCount()+"/"+f.total[i]);
@@ -3840,5 +3841,11 @@ public class IDGApp extends App implements Commons {
         }
 
         return ok (ix.idg.views.html.targetcompare2.render(targets));
+    }
+
+    public static Integer getTermCount (Class kind, String label, String term) {
+        TextIndexer.TermVectors tvs =
+            SearchFactory.getTermVectors(kind, label);
+        return tvs != null ? tvs.getTermCount(term) : null;
     }
 }

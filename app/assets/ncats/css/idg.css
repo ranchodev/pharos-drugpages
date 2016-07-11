@@ -18,3 +18,7 @@
 .table tbody>tr>td.valign-center {
     vertical-align: middle;
 }
+
+.label-as-badge {
+    border-radius: 1em;
+}

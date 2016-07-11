@@ -24,21 +24,23 @@
 @(target: Target, diseases: List[DiseaseRelevance], breadcrumb: List[Keyword])
 
 @facet(label: String, value: String, href: String = null, max: Int = 40) = {
-  @if(max > 0 && value.length > max) {
-    <a id="keyword" class="label label-primary loader"
-       data-toggle="popover"
-       data-html="true"
-       data-trigger="hover"
-       data-placement="top"
-       title="@label"
-       data-content="<p align='left'>@value</p>"
-       href='@{ix.idg.controllers.routes.IDGApp.targets()+"?facet="+URLEncoder.encode(label,"utf8")+"/"}@URLEncoder.encode(value, "utf8")'>@{value.substring(0, max)}...</a>&nbsp;
-  } else {
-    <a id="keyword" class="label label-primary loader" 
-       href='@{ix.idg.controllers.routes.IDGApp.targets()+"?facet="+URLEncoder.encode(label,"utf8")+"/"}@URLEncoder.encode(value, "utf8")'>@value</a>
-  }
-  @if(href != null) {
-     <a href="@href"><i class="fa fa-external-link"></i></a>
+  @defining(IDGApp.getTermCount(classOf[Target], label, value)) { count =>
+     @if(max > 0 && value.length > max) {
+       <a id="keyword" class="label label-primary label-as-badge loader"
+          data-toggle="popover"
+       	  data-html="true"
+       	  data-trigger="hover"
+       	  data-placement="top"
+       	  title="@label"
+       	  data-content="<p align='left'>@value</p>"
+       	  href='@{ix.idg.controllers.routes.IDGApp.targets()+"?facet="+URLEncoder.encode(label,"utf8")+"/"}@URLEncoder.encode(value, "utf8")'>@{value.substring(0, max)}... (@count)</a>&nbsp;
+     } else {
+       <a id="keyword" class="label label-primary label-as-badge loader" 
+          href='@{ix.idg.controllers.routes.IDGApp.targets()+"?facet="+URLEncoder.encode(label,"utf8")+"/"}@URLEncoder.encode(value, "utf8")'>@value (@count)</a>
+     }
+     @if(href != null) {
+     	<a href="@href"><i class="fa fa-external-link"></i></a>
+     }
   }
 }
 
@@ -217,8 +219,9 @@
 }
 
 @diseaserow(dr: DiseaseRelevance) = {
+  @defining(IDGApp.getTermCount(classOf[Target], IDG_DISEASE, dr.disease.name)) { count =>
      <tr @*class="treegrid-@dr.disease.id"*@>
-       <td><a class="label label-primary loader" href="@{ix.idg.controllers.routes.IDGApp.targets()+"?facet="+URLEncoder.encode(IDG_DISEASE,"utf8")+"/"+URLEncoder.encode(dr.disease.name, "utf8")}">@dr.disease.name</a></td>
+       <td><a class="label label-primary label-as-badge loader" href="@{ix.idg.controllers.routes.IDGApp.targets()+"?facet="+URLEncoder.encode(IDG_DISEASE,"utf8")+"/"+URLEncoder.encode(dr.disease.name, "utf8")}">@dr.disease.name (@count)</a></td>
        <td>@diseasedblink(dr.disease,dr.zscore)</td>
        <td>@diseasedblink(dr.disease,dr.conf)</td>
        @if(dr.tinxScore != null) {
@@ -242,6 +245,7 @@
          </tr>
        }
      }
+   }
 }
 
 @expression(name: String, skull: String, ext: Keyword = null) = {
