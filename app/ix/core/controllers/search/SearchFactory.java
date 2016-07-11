@@ -3,6 +3,8 @@ package ix.core.controllers.search;
 import java.io.*;
 import java.security.*;
 import java.util.*;
+import java.util.concurrent.Callable;
+
 import play.*;
 import play.db.ebean.*;
 import play.data.*;
@@ -203,21 +205,33 @@ public class SearchFactory extends EntityFactory {
         return ok (_indexer.getFacetsConfig());
     }
 
-    public static Result termVectors (Class kind, String field) {
+    public static TextIndexer.TermVectors getTermVectors
+        (final Class kind, final String field) {
         try {
-            TextIndexer.TermVectors tv = _indexer.getTermVectors(kind, field);
+            final String key = SearchFactory.class.getName()+"/termVectors/"
+                +kind.getName()+"/"+field;
+            return IxCache.getOrElse
+                (key, new Callable<TextIndexer.TermVectors> () {
+                        public TextIndexer.TermVectors call ()
+                            throws Exception {
+                            return _indexer.getTermVectors(kind, field);
+                        }
+                    });
+        }
+        catch (Exception ex) {
+            Logger.error("Can't generate termVectors for "+kind+"/"+field, ex);
+            return null;
+        }
+    }
+
+    public static Result termVectors (Class kind, String field) {
+        TextIndexer.TermVectors tv = getTermVectors (kind, field);
+        if (tv != null) {
             EntityMapper mapper = new EntityMapper ();
-            /*
-            File f = new File ("tv.json");
-            PrintStream ps = new PrintStream (new FileOutputStream (f));
-            ps.print(mapper.toJson(tv, true));
-            ps.close();
-            */
             return ok (mapper.valueToTree(tv));
         }
-        catch (IOException ex) {
-            return internalServerError (ex.getMessage());
-        }
+        
+        return notFound ("Can't find termVectors for "+kind+"/"+field);
     }
     
     public static Result suggest (String q, int max) {

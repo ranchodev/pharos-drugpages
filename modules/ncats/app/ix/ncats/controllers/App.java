@@ -532,11 +532,11 @@ public class App extends Authentication {
         String[] facets = request().queryString().get("facet");
         if (facets != null) {
             for (String f : facets) {
-                String[] toks = f.split("/");
-                if (toks.length == 2) {
+                int pos = f.indexOf('/');
+                if (pos > 0) {
                     try {
-                        String name = toks[0];
-                        String value = toks[1];
+                        String name = f.substring(0, pos);
+                        String value = f.substring(pos+1);
                         /*
                         Logger.debug("Searching facet "+name+"/"+value+"..."
                                      +facet.getName()+"/"
@@ -589,6 +589,24 @@ public class App extends Authentication {
             }
         }
         return unspec;
+    }
+
+    public static List<String> getSpecifiedFacets (FacetDecorator[] decors) {
+        String[] facets = request().queryString().get("facet");
+        List<String> spec = new ArrayList<String>();
+        if (facets != null && facets.length > 0) {
+            for (String f : facets) {
+                int matches = 0;
+                for (FacetDecorator d : decors) {
+                    if (f.startsWith(d.facet.getName()))
+                        ++matches;
+                }
+                
+                if (matches > 0)
+                    spec.add(f);
+            }
+        }
+        return spec;
     }
 
     public static Facet[] filter (List<Facet> facets, String... names) {

@@ -261,8 +261,8 @@ public class IxCache extends Plugin
         }
 
         Element elm = null;
+        DatabaseEntry dkey = getKeyEntry (key); 
         try {
-            DatabaseEntry dkey = getKeyEntry (key);
             DatabaseEntry data = new DatabaseEntry ();
             OperationStatus status = db.get(null, dkey, data, null);
             if (status == OperationStatus.SUCCESS) {
@@ -280,7 +280,13 @@ public class IxCache extends Plugin
             }
         }
         catch (Exception ex) {
-            Logger.error("Can't recreate entry for "+key, ex);
+            Logger.warn("Can't recreate entry for "+key
+                        +"; removing this entry from cache!", ex);
+            try {
+                db.delete(null, dkey);
+            }
+            catch (Exception exx) {
+            }
         }
         return elm;
     }
