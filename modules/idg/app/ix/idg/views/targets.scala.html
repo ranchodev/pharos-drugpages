@@ -36,9 +36,9 @@ facets: Array[FacetDecorator], targets: List[Target], ctx: String )
     @if(ctx != null) {
        @defining(IDGApp.getSeqAlignment(ctx, t)) { aln =>
          @if(aln != null) {
-         <tr class="success">
+         <tr class="default">
 	    <td colspan="10">
-	      <pre>@{"identity = %.3f".format(aln.alignments(0).iden)}
+	      <pre class="pre-scrollable" style="max-width:600px;overflow-x:auto;">@{"identity = %.3f".format(aln.alignments(0).iden)}
 @aln.alignments(0).alignment
 </pre>
 	    </td>

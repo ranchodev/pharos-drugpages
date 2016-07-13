@@ -105,7 +105,7 @@ public class SequenceIndexer {
         }
     }
 
-    public static class SEG implements Comparable<SEG> {
+    public static class SEG implements Comparable<SEG>, Serializable {
         public int qi, qj;
         public int ti, tj;
 
@@ -155,7 +155,9 @@ public class SequenceIndexer {
         }
     }
 
-    public static class Alignment implements Comparable<Alignment> {
+    public static class Alignment
+        implements Comparable<Alignment>, Serializable {
+        
         public final SEG segment; // coordinate of query
         public final String query; // segment of query
         public final String target; // segment of sequence
@@ -193,7 +195,7 @@ public class SequenceIndexer {
         }
     }
     
-    public static class Result {
+    public static class Result implements Serializable {
         public final CharSequence query;
         public final String id;
         public final CharSequence target;

@@ -169,7 +169,7 @@ public class TcrdRegistry extends Controller implements Commons {
         // xrefs for the current target
         Map<String, List<String>> xrefs =
             new HashMap<String, List<String>>();
-        Map<String, Keyword> phenotypeSource = new HashMap<String, Keyword>();
+        //Map<String, Keyword> phenotypeSource = new HashMap<String, Keyword>();
 
         Map<Target.TDL, Keyword> tdlKeywords =
             new EnumMap<Target.TDL,Keyword>(Target.TDL.class);
@@ -185,7 +185,26 @@ public class TcrdRegistry extends Controller implements Commons {
             this.ctx = ctx;
             this.targets = targets;
 
+            List<Keyword> keywords = KeywordFactory.finder
+                .where().eq("label", IDG_DEVELOPMENT).findList();
+            for (Keyword kw : keywords) {
+                tdlKeywords.put(Target.TDL.valueOf(kw.term), kw);
+            }
+            Logger.debug(tdlKeywords.size()+" "+IDG_DEVELOPMENT+" loaded!");
 
+            keywords = KeywordFactory.finder
+                .where().eq("label", IDG_FAMILY).findList();
+            for (Keyword kw : keywords) {
+                famKeywords.put(kw.term, kw);
+            }
+            Logger.debug(famKeywords.size()+" "+IDG_FAMILY+" loaded!");
+            
+            keywords = KeywordFactory.finder
+                .where().eq("label", SOURCE).findList();
+            for (Keyword kw : keywords)
+                datasources.put(kw.term, kw);
+            Logger.debug(datasources.size()+" "+SOURCE+" loaded!");
+            
             // For some reason it is possible that a target has entries in target2disease and tinx_novelty
             // but no entries in tinx_importance. Example is Q8WXS5. As a result the SQL below would not
             // return anything
@@ -624,7 +643,7 @@ public class TcrdRegistry extends Controller implements Commons {
                     tref.save();
                     aref.save();
                     assay.update();
-                    target.update();
+                    //target.update();
                 }
                 catch (Exception ex) {
                     ex.printStackTrace();
@@ -1571,7 +1590,7 @@ public class TcrdRegistry extends Controller implements Commons {
                     tref.save();
                     lref.save();
                     ligand.update();
-                    target.update();
+                    //target.update();
                 }
                 catch (Exception ex) {
                     ex.printStackTrace();
@@ -1940,7 +1959,7 @@ public class TcrdRegistry extends Controller implements Commons {
                     try {
                         if (xref.id == null) {
                             xref.save();
-                            target.update();
+                            //target.update();
                         }
                         else {
                             xref.update();
@@ -2104,8 +2123,22 @@ public class TcrdRegistry extends Controller implements Commons {
                         // don't store self-link
                         Target t = TARGETS.get(p2);
                         if (t == null) {
+                            /*
                             Logger.error
                                 ("Can't find target with protein id="+p2);
+                            */
+                            List<Target> targets = TargetFactory.finder
+                                .where().eq("synonyms.term", "TCRD:"+p2)
+                                .findList();
+                            if (targets.isEmpty()) {    
+                                Logger.error
+                                    ("Can't find target with protein id="+p2
+                                     +" from database!");
+                            }
+                            else {
+                                t = targets.get(0);
+                                TARGETS.put(p2, t);
+                            }
                         }
                         else {
                             String type = rset.getString("ppitype");
@@ -2542,7 +2575,7 @@ public class TcrdRegistry extends Controller implements Commons {
                                 (new Text (IDG_GENERIF, me.getValue()));
                             if (xref.id == null) {
                                 xref.save();
-                                target.update();
+                                //target.update();
                             }
                             else {
                                 xref.update();
@@ -3094,10 +3127,25 @@ public class TcrdRegistry extends Controller implements Commons {
                 }
                 else {
                     Logger.debug("Skipping "+acc);
+                    TARGETS.put(protId, tlist.get(0));
                 }
             }
             rset.close();
             stm.close();
+
+            for (Disease d : DiseaseFactory.finder.all()) {
+                for (Keyword kw : d.getSynonyms())
+                    DISEASES.put(kw.term, d);
+                if (d.name != null)
+                    DISEASES.put(d.name, d);
+            }
+
+            for (Ligand l : LigandFactory.finder.all()) {
+                for (Keyword kw : l.getSynonyms())
+                    LIGS.put(kw.term, l);
+                if (l.name != null)
+                    LIGS.put(l.name, l);
+            }
         }
         catch (Exception ex) {
             ex.printStackTrace();

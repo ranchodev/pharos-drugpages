@@ -18,6 +18,9 @@
 	  }
           @for(f <- spec) {
 	      <button style="margin-top:2px;" class="btn btn-primary"
+                      data-toggle="tooltip"
+		      data-html="true"
+		      data-title='Remove filter <strong>@f.substring(0,f.indexOf('/'))</strong><p><em>@f.substring(f.indexOf('/')+1)</em>'
 	      	      onclick="removeFacet('@f')">
 	         @f.substring(0,f.indexOf('/'))&nbsp;
 		 <span class="badge">@f.substring(f.indexOf('/')+1)</span>
@@ -70,51 +73,81 @@
 	</button>
 	@request().getQueryString("type") match {
            case "sequence" => {
-	      <span><h4>Sequence Query:&nbsp;
-		  <code>@ix.ncats.controllers.App.getSequence(request().getQueryString("q"), 50)</code></h4></span> <div id="searching"></div>
+	       @defining(request.getQueryString("q")) { q =>
+ 	          <button style="margin-top:2px;" class="btn btn-danger"
+		        data-toggle="tooltip"
+			data-animation="true"
+           		data-trigger="click hover focus"
+           		data-title="Remove sequence query"
+	   		data-html="true"
+	      	        onclick="removeParams('q','type','identity')">
+		     Sequence Query <span class="badge">@ix.ncats.controllers.App.getSequence(q, 50) &ge; @request.getQueryString("identity")<div id="searching"></div></span> <span class="fa fa-remove" aria-hidden="true"></span>
+	          </button>
+		  @facetsummary(false)
+               }
 	   }
            case "batch" => {
 	      <span><h4>Batch Query:&nbsp;
 		  <code>@ix.ncats.controllers.App.getPayload(request().getQueryString("q"), 50)</code></h4></span> <div id="searching"></div>
 	    }
-  	    case "substructure" => {
-	      <span><h4>Substructure Query:&nbsp; <a  href="#"
-           tabindex="-1"
-           data-toggle="popover"
-           data-animation="true"
-           data-placement="bottom"
-           data-trigger="click hover focus"
-           data-title=""
-	   data-html="true"
-           data-content="<img src='@ix.ncats.controllers.routes.App.render(request().getQueryString("q"),150)'>"><code>@request().getQueryString("q")</code></a></h4></span><div id="searching"></div>
-	    }
-	     case "similarity" => {
-	      <span><h4>Similarity Query:&nbsp; <a  href="#"
-           tabindex="-1"
-           data-toggle="popover"
-           data-animation="true"
-           data-placement="bottom"
-           data-trigger="click hover focus"
-           data-title=""
-	   data-html="true"
-           data-content="<img src='@ix.ncats.controllers.routes.App.render(request().getQueryString("q"),150)'>"><code>@request().getQueryString("q")</code></a> &ge; @request().getQueryString("cutoff")</h4></span><div id="searching"></div>
+  	   case "substructure" => {
+	       @defining(request.getQueryString("q")) { q =>
+ 	          <button style="margin-top:2px;" class="btn btn-danger"
+		        data-toggle="popover"
+			data-animation="true"
+           		data-placement="bottom"
+           		data-trigger="click hover focus"
+           		data-title=""
+	   		data-html="true"
+           		data-content="<img src='@ix.ncats.controllers.routes.App.render(q,150)'>"
+	      	      onclick="removeParams('q','type')">
+		     Substructure Query <span class="badge">@q <div id="searching"></div></span> <span class="fa fa-remove" aria-hidden="true"></span>
+	          </button>
+		  @facetsummary(false)
+               }
+	   }
+           case "similarity" => {
+	      @defining(request.getQueryString("q")) { q =>
+ 	          <button style="margin-top:2px;" class="btn btn-danger"
+		        data-toggle="popover"
+			data-animation="true"
+           		data-placement="bottom"
+           		data-trigger="click hover focus"
+           		data-title=""
+	   		data-html="true"
+           		data-content="<img src='@ix.ncats.controllers.routes.App.render(q,150)'>"
+	      	      onclick="removeParams('q','type','cutoff')">
+		     Similarity Query <span class="badge">@q &ge; @request.getQueryString("cutoff") <div id="searching"></div></span> <span class="fa fa-remove" aria-hidden="true"></span>
+	          </button>
+		  @facetsummary(false)
+	      }
 	   }
            case _ => {
-	      @if(request().getQueryString("q") != null) {
-   	         <span><h4>Query:&nbsp;<code>@request().getQueryString("q")</code>
-              @if(total == 0) {
-                  <span  class="text-center" style="color: #000000;"><h4>Didn't find what you're looking for?
-                      <a href="mailto:pharos@@mail.nih.gov?subject=Empty result for query '@request().uri'" class="alert-link">Contact us</a></h4></span>
-              } else {
-	         @facetsummary(false)
-	      }
-          } else {
+	     @defining(request.getQueryString("q")){ q =>
+	        @if(q != null) {
+   	          <button style="margin-top:2px;" class="btn btn-danger"
+                      data-toggle="tooltip"
+		      data-html="true"
+		      data-title='Remove query <em>@q</em>'
+	      	      onclick="removeParams('q')">
+		     Query <span class="badge">@q</span>
+	             <span class="fa fa-remove" aria-hidden="true"></span>
+	          </button>
+	      
+                  @if(total == 0) {
+                      <span  class="text-center" style="color: #000000;"><h4>Didn't find what you're looking for?
+                         <a href="mailto:pharos@@mail.nih.gov?subject=Empty result for query '@request().uri'" class="alert-link">Contact us</a></h4></span>
+                  } else {
+	              @facetsummary(false)
+	          }
+               } else {
 	         @for(f <- unspecf) {
 	              <span><h4>@f.substring(0,f.indexOf('/')):&nbsp;<code>@f.substring(f.indexOf('/')+1)</code></h4></span>
 	         }
 	      }
 	    }
           }
+	}
         </div>
         } else {
 	  @facetsummary(true) 
@@ -152,6 +185,34 @@
 <script>
 function dismissQuery () {
     location.assign('@resetAction');
+}
+
+function removeParams () {
+    var args = {};
+    for (var i = 0; i < arguments.length; ++i) {
+       args[arguments[i]] = 0;
+    }
+    var q = [];
+    location.search.substr(1).split("&").forEach(function(item) {
+        var p = decodeURIComponent(item.split("=")[0]);
+	console.log('..'+p);
+	if (p in args) {
+	   console.log('removing '+item);
+	}
+	else {
+	   //console.log('keeping '+item);
+	   q.push(item);
+	}
+    });
+    var url = location.href.split("?")[0];
+    if (q.length > 0) {
+       url = url + '?'+q[0];
+       for (var i = 1; i < q.length; ++i) {
+          url = url + '&'+q[i];
+       }
+    }
+    console.log(url);
+    location.href = url;
 }
 
 function removeFacet (facet) {

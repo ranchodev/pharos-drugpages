@@ -224,14 +224,65 @@ public class SearchFactory extends EntityFactory {
         }
     }
 
+    public static TextIndexer.TermVectors getConditionalTermVectors
+        (final Class kind, final String field,
+         final Map<String, String> conditionals) {
+        if (conditionals == null || conditionals.isEmpty())
+            throw new IllegalArgumentException
+                ("Can't get conditional term vectors with empty constraints!");
+        try {
+            List<String> params = new ArrayList<String>();
+            for (Map.Entry<String, String> me : conditionals.entrySet())
+                params.add(me.getKey()+"/"+me.getValue());
+            Collections.sort(params);
+            
+            final String key = SearchFactory.class.getName()
+                +"/termVectors/"+kind.getName()+"/"+field+"/"
+                +Util.sha1(params.toArray(new String[0]));
+            return IxCache.getOrElse
+                (key, new Callable<TextIndexer.TermVectors> () {
+                        public TextIndexer.TermVectors call ()
+                            throws Exception {
+                            return _indexer.getTermVectors
+                                (kind, field, conditionals);
+                        }
+                    });
+        }
+        catch (Exception ex) {
+            Logger.error("Can't generate termVectors for "+kind+"/"+field
+                         +" conditioned on "+conditionals, ex);
+            return null;            
+        }
+    }
+
     public static Result termVectors (Class kind, String field) {
-        TextIndexer.TermVectors tv = getTermVectors (kind, field);
-        if (tv != null) {
-            EntityMapper mapper = new EntityMapper ();
-            return ok (mapper.valueToTree(tv));
+        String[] facets = request().queryString().get("facet");
+        
+        EntityMapper mapper = new EntityMapper ();
+        TextIndexer.TermVectors tv = null;
+        if (facets != null && facets.length > 0) {
+            Map<String, String> filters = new TreeMap<String, String>();
+            for (String f : facets) {
+                // syntax of a facet: FIELD/VALUE
+                int pos = f.indexOf('/');
+                if (pos > 0) {
+                    filters.put(f.substring(0, pos), f.substring(pos+1));
+                }
+            }
+            
+            if (!filters.isEmpty()) {
+                tv = getConditionalTermVectors (kind, field, filters);
+            }
+            else {
+                tv = getTermVectors (kind, field);
+            }
+        }
+        else {
+            tv = getTermVectors (kind, field);
         }
         
-        return notFound ("Can't find termVectors for "+kind+"/"+field);
+        return tv != null ? ok (mapper.valueToTree(tv))
+            : notFound ("Can't find termVectors for "+kind+"/"+field);
     }
     
     public static Result suggest (String q, int max) {

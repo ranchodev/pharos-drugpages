@@ -21,7 +21,9 @@ import org.apache.lucene.facet.taxonomy.directory.DirectoryTaxonomyReader;
 import org.apache.lucene.facet.taxonomy.directory.DirectoryTaxonomyWriter;
 import org.apache.lucene.index.*;
 import org.apache.lucene.index.FieldInfo.IndexOptions;
+import org.apache.lucene.queries.TermFilter;
 import org.apache.lucene.queries.TermsFilter;
+import org.apache.lucene.queries.ChainedFilter;
 import org.apache.lucene.queryparser.classic.ParseException;
 import org.apache.lucene.queryparser.classic.QueryParser;
 import org.apache.lucene.search.*;
@@ -122,7 +124,8 @@ public class TextIndexer {
         int numDocs;
         List<Map> docs = new ArrayList<Map>();
         Map<String, Map> terms = new TreeMap<String,Map>();
-
+        Map<String, String> filters = new TreeMap<String, String>();
+        
         TermVectors (Class kind, String field) {
             this.kind = kind;
             this.field = field;
@@ -130,7 +133,8 @@ public class TextIndexer {
 
         public Class getKind () { return kind; }
         public String getField () { return field; }
-        
+
+        public Map<String, String> getFilters () { return filters; }
         public Map<String, Map> getTerms () { return terms; }
         public List<Map> getDocs () { return docs; }    
         public int getNumDocs () { return numDocs; }
@@ -155,6 +159,11 @@ public class TextIndexer {
         private Map<String, Set> counts;
         
         TermVectorsCollector (Class kind, String field) throws IOException {
+            this (kind, field, new Term[0]);
+        }
+
+        TermVectorsCollector (Class kind, String field, Term... terms)
+            throws IOException {
             tvec = new TermVectors (kind, field);
             counts = new TreeMap<String, Set>();
             
@@ -170,8 +179,24 @@ public class TextIndexer {
             this.reader = searcher.getIndexReader();
 
             TermQuery tq = new TermQuery
-                (new Term (FIELD_KIND, kind.getName()));            
-            searcher.search(tq, this);
+                (new Term (FIELD_KIND, kind.getName()));
+            
+            Filter filter = null;
+            if (terms != null && terms.length > 0) {
+                if (terms.length == 1) {
+                    filter = new TermFilter (terms[0]);
+                    tvec.filters.put(terms[0].field(), terms[0].text());
+                }
+                else {
+                    Filter[] filters = new TermFilter[terms.length];
+                    for (int i = 0; i < terms.length; ++i) {
+                        filters[i] = new TermFilter (terms[i]);
+                        tvec.filters.put(terms[i].field(), terms[i].text());
+                    }
+                    filter = new ChainedFilter (filters, ChainedFilter.AND);
+                }
+            }
+            searcher.search(tq, filter, this);
 
             for (Map.Entry<String, Set> me : counts.entrySet()) {
                 Map map = new HashMap ();
@@ -1046,7 +1071,21 @@ public class TextIndexer {
 
     public TermVectors getTermVectors (Class kind, String field)
         throws IOException {
-        return new TermVectorsCollector(kind, field).termVectors();
+        return new TermVectorsCollector (kind, field).termVectors();
+    }
+    
+    public TermVectors getTermVectors (Class kind, String field,
+                                       Map<String, String> filters)
+        throws IOException {
+        Term[] terms = new Term[0];
+        if (filters != null && !filters.isEmpty()) {
+            terms = new Term[filters.size()];
+            int i = 0;
+            for (Map.Entry<String, String> me : filters.entrySet()) {
+                terms[i++] = new Term (me.getKey(), me.getValue());
+            }
+        }
+        return new TermVectorsCollector(kind, field, terms).termVectors();
     }
     
     public SearchResult range (SearchOptions options, String field,

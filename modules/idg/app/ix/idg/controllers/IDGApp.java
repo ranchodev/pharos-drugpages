@@ -1444,9 +1444,9 @@ public class IDGApp extends App implements Commons {
                         dr.comment = ((Text)p).text;
                     }
                 }
-                if (dr.zscore != null || dr.conf != null)
-                    diseases.add(dr);
-                else if (dr.comment != null) {
+                diseases.add(dr);
+                
+                if (dr.comment != null) {
                     for (Keyword kw : dr.disease.synonyms) {
                         if ("MIM".equals(kw.label)) {
                             dr.omim = kw;
