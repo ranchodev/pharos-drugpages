@@ -21,7 +21,9 @@ import org.apache.lucene.facet.taxonomy.directory.DirectoryTaxonomyReader;
 import org.apache.lucene.facet.taxonomy.directory.DirectoryTaxonomyWriter;
 import org.apache.lucene.index.*;
 import org.apache.lucene.index.FieldInfo.IndexOptions;
+import org.apache.lucene.queries.TermFilter;
 import org.apache.lucene.queries.TermsFilter;
+import org.apache.lucene.queries.ChainedFilter;
 import org.apache.lucene.queryparser.classic.ParseException;
 import org.apache.lucene.queryparser.classic.QueryParser;
 import org.apache.lucene.search.*;
@@ -114,22 +116,57 @@ public class TextIndexer {
         }
     }
 
-    public class TermVectors extends Collector {
-        private int docBase;
-        private TermsEnum termsEnum;
-        private Class kind;     
-        private String field;
-        private IndexReader reader;
-        private int numDocs;
-        private Map<String, Set> counts;
-        private List<Map> docs;
-        private List<Map> terms;
-        private Class idType;
+    public static class TermVectors implements java.io.Serializable {
+        static private final long serialVersionUID = 0x192464a5d08ea528l;
         
-        TermVectors (Class kind, String field) throws IOException {
+        Class kind;     
+        String field;
+        int numDocs;
+        List<Map> docs = new ArrayList<Map>();
+        Map<String, Map> terms = new TreeMap<String,Map>();
+        Map<String, String> filters = new TreeMap<String, String>();
+        
+        TermVectors (Class kind, String field) {
             this.kind = kind;
             this.field = field;
+        }
 
+        public Class getKind () { return kind; }
+        public String getField () { return field; }
+
+        public Map<String, String> getFilters () { return filters; }
+        public Map<String, Map> getTerms () { return terms; }
+        public List<Map> getDocs () { return docs; }    
+        public int getNumDocs () { return numDocs; }
+        public int getNumDocsWithTerms () { return docs.size(); }
+        public int getNumTerms () { return terms.size(); }
+        public Integer getTermCount (String term) {
+            Map map = terms.get(term);
+            Integer count = null;
+            if (map != null) {
+                count = (Integer)map.get("nDocs");
+            }
+            return count;
+        }
+    }
+
+    class TermVectorsCollector extends Collector {
+        private int docBase;
+        private TermsEnum termsEnum;
+        private IndexReader reader;     
+        private Class idType;
+        private TermVectors tvec;
+        private Map<String, Set> counts;
+        
+        TermVectorsCollector (Class kind, String field) throws IOException {
+            this (kind, field, new Term[0]);
+        }
+
+        TermVectorsCollector (Class kind, String field, Term... terms)
+            throws IOException {
+            tvec = new TermVectors (kind, field);
+            counts = new TreeMap<String, Set>();
+            
             idType = String.class;
             for (Field f : kind.getFields()) {
                 if (null != f.getAnnotation(Id.class)) {
@@ -141,18 +178,31 @@ public class TextIndexer {
             IndexSearcher searcher = getSearcher ();        
             this.reader = searcher.getIndexReader();
 
-            docs = new ArrayList<Map>();            
-            counts = new TreeMap<String, Set>();                    
             TermQuery tq = new TermQuery
-                (new Term (FIELD_KIND, kind.getName()));            
-            searcher.search(tq, this);
+                (new Term (FIELD_KIND, kind.getName()));
             
-            terms = new ArrayList<Map>();
+            Filter filter = null;
+            if (terms != null && terms.length > 0) {
+                if (terms.length == 1) {
+                    filter = new TermFilter (terms[0]);
+                    tvec.filters.put(terms[0].field(), terms[0].text());
+                }
+                else {
+                    Filter[] filters = new TermFilter[terms.length];
+                    for (int i = 0; i < terms.length; ++i) {
+                        filters[i] = new TermFilter (terms[i]);
+                        tvec.filters.put(terms[i].field(), terms[i].text());
+                    }
+                    filter = new ChainedFilter (filters, ChainedFilter.AND);
+                }
+            }
+            searcher.search(tq, filter, this);
+
             for (Map.Entry<String, Set> me : counts.entrySet()) {
                 Map map = new HashMap ();
-                map.put("term", me.getKey());
                 map.put("docs", me.getValue().toArray(new Object[0]));
-                terms.add(map);
+                map.put("nDocs", me.getValue().size());
+                tvec.terms.put(me.getKey(), map);
             }
             counts = null;
         }
@@ -164,10 +214,10 @@ public class TextIndexer {
         public void collect (int doc) {
             int docId = docBase + doc;
             try {
-                Terms docterms = reader.getTermVector(docId, field);
+                Terms docterms = reader.getTermVector(docId, tvec.field);
                 if (docterms != null) {
                     Document d = reader.document(docId);                    
-                    Object id = d.get(kind.getName()+"._id");
+                    Object id = d.get(tvec.kind.getName()+"._id");
                     if (Long.class.isAssignableFrom(idType)) {
                         try {
                             id = Long.parseLong(id.toString());
@@ -193,12 +243,13 @@ public class TextIndexer {
                     Map map = new HashMap ();
                     map.put("doc", id);
                     map.put("terms", terms.toArray(new String[0]));
-                    docs.add(map);
+                    map.put("nTerms", terms.size());
+                    tvec.docs.add(map);
                 }
                 else {
                     //Logger.debug("No term vector for field \""+field+"\"!");
                 }
-                ++numDocs;
+                ++tvec.numDocs;
             }
             catch (IOException ex) {
                 ex.printStackTrace();
@@ -208,14 +259,8 @@ public class TextIndexer {
         public void setNextReader (AtomicReaderContext ctx) {
             docBase = ctx.docBase;
         }
-        
-        public Class getKind () { return kind; }
-        public List<Map> getTerms () { return terms; }
-        public List<Map> getDocs () { return docs; }    
-        public String getField () { return field; }
-        public int getNumDocs () { return numDocs; }
-        public int getNumDocsWithTerms () { return docs.size(); }
-        public int getNumTerms () { return terms.size(); }
+
+        public TermVectors termVectors () { return tvec; }
     }
     
     public static class FV implements java.io.Serializable {
@@ -325,8 +370,9 @@ public class TextIndexer {
         final long timestamp = System.currentTimeMillis();
         AtomicLong stop = new AtomicLong ();
 
-        final ReentrantLock lock = new ReentrantLock ();
-        final Condition finished = lock.newCondition();
+        final transient ReentrantLock lock = new ReentrantLock ();
+        final transient Condition finished = lock.newCondition();
+        final transient Set<String> keys = new HashSet<String>();
 
         SearchResult () {}
         SearchResult (SearchOptions options, String query) {
@@ -358,11 +404,11 @@ public class TextIndexer {
             }
                 
             Iterator it = matches.iterator();
-            for (int i = 0; i < start && it.hasNext(); ++i)
-                it.next(); // skip
-            
             int i = 0;
-            for (; i < count && it.hasNext(); ++i) {
+            for (; i < start && it.hasNext(); ++i)
+                it.next(); // skip
+
+            for (i = 0; i < count && it.hasNext(); ++i) {
                 list.add(it.next());
             }
             return i;
@@ -386,6 +432,12 @@ public class TextIndexer {
                 lock.unlock();
             }
         }
+
+        public void updateCacheWhenComplete (String... keys) {
+            for (String key : keys) {
+                this.keys.add(key);
+            }
+        }
         
         public boolean isEmpty () { return matches.isEmpty(); }
         public int count () { return count; }
@@ -406,6 +458,9 @@ public class TextIndexer {
             lock.lock();
             try {
                 stop.set(System.currentTimeMillis());
+                for (String key : keys) {
+                    IxCache.set(key, this);
+                }
                 finished.signal();
             }
             finally {
@@ -598,7 +653,7 @@ public class TextIndexer {
                     (kind.stringValue()+":"+id
                      +" not available in persistence store!");
             }
-            
+
             return value;
         }
         
@@ -618,13 +673,15 @@ public class TextIndexer {
                         }
                         
                         try {
+                            /*
                             Object value = IxCache.getOrElse
                                 (field+":"+id.stringValue(), new Callable () {
                                         public Object call () throws Exception {
                                             return findObject (kind, id);
                                         }
                                     });
-                            
+                            */
+                            Object value = findObject (kind, id);
                             if (value != null)
                                 result.add(value);
                         }
@@ -659,7 +716,6 @@ public class TextIndexer {
                                      +": fetching payload "
                                      +payload.hits.totalHits
                                      +" for "+payload.result);
-
                         payload.fetch();
                         Logger.debug(Thread.currentThread()+": ## fetched "
                                      +payload.result.size()
@@ -1015,7 +1071,21 @@ public class TextIndexer {
 
     public TermVectors getTermVectors (Class kind, String field)
         throws IOException {
-        return new TermVectors (kind, field);
+        return new TermVectorsCollector (kind, field).termVectors();
+    }
+    
+    public TermVectors getTermVectors (Class kind, String field,
+                                       Map<String, String> filters)
+        throws IOException {
+        Term[] terms = new Term[0];
+        if (filters != null && !filters.isEmpty()) {
+            terms = new Term[filters.size()];
+            int i = 0;
+            for (Map.Entry<String, String> me : filters.entrySet()) {
+                terms[i++] = new Term (me.getKey(), me.getValue());
+            }
+        }
+        return new TermVectorsCollector(kind, field, terms).termVectors();
     }
     
     public SearchResult range (SearchOptions options, String field,
@@ -1109,12 +1179,12 @@ public class TextIndexer {
                 
                 for (FacetResult result : facetResults) {
                     Facet f = new Facet (result.dim);
-                    if (DEBUG (1)) {
+                    if (DEBUG (2)) {
                         Logger.info(" + ["+result.dim+"]");
                     }
                     for (int i = 0; i < result.labelValues.length; ++i) {
                         LabelAndValue lv = result.labelValues[i];
-                        if (DEBUG (1)) {
+                        if (DEBUG (2)) {
                             Logger.info("     \""+lv.label+"\": "+lv.value);
                         }
                         f.values.add(new FV (lv.label, lv.value.intValue()));
@@ -1130,7 +1200,7 @@ public class TextIndexer {
                     if (pos > 0) {
                         String facet = dd.substring(0, pos);
                         String value = dd.substring(pos+1);
-                        ddq.add(facet, value.split("/"));
+                        ddq.add(facet, value/*.split("/")*/);
                     }
                     else {
                         Logger.warn("Bogus drilldown syntax: "+dd);
@@ -1171,7 +1241,7 @@ public class TextIndexer {
                 
                 for (FacetResult result : facetResults) {
                     if (result != null) {
-                        if (DEBUG (1)) {
+                        if (DEBUG (2)) {
                             Logger.info(" + ["+result.dim+"]");
                         }
                         Facet f = new Facet (result.dim);
@@ -1188,7 +1258,7 @@ public class TextIndexer {
                         
                         for (int i = 0; i < result.labelValues.length; ++i) {
                             LabelAndValue lv = result.labelValues[i];
-                            if (DEBUG (1)) {
+                            if (DEBUG (2)) {
                                 Logger.info
                                     ("     \""+lv.label+"\": "+lv.value);
                             }

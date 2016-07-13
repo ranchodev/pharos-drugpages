@@ -23,9 +23,11 @@ import ix.idg.models.Assay;
 import ix.idg.models.Disease;
 import ix.idg.models.Ligand;
 import ix.idg.models.Target;
+import ix.idg.models.Compartment;
 import ix.ncats.controllers.App;
 import ix.seqaln.SequenceIndexer;
 import ix.utils.Util;
+import ix.utils.Global;
 import org.apache.commons.lang3.StringUtils;
 import play.Logger;
 import play.Play;
@@ -366,11 +368,25 @@ public class IDGApp extends App implements Commons {
                 return url.toString();
             }
             else if (name.equals(IDG_TARGET) || name.equals(UNIPROT_GENE)) {
-                return "<a class='loader' href='"+routes.IDGApp.target(label)+"'>"+label+"</a>";
+                try {
+                    return "<a class='loader' href='"+routes.IDGApp.target(URLEncoder.encode(label, "utf8"))+"'>"+label+"</a>";
+                }
+                catch (Exception ex) {
+                    Logger.error("Can't utf encode label: "+label, ex);
+                    return "<a class='loader' href='"+routes.IDGApp.target(label)+"'>"+label+"</a>";
+                }
             }
             else if (name.equals(IDG_DISEASE)) {
-                return "<a class='loader' href='"+routes.IDGApp.disease(label)+"'>"
-                    +label+"</a>";
+                try {
+                    return "<a class='loader' href='"
+                        +routes.IDGApp.disease(URLEncoder.encode(label, "utf8"))+"'>"
+                        +label+"</a>";
+                }
+                catch (Exception ex) {
+                    Logger.error("Can't utf encode label: "+label, ex);
+                    return "<a class='loader' href='"
+                        +routes.IDGApp.disease(label)+"'>"+label+"</a>";
+                }
             }
             else if (name.equals(WHO_ATC)) {
                 final String key = WHO_ATC+":"+label;
@@ -410,6 +426,17 @@ public class IDGApp extends App implements Commons {
                 }
                 if (label.equalsIgnoreCase("nuclear receptor")) {
                     return "<a href=\"http://en.wikipedia.org/wiki/Nuclear_receptor\">"+label+"</a> <i class='fa fa-external-link'></i>";
+                }
+            }
+            else if (name.equals(TECHDEV_PI)) {
+                if (label.equalsIgnoreCase("Bryan Roth")) {
+                    return "<a href=\"https://pdspdb.unc.edu/rothlab/\">"+label+"</a> <i class='fa fa-external-link'></i>";
+                }
+                else if (label.equalsIgnoreCase("Susumu Tomita")) {
+                    return "<a href=\"http://medicine.yale.edu/cnnr/people/susumu_tomita.profile\">"+label+"</a> <i class='fa fa-external-link'></i>";
+                }
+                else if (label.equalsIgnoreCase("Gaia Skibinski")) {
+                    return "<a href=\"https://labs.gladstone.org/finkbeiner/\">"+label+"</a> <i class='fa fa-external-link'></i>";
                 }
             }
             
@@ -510,34 +537,23 @@ public class IDGApp extends App implements Commons {
 
         public Result get (final String name) {
             try {
-                List<T> e = find (name);
-                if (e == null || e.isEmpty()) {
-                    return _notFound ("Unknown name: "+name);
-                }
-                return result (e);
+                String view = request().getQueryString("view");
+                final String key = getClass().getName()
+                    +"/"+cls.getName()+"/"+name+"/result/"
+                    +(view != null?view:"");
+                
+                return getOrElse (key, new Callable<Result> () {
+                        public Result call () throws Exception {
+                            List<T> e = find (name);
+                            if (e == null || e.isEmpty()) {
+                                return _notFound ("Unknown name: "+name);
+                            }
+                            return getResult (e);
+                        }
+                    });
             }
             catch (Exception ex) {
                 Logger.error("Unable to generate Result for \""+name+"\"", ex);
-                return _internalServerError (ex);
-            }
-        }
-        
-        public Result result (final List<T> e) {
-            try {
-                final String key = cls.getName()
-                    +"/result/"+Util.sha1(request ());
-                return getOrElse (key, new Callable<Result> () {
-                            public Result call () throws Exception {
-                                long start = System.currentTimeMillis();
-                                Result r = getResult (e);
-                                Logger.debug("Cache missed: "+key+"..."
-                                             +(System.currentTimeMillis()-start)
-                                             +"ms");
-                                return r;
-                            }
-                        });
-            }
-            catch (Exception ex) {
                 return _internalServerError (ex);
             }
         }
@@ -608,16 +624,18 @@ public class IDGApp extends App implements Commons {
     public static final String[] TARGET_FACETS = {
             IDG_DEVELOPMENT,
             IDG_FAMILY,
+            TECHDEV_PI,
             IDG_DISEASE,
             IDG_TISSUE,
-            "R01 Grant Count",
-            "Jensen Score"
+            //"R01 Grant Count",
+            //"Jensen Score"
     };
 
     public static final String[] ALL_TARGET_FACETS = {
         
         IDG_DEVELOPMENT,
         IDG_FAMILY,
+        TECHDEV_PI,
         IDG_DISEASE,
         IDG_LIGAND,
         IDG_DRUG,
@@ -640,6 +658,10 @@ public class IDGApp extends App implements Commons {
         GO_PROCESS,
         GO_FUNCTION,
 
+        COMPARTMENT_GOTERM,
+        COMPARTMENT_EVIDENCE,
+        COMPARTMENT_TYPE,
+        
         "KEGG Pathway",
         "Reactome Pathway",
         "Wikipathways Pathway",
@@ -741,18 +763,20 @@ public class IDGApp extends App implements Commons {
         }
 
         if (kind != null) {
-            SearchResult result = getSearchFacets (kind);
-            Logger.debug("+++");
+            //Logger.debug("+++");
             for (FacetDecorator f : decors) {
                 if (!f.hidden) {
-                    Logger.debug("Facet "+f.facet.getName());
-                    Facet full = result.getFacet(f.facet.getName());
+                    TextIndexer.TermVectors tvs = SearchFactory.getTermVectors
+                        (kind, f.facet.getName());
+                    
+                    if (Global.DEBUG(2))
+                        Logger.debug("Facet "+f.facet.getName());
                     for (int i = 0; i < f.facet.size(); ++i) {
                         TextIndexer.FV fv = f.facet.getValue(i);
-                        f.total[i] = full.getCount(fv.getLabel());
-                        Logger.debug("  + "+fv.getLabel()+" "
-                                     +fv.getCount()
-                                     +"/"+f.total[i]);
+                        f.total[i] = tvs.getTermCount(fv.getLabel());
+                        if (Global.DEBUG(2))
+                            Logger.debug("  + "+fv.getLabel()+" "
+                                         +fv.getCount()+"/"+f.total[i]);
                     }
                 }
             }
@@ -829,10 +853,11 @@ public class IDGApp extends App implements Commons {
     public static Result impc() throws IOException {
 
         TextIndexer.TermVectors tvs = _textIndexer.getTermVectors(Target.class, IMPC_TERM);
-        List<Map> terms = tvs.getTerms();
+        Map<String, Map> terms = tvs.getTerms();
         Map<Keyword,Integer> termCounts = new HashMap<>();
-        for (Map term : terms) {
-            termCounts.put(getKeywordByTerm((String) term.get("term")), ((Object[]) term.get("docs")).length);
+        for (Map.Entry<String, Map> term : terms.entrySet()) {
+            termCounts.put(getKeywordByTerm(term.getKey()),
+                           (Integer)term.getValue().get("nDocs"));
         }
 
         List<Map> docs = tvs.getDocs();
@@ -1263,21 +1288,7 @@ public class IDGApp extends App implements Commons {
     }
 
     public static List<Ligand> getLigands (EntityModel e) {
-        List<Ligand> ligands = new ArrayList<Ligand>();
-        for (XRef xref : e.getLinks()) {
-            try {
-                Class cls = Class.forName(xref.kind);
-                if (Ligand.class.isAssignableFrom(cls)) {
-                    ligands.add((Ligand)xref.deRef());
-                }
-            }
-            catch (Exception ex) {
-                ex.printStackTrace();
-                Logger.error("Can't resolve XRef "
-                             +xref.kind+":"+xref.refid, ex);
-            }
-        }
-        return ligands;
+        return getLinkedObjects (e, Ligand.class);
     }
 
     public static List<Ligand> getLigandsWithActivity(EntityModel e) {
@@ -1336,6 +1347,56 @@ public class IDGApp extends App implements Commons {
         return props;
     }
 
+    public static List<XRef> getLinks (EntityModel e, Class klass) {
+        List<XRef> links = new ArrayList<XRef>();
+        for (XRef ref : e.getLinks()) {
+            try {
+                Class cls = Class.forName(ref.kind);
+                if (klass.isAssignableFrom(cls)) {
+                    links.add(ref);
+                }
+            }
+            catch (Exception ex) {
+                ex.printStackTrace();
+                Logger.error("Bogus XRef class: "+ref.kind, ex);
+            }
+        }
+        
+        return links;
+    }
+
+    public static <T> List<T> getLinkedObjects (EntityModel e, Class<T> klass) {
+        List<T> objects = new ArrayList<T>();
+        for (XRef xref : getLinks (e, klass)) {
+            try {
+                objects.add((T)xref.deRef());
+            }
+            catch (Exception ex) {
+                ex.printStackTrace();
+                Logger.error("Can't resolve XRef "
+                             +xref.kind+":"+xref.refid, ex);
+            }
+        }
+        
+        return objects;
+    }
+
+    public static List<Compartment> getCompartments (EntityModel e) {
+        return getLinkedObjects (e, Compartment.class);
+    }
+
+    public static List<Keyword> getCompartmentGOTerms (EntityModel e) {
+        Set<Keyword> terms = new TreeSet<Keyword>();
+        for (XRef ref : getLinks (e, Compartment.class)) {
+            for (Value v : ref.properties) {
+                if (COMPARTMENT_GOTERM.equals(v.label)) {
+                    terms.add((Keyword)v);
+                }
+            }
+        }
+        return new ArrayList<Keyword>(terms);
+    }
+    
     public static List<Mesh> getMesh (EntityModel e) {
         Map<String, Mesh> mesh = new TreeMap<String, Mesh>();
         for (Publication p : e.getPublications()) {
@@ -1383,9 +1444,9 @@ public class IDGApp extends App implements Commons {
                         dr.comment = ((Text)p).text;
                     }
                 }
-                if (dr.zscore != null || dr.conf != null)
-                    diseases.add(dr);
-                else if (dr.comment != null) {
+                diseases.add(dr);
+                
+                if (dr.comment != null) {
                     for (Keyword kw : dr.disease.synonyms) {
                         if ("MIM".equals(kw.label)) {
                             dr.omim = kw;
@@ -1541,7 +1602,7 @@ public class IDGApp extends App implements Commons {
             if (!query.containsKey("order") && q == null) {
                 // only implicitly order based on novelty if it's not a
                 // search
-                query.put("order", new String[]{"$novelty"});
+                //query.put("order", new String[]{"$novelty"});
             }
             
             final SearchResult result =
@@ -2152,7 +2213,7 @@ public class IDGApp extends App implements Commons {
                             filter (getFacets (Ligand.class, FACET_DIM),
                                     LIGAND_FACETS);
             
-                        int _rows = Math.min(total, Math.max(1, rows));
+                        int _rows = Math.max(1, Math.min(total, rows));
                         int[] pages = paging (_rows, page, total);
             
                         List<Ligand> ligands = LigandFactory.getLigands
@@ -2756,8 +2817,8 @@ public class IDGApp extends App implements Commons {
 
     public static String formatSequence (String text, int wrap) {
         StringBuilder seq = new StringBuilder ();
-        int j = 1;
-        for (int len = text.length(), i = 1; i <= len; ++i) {
+        int j = 1, len = text.length();
+        for (int i = 1; i <= len; ++i) {
             seq.append(text.charAt(i-1));           
             if (i % wrap == 0) {
                 seq.append(String.format("%1$7d - %2$d\n", j, i));
@@ -2765,10 +2826,10 @@ public class IDGApp extends App implements Commons {
             }
         }
         
-        int r = wrap - (text.length() % wrap);
-        if (r != 0) {
+        int r = wrap - (len % wrap);
+        if (r > 0 && j < len) {
             seq.append(String.format
-                       ("%1$"+(r+7)+"d - %2$d\n", j, text.length()));
+                       ("%1$"+(r+7)+"d - %2$d\n", j, len));
         }
         seq.append("//");        
         return seq.toString();
@@ -3654,29 +3715,30 @@ public class IDGApp extends App implements Commons {
                     public Result call () throws Exception {
                         SearchResultProcessor<Target> processor =
                             new SearchResultProcessor<Target>() {
-                                protected Object instrument (Target t) throws Exception {
-                                    return t;
-                                }
-                            };
+                            protected Object instrument (Target t) throws Exception {
+                                return t;
+                            }
+                        };
                         processor.setResults
                             (rows, Collections.enumeration(getTargetsByPMID (pmid)));
                         
                         return App.fetchResult
                             (processor.getContext(), rows, page,
                              new DefaultResultRenderer<Target> () {
-                                 public Result render (SearchResultContext context,
-                                                       int page, int rows,
-                                                       int total, int[] pages,
-                                                       List<Facet> facets,
-                                                       List<Target> targets) {
-                                     return ok (ix.idg.views.html.targets.render
-                                                (page, rows, total,
-                                                 pages, decorate(Target.class,
-                                                                 filter (facets,
-                                                                         TARGET_FACETS)),
-                                                 targets, context.getId()));
-                                 }
-                             });
+                                public Result render
+                                    (SearchResultContext context,
+                                     int page, int rows,
+                                     int total, int[] pages,
+                                     List<Facet> facets,
+                                     List<Target> targets) {
+                                    return ok (ix.idg.views.html.targets.render
+                                               (page, rows, total,
+                                                pages, decorate(Target.class,
+                                                                filter (facets,
+                                                                        TARGET_FACETS)),
+                                                targets, context.getId()));
+                                }
+                            });
                     }
                 });
         }
@@ -3777,6 +3839,13 @@ public class IDGApp extends App implements Commons {
         for (int i = 0; i < all.size(); ++i) {
             targets[i/2][i%2] = all.get(i);
         }
+
         return ok (ix.idg.views.html.targetcompare2.render(targets));
+    }
+
+    public static Integer getTermCount (Class kind, String label, String term) {
+        TextIndexer.TermVectors tvs =
+            SearchFactory.getTermVectors(kind, label);
+        return tvs != null ? tvs.getTermCount(term) : null;
     }
 }

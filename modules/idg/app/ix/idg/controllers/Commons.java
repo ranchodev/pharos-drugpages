@@ -24,6 +24,7 @@ public interface Commons {
     public static final String IDG_TOOLS_SELECTIVE_COMPOUNDS = "Selective compounds";
     public static final String IDG_TOOLS_PHENOTYPES = "Phenotypes";
     public static final String TARGET_PUBLICATIONS = "Publications";
+    public static final String TARGET_COMPARTMENTS = "Compartments";
     public static final String TARGET_PPI = "Protein-Protein Interactions";
     
     public static final String PHARMALOGICAL_ACTION = "Pharmalogical Action";
@@ -34,6 +35,14 @@ public interface Commons {
     
     public static final String GRANT_FUNDING_IC = "Grant Funding IC";
     public static final String GRANT_ACTIVITY = "Grant Activity";
+    public static final String GRANT_APPLICATION = "Grant Application";
+
+    public static final String TECHDEV_PI = "TechDev PI";
+    public static final String TECHDEV_GRANT = "TechDev Grant";
+
+    public static final String COMPARTMENT_GOTERM = "Compartment GO Term";
+    public static final String COMPARTMENT_EVIDENCE = "Compartment Evidence";
+    public static final String COMPARTMENT_TYPE = "Compartment Type";
     
     public static final String OMIM_GENE = "OMIM Gene";
     public static final String GWAS_TRAIT = "GWAS Trait";
@@ -59,6 +68,8 @@ public interface Commons {
     public static final String KEGG_PATHWAY = "KEGG Pathway";
     public static final String PATENT_COUNT = "Patent Count";
 
+    public static final String GO_ID = "GO ID";
+    public static final String GO_TERM = "GO Term";
     public static final String GO_COMPONENT = "GO Component";
     public static final String GO_PROCESS = "GO Process";
     public static final String GO_FUNCTION = "GO Function";

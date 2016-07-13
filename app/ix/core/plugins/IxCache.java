@@ -7,6 +7,7 @@ import java.util.concurrent.*;
 import play.Logger;
 import play.Plugin;
 import play.Application;
+import play.mvc.Result;
 
 import net.sf.ehcache.Cache;
 import net.sf.ehcache.CacheManager;
@@ -260,13 +261,14 @@ public class IxCache extends Plugin
         }
 
         Element elm = null;
+        DatabaseEntry dkey = getKeyEntry (key); 
         try {
-            DatabaseEntry dkey = getKeyEntry (key);
             DatabaseEntry data = new DatabaseEntry ();
             OperationStatus status = db.get(null, dkey, data, null);
             if (status == OperationStatus.SUCCESS) {
                 ObjectInputStream ois = new ObjectInputStream
-                    (new ByteArrayInputStream (data.getData()));
+                    (new ByteArrayInputStream
+                     (data.getData(), data.getOffset(), data.getSize()));
                 elm = new Element (key, ois.readObject());
                 ois.close();
             }
@@ -278,7 +280,13 @@ public class IxCache extends Plugin
             }
         }
         catch (Exception ex) {
-            Logger.error("Can't recreate entry for "+key, ex);
+            Logger.warn("Can't recreate entry for "+key
+                        +"; removing this entry from cache!", ex);
+            try {
+                db.delete(null, dkey);
+            }
+            catch (Exception exx) {
+            }
         }
         return elm;
     }
@@ -326,6 +334,9 @@ public class IxCache extends Plugin
         try {
             DatabaseEntry dkey = getKeyEntry (key);
             OperationStatus status = db.delete(null, dkey);
+            if (status != OperationStatus.SUCCESS)
+                Logger.warn("Delete cache key '"
+                            +key+"' returns status "+status);
         }
         catch (Exception ex) {
             Logger.error("Deleting cache "+key+" from persistence!", ex);

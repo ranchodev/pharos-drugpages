@@ -219,7 +219,8 @@ public class App extends Authentication {
         //last page
         int max = (total+ rowsPerPage-1)/rowsPerPage;
         if (page < 0 || page > max) {
-            throw new IllegalArgumentException ("Bogus page "+page);
+            //throw new IllegalArgumentException ("Bogus page "+page);
+            return new int[0];
         }
         
         int[] pages;
@@ -531,11 +532,11 @@ public class App extends Authentication {
         String[] facets = request().queryString().get("facet");
         if (facets != null) {
             for (String f : facets) {
-                String[] toks = f.split("/");
-                if (toks.length == 2) {
+                int pos = f.indexOf('/');
+                if (pos > 0) {
                     try {
-                        String name = toks[0];
-                        String value = toks[1];
+                        String name = f.substring(0, pos);
+                        String value = f.substring(pos+1);
                         /*
                         Logger.debug("Searching facet "+name+"/"+value+"..."
                                      +facet.getName()+"/"
@@ -590,6 +591,24 @@ public class App extends Authentication {
         return unspec;
     }
 
+    public static List<String> getSpecifiedFacets (FacetDecorator[] decors) {
+        String[] facets = request().queryString().get("facet");
+        List<String> spec = new ArrayList<String>();
+        if (facets != null && facets.length > 0) {
+            for (String f : facets) {
+                int matches = 0;
+                for (FacetDecorator d : decors) {
+                    if (f.startsWith(d.facet.getName()))
+                        ++matches;
+                }
+                
+                if (matches > 0)
+                    spec.add(f);
+            }
+        }
+        return spec;
+    }
+
     public static Facet[] filter (List<Facet> facets, String... names) {
         if (names == null || names.length == 0)
             return facets.toArray(new Facet[0]);
@@ -623,18 +642,11 @@ public class App extends Authentication {
         }
         return new TextIndexer.Facet[0];
     }
-
-    public static String randvar (int size) {
-        Random rand = new Random ();
-        char[] alpha = {'a','b','c','d','e','f','g','h','i','j','k',
-                        'l','m','n','o','p','q','r','s','t','u','v',
-                        'x','y','z'};
-        StringBuilder sb = new StringBuilder ();
-        for (int i = 0; i < size; ++i)
-            sb.append(alpha[rand.nextInt(alpha.length)]);
-        return sb.toString();
-    }
     
+    public static String randvar (int size) {
+        return Util.randvar(size, request ());
+    }
+
     public static String randvar () {
         return randvar (5);
     }
@@ -700,8 +712,11 @@ public class App extends Authentication {
         
         if (kind != null)
             args.add(kind.getName());
-        
-        return Util.sha1(args.toArray(new String[0]));
+
+        String sha1 = Util.sha1(args.toArray(new String[0]));
+        //Logger.debug("SIGNATURE: "+args+" => "+sha1);
+
+        return sha1;
     }
 
     public static SearchResult getSearchContext (String ctx) {
@@ -795,6 +810,7 @@ public class App extends Authentication {
                                          ? null : Integer.parseInt(min),
                                          max.equals("")
                                          ? null : Integer.parseInt(max));
+                                    result.updateCacheWhenComplete(sha1);
                                     return cacheKey (result, sha1);
                                 }
                             });
@@ -807,6 +823,7 @@ public class App extends Authentication {
                                 SearchResult result = SearchFactory.search
                                 (kind, hasFacets ? null : q,
                                  total, 0, FACET_DIM, query);
+                                result.updateCacheWhenComplete(sha1);
                                 return cacheKey (result, sha1);
                             }
                         });
@@ -1283,7 +1300,7 @@ public class App extends Authentication {
         protected abstract Object instrument (T r) throws Exception;
     }
 
-    public static class SearchResultContext {
+    public static class SearchResultContext implements Serializable {
         public enum Status {
             Pending,
             Running,
@@ -1298,15 +1315,18 @@ public class App extends Authentication {
         List results = new CopyOnWriteArrayList ();
         String id = randvar (10);
         Integer total;
+        transient Set<String> keys = new HashSet<String>();
 
         SearchResultContext () {
         }
 
         SearchResultContext (SearchResult result) {
             start = result.getTimestamp();          
+            results = result.getMatches();
+            total = result.count();
             if (result.finished()) {
-                status = Status.Done;
                 stop = result.getStopTime();
+                setStatus (Status.Done);
             }
             else if (result.size() > 0)
                 status = Status.Running;
@@ -1316,13 +1336,21 @@ public class App extends Authentication {
                     ("Loading...%1$d%%",
                      (int)(100.*result.size()/result.count()+0.5));
             }
-            results = result.getMatches();
-            total = result.count();
         }
 
         public String getId () { return id; }
         public Status getStatus () { return status; }
-        public void setStatus (Status status) { this.status = status; }
+        public void setStatus (Status status) { 
+            this.status = status; 
+            if (status == Status.Done) {
+                if (total == null)
+                    total = getCount ();
+                // update cache
+                for (String k : keys)
+                    IxCache.set(k, this);
+                IxCache.set(id, this);
+            }
+        }
         public String getMessage () { return mesg; }
         public void setMessage (String mesg) { this.mesg = mesg; }
         public Integer getCount () { return results.size(); }
@@ -1331,6 +1359,10 @@ public class App extends Authentication {
         public Long getStop () { return stop; }
         public boolean finished () {
             return status == Status.Done || status == Status.Failed;
+        }
+        public void updateCacheWhenComplete (String... keys) {
+            for (String k : keys)
+                this.keys.add(k);
         }
         
         @com.fasterxml.jackson.annotation.JsonIgnore
@@ -1348,8 +1380,8 @@ public class App extends Authentication {
                     ctx.setStatus(SearchResultContext.Status.Running);
                     ctx.start = System.currentTimeMillis();            
                     int count = processor.process();
-                    ctx.setStatus(SearchResultContext.Status.Done);
                     ctx.stop = System.currentTimeMillis();
+                    ctx.setStatus(SearchResultContext.Status.Done);
                     Logger.debug("Actor "+self()+" finished; "+count
                                  +" search result(s) instrumented!");
                     context().stop(self ());
@@ -1384,6 +1416,10 @@ public class App extends Authentication {
      * finished in one way or another
      */
     public static Call checkStatus () {
+        return checkStatus (null);
+    }
+    
+    public static Call checkStatus (String kind) {
         String query = request().getQueryString("q");
         String type = request().getQueryString("type");
 
@@ -1431,7 +1467,17 @@ public class App extends Authentication {
             }
         }
         else {
-            String key = signature (query, getRequestQuery ());
+            Class klass = null;
+            if (kind != null) {
+                try {
+                    klass = Class.forName(kind);
+                }
+                catch (Exception ex) {
+                    Logger.warn("Bogus kind: "+kind, ex);
+                }
+            }
+            
+            String key = signature (klass, query, getRequestQuery ());
             Object value = IxCache.get(key);
             Logger.debug("checkStatus: key="+key+" value="+value);
             
@@ -1480,7 +1526,9 @@ public class App extends Authentication {
             return getOrElse (key, new Callable<SearchResultContext> () {
                     public SearchResultContext call () throws Exception {
                         processor.setResults(rows, tokenizer.tokenize(q));
-                        return processor.getContext();
+                        SearchResultContext ctx = processor.getContext();
+                        ctx.updateCacheWhenComplete(key);
+                        return ctx;
                     }
                 });
         }
@@ -1502,7 +1550,9 @@ public class App extends Authentication {
                      public SearchResultContext call () throws Exception {
                          processor.setResults
                              (rows, _seqIndexer.search(seq, identity));
-                         return processor.getContext();
+                         SearchResultContext ctx = processor.getContext();
+                         ctx.updateCacheWhenComplete(key);
+                         return ctx;
                      }
                  });
         }
@@ -1528,6 +1578,7 @@ public class App extends Authentication {
                                  (rows, _strucIndexer.substructure(query, 0));
                              SearchResultContext ctx = processor.getContext();
                              Logger.debug("## cache missed: "+key+" => "+ctx);
+                             ctx.updateCacheWhenComplete(key);
                              return ctx;
                          }
                      });
@@ -1556,7 +1607,9 @@ public class App extends Authentication {
                              processor.setResults
                                  (rows, _strucIndexer.similarity
                                   (query, threshold, 0));
-                             return processor.getContext();
+                             SearchResultContext ctx =processor.getContext();
+                             ctx.updateCacheWhenComplete(key);
+                             return ctx;
                          }
                      });
         }
@@ -1598,6 +1651,7 @@ public class App extends Authentication {
                         Logger.debug("Cache misses: "
                                      +key+" size="+results.size()
                                      +" class="+searchResult);
+                        searchResult.updateCacheWhenComplete(key);
                         // make an alias for the context.id to this search
                         // result
                         return cacheKey (searchResult, context.getId());
@@ -1634,7 +1688,6 @@ public class App extends Authentication {
                 results.add((T)result.get(i));
             */
             result.copyTo(results, i, rows);
-        
             facets.addAll(result.getFacets());
 
             if (result.finished()) {

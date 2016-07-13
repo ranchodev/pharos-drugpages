@@ -217,6 +217,16 @@ public class Eutils {
         return null;
     }
 
+    public static Publication fetchPublicationSimple (long pmid) {
+        try {
+            return parsePublication (getDOM (EUTILS_URL+pmid));
+        }
+        catch (Throwable ex) {
+            ex.printStackTrace();
+        }
+        return null;
+    }
+
     public static void fetchPublication (final Long pmid,
                                          final Callback callback) {
         F.Promise<WSResponse> promise = getPromise (pmid);

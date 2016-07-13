@@ -18,13 +18,17 @@ public class TextIndexerPlugin extends Plugin {
     }
 
     public void onStart () {
-        Logger.info("Loading plugin "+getClass().getName()+"...");
         ctx = app.plugin(IxContext.class);
         if (ctx == null)
             throw new IllegalStateException
                 ("IxContext plugin is not loaded!");
         try {
             indexer = TextIndexer.getInstance(ctx.text());
+            int workers = app.configuration()
+                .getInt("ix.text.fetchWorkers", 10);
+            Logger.info("Loading plugin "
+                        +getClass().getName()+"...fetchWorkers="+workers);
+            indexer.setFetchWorkers(workers);
         }
         catch (IOException ex) {
             Logger.trace("Can't initialize text indexer", ex);

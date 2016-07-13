@@ -2,6 +2,7 @@ package ix.idg.controllers;
 
 import com.avaje.ebean.Expr;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import ix.core.models.Keyword;
@@ -78,11 +79,10 @@ public class TINXApp extends App {
         }
     }
 
-    // aggregate by target
-    static Result _tinx() {
+    public static JsonNode _tinxJson () throws Exception {
         List<TINX> all = TINXFactory.finder.all();
         ArrayNode root = mapper.createArrayNode();
-
+                        
         Map<String, Map<String, Double>> imap = new HashMap<>();
         Map<String, TINX> nmap = new HashMap<>();
         for (TINX t : all) {
@@ -97,7 +97,7 @@ public class TINXApp extends App {
             }
             imap.put(t.getUniprotId(), ivalue);
         }
-
+                        
         // compute a mean importance and construct json
         for (String key : nmap.keySet()) {
             ObjectNode node = mapper.createObjectNode();
@@ -120,7 +120,30 @@ public class TINXApp extends App {
             node.put("importance", inode);
             root.add(node);
         }
-        return ok(root);
+        return root;
+    }
+
+    public static JsonNode tinxJson () {
+        try {
+            final String key = TINXApp.class.getName()+"/tinxJson";
+            return getOrElse (key, new Callable<JsonNode>() {
+                    public JsonNode call () throws Exception {
+                        return _tinxJson ();
+                    }
+                });
+        }
+        catch (Exception ex) {
+            Logger.error("Can't generate aggregate TINX json", ex);
+            return null;
+        }
+    }
+    
+    // aggregate by target
+    static Result _tinx () {
+        JsonNode json = tinxJson ();
+        if (json == null)
+            return internalServerError ("Can't retrieve tinx aggregate data");
+        return ok (json);
     }
 
     public static Result tinxForTarget (final String acc) {
@@ -136,28 +159,36 @@ public class TINXApp extends App {
             return _internalServerError(e);
         }
     }
-
+    
     public static Result _tinxForTarget(final String acc) {
+        JsonNode json = getTinxForTargetJson (acc);
+        if (json == null)
+            return _notFound ("No TINX found for target \""+acc+"\"");
+        return ok(json);
+    }
+
+    public static JsonNode _getTinxForTargetJson (String acc)
+        throws Exception {
         List<TINX> tinx = TINXFactory.finder
             .where().eq("uniprotId", acc).findList();
         if (tinx.isEmpty()) {
-            return _notFound ("No TINX found for target \""+acc+"\"");
+            return null;
         }
-
+                        
         ArrayNode imps = mapper.createArrayNode();
-
+                        
         Double meanImportance = 0.0;
         Double novelty = null;
-
+                        
         for (TINX tx : tinx) {
             if (novelty == null) {
                 novelty = tx.novelty;
             }
             meanImportance += tx.importance;
             List<Disease> diseases = DiseaseFactory.finder
-                    .where(Expr.and(Expr.eq("synonyms.label", "DOID"),
-                            Expr.eq("synonyms.term", tx.doid)))
-                    .findList();
+                .where(Expr.and(Expr.eq("synonyms.label", "DOID"),
+                                Expr.eq("synonyms.term", tx.doid)))
+                .findList();
             ObjectNode node = mapper.createObjectNode();
             node.put("doid", tx.doid);
             node.put("imp", tx.importance);
@@ -167,18 +198,32 @@ public class TINXApp extends App {
             }
             imps.add(node);
         }
-        
+                        
         if (tinx.size() > 0)
             meanImportance /= tinx.size();
         else meanImportance = 1e-10;
-        
+                        
         ObjectNode root = mapper.createObjectNode();
         root.put("acc", acc);
         root.put("novelty", novelty);
         root.put("meanImportance", meanImportance);
         root.put("importances", imps);
-
-        return (ok(root));
+                        
+        return root;
     }
-
+    
+    public static JsonNode getTinxForTargetJson (final String acc) {
+        try {
+            final String key = "tinx/"+acc+"/json";
+            return getOrElse (key, new Callable<JsonNode> () {
+                    public JsonNode call () throws Exception {
+                        return _getTinxForTargetJson (acc);
+                    }
+                });
+        }
+        catch (Exception ex) {
+            Logger.error("Can't retrieve tinx json for "+acc, ex);
+            return null;
+        }
+    }
 }

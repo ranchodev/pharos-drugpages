@@ -24,21 +24,23 @@
 @(target: Target, diseases: List[DiseaseRelevance], breadcrumb: List[Keyword])
 
 @facet(label: String, value: String, href: String = null, max: Int = 40) = {
-  @if(max > 0 && value.length > max) {
-    <a id="keyword" class="label label-primary loader"
-       data-toggle="popover"
-       data-html="true"
-       data-trigger="hover"
-       data-placement="top"
-       title="@label"
-       data-content="<p align='left'>@value</p>"
-       href='@{ix.idg.controllers.routes.IDGApp.targets()+"?facet="+URLEncoder.encode(label,"utf8")+"/"}@URLEncoder.encode(value, "utf8")'>@{value.substring(0, max)}...</a>&nbsp;
-  } else {
-    <a id="keyword" class="label label-primary loader" 
-       href='@{ix.idg.controllers.routes.IDGApp.targets()+"?facet="+URLEncoder.encode(label,"utf8")+"/"}@URLEncoder.encode(value, "utf8")'>@value</a>
-  }
-  @if(href != null) {
-     <a href="@href"><i class="fa fa-external-link"></i></a>
+  @defining(IDGApp.getTermCount(classOf[Target], label, value)) { count =>
+    <div>@if(max > 0 && value.length > max) {
+       <a id="keyword" class="label label-primary loader"
+          data-toggle="tooltip"
+       	  data-html="true"
+       	  data-trigger="hover"
+       	  data-placement="top"
+       	  title="@value"
+       	  data-content="<p align='left'>@value</p>"
+       	  href='@{ix.idg.controllers.routes.IDGApp.targets()+"?facet="+URLEncoder.encode(label,"utf8")+"/"}@URLEncoder.encode(value, "utf8")'>@{value.substring(0, max)}... <span class="badge">@count</span></a>&nbsp;
+     } else {
+       <a id="keyword" class="label label-primary loader" 
+          href='@{ix.idg.controllers.routes.IDGApp.targets()+"?facet="+URLEncoder.encode(label,"utf8")+"/"}@URLEncoder.encode(value, "utf8")'>@value <span class="badge">@count</span></a>
+     }
+     @if(href != null) {
+     	<a href="@href"><i class="fa fa-external-link"></i></a>
+     }</div>
   }
 }
 
@@ -112,8 +114,7 @@
   }
 }
 
-@property(name: String, href: String = null, dir: Int = 0) = {
- @defining(IDGApp.getProperties(target, name, dir)) { props =>
+@propertyfacets(name: String, props: List[Value], href: String = null, dir: Int = 0) = {
     @if(!props.isEmpty()) {
        @if(props.length > 10) {
        <div class="modal fade" id="@Util.sha1(name).substring(0,5)"
@@ -127,7 +128,8 @@
                         <span aria-hidden="true">&times;</span></button>
                         <h4 class="modal-title" id="myModalLabel">@name for @target.getName</h4>
                 </div>
-                <div class="modal-body">
+                <div class="modal-body"
+		     style="max-height:400px;overflow-y:auto;">
                     @for(p <- props) {
                         @p match {
                            case kw: Keyword => {
@@ -188,6 +190,11 @@
        </div>
        }
      }
+}
+
+@property(name: String, href: String = null, dir: Int = 0) = {
+  @defining(IDGApp.getProperties(target, name, dir)) { props =>
+     @propertyfacets(name, props, href, dir)
   }
 }
 
@@ -196,11 +203,11 @@
        <a class="label label-@label loader"
            href="#@Util.sha1(x.getValue().toString()).substring(0,6)"
            tabindex="0"
-           data-toggle="popover"
+           data-toggle="tooltip"
            data-animation="true"
            data-placement="top"
            data-trigger="click hover focus"
-           data-title="@title"
+           data-title="@x.getValue"
            data-content="@x.getValue()">@x.getValue().toString().substring(0, 50)...</a></span>
   } else {
       <span class="label label-@label">@x.getValue()</span>
@@ -213,15 +220,32 @@
 }
 
 @diseaserow(dr: DiseaseRelevance) = {
+  @defining(IDGApp.getTermCount(classOf[Target], IDG_DISEASE, dr.disease.name)) { count =>
      <tr @*class="treegrid-@dr.disease.id"*@>
-       <td><a class="label label-primary loader" href="@{ix.idg.controllers.routes.IDGApp.targets()+"?facet="+URLEncoder.encode(IDG_DISEASE,"utf8")+"/"+URLEncoder.encode(dr.disease.name, "utf8")}">@dr.disease.name</a></td>
+       <td>
+         @if(dr.disease.name.length > 40) {
+            <a id="keyword" class="label label-primary loader"
+     	         data-toggle="tooltip"
+       	  	 data-html="true"
+       	  	 data-trigger="hover"
+       	  	 data-placement="top"
+       	  	 title="@dr.disease.name"
+       	  	 data-content="<p align='left'>@dr.disease.name</p>"
+                 href="@{ix.idg.controllers.routes.IDGApp.targets()+"?facet="+URLEncoder.encode(IDG_DISEASE,"utf8")+"/"+URLEncoder.encode(dr.disease.name, "utf8")}">@{dr.disease.name.substring(0,40)}... <span class="badge">@count</span>&nbsp;</a>
+	 } else {
+            <a class="label label-primary loader"
+	        href="@{ix.idg.controllers.routes.IDGApp.targets()+"?facet="+URLEncoder.encode(IDG_DISEASE,"utf8")+"/"+URLEncoder.encode(dr.disease.name, "utf8")}">@dr.disease.name <span class="badge">@count</span></a>
+	 }
+       </td>
        <td>@diseasedblink(dr.disease,dr.zscore)</td>
        <td>@diseasedblink(dr.disease,dr.conf)</td>
+       @**
        @if(dr.tinxScore != null) {
        <td>@{"%1$.3f".format(dr.tinxScore)}</td>
        } else {
        <td></td>
        }
+       **@
      </tr>
 
      @for(i <- 0 until dr.lineage.size()) {
@@ -238,11 +262,16 @@
          </tr>
        }
      }
+   }
 }
 
 @expression(name: String, skull: String, ext: Keyword = null) = {
    <div class="row">
       <div class="col-md-6">
+         <img class="img-responsive" height="200" src='@ix.idg.controllers.routes.ExpressionApp.homunculus(IDGApp.getId(target), skull)' />
+	 
+      </div>
+      <div class="col-md-6" style="max-height:300px;overflow-y: auto;">
          @defining(ExpressionApp.getLinkedExpr(target, name)){ exprs =>
          <div class="panel-body">
             @for(expr <- exprs) {
@@ -255,9 +284,6 @@
             }
          </div>
          }
-      </div>
-      <div class="col-md-6">
-         <img class="img-responsive" height="200" src='@ix.idg.controllers.routes.ExpressionApp.homunculus(IDGApp.getId(target), skull)' />
       </div>
   </div>
 }
@@ -339,7 +365,7 @@
    @defining(IDGApp.getStructure(lig)) { struc =>
       @if(struc != null) {
           <a tabindex="-1"
-             data-toggle="popover"
+             data-toggle="tooltip"
              data-animation="true"
              data-placement="top"
              data-trigger="click hover focus"
@@ -352,7 +378,7 @@
    }
    </td>
    <td class="valign-center">
-       <a class="label label-primary loader" href='@ix.idg.controllers.routes.IDGApp.ligand(IDGApp.getId(lig))'>@lig.getName()</a>
+      <a class="label label-primary loader" href='@ix.idg.controllers.routes.IDGApp.ligand(IDGApp.getId(lig))'>@lig.getName()</a>
    </td>
    @defining(IDGApp.getActivity(target, lig)) { act =>
       @if(act != null) {
@@ -633,35 +659,54 @@ This is TCRD target <a href='@ix.core.controllers.v1.routes.RouteFactory.get("ta
         @property(GO_COMPONENT)
         @property(GO_PROCESS)
 
-        @defining(IDGApp.getLigands(target)) { ligands =>
-              @if(!ligands.isEmpty()) {
-                 <div class="panel panel-default">
-                 <a name="ligands" tocname="Ligands"></a>
-                    <div class="panel-heading">
-                       <h3 class="panel-title"><a class="loader" href='@{ix.idg.controllers.routes.IDGApp.ligands() + "?facet=" + IDG_TARGET+"/"+target.getSynonym(UNIPROT_GENE).term}'>Ligand (@ligands.size)</a></h3>
+	@defining(IDGApp.getCompartmentGOTerms(target)) { terms =>
+	   @if(terms.size > 15) {
+	      <div class="modal fade" id="compartment-modal"
+              	   tabindex="-1" role="dialog" aria-labelledby="myModalLabel"
+		   aria-hidden="true">
+		 <div class="modal-dialog">
+             	    <div class="modal-content">
+                       <div class="modal-header">
+                       	  <button type="button" class="close"
+                            	    data-dismiss="modal" aria-label="Close">
+                               <span aria-hidden="true">&times;</span></button>
+                          <h4 class="modal-title" id="myModalLabel">Compartment GO Terms for @target.getName</h4>
+                       </div>
+                       <div class="modal-body">
+                          @for(t <- terms) {
+                             @keyword(t, 0)
+                          }
+                       </div>
                     </div>
-                    <div class="panel-body"
-                         style="max-height: 300px;overflow-y: auto;">
-                      <table class="table">
-                        @if(ligands.size > 20) {
-                           @for(l <- ligands.subList(0, 20)) {
-                              @ligandrow(l)
-                           }
-                        } else {
-                           @for(lig <- ligands) {
-                              @ligandrow(lig)
-                           }
-                        }
-                      </table>
-                   </div>
-                   @if(ligands.size > 20) {
-                   <div class="panel-footer">
-                      <a class="loader" href='@{ix.idg.controllers.routes.IDGApp.ligands() + "?facet=" + IDG_TARGET+"/"+target.getSynonym(UNIPROT_GENE).term}'>See all @ligands.size ligands...</a>
-                   </div>
-                   }
-                </div>
-             }
-         }
+                 </div>          
+              </div>
+              <div class="panel panel-default">
+                <div class="panel-heading">
+                   <h3 class="panel-title">Compartment GO Terms (@terms.size)</h3>
+		</div>
+                <div class="panel-body">
+                  @for(t <- terms.subList(0, 15)) {
+                    @keyword(t)
+                  }
+                  <a class="label label-danger"
+                     data-toggle="modal"
+		     @*data-target="#compartment-modal"*@
+                     href="#compartment-modal">See all...</a>
+          	</div>
+              </div>
+	   } else {
+              <div class="panel panel-default">
+                 <div class="panel-heading">
+	           <h3 class="panel-title">Compartment GO Term (@terms.size)</h3>
+		 </div>
+                 <div class="panel-body">
+		     @for(t <- terms) {
+		        @keyword(t)
+		     }
+		 </div>
+      	       </div>
+	   }
+	}
         
         @**
         @if(target.patentCount != null && target.patentCount > 0) {
@@ -702,6 +747,7 @@ This is TCRD target <a href='@ix.core.controllers.v1.routes.RouteFactory.get("ta
                 <div class="col-md-2"></div>
               </div>
               <button type="button" class="btn btn-default"
+	      	      id="modal-radar-btn"
                       data-toggle="modal" data-target="#modal-radar"
                       aria-label="Left Align" style="float:right;">
                   <span class="fa fa-external-link" aria-hidden="true"></span>
@@ -723,6 +769,35 @@ This is TCRD target <a href='@ix.core.controllers.v1.routes.RouteFactory.get("ta
              </div>
           }
         }
+        @defining(IDGApp.getLigands(target)) { ligands =>
+              @if(!ligands.isEmpty()) {
+                 <div class="panel panel-default">
+                 <a name="ligands" tocname="Ligands"></a>
+                    <div class="panel-heading">
+                       <h3 class="panel-title"><a class="loader" href='@{ix.idg.controllers.routes.IDGApp.ligands() + "?facet=" + IDG_TARGET+"/"+target.getSynonym(UNIPROT_GENE).term}'>Ligand (@ligands.size)</a></h3>
+                    </div>
+                    <div class="panel-body"
+                         style="max-height: 400px;overflow-y: auto;">
+                      <table class="table table-striped">
+                        @if(ligands.size > 20) {
+                           @for(l <- ligands.subList(0, 20)) {
+                              @ligandrow(l)
+                           }
+                        } else {
+                           @for(lig <- ligands) {
+                              @ligandrow(lig)
+                           }
+                        }
+                      </table>
+                   </div>
+                   @if(ligands.size > 20) {
+                   <div class="panel-footer">
+                      <a class="loader" href='@{ix.idg.controllers.routes.IDGApp.ligands() + "?facet=" + IDG_TARGET+"/"+target.getSynonym(UNIPROT_GENE).term}'>See all @ligands.size ligands...</a>
+                   </div>
+                   }
+                </div>
+             }
+         }
        </div>
     </div> <!-- row -->
     <!--
@@ -757,7 +832,7 @@ This is TCRD target <a href='@ix.core.controllers.v1.routes.RouteFactory.get("ta
                         title="<p align='left'>Disease-gene associations mined from Medline Franklid et al, Methods, 2015, 83-89</p>">Disease Relevance (@diseases.size())</h3>
           </div>
           <div class="panel-body" style="max-height:300px;overflow-y:auto;">
-               <table class="tree table">
+               <table class="tree table table-striped">
                           <tr>
                               <th>Disease</th>
                               <th>Z-score <i class="fa fa-info-circle"
@@ -766,9 +841,11 @@ This is TCRD target <a href='@ix.core.controllers.v1.routes.RouteFactory.get("ta
                               <th>Confidence <i class="fa fa-info-circle"
                               data-toggle="tooltip" data-placement="top" data-html="true"
                               title="<p align='left'>Half the Z-score, described in <a href='http://www.sciencedirect.com/science/article/pii/S1046202314003831'>Franklid et al, Methods, 2015, 83-89</a></p>"></i></th>
+			      @** this doesn't seem to be available anymore? 
                               <th>Importance <i class="fa fa-info-circle"
                               data-toggle="tooltip" data-placement="top" data-html="true"
                               title="<p align='left'>A score characterizing the importance of the target, based on occurences in the published literature.</p>"></i></th>
+			      **@
                           </tr>
                           @for(dr <- diseases) {
                                @diseaserow(dr)
@@ -972,7 +1049,7 @@ This is TCRD target <a href='@ix.core.controllers.v1.routes.RouteFactory.get("ta
     <!-- 
       -- Publications
       -->
-   @if(!target.getPublications.isEmpty()) {
+   @if(false && !target.getPublications.isEmpty()) {
     <div class="row">
       <div class="col-md-12">
         <div class="panel panel-default">
@@ -1167,7 +1244,10 @@ This is TCRD target <a href='@ix.core.controllers.v1.routes.RouteFactory.get("ta
              <div class="panel panel-default">
                <a name="seq" tocname="Sequence"></a>
                <div class="panel-heading">
-                 <h3 class="panel-title">AA Sequence</h3>
+                 <h3 class="panel-title">AA Sequence <a title="Sequence search"
+		     href="#sequence-modal" data-toggle="modal">
+		     <i class="fa fa-search"></i></a>
+		 </h3>
                </div>
                <div class="panel-body">
 		 <div id="aa-profile" style="max-height:200px; width:100%;"></div>
@@ -1179,7 +1259,7 @@ This is TCRD target <a href='@ix.core.controllers.v1.routes.RouteFactory.get("ta
        }
     }
 
-    @defining(IDGApp.getPublications(target)) { pubs =>
+    @defining(target.getPublications) { pubs =>
        @if(!pubs.isEmpty) {
          <div class="row">
            <div class="col-md-12">
@@ -1444,10 +1524,12 @@ $('.tree').treegrid({
       }
   });
 
+  $('#attr-type-radar').html('<i class="fa fa-spinner fa-spin fa-3x fa-fw"></i><span class="sr-only">Loading...</span>');
   $.ajax({
      url: '@ix.idg.controllers.routes.HarmonogramApp.hgForTarget(null,null,null,"radar-attr_type")&q=@IDGApp.getId(target)',
      dataType:"json",
      success:function(data) {
+        $('#attr-type-radar').html('');
         var chart = RadarChart.chart();
         chart.config({
             w:150, h:150,
@@ -1457,6 +1539,10 @@ $('.tree').treegrid({
            .attr("width", 150)
            .attr("height", 150)
            .append('g').classed('focus', 1).datum(data).call(chart);
+     },
+     error:function () {
+        $('#attr-type-radar').html('<h4><em>No data available</em></h4>');
+	$('#modal-radar-btn').attr('disabled','true');
      }
   });
 

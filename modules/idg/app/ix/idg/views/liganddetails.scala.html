@@ -1,6 +1,7 @@
 @import ix.core.models.Keyword
 @import ix.core.models.Text
 @import ix.core.models.Publication
+@import ix.core.models.Structure
 @import ix.idg.models.Ligand
 @import ix.idg.controllers.Commons._
 @import ix.idg.controllers.ChemblRegistry._
@@ -83,7 +84,7 @@
 	</div>
 	<div class="panel panel-default">
           <div class="panel-heading">
-            <h3 class="panel-title">Synonyms</h3>
+            <h3 class="panel-title">Synonym</h3>
           </div>
           <div class="panel-body">
             <table class="table table-striped">
@@ -142,7 +143,7 @@
          </div>
         <div class="panel panel-default">
           <div class="panel-heading">
-              <h3 class="panel-title">Molecular Definitions</h3>
+              <h3 class="panel-title">Molecular Definition</h3>
           </div>
           <div class="panel-body">
 	    <table class="table table-striped">
@@ -169,6 +170,22 @@
 		   case _ => {
 		   }
 		 }
+	       }
+	       @defining(IDGApp.getLinkedObjects(ligand, classOf[Structure])) { objs =>
+	          @if(!objs.isEmpty) {
+		     <tr>
+		       <td>Formula</td>
+		       <td>@objs(0).formula</td>
+		     </tr>
+		     <tr>
+		       <td>Molecular Weight</td>
+		       <td>@{"%1$.2f".format(objs(0).mwt)} da</td>
+		     </tr>
+		     <tr>
+		       <td>Stereocenters</td>
+		       <td>@objs(0).definedStereo/@objs(0).stereoCenters</td>
+		     </tr>
+		  }
 	       }
 	    </table>
           </div>

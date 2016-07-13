@@ -18,3 +18,15 @@
 .table tbody>tr>td.valign-center {
     vertical-align: middle;
 }
+
+.label-as-badge {
+    border-radius: 1em;
+}
+
+.label-primary .badge {
+    border-radius: 1em;
+    padding: 0px 4px;
+    background-color: #fff;
+    color: #337ab7;
+/*    margin-right: 2px;*/
+}

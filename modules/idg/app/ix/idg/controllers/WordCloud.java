@@ -66,7 +66,7 @@ public class WordCloud {
 
     public static List<VNum> textHistogram(Target t, String textType, String transform) throws Exception {
         List<String> words = new ArrayList<>();
-        List<Publication> pubs = IDGApp.getPublications(t);
+        List<Publication> pubs = t.getPublications();
         for (Publication p : pubs) {
             if (textType.equalsIgnoreCase("title"))
                 Collections.addAll(words, p.title.split(" "));

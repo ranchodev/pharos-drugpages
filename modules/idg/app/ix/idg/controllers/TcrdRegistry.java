@@ -163,13 +163,13 @@ public class TcrdRegistry extends Controller implements Commons {
             pstm11, pstm12, pstm13, pstm14, pstm15,
             pstm16, pstm17, pstm18, pstm19, pstm20,
             pstm21, pstm22, pstm23, pstm24, pstm25,
-            pstm26;
+            pstm26, pstm27, pstm28;
         Map<String, Keyword> datasources = new HashMap<String, Keyword>();
 
         // xrefs for the current target
         Map<String, List<String>> xrefs =
             new HashMap<String, List<String>>();
-        Map<String, Keyword> phenotypeSource = new HashMap<String, Keyword>();
+        //Map<String, Keyword> phenotypeSource = new HashMap<String, Keyword>();
 
         Map<Target.TDL, Keyword> tdlKeywords =
             new EnumMap<Target.TDL,Keyword>(Target.TDL.class);
@@ -185,7 +185,26 @@ public class TcrdRegistry extends Controller implements Commons {
             this.ctx = ctx;
             this.targets = targets;
 
+            List<Keyword> keywords = KeywordFactory.finder
+                .where().eq("label", IDG_DEVELOPMENT).findList();
+            for (Keyword kw : keywords) {
+                tdlKeywords.put(Target.TDL.valueOf(kw.term), kw);
+            }
+            Logger.debug(tdlKeywords.size()+" "+IDG_DEVELOPMENT+" loaded!");
 
+            keywords = KeywordFactory.finder
+                .where().eq("label", IDG_FAMILY).findList();
+            for (Keyword kw : keywords) {
+                famKeywords.put(kw.term, kw);
+            }
+            Logger.debug(famKeywords.size()+" "+IDG_FAMILY+" loaded!");
+            
+            keywords = KeywordFactory.finder
+                .where().eq("label", SOURCE).findList();
+            for (Keyword kw : keywords)
+                datasources.put(kw.term, kw);
+            Logger.debug(datasources.size()+" "+SOURCE+" loaded!");
+            
             // For some reason it is possible that a target has entries in target2disease and tinx_novelty
             // but no entries in tinx_importance. Example is Q8WXS5. As a result the SQL below would not
             // return anything
@@ -268,6 +287,13 @@ public class TcrdRegistry extends Controller implements Commons {
             pstm26 = con.prepareStatement
                 ("select * from ppi where protein1_id = ?");
 
+            pstm27 = con.prepareStatement
+                ("select * from compartment where protein_id = ?");
+
+            pstm28 = con.prepareStatement
+                ("select * from techdev_contact a, techdev_info b where "
+                 +"a.id = b.contact_id and b.protein_id = ?");
+
             this.chembl = chembl;
         }
 
@@ -307,6 +333,7 @@ public class TcrdRegistry extends Controller implements Commons {
         }
 
         public void persists () throws Exception {
+            java.util.Date start = new java.util.Date();
             for (TcrdTarget t : targets) {
                 persists (t);
             }
@@ -357,7 +384,8 @@ public class TcrdRegistry extends Controller implements Commons {
                     ex.printStackTrace();
                 }
             }
-            Logger.debug("#### PERSISTENCE COMPLETE AT "
+            Logger.debug("\n#### PERSISTENCE STARTED ON "+start+" ####"
+                         +"\n#### AND COMPLETE AT "
                          +new java.util.Date()+"! #####");
         }
 
@@ -388,11 +416,13 @@ public class TcrdRegistry extends Controller implements Commons {
             pstm24.close();
             pstm25.close();
             pstm26.close();
+            pstm27.close();
+            pstm28.close();
             chembl.shutdown();
         }
 
         void instrument (Target target, TcrdTarget t) throws Exception {
-            Logger.debug("... instrumenting target "+t.id);
+            //Logger.debug("... instrumenting target " +t.id);
             target.synonyms.add(new Keyword (IDG_TARGET, "TCRD:"+t.id));
             target.properties.add(t.source);
             
@@ -406,10 +436,13 @@ public class TcrdRegistry extends Controller implements Commons {
             xrefs.clear();
             pstm12.setLong(1, t.protein);
             ResultSet rset = pstm12.executeQuery();
+            Map<String, Integer> counts = new TreeMap<String, Integer>();
             while (rset.next()) {
                 String xtype = rset.getString("xtype");
                 value = rset.getString("value");
-                Logger.info("  + "+xtype+": "+value);
+                //Logger.info("  + "+xtype+": "+value);
+                Integer c = counts.get(xtype);
+                counts.put(xtype, c==null?1:(c+1));
                 if ("uniprot keyword".equalsIgnoreCase(xtype)) {
                     String term = rset.getString("xtra");
                     if (term != null) {
@@ -455,36 +488,47 @@ public class TcrdRegistry extends Controller implements Commons {
             rset = pstm14.executeQuery();
             while (rset.next()) {
                 target.name = rset.getString("description");
+                value = rset.getString("uniprot");
+                
+                Keyword kw = new Keyword (UNIPROT_ACCESSION, value);
+                kw.href = "http://www.uniprot.org/uniprot/"+value;
+                Keyword _kw = target.addIfAbsent(kw);
+                if (_kw == kw)
+                    kw.save();
 
-                Keyword kw = KeywordFactory.registerIfAbsent
-                    (UNIPROT_ACCESSION, value = rset.getString("uniprot"),
-                     "http://www.uniprot.org/uniprot/"+value);
-                target.addIfAbsent(kw);
+                kw = new Keyword (STRING_ID, rset.getString("stringid"));
+                _kw = target.addIfAbsent(kw);
+                if (_kw == kw)
+                    kw.save();
 
-                kw = KeywordFactory.registerIfAbsent
-                        (STRING_ID, rset.getString("stringid"), null);
-                target.addIfAbsent(kw);
-
-                kw = KeywordFactory.registerIfAbsent
-                    (UNIPROT_NAME, rset.getString("name"), null);
-                target.addIfAbsent(kw);
+                kw = new Keyword (UNIPROT_NAME, rset.getString("name"));
+                _kw = target.addIfAbsent(kw);
+                if (_kw == kw)
+                    kw.save();
 
                 //Gene gene = GeneFactory.registerIfAbsent(rset.getString("sym"));
                 //target.links.add(new XRef (gene));
-                kw = KeywordFactory.registerIfAbsent
-                    (UNIPROT_GENE, value = rset.getString("sym"),
-                     "http://www.genenames.org/cgi-bin/gene_symbol_report?match="+value);
-                target.addIfAbsent(kw);
+                value = rset.getString("sym");
+                kw = new Keyword (UNIPROT_GENE, value);
+                kw.href = 
+                    "http://www.genenames.org/cgi-bin/gene_symbol_report?match="+value;
+                _kw = target.addIfAbsent(kw);
+                if (_kw == kw)
+                    kw.save();
+                
+                value = String.valueOf(rset.getLong("geneid"));
+                kw = new Keyword (ENTREZ_GENE, value);
+                kw.href = "http://www.ncbi.nlm.nih.gov/gene/"+value;
+                _kw = target.addIfAbsent(kw);
+                if (_kw == kw)
+                    kw.save();
 
-                kw = KeywordFactory.registerIfAbsent
-                        (ENTREZ_GENE, value = String.valueOf(rset.getLong("geneid")),
-                                "http://www.ncbi.nlm.nih.gov/gene/"+value);
-                target.addIfAbsent(kw);
-
-                kw = KeywordFactory.registerIfAbsent
-                        (DTO_ID, value = rset.getString("dtoid"),
-                                "http://drugtargetontology.org/"+value);
-                target.addIfAbsent(kw);
+                value = rset.getString("dtoid");
+                kw = new Keyword (DTO_ID, value);
+                kw.href = "http://drugtargetontology.org/"+value;
+                _kw = target.addIfAbsent(kw);
+                if (_kw == kw)
+                    kw.save();
 
                 Text seq = new Text (UNIPROT_SEQUENCE, rset.getString("seq"));
                 seq.save();
@@ -500,21 +544,24 @@ public class TcrdRegistry extends Controller implements Commons {
                 String type = rset.getString("type");
                 value = rset.getString("value");
                 if ("uniprot".equalsIgnoreCase(type)) {
-                    Keyword kw = KeywordFactory.registerIfAbsent
-                        (UNIPROT_ACCESSION, value,
-                         "http://www.uniprot.org/uniprot/"+value);
-                    target.addIfAbsent(kw);
+                    Keyword kw = new Keyword (UNIPROT_ACCESSION, value);
+                    kw.href = "http://www.uniprot.org/uniprot/"+value;
+                    Keyword _kw = target.addIfAbsent(kw);
+                    if (_kw == kw)
+                        kw.save();
                 }
                 else if ("symbol".equalsIgnoreCase(type)) {
-                    Keyword kw = KeywordFactory.registerIfAbsent
-                        (UNIPROT_SHORTNAME, value, null);
-                    target.addIfAbsent(kw);
+                    Keyword kw = new Keyword (UNIPROT_SHORTNAME, value);
+                    Keyword _kw = target.addIfAbsent(kw);
+                    if (_kw == kw)
+                        kw.save();
                 }
                 Logger.info("  + "+type+": "+value);
             }
             rset.close();
             
             target.properties.add(source);
+            Logger.debug("Target "+target.id+" xtype: "+counts);
         }
                          
         void addPatent (Target target, long protein) throws Exception {
@@ -596,7 +643,7 @@ public class TcrdRegistry extends Controller implements Commons {
                     tref.save();
                     aref.save();
                     assay.update();
-                    target.update();
+                    //target.update();
                 }
                 catch (Exception ex) {
                     ex.printStackTrace();
@@ -632,6 +679,13 @@ public class TcrdRegistry extends Controller implements Commons {
                     }
                 }
                 cost += rset.getDouble("cost");
+                long appid = rset.getLong("appid");
+                if (!rset.wasNull()) {
+                    Keyword grant = new Keyword 
+                        (GRANT_APPLICATION, rset.getString("full_project_num"));
+                    grant.href = "https://projectreporter.nih.gov/project_info_description.cfm?aid="+appid;
+                    target.properties.add(grant);
+                }
                 ++count;
             }
             rset.close();
@@ -659,14 +713,17 @@ public class TcrdRegistry extends Controller implements Commons {
         void addPathway (Target target, long protein) throws Exception {
             pstm11.setLong(1, protein);
             ResultSet rset = pstm11.executeQuery();
+            Map<String, Integer> counts = new TreeMap<String, Integer>();
             while (rset.next()) {
                 String source = rset.getString("pwtype");
                 String name = rset.getString("name");
                 Keyword term = KeywordFactory.registerIfAbsent
                     (source+" Pathway", name, rset.getString("url"));
                 target.addIfAbsent((Value)term);
+                /*
                 Logger.debug("Target "+target.id
                              +" pathway ("+source+"): "+term.term);
+                */
                 
                 if ("Reactome".equals(source)) {
                     List<String> refs = xrefs.get("Reactome");
@@ -678,8 +735,11 @@ public class TcrdRegistry extends Controller implements Commons {
                         target.addIfAbsent((Value)kw);
                     }
                 }
+                Integer c = counts.get(source);
+                counts.put(source, c==null?1:(c+1));
             }
             rset.close();
+            Logger.debug("Target "+target.id+" pathway: "+counts);
         }
 
         void addHarmonogram(Target target, long protein) throws Exception {
@@ -707,12 +767,13 @@ public class TcrdRegistry extends Controller implements Commons {
             target.knowledgeAvailability = cdfSum;
 
             rset.close();
-            Logger.debug(n+" harmonogram entries for "+target.id);
+            Logger.debug("Target "+target.id+" has "+n+" harmonogram entries!");
         }
 
         void addGO (Target target, long protein) throws Exception {
             pstm9.setLong(1, protein);
             ResultSet rset = pstm9.executeQuery();
+            Map<String, Integer> counts = new TreeMap<String, Integer>();
             while (rset.next()) {
                 String term = rset.getString("go_term");
                 String id = rset.getString("go_id");
@@ -746,15 +807,19 @@ public class TcrdRegistry extends Controller implements Commons {
 
                 if (go != null && !target.properties.contains(go)) {
                     target.properties.add(go);
-                    Logger.debug("Target "+target.id+" GO: "+term);
+                    //Logger.debug("Target "+target.id+" GO: "+term);
                 }
+                Integer c = counts.get(""+kind);
+                counts.put(""+kind,c==null?1:(c+1));
             }
             rset.close();
+            Logger.debug("Target "+target.id+" GO: "+counts);
         }
         
         void addExpression (Target target, long protein) throws Exception {
             pstm8.setLong(1, protein);
             ResultSet rset = pstm8.executeQuery();
+            Map<String, Integer> counts = new TreeMap<String, Integer>();
             Map<String, Keyword> sources = new HashMap<String, Keyword>();
             while (rset.next()) {
                 String qv = rset.getString("qual_value");
@@ -798,9 +863,11 @@ public class TcrdRegistry extends Controller implements Commons {
                 else if (expr.source.startsWith("JensenLab Text Mining")) {
                     sourceUrl = "http://tissues.jensenlab.org";
                     expr.sourceid = JENSEN_TM_EXPR;
-                    tissue = KeywordFactory.registerIfAbsent
-                        (JENSEN_TM_TISSUE, expr.tissue, null);
-                    target.addIfAbsent((Value)tissue);
+                    // this is specific to each protein
+                    tissue = new Keyword (JENSEN_TM_TISSUE, expr.tissue);
+                    tissue.href = rset.getString("url");
+                    tissue.save();
+                    target.properties.add(tissue);
                 }
                 else if (expr.source.startsWith
                            ("JensenLab Knowledge UniProtKB-RC")) {
@@ -825,7 +892,8 @@ public class TcrdRegistry extends Controller implements Commons {
                 }
                 else if (expr.source.startsWith("JensenLab Experiment")) {
                     sourceUrl = "http://tissues.jensenlab.org";
-                    String t = expr.source.substring("JensenLab Experiment".length()+1).trim();
+                    String t = expr.source
+                        .substring("JensenLab Experiment".length()+1).trim();
                     expr.sourceid = t+" Expression";
                 }
                 else
@@ -840,7 +908,9 @@ public class TcrdRegistry extends Controller implements Commons {
                 if (ref.id == null)
                     ref.save();
                 
-                Logger.debug("Target "+target.id+" "+expr.source+": "+expr.tissue);
+                //Logger.debug("Target "+target.id+" "+expr.source+": "+expr.tissue);
+                Integer c = counts.get(expr.source);
+                counts.put(expr.source, c==null?1:(c+1));
 
                 Keyword source = datasources.get(expr.source);
                 if (source == null) {
@@ -867,6 +937,7 @@ public class TcrdRegistry extends Controller implements Commons {
                     target.properties.add(kw);
                 }
             }
+            Logger.debug("Target "+target.id+" expression: "+counts);
         }
 
         static Pattern OmimRegex = Pattern.compile("([^\\s]+)\\s\\(([1-4])\\)");
@@ -1074,7 +1145,7 @@ public class TcrdRegistry extends Controller implements Commons {
             int selective = 0;
             Keyword mice = KeywordFactory.registerIfAbsent
                 ("IMPC Mice Produced", "YES", null);
-            
+            Map<String, Integer> counts = new TreeMap<String, Integer>();
             while (rset.next()) {
                 String type = rset.getString("itype");
                 
@@ -1112,7 +1183,9 @@ public class TcrdRegistry extends Controller implements Commons {
                 }
                 
                 if (val != null) {
-                    Logger.debug("Target "+target.id+": "+type);
+                    //Logger.debug("Target "+target.id+": "+type);
+                    Integer c = counts.get(type);
+                    counts.put(type, c==null?1:(c+1));
                     if (type.equalsIgnoreCase("UniProt Function")) {
                         target.description = (String)val.getValue();
                     }
@@ -1165,6 +1238,8 @@ public class TcrdRegistry extends Controller implements Commons {
                     (IDG_TOOLS, IDG_TOOLS_ANTIBODIES, null);
                 target.properties.add(kw);
             }
+
+            Logger.debug("Target "+target.id+" tdl info: "+counts);
         }
 
         void addPanther (Target target,long protein) throws Exception {
@@ -1515,7 +1590,7 @@ public class TcrdRegistry extends Controller implements Commons {
                     tref.save();
                     lref.save();
                     ligand.update();
-                    target.update();
+                    //target.update();
                 }
                 catch (Exception ex) {
                     ex.printStackTrace();
@@ -1725,14 +1800,18 @@ public class TcrdRegistry extends Controller implements Commons {
             }
             rset.close();
 
-            try {
-                target.update();
-                Logger.debug("Target "+target.id+" has "+count+" ligand(s)... "
-                             +(System.currentTimeMillis()-start)+"ms!");
+            /*
+            if (count > 0) {
+                try {
+                    target.update();
+                }
+                catch (Exception ex) {
+                    ex.printStackTrace();
+                }
             }
-            catch (Exception ex) {
-                ex.printStackTrace();
-            }
+            */
+            Logger.debug("Target "+target.id+" has "+count+" ligand(s)... "
+                         +(System.currentTimeMillis()-start)+"ms!");
         }
 
         Disease registerDiseaseIfAbsent
@@ -1880,7 +1959,7 @@ public class TcrdRegistry extends Controller implements Commons {
                     try {
                         if (xref.id == null) {
                             xref.save();
-                            target.update();
+                            //target.update();
                         }
                         else {
                             xref.update();
@@ -1941,16 +2020,65 @@ public class TcrdRegistry extends Controller implements Commons {
             }
         }
 
+        void addCompartment (Target target, long protein) throws Exception {
+            pstm27.setLong(1, protein);
+            ResultSet rset = pstm27.executeQuery();
+            try {
+                int count = 0;
+                long start = System.currentTimeMillis();
+                while (rset.next()) {
+                    Compartment comp = new Compartment ();
+                    comp.type = rset.getString("ctype");
+                    comp.goId = rset.getString("go_id");
+                    comp.goTerm = rset.getString("go_term");
+                    comp.zscore = rset.getDouble("zscore");
+                    if (rset.wasNull())
+                        comp.zscore = null;
+                    comp.evidence = rset.getString("evidence");
+                    comp.conf = rset.getDouble("conf");
+                    if (rset.wasNull())
+                        comp.conf = null;
+                    comp.url = rset.getString("url");
+                    try {
+                        comp.save();
+                        XRef ref = new XRef (comp);
+                        Keyword kw = getKeyword
+                            (COMPARTMENT_GOTERM, comp.goTerm,
+                             "http://amigo.geneontology.org/amigo/term/"
+                             +comp.goId);
+                        ref.properties.add(kw);
+                              
+                        kw = getKeyword (COMPARTMENT_EVIDENCE, 
+                                         comp.evidence, comp.url);
+                        ref.properties.add(kw);
+
+                        kw = getKeyword (COMPARTMENT_TYPE, comp.type, null);
+                        ref.properties.add(kw);
+
+                        ref.save();
+                        target.links.add(ref);
+                    }
+                    catch (Exception ex) {
+                        Logger.error("Can't persist compartment for protein "
+                                     +protein, ex);
+                    }
+                    ++count;
+                }
+                Logger.debug("Target "+target.id+" has "
+                             +count+" compartments..."+String.format
+                             ("%1$dms!", System.currentTimeMillis()-start));
+            }
+            finally {
+                rset.close();
+            }
+        }
+
         void addPublication (Target target, long protein) throws Exception {
             pstm22.setLong(1, protein);
             ResultSet rset = pstm22.executeQuery();
             try {
-                Predicate pred = new Predicate (TARGET_PUBLICATIONS);
-                pred.subject = new XRef (target);
-                // add synonyms for search results              
-                for (Keyword kw : target.getSynonyms())
-                    pred.subject.properties.add(kw);
-
+                int count = 0;
+                long start = System.currentTimeMillis();
                 while (rset.next()) {
                     long pmid = rset.getLong("id");
                     Publication pub = PublicationFactory.byPMID(pmid);
@@ -1968,17 +2096,15 @@ public class TcrdRegistry extends Controller implements Commons {
                         pub.year = year;
                         pub.save();
                     }
-                    
-                    XRef ref = new XRef (pub);
-                    for (Keyword kw : target.getSynonyms())
-                        ref.properties.add(kw);
-                    ref.save();
-                    pred.addIfAbsent(ref);
+
+                    target.addIfAbsent(pub);
+                    ++count;
                 }
-                pred.save();
                 
                 Logger.debug("Target "+target.id+" has "
-                             +pred.objects.size()+" publications!");
+                             +count+" publications..."
+                             +String.format("%1$dms!",
+                                            System.currentTimeMillis()-start));
             }
             finally {
                 rset.close();
@@ -1997,8 +2123,22 @@ public class TcrdRegistry extends Controller implements Commons {
                         // don't store self-link
                         Target t = TARGETS.get(p2);
                         if (t == null) {
+                            /*
                             Logger.error
                                 ("Can't find target with protein id="+p2);
+                            */
+                            List<Target> targets = TargetFactory.finder
+                                .where().eq("synonyms.term", "TCRD:"+p2)
+                                .findList();
+                            if (targets.isEmpty()) {    
+                                Logger.error
+                                    ("Can't find target with protein id="+p2
+                                     +" from database!");
+                            }
+                            else {
+                                t = targets.get(0);
+                                TARGETS.put(p2, t);
+                            }
                         }
                         else {
                             String type = rset.getString("ppitype");
@@ -2036,9 +2176,51 @@ public class TcrdRegistry extends Controller implements Commons {
             }
         }
 
+        void addTechdev (Target target, long protein) throws Exception {
+            pstm28.setLong(1, protein);
+            ResultSet rset = pstm28.executeQuery();
+            try {
+                while (rset.next()) {
+                    Techdev dev = new Techdev ();
+                    dev.pi = rset.getString("name");
+                    dev.grantNum = rset.getString("grant_number");
+                    dev.comment = rset.getString("comment");
+                    dev.pmcid = rset.getString("publication_pcmid");
+                    dev.pmid = rset.getLong("publication_pmid");
+                    if (rset.wasNull())
+                        dev.pmid = null;
+                    dev.resourceUrl = rset.getString("resource_url");
+                    dev.dataUrl = rset.getString("data_url");
+                    dev.target = target;
+                    try {
+                        dev.save();
+
+                        XRef ref = new XRef (dev);
+                        // add these for target facets
+                        ref.properties.add(KeywordFactory.registerIfAbsent
+                                           (TECHDEV_PI, dev.pi, null));
+                        ref.properties.add(KeywordFactory.registerIfAbsent
+                                           (TECHDEV_GRANT, dev.grantNum, null));
+                        ref.save();
+                        target.links.add(ref);
+                    }
+                    catch (Exception ex) {
+                        Logger.error("Can't persist Techdev "
+                                     +rset.getLong("a.id")+" for protein "+protein, ex);
+                    }
+                }
+            }
+            finally {
+                rset.close();
+            }
+        }
+
         void persists (TcrdTarget t) throws Exception {
+            long start = System.currentTimeMillis();
+
             Http.Context.current.set(ctx);
-            Logger.debug(t.family+" "+t.tdl+" "+t.acc+" "+t.id);
+            Logger.debug("####### Processing target... "+t.acc+" "+t.id
+                         +" \""+t.family+"\' "+t.tdl+" #######");
             
             final Target target = new Target ();
             target.idgFamily = t.family;
@@ -2091,6 +2273,8 @@ public class TcrdRegistry extends Controller implements Commons {
                 addGeneRIF (target, t.protein);
                 addTINX (target, t.id);
                 addPublication (target, t.protein);
+                addCompartment (target, t.protein);
+                addTechdev (target, t.protein);
             }
             catch (Exception ex) {
                 Logger.error("Can't parse target "+IDGApp.getId(target)+"!");
@@ -2133,6 +2317,11 @@ public class TcrdRegistry extends Controller implements Commons {
                 if (lig.id != null)
                     LIGANDS.put(lig.id, lig);
             */
+
+            Logger.debug("####### Target "+t.acc+" processed in "
+                         +String.format("%1$dms!", 
+                                        System.currentTimeMillis()-start)
+                         +" ########");
         }
     }
 
@@ -2386,7 +2575,7 @@ public class TcrdRegistry extends Controller implements Commons {
                                 (new Text (IDG_GENERIF, me.getValue()));
                             if (xref.id == null) {
                                 xref.save();
-                                target.update();
+                                //target.update();
                             }
                             else {
                                 xref.update();
@@ -2843,7 +3032,7 @@ public class TcrdRegistry extends Controller implements Commons {
                  +"left join tinx_novelty d\n"
                  +"    on d.protein_id = a.protein_id \n"
                  //+"where d.protein_id in (9671,9849,11534,15077,658,11534)"
-                 //+"where d.protein_id in (8721)\n"
+                 //+"where d.protein_id in (137,734,6845)\n"
                  //+"where c.id in (11521)\n"
                  //+"where a.target_id in (12241)\n"
                  //+"where c.uniprot = 'Q9H3Y6'\n"
@@ -2938,10 +3127,25 @@ public class TcrdRegistry extends Controller implements Commons {
                 }
                 else {
                     Logger.debug("Skipping "+acc);
+                    TARGETS.put(protId, tlist.get(0));
                 }
             }
             rset.close();
             stm.close();
+
+            for (Disease d : DiseaseFactory.finder.all()) {
+                for (Keyword kw : d.getSynonyms())
+                    DISEASES.put(kw.term, d);
+                if (d.name != null)
+                    DISEASES.put(d.name, d);
+            }
+
+            for (Ligand l : LigandFactory.finder.all()) {
+                for (Keyword kw : l.getSynonyms())
+                    LIGS.put(kw.term, l);
+                if (l.name != null)
+                    LIGS.put(l.name, l);
+            }
         }
         catch (Exception ex) {
             ex.printStackTrace();

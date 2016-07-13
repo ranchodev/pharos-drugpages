@@ -31,8 +31,8 @@ object ApplicationBuild extends Build {
     javaEbean,
     cache,
     filters,
-    "com.zaxxer" % "HikariCP-java6" % "2.3.8"
-      ,"com.edulify" %% "play-hikaricp" % "2.0.6"
+    "com.zaxxer" % "HikariCP" % "2.4.3"
+      ,"com.edulify" %% "play-hikaricp" % "2.1.0"
       ,"mysql" % "mysql-connector-java" % "5.1.31"
       ,"org.postgresql" % "postgresql" % "9.4-1201-jdbc41"     
       ,"com.hazelcast" % "hazelcast" % "3.5.2" 
@@ -143,11 +143,11 @@ public class BuildInfo {
     libraryDependencies ++= commonDependencies,
       libraryDependencies += "org.webjars" % "morrisjs" % "0.5.1",
       libraryDependencies += "org.webjars" % "fabric.js" % "1.4.12",
-      libraryDependencies += "org.webjars" % "datatables" % "1.10.10",
-      libraryDependencies += "org.webjars" % "datatables-plugins" % "1.10.9-1",
+      libraryDependencies += "org.webjars" % "datatables" % "1.10.12",
+      libraryDependencies += "org.webjars" % "datatables-plugins" % "1.10.12",
       libraryDependencies += "org.webjars" % "highcharts" % "4.2.5",
-
-        javacOptions ++= javaBuildOptions
+      javacOptions ++= javaBuildOptions,
+      unmanagedSourceDirectories in Compile += baseDirectory.value / "src"
       //javaOptions in Runtime += "-Dconfig.resource=pharos.conf"
   ).dependsOn(ncats).aggregate(ncats)
 

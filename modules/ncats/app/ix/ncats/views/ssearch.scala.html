@@ -71,7 +71,8 @@ function setStructure (struc) {
 	</div>
       </div>
       <div class="modal-footer">
-	<form class="form-inline" onchange="searchSelect()"
+	<form id="structure-form" class="form-inline" 
+	      onchange="searchSelect()"
 	      method="@method" action="@action">
 	  <div class="form-group">
 	      <select class="form-control" id="search-selection" name="type">
@@ -89,7 +90,7 @@ function setStructure (struc) {
 		     title="Query structure"
 	      	     style="width: 300px" name="q" id="structure">
 	    </div>
-	  <button type="submit" onclick="submitForm()" 
+	  <button type="button" @*onclick="submitForm()"*@
 		  class="btn btn-primary" id="search-btn">Search</button>
 	</form>
       </div>
@@ -99,14 +100,23 @@ function setStructure (struc) {
 
 <div class="modal fade" tabindex="-1" role="dialog" id="spinModal"
      aria-labelledby="mySmallModalLabel" aria-hidden="true">
-  <div class="modal-dialog modal-sm">
+  <div class="modal-dialog modal-lg">
     <div class="modal-content">
-      <center><img src='@routes.Assets.at("ncats/images/spinners/294.GIF")'></center>
+      <center><img src='@routes.Assets.at("ncats/images/Preloader_10.gif")'></center>
     </div>
   </div>
 </div>
 
 <script>
+  $(document).ready(function () {
+      $('#search-btn').on('click', function (ev) {
+          ev.preventDefault();
+          $('#page-loader').addClass('loader-wait');
+          $('#strucModal').modal('hide');
+          $('#structure-form').submit();                
+      });
+  });
+
   function submitForm () {
    // console.log(el);
     $('#strucModal').modal('hide');  
