@@ -334,6 +334,7 @@ public class DownloadEntities extends Controller {
         StringBuilder sb = new StringBuilder();
         sb.append(routes.IDGApp.target(csvQuote(IDGApp.getId(t)))).append(",").
                 append(csvQuote(IDGApp.getId(t))).append(",").
+                append(csvQuote(IDGApp.getGeneSymbol(t))).append(",").
                 append(csvQuote(t.getName())).append(",").
                 append(csvQuote(t.getDescription())).append(",").
                 append(csvQuote(t.idgTDL.toString())).append(",").
@@ -410,7 +411,7 @@ public class DownloadEntities extends Controller {
         StringBuilder sb = new StringBuilder();
 
         // basic target info
-        String tmp = "URL,Uniprot ID,Name,Description,Development Level,DTOClass,PantherClass,ChemblClass,Novelty,Target Family,Function," +
+        String tmp = "URL,Uniprot ID,GeneSymbol,Name,Description,Development Level,DTOClass,PantherClass,ChemblClass,Novelty,Target Family,Function," +
                 "GrantCount,R01Count,PatentCount,AntibodyCount,PubmedCount,PMIDs";
         tmp = tmp.replace(",", "\",\"");
         tmp = "\"" + tmp + "\"\n";
