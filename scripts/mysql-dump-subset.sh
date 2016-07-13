@@ -35,72 +35,72 @@ mysqldump -uroot $tcrd \
 out="${tcrd}_02.sql"
 echo "Dumping $out..."
 mysqldump -uroot --lock-all-tables -w "target_id in $t_cond" \
-    $tcrd chembl_activity > $out
+          $tcrd chembl_activity > $out
 
 out="${tcrd}_03.sql"
 echo "Dumping $out..."
 mysqldump -uroot --lock-all-tables -w "protein_id in $p_cond" \
-    $tcrd compartment > $out
+          $tcrd compartment > $out
 
 out="${tcrd}_04.sql"
 echo "Dumping $out..."
 mysqldump -uroot --lock-all-tables -w "target_id in $t_cond" \
-    $tcrd drug_activity > $out
+          $tcrd drug_activity > $out
 
 out="${tcrd}_05.sql"
 echo "Dumping $out..."
 mysqldump -uroot --lock-all-tables -w "protein_id in $p_cond" \
-    $tcrd expression > $out
+          $tcrd expression > $out
 
 out="${tcrd}_06.sql"
 echo "Dumping $out..."
 mysqldump -uroot --lock-all-tables -w "protein_id in $p_cond" \
-    $tcrd feature > $out
+          $tcrd feature > $out
 
 out="${tcrd}_07.sql"
 echo "Dumping $out..."
 mysqldump -uroot --lock-all-tables -w "protein_id in $p_cond" \
-    $tcrd gene_attribute > $out
+          $tcrd gene_attribute > $out
 
 out="${tcrd}_08.sql"
 echo "Dumping $out..."
 mysqldump -uroot --lock-all-tables -w "protein_id in $p_cond" \
-    $tcrd generif > $out
+          $tcrd generif > $out
 
 out="${tcrd}_09.sql"
 echo "Dumping $out..."
 mysqldump -uroot --lock-all-tables -w "protein_id in $p_cond" \
-    $tcrd goa > $out
+          $tcrd goa > $out
 
 out="${tcrd}_10.sql"
 echo "Dumping $out..."
 mysqldump -uroot --lock-all-tables -w "protein_id in $p_cond" \
-    $tcrd hgram_cdf > $out
+          $tcrd hgram_cdf > $out
 
 out="${tcrd}_11.sql"
 echo "Dumping $out..."
 mysqldump -uroot --lock-all-tables -w "target_id in $t_cond" \
-    $tcrd pathway > $out
+          $tcrd pathway > $out
 
 out="${tcrd}_12.sql"
 echo "Dumping $out..."
 mysqldump -uroot --lock-all-tables -w "protein_id in $p_cond" \
-    $tcrd phenotype > $out
+          $tcrd phenotype > $out
 
 out="${tcrd}_13.sql"
 echo "Dumping $out..."
 mysqldump -uroot --lock-all-tables -w "protein_id in $p_cond" \
-    $tcrd pmscore > $out
+          $tcrd pmscore > $out
 
 out="${tcrd}_14.sql"
 echo "Dumping $out..."
 mysqldump -uroot --lock-all-tables -w "id in $p_cond" \
-    $tcrd protein > $out
+          $tcrd protein > $out
 
 out="${tcrd}_15.sql"
 echo "Dumping $out..."
 mysqldump -uroot --lock-all-tables -w "protein_id in $p_cond" \
-    $tcrd protein2pubmed > $out
+          $tcrd protein2pubmed > $out
 
 out="${tcrd}_16.sql"
 echo "Dumping $out..."
@@ -111,41 +111,46 @@ mysqldump -uroot --lock-all-tables \
 out="${tcrd}_17.sql"
 echo "Dumping $out..."
 mysqldump -uroot --lock-all-tables -w "protein_id in $p_cond" \
-    $tcrd t2tc > $out
+          $tcrd t2tc > $out
 
 out="${tcrd}_18.sql"
 echo "Dumping $out..."
 mysqldump -uroot --lock-all-tables -w "id in $t_cond" \
-    $tcrd target > $out
+          $tcrd target > $out
 
 out="${tcrd}_19.sql"
 echo "Dumping $out..."
 mysqldump -uroot --lock-all-tables -w "target_id in $t_cond" \
-    $tcrd target2disease > $out
+          $tcrd target2disease > $out
 
 out="${tcrd}_20.sql"
 echo "Dumping $out..."
 mysqldump -uroot --lock-all-tables -w "target_id in $t_cond" \
-    $tcrd target2grant > $out
+          $tcrd target2grant > $out
 
 out="${tcrd}_21.sql"
 echo "Dumping $out..."
 mysqldump -uroot --lock-all-tables -w "protein_id in $p_cond" \
-    $tcrd tdl_info > $out
+          $tcrd tdl_info > $out
 
 out="${tcrd}_22.sql"
 echo "Dumping $out..."
 mysqldump -uroot --lock-all-tables -w "protein_id in $p_cond" \
-    $tcrd tinx_importance > $out
+          $tcrd tinx_importance > $out
 
 out="${tcrd}_23.sql"
 echo "Dumping $out..."
 mysqldump -uroot --lock-all-tables -w "protein_id in $p_cond" \
-    $tcrd tinx_novelty > $out
+          $tcrd tinx_novelty > $out
 
 out="${tcrd}_24.sql"
 echo "Dumping $out..."
 mysqldump -uroot --lock-all-tables -w "target_id in $t_cond" \
-    $tcrd xref > $out
+          $tcrd xref > $out
+
+out="${tcrd}_25.sql"
+echo "Dumping $out..."
+mysqldump -uroot --lock-all-tables -w "target_id in $t_cond" \
+          $tcrd pathway > $out
 
 echo "ALL DONE!!!"

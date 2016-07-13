@@ -268,6 +268,9 @@ public class IDGApp extends App implements Commons {
                 if (ChEMBL_MECHANISM.equals(v.label)) {
                     mechanism = ((Text)v).text;
                 }
+                else if (PHARMALOGICAL_ACTION.equals(v.label)) {
+                    mechanism = ((Keyword)v).term;
+                }
                 else if (v instanceof VNum) {
                     activities.add((VNum)v);
                 }
@@ -1308,6 +1311,26 @@ public class IDGApp extends App implements Commons {
             }
         }
         return ligands;
+    }
+
+    public static List<Value> getLinkedProperties
+        (EntityModel e, Class kind, String label) {
+        List<Value> props = new ArrayList<Value>();
+        for (XRef ref : getLinks (e, kind)) {
+            try {
+                Class cls = Class.forName(ref.kind);
+                if (kind.isAssignableFrom(cls)) {
+                    for (Value p : ref.properties) {
+                        if (p.label.equals(label))
+                            props.add(p);
+                    }
+                }
+            }
+            catch (Exception ex) {
+                Logger.error("Bogus XRef class: "+ref.kind, ex);
+            }
+        }
+        return props;
     }
 
     public static List<Value> getProperties (EntityModel e, String label) {

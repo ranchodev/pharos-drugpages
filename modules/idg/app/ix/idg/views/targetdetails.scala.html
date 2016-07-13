@@ -3,6 +3,7 @@
 @import ix.idg.models.Target.TDL
 @import ix.idg.models.Ligand
 @import ix.idg.models.Disease
+@import ix.idg.models.Techdev
 @import ix.core.models.Value
 @import ix.core.models.VStr
 @import ix.core.models.Keyword
@@ -392,6 +393,39 @@
 </tr>
 }
 
+@techdev(t: Target) = {
+  @defining(IDGApp.getLinkedObjects(t, classOf[Techdev])){ techdev =>
+     @if(techdev != null) {
+        <div class="panel panel-default" 
+              style="max-height: 300px; overflow-y: auto;">
+           <a name="pdb" tocname="PDB"></a>
+           <div class="panel-heading">
+              <h3 class="panel-title">TechDev Info (@techdev.size)</h3>
+           </div>
+           <div class="panel-body">
+	     <table class="table table-striped">
+               @for(td <- techdev){
+	          <tr>
+		    <td>
+		      <a id="keyword" class="label label-primary loader" 
+          	      	 href='@{ix.idg.controllers.routes.IDGApp.targets()+"?facet="+URLEncoder.encode(TECHDEV_PI,"utf8")+"/"}@URLEncoder.encode(td.pi, "utf8")'>@td.pi <span class="badge">@IDGApp.getTermCount(classOf[Target], TECHDEV_PI, td.pi)</span></a>
+		    </td>
+		    <td>
+		    @if(td.resourceUrl != null) {
+	               <a href="@td.resourceUrl">@td.comment <i class="fa fa-external-link"></i></a>
+		    } else {
+		       @td.comment
+		    }
+		    </td>
+		  </tr>
+                }
+	     </table>
+           </div>
+        </div>
+     }
+  }
+}
+
 @ix.ncats.views.html.main(target.name){
 @targetmenu(null)
 }{
@@ -536,7 +570,9 @@ This is TCRD target <a href='@ix.core.controllers.v1.routes.RouteFactory.get("ta
           </div>
         </div>
 
-          @defining(target.getSynonyms(PDB_ID)) { pdbids =>
+        @property(PANTHER_PROTEIN_CLASS, null, -1)
+        @property(ChEMBL_PROTEIN_CLASS, null, -1)	
+        @defining(target.getSynonyms(PDB_ID)) { pdbids =>
               @if(pdbids.size() > 0) {
                   <div class="panel panel-default" 
                        style="max-height: 300px; overflow-y: auto;">
@@ -728,8 +764,7 @@ This is TCRD target <a href='@ix.core.controllers.v1.routes.RouteFactory.get("ta
         **@
       </div>
       <div class="col-md-4">
-        @property(PANTHER_PROTEIN_CLASS, null, -1)
-        @property(ChEMBL_PROTEIN_CLASS, null, -1)
+        @techdev(target)
         @property(IMPC_TERM)
         @property("Pathway", null, 1)
         @property(UNIPROT_KEYWORD)
@@ -1541,7 +1576,7 @@ $('.tree').treegrid({
            .append('g').classed('focus', 1).datum(data).call(chart);
      },
      error:function () {
-        $('#attr-type-radar').html('<h4><em>No data available</em></h4>');
+        $('#attr-type-radar').html('<h5><em>No data available</em></h5>');
 	$('#modal-radar-btn').attr('disabled','true');
      }
   });
