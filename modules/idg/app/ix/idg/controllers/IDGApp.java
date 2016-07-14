@@ -372,7 +372,8 @@ public class IDGApp extends App implements Commons {
             }
             else if (name.equals(IDG_TARGET) || name.equals(UNIPROT_GENE)) {
                 try {
-                    return "<a class='loader' href='"+routes.IDGApp.target(URLEncoder.encode(label, "utf8"))+"'>"+label+"</a>";
+                    return "<a class='loader' href=\""
+                        +routes.IDGApp.target(label)+"\">"+label+"</a>";
                 }
                 catch (Exception ex) {
                     Logger.error("Can't utf encode label: "+label, ex);
@@ -381,8 +382,8 @@ public class IDGApp extends App implements Commons {
             }
             else if (name.equals(IDG_DISEASE)) {
                 try {
-                    return "<a class='loader' href='"
-                        +routes.IDGApp.disease(URLEncoder.encode(label, "utf8"))+"'>"
+                    return "<a class='loader' href=\""
+                        +routes.IDGApp.disease(label)+"\">"
                         +label+"</a>";
                 }
                 catch (Exception ex) {
@@ -3870,5 +3871,12 @@ public class IDGApp extends App implements Commons {
         TextIndexer.TermVectors tvs =
             SearchFactory.getTermVectors(kind, label);
         return tvs != null ? tvs.getTermCount(term) : null;
+    }
+
+    public static Result targetdescriptor (String name) {
+        return ok (ix.idg.views.html.targetdescriptor.render
+                   (new TermVectorSummary (Target.class, name),
+                    new TermVectorConditional (Target.class, name,
+                                               IDG_DEVELOPMENT)));
     }
 }

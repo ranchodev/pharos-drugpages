@@ -16,13 +16,14 @@ POST    /tcrd   ix.idg.controllers.TcrdRegistry.load
 GET	/	ix.idg.controllers.IDGApp.home
 GET	/about	ix.idg.controllers.IDGApp.about
 GET	/impc	ix.idg.controllers.IDGApp.impc
-GET /pmscore ix.idg.controllers.IDGApp.pmscore
-GET /help   ix.idg.controllers.IDGApp.help
+GET	/pmscore ix.idg.controllers.IDGApp.pmscore
+GET	/help   ix.idg.controllers.IDGApp.help
 GET	/index	ix.idg.controllers.IDGApp.index
 GET	/kinome	ix.idg.controllers.IDGApp.kinome
 GET	/targets	ix.idg.controllers.IDGApp.targets(q: String ?= null, rows: Int ?= 10, page: Int ?= 1)
 GET /targets/compare ix.idg.controllers.IDGApp.compareTargets2(q: String ?= null)
 GET	/targets/facets	ix.idg.controllers.IDGApp.targetfacets(ctx: String ?= null)
+GET	/targets/facets/:name	ix.idg.controllers.IDGApp.targetdescriptor(name: String)
 GET	/targets/:name	ix.idg.controllers.IDGApp.target(name: String)
 GET	/targets/:name/publications	ix.idg.controllers.IDGApp.publicationsForTarget(name: String, top: Int ?= -1, skip: Int ?= 0)
 GET	/diseases	ix.idg.controllers.IDGApp.diseases(q: String ?= null, rows: Int ?= 10, page: Int ?= 1)

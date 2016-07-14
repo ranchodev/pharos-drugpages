@@ -198,6 +198,14 @@ public class TextIndexer {
             }
             searcher.search(tq, filter, this);
 
+            Collections.sort(tvec.docs, new Comparator<Map>() {
+                    public int compare (Map m1, Map m2) {
+                        Integer c1 = (Integer)m1.get("nTerms");
+                        Integer c2 = (Integer)m2.get("nTerms");
+                        return c2 - c1;
+                    }
+                });
+
             for (Map.Entry<String, Set> me : counts.entrySet()) {
                 Map map = new HashMap ();
                 map.put("docs", me.getValue().toArray(new Object[0]));

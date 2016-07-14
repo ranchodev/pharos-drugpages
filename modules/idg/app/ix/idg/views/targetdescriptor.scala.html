@@ -1,0 +1,170 @@
+
+@import java.net.URLEncoder
+@import ix.core.search.TextIndexer._
+@import ix.core.controllers.search.SearchFactory
+@import ix.idg.models._
+@import ix.idg.controllers.TermVectorSummary
+@import ix.idg.controllers.TermVectorConditional
+@import ix.idg.controllers.IDGApp
+
+@(tvs: TermVectorSummary, ctv: TermVectorConditional)
+
+@ix.ncats.views.html.main("Summary of "+tvs.field){
+@targetmenu(null)
+}{@HtmlFormat.empty}{
+<div class="container-fluid">
+  <div class="col-md-12">
+    <div class="page-header">
+      <h1><a href='@ix.core.controllers.v1.routes.RouteFactory.termVectors("targets", tvs.field)'><i class="fa fa-code"></i></a> Summary of <em>@tvs.field</em></h1>
+    </div>
+    <div class="row">
+      <div class="col-md-6">
+	<div class="panel panel-default">
+          <div class="panel-body">
+            <table class="table table-striped">
+              <tr>
+		<td>Unique values</td>
+		<td>@tvs.termRank.length</td>
+	      </tr>
+	      <tr>
+		<td>Averge values per target</td>
+		  @if(tvs.avgTermsPerDoc != null) {
+		     <td>@{"%1$.3f".format(tvs.avgTermsPerDoc)}</td>
+		  } else {
+		     <td></td>
+		  }
+	      </tr>
+	      <tr>
+		<td>Some popular values</td>
+		<td>@for(i <- 0 until Math.min(tvs.termRank.length,5)) {
+	             <div>
+		       <a class="label label-primary loader" 
+			  href='@{ix.idg.controllers.routes.IDGApp.targets()+"?facet="+URLEncoder.encode(tvs.field,"utf8")+"/"}@URLEncoder.encode(tvs.termRank(i), "utf8")'>@tvs.termRank(i) <span class="badge">@tvs.termCount(i)</span></a>
+		     </div>
+	            }
+		</td>
+	      </tr>
+	      <tr>
+		<td>Top targets with value counts</td>
+		<td>@for(e <- tvs.targets.entrySet) {
+		       @defining(IDGApp.getGeneSymbol(e.getKey)){ gene =>
+		         <a class="label label-primary loader"
+			    title='@e.getKey.idgTDL: @e.getKey.name'
+			    href='@{ix.idg.controllers.routes.IDGApp.targets()+"/"+gene}'>@gene <span class="badge">@e.getValue</span></a>
+		       }
+	            }
+		</td>
+	      </tr>
+	      <tr>
+		<td colspan="2">
+		  <div id="term-count-profile"
+		       style="width:100%;height:200px;">
+		  </div>
+		</td>
+	      </tr>
+	    </table>
+	  </div>
+	</div>
+      </div>
+      <div class="col-md-6">
+      	<div class="panel panel-default">
+          <div class="panel-body">
+	    <div id="term-profile" style="height:550px;">
+	    </div>
+          </div>
+	</div>
+      </div>
+    </div>
+  </div>
+</div>
+<head>
+  <link type="text/css" rel="stylesheet" href='@routes.Assets.at("stylesheets/main.css")'/>
+  <script src='@routes.WebJarAssets.at(WebJarAssets.locate("highcharts.js"))' type='text/javascript'></script>
+</head>
+}
+
+<script>
+$(document).ready(function () {
+    $('#term-count-profile').highcharts({
+        chart: {
+	   type: 'column',
+	   zoomType: 'x'
+	},
+	title: {
+	   text: 'Distribution of counts of <b>@tvs.field</b>'
+	},
+	xAxis: {
+	   min: 0,
+	   startOnTick: true,
+	   endOnTick: true,
+	   showLastLabel: true
+	},
+	yAxis: {
+	   min: 0,
+	   title: {
+	      text: null
+	   }
+	},
+	tooltip: {
+	   pointFormat: '<b>{point.y}</b> target(s) with <b>{point.x}</b> value(s) for <b>@tvs.field</b>'
+	},
+        credits: {enabled: false},
+	legend: { enabled: false},
+	series: [{
+	   data: [
+	     @for(i <- 0 until tvs.termCountProfile.length) {
+	        [@i,@tvs.termCountProfile(i)],
+	     }
+	   ]
+	}]
+    });
+
+    $('#term-profile').highcharts({
+      colors: [
+    	'#f0ad4e', // Tbio
+    	'#5bc0de', // Tchem
+    	'#337ab7',
+        '#d9534f' // Tdark		
+       ],
+       chart: {
+          type: 'bar',
+	  zoomType: 'x'
+       },
+       title: {
+          text: 'Term distribution of <b>@tvs.field</b> per <b>@ctv.condition</b>'
+       },
+       xAxis: {
+          categories: [
+	    @for(t <- ctv.terms) {
+	       '@t',
+	    }
+	  ]
+       },
+       yAxis: {
+          title: {
+	     text: 'Count'
+	  }
+       },
+       legend: {
+          reversed: true
+       },
+       credits: {enabled: false},       
+       plotOptions: {
+          series: {
+	     stacking: 'normal'
+	  }
+       },
+       series: [
+          @for(i <- 0 until ctv.categories.length) {
+	     {name: '@ctv.categories(i)',
+	      data: [
+                 @for(j <- 0 until ctv.terms.length) {
+		    @ctv.count(j, i),
+		 }
+	      ]
+	     },
+	  }
+       ]
+    });
+});
+</script>

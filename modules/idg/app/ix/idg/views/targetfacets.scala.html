@@ -13,9 +13,10 @@
 <div class="col-md-4" facetname="@f.name">
   <div class="panel panel-default" id="@Util.sha1(App.encode(f.facet))" >
       <div class="panel-heading">
-          <h3 class="panel-title">
+        <h3 class="panel-title">
+	  <a href="@ix.idg.controllers.routes.IDGApp.targetdescriptor(f.facet.getName)"><i class="fa fa-bar-chart"></i></a>
           @f.name
-          @if(f.size() > 6) {  <a href="#"><i class="fa fa-caret-down" aria-hidden="true"></i></a> }
+          @if(f.size() > 6) {  <a id="search" href="#"><i class="fa fa-caret-down" aria-hidden="true"></i></a> }
           </h3>
 
           @if(f.size() > 6){
@@ -229,7 +230,7 @@ $(document).ready(function() {
     $(".facetfilterdiv" ).each(function() {
         $(this ).toggle();
     });
-    $(".panel-title a" ).on('click', function(){
+    $(".panel-title #search" ).on('click', function(){
         var startElem = $(this ).parent( ).parent();
         var elem = $(startElem ).find(".form-group");
         $(elem ).toggle();

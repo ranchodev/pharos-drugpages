@@ -205,18 +205,17 @@ public class SearchFactory extends EntityFactory {
         return ok (_indexer.getFacetsConfig());
     }
 
-    public static TextIndexer.TermVectors getTermVectors
+    public static TermVectors getTermVectors
         (final Class kind, final String field) {
         try {
             final String key = SearchFactory.class.getName()+"/termVectors/"
                 +kind.getName()+"/"+field;
-            return IxCache.getOrElse
-                (key, new Callable<TextIndexer.TermVectors> () {
-                        public TextIndexer.TermVectors call ()
-                            throws Exception {
-                            return _indexer.getTermVectors(kind, field);
-                        }
-                    });
+            return IxCache.getOrElse(key, new Callable<TermVectors> () {
+                    public TermVectors call ()
+                        throws Exception {
+                        return _indexer.getTermVectors(kind, field);
+                    }
+                });
         }
         catch (Exception ex) {
             Logger.error("Can't generate termVectors for "+kind+"/"+field, ex);
@@ -224,7 +223,42 @@ public class SearchFactory extends EntityFactory {
         }
     }
 
-    public static TextIndexer.TermVectors getConditionalTermVectors
+    public static Map<String, TermVectors>
+        getConditionalTermVectors (final Class kind,
+                                   final String field,
+                                   final String conditional) {
+        try {
+            final String key = SearchFactory.class.getName()+"/termVectors/"
+                +kind.getName()+"/"+field+"/"+conditional;
+            return IxCache.getOrElse
+                (key, new Callable<Map<String, TermVectors>>() {
+                        public Map<String, TermVectors> call ()
+                            throws Exception {
+                            TermVectors tv = getTermVectors (kind, conditional);
+                            Map<String, TermVectors> result = null;
+                            if (tv != null) {
+                                result = new TreeMap<String, TermVectors>();
+                                Map<String, String> cond =
+                                    new HashMap<String, String>();
+                                for (String term : tv.getTerms().keySet()) {
+                                    cond.put(conditional, term);
+                                    TermVectors ctv = getConditionalTermVectors
+                                        (kind, field, cond);
+                                    result.put(term, ctv);
+                                }
+                            }
+                            return result;
+                        }
+                    });
+        }
+        catch (Exception ex) {
+            Logger.error("Can't generate conditional termVectors("
+                         +field+"|"+conditional+","+kind+")", ex);
+        }
+        return null;    
+    }
+    
+    public static TermVectors getConditionalTermVectors
         (final Class kind, final String field,
          final Map<String, String> conditionals) {
         if (conditionals == null || conditionals.isEmpty())
@@ -239,14 +273,13 @@ public class SearchFactory extends EntityFactory {
             final String key = SearchFactory.class.getName()
                 +"/termVectors/"+kind.getName()+"/"+field+"/"
                 +Util.sha1(params.toArray(new String[0]));
-            return IxCache.getOrElse
-                (key, new Callable<TextIndexer.TermVectors> () {
-                        public TextIndexer.TermVectors call ()
-                            throws Exception {
-                            return _indexer.getTermVectors
-                                (kind, field, conditionals);
-                        }
-                    });
+            return IxCache.getOrElse(key, new Callable<TermVectors> () {
+                    public TermVectors call ()
+                        throws Exception {
+                        return _indexer.getTermVectors
+                            (kind, field, conditionals);
+                    }
+                });
         }
         catch (Exception ex) {
             Logger.error("Can't generate termVectors for "+kind+"/"+field
@@ -257,31 +290,40 @@ public class SearchFactory extends EntityFactory {
 
     public static Result termVectors (Class kind, String field) {
         String[] facets = request().queryString().get("facet");
-        
+
         EntityMapper mapper = new EntityMapper ();
-        TextIndexer.TermVectors tv = null;
+        
+        Object result = null;
         if (facets != null && facets.length > 0) {
             Map<String, String> filters = new TreeMap<String, String>();
+            String conditional = null;
             for (String f : facets) {
                 // syntax of a facet: FIELD/VALUE
                 int pos = f.indexOf('/');
                 if (pos > 0) {
                     filters.put(f.substring(0, pos), f.substring(pos+1));
                 }
+                else {
+                    conditional = f;
+                }
             }
-            
-            if (!filters.isEmpty()) {
-                tv = getConditionalTermVectors (kind, field, filters);
+
+            if (conditional != null) {
+                result = getConditionalTermVectors
+                    (kind, field, conditional);
+            }
+            else if (!filters.isEmpty()) {
+                result = getConditionalTermVectors (kind, field, filters);
             }
             else {
-                tv = getTermVectors (kind, field);
+                result = getTermVectors (kind, field);
             }
         }
         else {
-            tv = getTermVectors (kind, field);
+            result = getTermVectors (kind, field);
         }
         
-        return tv != null ? ok (mapper.valueToTree(tv))
+        return result != null ? ok (mapper.valueToTree(result))
             : notFound ("Can't find termVectors for "+kind+"/"+field);
     }
     
