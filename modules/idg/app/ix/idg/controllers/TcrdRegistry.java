@@ -823,7 +823,9 @@ public class TcrdRegistry extends Controller implements Commons {
             Map<String, Keyword> sources = new HashMap<String, Keyword>();
             while (rset.next()) {
                 String qv = rset.getString("qual_value");
-                if ("Not detected".equalsIgnoreCase(qv))
+                String ev = rset.getString("evidence");
+                if ("Not detected".equalsIgnoreCase(qv)
+                    && !"CURATED".equalsIgnoreCase(ev))
                     continue;
 
                 Expression expr = new Expression();
@@ -833,7 +835,7 @@ public class TcrdRegistry extends Controller implements Commons {
                 expr.confidence = rset.getDouble("conf");
                 expr.qualValue = qv;
                 expr.numberValue = rset.getDouble("number_value");
-                expr.evidence = rset.getString("evidence");
+                expr.evidence = ev;
 
                 String sourceUrl = "";
                 Keyword tissue = null;

@@ -147,9 +147,9 @@
        <div class="panel panel-default">
           <div class="panel-heading">
             @if(href != null) {
-              <h3 class="panel-title"><a href="@href">@name <i class="fa fa-external-link"></i></a> (@props.length)</h3>
+              <h3 class="panel-title">@if(dir==0){<a href="@ix.idg.controllers.routes.IDGApp.targetdescriptor(name)"><i class="fa fa-bar-chart"></i></a>&nbsp;}<a href="@href">@name <i class="fa fa-external-link"></i></a> (@props.length)</h3>
             } else {
-              <h3 class="panel-title">@name (@props.length)</h3>
+              <h3 class="panel-title">@if(dir==0){<a href="@ix.idg.controllers.routes.IDGApp.targetdescriptor(name)"><i class="fa fa-bar-chart"></i></a>&nbsp;}@name (@props.length)</h3>
             }
           </div>
           <div class="panel-body">
@@ -571,7 +571,8 @@ This is TCRD target <a href='@ix.core.controllers.v1.routes.RouteFactory.get("ta
         </div>
 
         @property(PANTHER_PROTEIN_CLASS, null, -1)
-        @property(ChEMBL_PROTEIN_CLASS, null, -1)	
+        @property(ChEMBL_PROTEIN_CLASS, null, -1)
+        @property(GRANT_APPLICATION)
         @defining(target.getSynonyms(PDB_ID)) { pdbids =>
               @if(pdbids.size() > 0) {
                   <div class="panel panel-default" 
@@ -719,7 +720,7 @@ This is TCRD target <a href='@ix.core.controllers.v1.routes.RouteFactory.get("ta
               </div>
               <div class="panel panel-default">
                 <div class="panel-heading">
-                   <h3 class="panel-title">Compartment GO Terms (@terms.size)</h3>
+                   <h3 class="panel-title"><a href='@ix.idg.controllers.routes.IDGApp.targetdescriptor(COMPARTMENT_GOTERM)'><i class="fa fa-bar-chart"></i></a>&nbsp;Compartment GO Terms (@terms.size)</h3>
 		</div>
                 <div class="panel-body">
                   @for(t <- terms.subList(0, 15)) {
@@ -863,7 +864,8 @@ This is TCRD target <a href='@ix.core.controllers.v1.routes.RouteFactory.get("ta
         <div class="panel panel-default">
             <a name="diseases" tocname="Diseases"></a>
           <div class="panel-heading">
-            <h3 class="panel-title"><span data-toggle="tooltip"
+            <h3 class="panel-title"><a href="@ix.idg.controllers.routes.IDGApp.targetdescriptor(IDG_DISEASE)"><i class="fa fa-bar-chart"></i></a>&nbsp;
+	    	<span data-toggle="tooltip"
                         data-html="true"
                         title="<p align='left'>Disease-gene associations mined from Medline Franklid et al, Methods, 2015, 83-89</p>">Disease Relevance (@diseases.size())</h3>
           </div>

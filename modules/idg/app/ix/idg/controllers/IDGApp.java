@@ -690,6 +690,7 @@ public class IDGApp extends App implements Commons {
         MLP_ASSAY_TYPE,
         UNIPROT_KEYWORD,
         IDG_TOOLS,
+        GRANT_APPLICATION,
         GRANT_FUNDING_IC,
         GRANT_ACTIVITY,
         SOURCE  
