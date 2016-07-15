@@ -6,6 +6,7 @@
 @import ix.idg.controllers.TermVectorSummary
 @import ix.idg.controllers.TermVectorConditional
 @import ix.idg.controllers.IDGApp
+@import ix.idg.controllers.Commons._
 
 @(tvs: TermVectorSummary, ctv: TermVectorConditional)
 
@@ -15,7 +16,12 @@
 <div class="container-fluid">
   <div class="col-md-12">
     <div class="page-header">
-      <h1><a href='@ix.core.controllers.v1.routes.RouteFactory.termVectors("targets", tvs.field)'><i class="fa fa-code"></i></a> Summary of <em>@tvs.field</em></h1>
+      <h1><a href='@ix.core.controllers.v1.routes.RouteFactory.termVectors("targets", tvs.field)'><i class="fa fa-code"></i></a> Summary of <em>@tvs.field</em>
+       <div class="pull-right">
+           <a href="@ix.idg.controllers.routes.IDGApp.targets()"
+                    class="btn btn-default btn-lg">Close</a>
+       </div>
+      </h1>
     </div>
     <div class="row">
       <div class="col-md-6">
@@ -23,11 +29,11 @@
           <div class="panel-body">
             <table class="table table-striped">
               <tr>
-		<td>Unique values</td>
+		<td>Dimension</td>
 		<td>@tvs.termRank.length</td>
 	      </tr>
 	      <tr>
-		<td>Averge values per target</td>
+		<td>Averge terms per target</td>
 		  @if(tvs.avgTermsPerDoc != null) {
 		     <td>@{"%1$.3f".format(tvs.avgTermsPerDoc)}</td>
 		  } else {
@@ -35,7 +41,7 @@
 		  }
 	      </tr>
 	      <tr>
-		<td>Some popular values</td>
+		<td>Some popular terms</td>
 		<td>@for(i <- 0 until Math.min(tvs.termRank.length,5)) {
 	             <div>
 		       <a class="label label-primary loader" 
@@ -45,12 +51,12 @@
 		</td>
 	      </tr>
 	      <tr>
-		<td>Top targets with value counts</td>
+		<td>Top targets with term counts</td>
 		<td>@for(e <- tvs.targets.entrySet) {
 		       @defining(IDGApp.getGeneSymbol(e.getKey)){ gene =>
-		         <a class="label label-primary loader"
+		         <div><a class="label label-primary loader"
 			    title='@e.getKey.idgTDL: @e.getKey.name'
-			    href='@{ix.idg.controllers.routes.IDGApp.targets()+"/"+gene}'>@gene <span class="badge">@e.getValue</span></a>
+			    href='@{ix.idg.controllers.routes.IDGApp.targets()+"/"+gene}'>@gene <span class="badge">@e.getValue</span></a></div>
 		       }
 	            }
 		</td>
@@ -58,7 +64,7 @@
 	      <tr>
 		<td colspan="2">
 		  <div id="term-count-profile"
-		       style="width:100%;height:200px;">
+		       style="width:100%;height:205px;">
 		  </div>
 		</td>
 	      </tr>
@@ -112,7 +118,7 @@ $(document).ready(function () {
 	legend: { enabled: false},
 	series: [{
 	   data: [
-	     @for(i <- 0 until tvs.termCountProfile.length) {
+	     @for(i <- 0 until Math.min(2000,tvs.termCountProfile.length)) {
 	        [@i,@tvs.termCountProfile(i)],
 	     }
 	   ]
@@ -120,24 +126,29 @@ $(document).ready(function () {
     });
 
     $('#term-profile').highcharts({
-      colors: [
+       @if(ctv.condition.equals(IDG_DEVELOPMENT)) {
+       colors: [
     	'#f0ad4e', // Tbio
     	'#5bc0de', // Tchem
     	'#337ab7',
         '#d9534f' // Tdark		
        ],
+       }
        chart: {
           type: 'bar',
 	  zoomType: 'x'
        },
        title: {
-          text: 'Term distribution of <b>@tvs.field</b> per <b>@ctv.condition</b>'
+          text: 'Term distribution of <b>@tvs.field</b> per<br><b>@ctv.condition</b>'
        },
+       @if(ctv.terms.length > 2000) {
+         subtitle: {
+            text: '[Plot truncated due to large (@ctv.terms.length > 2000) number of terms.]' 
+         },
+       }
        xAxis: {
           categories: [
-	    @for(t <- ctv.terms) {
-	       '@t',
-	    }
+	    @for(i <- 0 until Math.min(2000, ctv.terms.length)){'@ctv.terms(i)',}
 	  ]
        },
        yAxis: {
@@ -148,23 +159,19 @@ $(document).ready(function () {
        legend: {
           reversed: true
        },
-       credits: {enabled: false},       
+       credits: {
+          //enabled: false
+	  href: 'https://pharos.nih.gov',
+	  text: 'Pharos (@ix.BuildInfo.COMMIT)',
+       },
        plotOptions: {
           series: {
 	     stacking: 'normal'
 	  }
        },
-       series: [
-          @for(i <- 0 until ctv.categories.length) {
-	     {name: '@ctv.categories(i)',
-	      data: [
-                 @for(j <- 0 until ctv.terms.length) {
-		    @ctv.count(j, i),
-		 }
-	      ]
-	     },
-	  }
-       ]
+       series: [ @for(i <- 0 until ctv.categories.length) {
+             {name: '@ctv.categories(i)', data: [ @for(j <- 0 until Math.min(2000,ctv.terms.length)) {@ctv.count(j, i),} ]},
+	  } ]
     });
 });
 </script>

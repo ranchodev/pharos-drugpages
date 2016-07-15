@@ -172,9 +172,9 @@
        <div class="panel panel-default">
           <div class="panel-heading">
             @if(href != null) {
-              <h3 class="panel-title"><a href="@href">@name <i class="fa fa-external-link"></i></a> (@props.length)</h3>
+              <h3 class="panel-title">@if(dir==0){<a href="@ix.idg.controllers.routes.IDGApp.targetdescriptor(name)"><i class="fa fa-bar-chart"></i></a>&nbsp;}<a href="@href">@name <i class="fa fa-external-link"></i></a> (@props.length)</h3>
             } else {
-              <h3 class="panel-title">@name (@props.length)</h3>
+              <h3 class="panel-title">@if(dir==0){<a href="@ix.idg.controllers.routes.IDGApp.targetdescriptor(name)"><i class="fa fa-bar-chart"></i></a>&nbsp;}@name (@props.length)</h3>
             }
           </div>
           <div class="panel-body">
@@ -400,7 +400,7 @@
               style="max-height: 300px; overflow-y: auto;">
            <a name="techdev" tocname="TechDev Info"></a>
            <div class="panel-heading">
-              <h3 class="panel-title">TechDev Info (@techdev.size)</h3>
+              <h3 class="panel-title"><a href='@ix.idg.controllers.routes.IDGApp.targetdescriptor(TECHDEV_PI)'><i class="fa fa-bar-chart"></i></a>&nbsp;TechDev Info (@techdev.size)</h3>
            </div>
            <div class="panel-body">
 	     <table class="table table-striped">
@@ -734,7 +734,7 @@ This is TCRD target <a href='@ix.core.controllers.v1.routes.RouteFactory.get("ta
 	   } else {
               <div class="panel panel-default">
                  <div class="panel-heading">
-	           <h3 class="panel-title">Compartment GO Term (@terms.size)</h3>
+	           <h3 class="panel-title"><a href='@ix.idg.controllers.routes.IDGApp.targetdescriptor(COMPARTMENT_GOTERM)'><i class="fa fa-bar-chart"></i></a>&nbsp;Compartment GO Term (@terms.size)</h3>
 		 </div>
                  <div class="panel-body">
 		     @for(t <- terms) {
@@ -929,25 +929,35 @@ This is TCRD target <a href='@ix.core.controllers.v1.routes.RouteFactory.get("ta
                  </div>
                <div class="col-md-8">
                    <ul class="nav nav-tabs">
-                       <li role="presentation" class="active"><a href="#gtex-tab" role="tab" aria-controls="gtex" data-toggle="tab">
+                       <li role="presentation" class="active">
+		       	   <a id="exprtab-@GTEx_TISSUE"
+			      href="#gtex-tab" role="tab" aria-controls="gtex"
+			      data-toggle="tab">
                            <span data-toggle="tooltip"
                            data-html="true"
                            title="<p align='left'>Tissue expression data from The Genotype-Tissue Expression (GTEx) project</p>">
                                GTEx</span></a></li>
                                
-                       <li role="presentation"><a href="#hpm-tab" role="tab" data-toggle="tab">
+                       <li role="presentation">
+		       	   <a id="exprtab-@HPM_TISSUE"
+			      href="#hpm-tab" role="tab" data-toggle="tab">
                            <span data-toggle="tooltip"
                            data-html="true"
                            title="<p align='left'>Tissue expression data from The Human Proteome Map (HPM)</p>">
                                HPM</span></a></li>
                                
-                       <li role="presentation"><a href="#hpa-tab" role="tab" data-toggle="tab">
+                       <li role="presentation">
+		       	   <a id="exprtab-@HPA_RNA_TISSUE"
+			      href="#hpa-tab" role="tab" data-toggle="tab">
                            <span data-toggle="tooltip"
                            data-html="true"
                            title="<p align='left'>Tissue expression data from The Human Protein Atlas</p>">
                                HPA</span></a></li>
                                
-                       <li role="presentation"><a href="#idg-tab" role="tab" aria-controls="idg" data-toggle="tab">
+                       <li role="presentation">
+		       	   <a id="exprtab-@IDG_TISSUE"
+			      href="#idg-tab" role="tab" aria-controls="idg"
+			      data-toggle="tab">
                            <span data-toggle="tooltip"
                            data-html="true"
                            title="<p align='left'>Consolidated tissue expression (combining GTEx, HPM and HPA)</p>">
@@ -955,24 +965,35 @@ This is TCRD target <a href='@ix.core.controllers.v1.routes.RouteFactory.get("ta
 
                        </li>
 
-<li role="presentation"><a href="#uniprot-tab" aria-controls="uniprot" data-toggle="tab">
+		       <li role="presentation">
+		           <a id="exprtab-@UNIPROT_TISSUE"
+			      href="#uniprot-tab" aria-controls="uniprot"
+			      data-toggle="tab">
                            <span data-toggle="tooltip"
                            data-html="true"
                            title="<p align='left'>UniProt tissue expression data</p>">
                                UniProt
                            </span></a></li>
-                       <li role="presentation"><a href="#jensen-kb-tab" aria-controls="jensen-kb" data-toggle="tab">
+                       <li role="presentation">
+		           <a id="exprtab-@JENSEN_KB_TISSUE"
+		       	      href="#jensen-kb-tab" aria-controls="jensen-kb"
+			      data-toggle="tab">
                            <span data-toggle="tooltip"
                            data-html="true"
                            title="<p align='left'>Tissue expression data from the Jensen Lab UniProtKB</p>">
                                Jensen-KB
                            </span></a></li>
-                       <li role="presentation"><a href="#jensen-tm-tab" aria-controls="jensen-tm" data-toggle="tab">
+                       <li role="presentation">
+		           <a id="exprtab-@JENSEN_TM_TISSUE"
+			      href="#jensen-tm-tab" aria-controls="jensen-tm"
+			      data-toggle="tab">
                            <span data-toggle="tooltip"
                            data-html="true"
                            title="<p align='left'>Text mined tissue expression data from the Jensen Lab</p>">
                                Jensen-TM
-                           </span></a></li>                        
+                           </span></a></li>
+			   <li class="pull-right">
+			      <a id="tissue-descriptor" href="@ix.idg.controllers.routes.IDGApp.targetdescriptor(GTEx_TISSUE)"><i class="fa fa-bar-chart"></i></a></li>
                    </ul>
                    <div class="tab-content">
                        <div role="tabpanel" class="tab-pane active" id="gtex-tab">
@@ -1488,6 +1509,15 @@ $(document).ready(function () {
         ]);
     }
 
+    $("a[id|='exprtab']").click(function () {
+       var p = $(this).attr("id").indexOf('-');
+       if (p > 0) {
+          var tissue = $(this).attr("id").substring(p+1);
+          $('#tissue-descriptor').attr("href", '@ix.idg.controllers.routes.IDGApp.targetdescriptor("")'+tissue);
+          console.log('tissue \''+tissue+'\'');
+       }
+    });
+    
     /* Cart related methods and vars */
     $.ajax({
         url:'@ix.idg.controllers.routes.DossierApp.count',
@@ -1497,18 +1527,18 @@ $(document).ready(function () {
         }
     });
 
-var folderNames = ['Default'];
+    var folderNames = ['Default'];
     @for(f <- ix.idg.controllers.DossierApp.getFolderNames()) {
         @if(!f.equals("")) {
             folderNames.push ( ' @f ');
         }
     }
 
-$("#sc-empty").click(function (e) {
-    $.get('@ix.idg.controllers.routes.DossierApp.emptyCart', function (d) {
-    $("#sc-count" ).html('');
-  });
-});
+    $("#sc-empty").click(function (e) {
+       $.get('@ix.idg.controllers.routes.DossierApp.emptyCart', function (d) {
+            $("#sc-count" ).html('');
+       });
+    });
 
     $("#folder-combobox").typeahead(
         {hint:true,minLength:1,highlight:true },
