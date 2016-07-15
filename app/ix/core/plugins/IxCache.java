@@ -1,8 +1,13 @@
 package ix.core.plugins;
 
 import java.io.*;
+import java.nio.*;
+import java.nio.file.*;
+import java.nio.channels.FileChannel;
 import java.util.*;
 import java.util.concurrent.*;
+import java.security.MessageDigest;
+import java.security.DigestOutputStream;
 
 import play.Logger;
 import play.Plugin;
@@ -33,23 +38,46 @@ import ix.utils.Util;
 
 public class IxCache extends Plugin
     implements CacheWriter, CacheEntryFactory {
-    
+
     public static final String CACHE_NAME = "IxCache";
     
     static final int MAX_ELEMENTS = 10000;
     static final int TIME_TO_LIVE = 60*60; // 1hr
     static final int TIME_TO_IDLE = 60*60; // 1hr
-
+    
+    public static final String CACHE_MAX_OBJECT_SIZE =
+        "ix.cache.maxCacheObjectSize";
     public static final String CACHE_MAX_ELEMENTS = "ix.cache.maxElements";
     public static final String CACHE_TIME_TO_LIVE = "ix.cache.timeToLive";
     public static final String CACHE_TIME_TO_IDLE = "ix.cache.timeToIdle";
 
+
     private final Application app;
     private Ehcache cache;
     private IxContext ctx;
+    
+    private File payload; // payload for cache that's too big (>5MB)
+    private long maxCacheObjectSize;
     protected Database db;
 
     static private IxCache _instance;
+
+    // a simple wrapper to store the file pointer to where the actual payload
+    // resides
+    static class CacheFilePointer implements Serializable {
+        public final File file;
+        CacheFilePointer (File file) {
+            this.file = file;
+        }
+
+        public Object deserialize () throws Exception {
+            ObjectInputStream ois = new ObjectInputStream
+                (Files.newInputStream(file.toPath(), StandardOpenOption.READ));
+            Object obj = ois.readObject();
+            ois.close();
+            return obj;
+        }
+    }
     
     public IxCache (Application app) {
         this.app = app;
@@ -82,6 +110,9 @@ public class IxCache extends Plugin
                 });
         */
         cache.registerCacheWriter(this);
+
+        maxCacheObjectSize = app.configuration()
+            .getLong(CACHE_MAX_OBJECT_SIZE, 1024*1024*5l);
         
         //CacheManager.getInstance().addCache(cache);     
         cache.setSampledStatisticsEnabled(true);
@@ -266,11 +297,7 @@ public class IxCache extends Plugin
             DatabaseEntry data = new DatabaseEntry ();
             OperationStatus status = db.get(null, dkey, data, null);
             if (status == OperationStatus.SUCCESS) {
-                ObjectInputStream ois = new ObjectInputStream
-                    (new ByteArrayInputStream
-                     (data.getData(), data.getOffset(), data.getSize()));
-                elm = new Element (key, ois.readObject());
-                ois.close();
+                elm = new Element (key, deserialize (data));
             }
             else if (status == OperationStatus.NOTFOUND) {
                 // 
@@ -290,6 +317,64 @@ public class IxCache extends Plugin
         }
         return elm;
     }
+
+    protected byte[] serialize (Object obj) throws IOException {
+        return serialize (null, null, obj);
+    }
+    
+    protected byte[] serialize (String prefix, String suffix, Object obj)
+        throws IOException {
+        Path path = Files.createTempFile(payload.toPath(), prefix, suffix);
+        File file = path.toFile();
+        byte[] ret = null;      
+        try {
+            MessageDigest md = MessageDigest.getInstance("sha1");
+            ObjectOutputStream oos = new ObjectOutputStream
+                (new DigestOutputStream (new FileOutputStream (file), md));
+            oos.writeObject(obj);
+            oos.close();
+
+            if (file.length() > maxCacheObjectSize) {
+                // rename this file to something permanent
+                File sha1 = new File (payload, Util.toHex(md.digest()));
+                if (file.renameTo(sha1)) {
+                    file = sha1;
+                }
+                else {
+                    Logger.warn("Can't rename file "+file+" to "+sha1);
+                }
+                
+                ByteArrayOutputStream bytes = new ByteArrayOutputStream ();
+                oos = new ObjectOutputStream (bytes);
+                oos.writeObject(new CacheFilePointer (file));
+                oos.close();
+                ret = bytes.toByteArray();
+            }
+            else {
+                ret = Files.readAllBytes(path);
+                Files.delete(path);
+            }
+        }
+        catch (Exception ex) {
+            Logger.error("Can't serialize object "+obj, ex);
+        }
+        return ret;
+    }
+
+    protected Object deserialize (DatabaseEntry e) throws Exception {
+        return deserialize (e.getData(), e.getOffset(), e.getSize());
+    }
+    
+    protected Object deserialize (byte[] data, int offset, int size)
+        throws Exception {
+        ObjectInputStream ois = new ObjectInputStream
+            (new ByteArrayInputStream(data, offset, size));
+        Object obj = ois.readObject();
+        if (obj instanceof CacheFilePointer) {
+            obj = ((CacheFilePointer)obj).deserialize();
+        }
+        return obj;
+    }
     
     /**
      * CacheWriter interface
@@ -297,6 +382,9 @@ public class IxCache extends Plugin
     @Override
     public void init () {
         try {
+            payload = new File (ctx.cache(), "payload");
+            payload.mkdirs();
+
             File dir = new File (ctx.cache(), "ix");
             dir.mkdirs();
             EnvironmentConfig envconf = new EnvironmentConfig ();
@@ -351,7 +439,7 @@ public class IxCache extends Plugin
             try {
                 DatabaseEntry dkey = getKeyEntry (key);
                 DatabaseEntry data = new DatabaseEntry
-                    (Util.serialize(elm.getObjectValue()));
+                    (serialize (elm.getObjectValue()));
                 OperationStatus status = db.put(null, dkey, data);
                 if (status != OperationStatus.SUCCESS)
                     Logger.warn

@@ -395,13 +395,23 @@ $(document).ready(function () {
       console.log('loadmodal is shown...');
    });
 
-    $('#modal-kinome').on('shown.bs.modal', function (e) {
+   $('#modal-kinome').on('shown.bs.modal', function (e) {
         console.log('kinome tree modal shown...');
         new Kinome('kinome-canvas',
             '@routes.Assets.at("images/kinome400.png")',
         '@HtmlFormat.raw(ix.idg.controllers.routes.IDGApp.getKinases(null)+App.queryString("q", "facet"))'
         );
-    });
+   });
+
+   $("h3[id|='facetheader']").html(function (index, html) {
+       var p = $(this).attr("id").indexOf('-');
+       if (p > 0) {
+          var facet = $(this).attr("id").substring(p+1);
+	  html = '<a href="@ix.idg.controllers.routes.IDGApp.targetdescriptor("")'+facet+'"><i class="fa fa-bar-chart"></i></a>&nbsp;'+html;
+	  console.log('facet header => '+html);
+       }
+       return html;
+   });
 
    $('#hgramModal').on('shown.bs.modal', function (e) {
       console.log('hgram modal is shown...');
