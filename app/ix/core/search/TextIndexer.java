@@ -43,10 +43,7 @@ import play.db.ebean.Model;
 
 import javax.persistence.Entity;
 import javax.persistence.Id;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
-import java.io.IOException;
+import java.io.*;
 import java.lang.reflect.Array;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
@@ -378,9 +375,9 @@ public class TextIndexer {
         final long timestamp = System.currentTimeMillis();
         AtomicLong stop = new AtomicLong ();
 
-        final transient ReentrantLock lock = new ReentrantLock ();
-        final transient Condition finished = lock.newCondition();
-        final transient Set<String> keys = new HashSet<String>();
+        transient ReentrantLock lock = new ReentrantLock ();
+        transient Condition finished = lock.newCondition();
+        transient Set<String> keys = new HashSet<String>();
 
         SearchResult () {}
         SearchResult (SearchOptions options, String query) {
@@ -423,7 +420,13 @@ public class TextIndexer {
         }
         
         public List getMatches () {
-            return new ArrayList (matches);
+            lock.lock();
+            try {
+                return new ArrayList (matches);
+            }
+            finally {
+                lock.unlock();
+            }
         }
         public List getMatchesAndWaitIfNotFinished () {
             lock.lock();
@@ -459,7 +462,13 @@ public class TextIndexer {
         }
 
         protected void add (Object obj) {
-            matches.add(obj);
+            lock.lock();
+            try {
+                matches.add(obj);
+            }
+            finally {
+                lock.unlock();
+            }
         }
         
         protected void done () {
@@ -474,6 +483,37 @@ public class TextIndexer {
             finally {
                 lock.unlock();
             }
+        }
+
+        private void writeObject(java.io.ObjectOutputStream out)
+            throws IOException {
+            lock.lock();
+            try {
+                out.defaultWriteObject();
+            }
+            finally {
+                lock.unlock();
+            }
+        }
+        
+        private void readObject(java.io.ObjectInputStream in)
+            throws IOException, ClassNotFoundException {
+            if (lock == null) {
+                lock = new ReentrantLock ();
+                finished = lock.newCondition();
+                keys = new HashSet<String>();
+            }
+            
+            lock.lock();
+            try {
+                in.defaultReadObject();
+            }
+            finally {
+                lock.unlock();
+            }
+        }
+        
+        private void readObjectNoData() throws ObjectStreamException {
         }
     }
 

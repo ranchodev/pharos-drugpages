@@ -38,7 +38,6 @@ import ix.utils.Util;
 
 public class IxCache extends Plugin
     implements CacheWriter, CacheEntryFactory {
-
     public static final String CACHE_NAME = "IxCache";
     
     static final int MAX_ELEMENTS = 10000;
@@ -51,7 +50,7 @@ public class IxCache extends Plugin
     public static final String CACHE_TIME_TO_LIVE = "ix.cache.timeToLive";
     public static final String CACHE_TIME_TO_IDLE = "ix.cache.timeToIdle";
 
-
+    private ExecutorService persistencePool;
     private final Application app;
     private Ehcache cache;
     private IxContext ctx;
@@ -59,6 +58,7 @@ public class IxCache extends Plugin
     private File payload; // payload for cache that's too big (>5MB)
     private long maxCacheObjectSize;
     protected Database db;
+    private MessageDigest md;
 
     static private IxCache _instance;
 
@@ -76,6 +76,78 @@ public class IxCache extends Plugin
             Object obj = ois.readObject();
             ois.close();
             return obj;
+        }
+    }
+
+    class SerializePayload {
+        final Object value;
+        final Serializable key;
+        
+        SerializePayload () {
+            key = null;
+            value = null;
+        }
+        SerializePayload (Element elm) {
+            this.key = elm.getKey();
+            this.value = elm.getObjectValue();
+        }
+
+        public void persists () throws Exception {
+            int tries = 0;
+            byte[] buf = null;
+            
+            //Logger.debug(Thread.currentThread().getName()+" >>> caching key: '"+key+"'");
+            do {
+                buf = serialize (value);
+                if (buf != null) {
+                    DatabaseEntry data = new DatabaseEntry (buf);
+                    DatabaseEntry dkey = getKeyEntry (key);
+                    OperationStatus status = db.put(null, dkey, data);
+                    if (status != OperationStatus.SUCCESS)
+                        Logger.warn
+                            ("** PUT for key "+key+" returns status "+status);
+                }
+                else {
+                    // this is just a bad way but is needed because there
+                    // isn't a good way for us to know when an entity bean
+                    // is done with lazy loading..
+                    Thread.sleep(100);
+                }
+                ++tries;
+            }
+            while (buf == null && tries < 5);
+            
+            if (buf == null) {
+                Logger.error("Serialization of "
+                             +value+" failed after "+tries+" attempts!");
+            }
+        }
+    }
+
+    final SerializePayload POISON_PAYLOAD = new SerializePayload ();
+
+    private final BlockingQueue<SerializePayload> queue =
+        new LinkedBlockingQueue<SerializePayload> ();
+    class PersistenceQueue implements Runnable {
+        public void run () {
+            String name = Thread.currentThread().getName();
+            try {
+                for (SerializePayload p;
+                     (p = queue.take()) != POISON_PAYLOAD;) {
+                    try {
+                        p.persists();
+                    }
+                    catch (Exception ex) {
+                        Logger.error
+                            (name+": can't persist cache payload: "
+                             +p.value, ex);
+                    }
+                }
+                Logger.debug(name+": complete...shutting down");
+            }
+            catch (Exception ex) {
+                Logger.error(name+": shutting down ", ex);
+            }
         }
     }
     
@@ -111,8 +183,19 @@ public class IxCache extends Plugin
         */
         cache.registerCacheWriter(this);
 
+        try {
+            md = MessageDigest.getInstance("sha1");
+        }
+        catch (Exception ex) {
+            Logger.error
+                ("Can't initialize plugin "+getClass().getName()+"!", ex);
+        }
+        
         maxCacheObjectSize = app.configuration()
             .getLong(CACHE_MAX_OBJECT_SIZE, 1024*1024*5l);
+
+        ExecutorService es = Executors.newSingleThreadExecutor();
+        es.submit(new PersistenceQueue ());
         
         //CacheManager.getInstance().addCache(cache);     
         cache.setSampledStatisticsEnabled(true);
@@ -123,6 +206,7 @@ public class IxCache extends Plugin
     public void onStop () {
         Logger.info("Stopping plugin "+getClass().getName());   
         try {
+            queue.put(POISON_PAYLOAD);
             cache.dispose();
             CacheManager.getInstance().removeCache(cache.getName());
         }
@@ -278,8 +362,8 @@ public class IxCache extends Plugin
         return _instance.cache.isKeyInCache(key);
     }
 
-    static DatabaseEntry getKeyEntry (Object value) {
-        return new DatabaseEntry (value.toString().getBytes());
+    DatabaseEntry getKeyEntry (Object value) throws Exception {
+        return new DatabaseEntry (value.toString().getBytes("utf-8"));
     }
     
     /**
@@ -290,19 +374,23 @@ public class IxCache extends Plugin
             throw new IllegalArgumentException
                 ("Cache key "+key+" is not serliazable!");
         }
-
+        
         Element elm = null;
         DatabaseEntry dkey = getKeyEntry (key); 
         try {
             DatabaseEntry data = new DatabaseEntry ();
             OperationStatus status = db.get(null, dkey, data, null);
-            if (status == OperationStatus.SUCCESS) {
+            switch (status) {
+            case SUCCESS: 
                 elm = new Element (key, deserialize (data));
-            }
-            else if (status == OperationStatus.NOTFOUND) {
-                // 
-            }
-            else {
+                //cache.put(elm);
+                break;
+                
+            case NOTFOUND: 
+                //Logger.warn("Can't find cache entry: '"+key+"'");
+                break;
+                
+            default:
                 Logger.warn("Unknown status for key "+key+": "+status);
             }
         }
@@ -326,9 +414,10 @@ public class IxCache extends Plugin
         throws IOException {
         Path path = Files.createTempFile(payload.toPath(), prefix, suffix);
         File file = path.toFile();
+        
         byte[] ret = null;      
         try {
-            MessageDigest md = MessageDigest.getInstance("sha1");
+            md.reset();
             ObjectOutputStream oos = new ObjectOutputStream
                 (new DigestOutputStream (new FileOutputStream (file), md));
             oos.writeObject(obj);
@@ -349,14 +438,21 @@ public class IxCache extends Plugin
                 oos.writeObject(new CacheFilePointer (file));
                 oos.close();
                 ret = bytes.toByteArray();
+                file = null;
             }
             else {
                 ret = Files.readAllBytes(path);
-                Files.delete(path);
             }
+        }
+        catch (ConcurrentModificationException ex) {
+            // bean is still lazy loading.. ignore for now
         }
         catch (Exception ex) {
             Logger.error("Can't serialize object "+obj, ex);
+        }
+        finally {
+            if (file != null)
+                file.delete();
         }
         return ret;
     }
@@ -393,6 +489,8 @@ public class IxCache extends Plugin
             DatabaseConfig dbconf = new DatabaseConfig ();
             dbconf.setAllowCreate(true);
             db = env.openDatabase(null, CACHE_NAME, dbconf);
+            Logger.debug("## persistence cache "+dir
+                         +" contains "+db.count()+" entries!");
         }
         catch (Exception ex) {
             Logger.error("Can't initialize lucene for "+ctx.cache(), ex);
@@ -406,9 +504,10 @@ public class IxCache extends Plugin
                 Logger.debug("#### closing cache writer "+cache.getName()
                              +"; "+db.count()+" entries #####");
                 db.close();
+                db.getEnvironment().close();
             }
             catch (Exception ex) {
-                Logger.error("Can't close lucene index!", ex);
+                Logger.error("Can't close cache database!", ex);
             }
         }
     }
@@ -435,18 +534,11 @@ public class IxCache extends Plugin
     public void write (Element elm) {
         Serializable key = elm.getKey();
         if (key != null) {
-            //Logger.debug("Persisting cache key="+key+" value="+elm.getObjectValue());
             try {
-                DatabaseEntry dkey = getKeyEntry (key);
-                DatabaseEntry data = new DatabaseEntry
-                    (serialize (elm.getObjectValue()));
-                OperationStatus status = db.put(null, dkey, data);
-                if (status != OperationStatus.SUCCESS)
-                    Logger.warn
-                        ("** PUT for key "+key+" returns status "+status);
+                queue.put(new SerializePayload (elm));
             }
             catch (Exception ex) {
-                Logger.error("Can't write cache element: key="
+                Logger.error("Can't queue cache element: key="
                              +key+" value="+elm.getObjectValue(), ex);
             }
         }

@@ -8,6 +8,7 @@ import java.util.regex.Pattern;
 import java.util.regex.Matcher;
 import java.util.concurrent.Callable;
 import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.concurrent.locks.*;
 
 import controllers.AssetsBuilder;
 import play.Play;
@@ -988,7 +989,8 @@ public class App extends Authentication {
     }
 
     public static Result render (final String value, final int size) {
-        String key = Util.sha1(value)+"::"+size;
+        String key = App.class.getName()+"/render/"
+            +Util.sha1(value)+"/"+size;
         try {
             response().setContentType("image/svg+xml");
             return getOrElse (0l, key, new Callable<Result>() {
@@ -1040,11 +1042,28 @@ public class App extends Authentication {
         }
     }
 
-     public static byte[] render (Molecule mol, String format, int size, int[] amap) throws Exception{
-        return render(mol,format,size,amap,null);
-         }
+     public static byte[] render (Molecule mol, String format,
+                                  int size, int[] amap) throws Exception {
+         return render(mol,format,size,amap,null);
+     }
 
-     public static byte[] render (Molecule mol, String format, int size, int[] amap, Map newDisplay)
+     public static byte[] render (final Molecule mol, final String format,
+                                  final int size, final int[] amap,
+                                  final Map newDisplay)
+        throws Exception {
+         final String key = App.class.getName()+"/render/"
+             +Util.sha1(mol.toFormat("mrv"))+"/"+format+"/"+size
+             +Arrays.hashCode(amap)+"/"
+             +(newDisplay!=null?newDisplay.hashCode():0);
+         return getOrElse (key, new Callable<byte[]> () {
+                 public byte[] call () throws Exception {
+                     return _render (mol, format, size, amap, newDisplay);
+                 }
+             });
+     }
+    
+     public static byte[] _render (Molecule mol, String format, int size,
+                                   int[] amap, Map newDisplay)
         throws Exception {
         Chemical chem = new Jchemical (mol);
         DisplayParams dp = DisplayParams.DEFAULT();
@@ -1098,11 +1117,12 @@ public class App extends Authentication {
         return bos.toByteArray();
     }
     
-    public static byte[] render (Structure struc, String format, int size, int[] amap)
+    public static byte[] render (Structure struc,
+                                 String format, int size, int[] amap)
         throws Exception {
         Map newDisplay = new HashMap();
-        if(struc.stereoChemistry == struc.stereoChemistry.RACEMIC){
-                newDisplay.put(DisplayParams.PROP_KEY_DRAW_STEREO_LABELS_AS_RELATIVE, true);
+        if(struc.stereoChemistry == struc.stereoChemistry.RACEMIC) {
+            newDisplay.put(DisplayParams.PROP_KEY_DRAW_STEREO_LABELS_AS_RELATIVE, true);
         }
         MolHandler mh = new MolHandler
             (struc.molfile != null ? struc.molfile : struc.smiles);
@@ -1111,29 +1131,29 @@ public class App extends Authentication {
             mol.clean(2, null);
         }
         if(struc.opticalActivity!= struc.opticalActivity.UNSPECIFIED && struc.opticalActivity!=null){
-                if(struc.definedStereo>0){
-                        if(struc.opticalActivity==struc.opticalActivity.PLUS_MINUS){
-                                if(struc.stereoChemistry==struc.stereoChemistry.EPIMERIC||struc.stereoChemistry==struc.stereoChemistry.RACEMIC||struc.stereoChemistry==struc.stereoChemistry.MIXED){
-                                        mol.setProperty("BOTTOM_TEXT","relative stereochemistry");
-                                }
-                        }
+            if(struc.definedStereo>0){
+                if(struc.opticalActivity==struc.opticalActivity.PLUS_MINUS){
+                    if(struc.stereoChemistry==struc.stereoChemistry.EPIMERIC||struc.stereoChemistry==struc.stereoChemistry.RACEMIC||struc.stereoChemistry==struc.stereoChemistry.MIXED){
+                        mol.setProperty("BOTTOM_TEXT","relative stereochemistry");
+                    }
                 }
-                if(struc.opticalActivity==struc.opticalActivity.PLUS){
-                        mol.setProperty("BOTTOM_TEXT","optical activity: (+)");
-                        if(struc.stereoChemistry == struc.stereoChemistry.UNKNOWN){
-                        newDisplay.put(DisplayParams.PROP_KEY_DRAW_STEREO_LABELS_AS_STARRED, true);
+            }
+            if(struc.opticalActivity==struc.opticalActivity.PLUS){
+                mol.setProperty("BOTTOM_TEXT","optical activity: (+)");
+                if(struc.stereoChemistry == struc.stereoChemistry.UNKNOWN){
+                    newDisplay.put(DisplayParams.PROP_KEY_DRAW_STEREO_LABELS_AS_STARRED, true);
                 }
-                }else if(struc.opticalActivity==struc.opticalActivity.MINUS){
-                        mol.setProperty("BOTTOM_TEXT","optical activity: (-)");
-                        if(struc.stereoChemistry == struc.stereoChemistry.UNKNOWN){
-                        newDisplay.put(DisplayParams.PROP_KEY_DRAW_STEREO_LABELS_AS_STARRED, true);
+            }else if(struc.opticalActivity==struc.opticalActivity.MINUS){
+                mol.setProperty("BOTTOM_TEXT","optical activity: (-)");
+                if(struc.stereoChemistry == struc.stereoChemistry.UNKNOWN){
+                    newDisplay.put(DisplayParams.PROP_KEY_DRAW_STEREO_LABELS_AS_STARRED, true);
                 }
-                }               
+            }               
         }
 
         if(size>250){
-                        if(struc.stereoChemistry != struc.stereoChemistry.ACHIRAL)
-                                newDisplay.put(DisplayParams.PROP_KEY_DRAW_STEREO_LABELS, true);
+            if(struc.stereoChemistry != struc.stereoChemistry.ACHIRAL)
+                newDisplay.put(DisplayParams.PROP_KEY_DRAW_STEREO_LABELS, true);
         }
         if(newDisplay.size()==0)newDisplay=null;
         return render (mol, format, size, amap,newDisplay);
@@ -1173,8 +1193,9 @@ public class App extends Authentication {
         final int[] amap = stringToIntArray(atomMap);
         if (format.equals("svg") || format.equals("png")) {
             final String key =
-                Structure.class.getName()+"/"+size+"/"+id+"."+format
-                + ":" + atomMap;
+                App.class.getName()+"/"+Structure.class.getName()+"/"
+                +id+"/"+size+"/"+id+"."+format
+                +(atomMap != null ? ":" + atomMap:"");
             String mime = format.equals("svg") ? "image/svg+xml" : "image/png";
             try {
                 Result result = getOrElse (key, new Callable<Result> () {
@@ -1315,7 +1336,9 @@ public class App extends Authentication {
         List results = new CopyOnWriteArrayList ();
         String id = randvar (10);
         Integer total;
+
         transient Set<String> keys = new HashSet<String>();
+        transient ReentrantLock lock = new ReentrantLock ();
 
         SearchResultContext () {
         }
@@ -1367,7 +1390,43 @@ public class App extends Authentication {
         
         @com.fasterxml.jackson.annotation.JsonIgnore
         public List getResults () { return results; }
-        protected void add (Object obj) { results.add(obj); }
+        protected void add (Object obj) {
+            lock.lock();
+            try {
+                results.add(obj);
+            }
+            finally {
+                lock.unlock();
+            }
+        }
+
+        private void writeObject(java.io.ObjectOutputStream out)
+            throws IOException {
+            lock.lock();
+            try {
+                out.defaultWriteObject();
+            }
+            finally {
+                lock.unlock();
+            }
+        }
+        
+        private void readObject(java.io.ObjectInputStream in)
+            throws IOException, ClassNotFoundException {
+            if (lock == null)
+                lock = new ReentrantLock ();
+            
+            lock.lock();
+            try {
+                in.defaultReadObject();
+            }
+            finally {
+                lock.unlock();
+            }
+        }
+        
+        private void readObjectNoData() throws ObjectStreamException {
+        }
     }
     
     static class SearchResultHandler extends UntypedActor {

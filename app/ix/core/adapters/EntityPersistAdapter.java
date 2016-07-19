@@ -11,6 +11,7 @@ import java.util.ArrayList;
 
 import java.lang.reflect.*;
 import com.avaje.ebean.event.*;
+import com.avaje.ebean.bean.*;
 
 import javax.persistence.Entity;
 import javax.persistence.Id;
@@ -268,6 +269,7 @@ public class EntityPersistAdapter extends BeanPersistAdapter {
         }
     }
 
+
     @Override
     public void postLoad (Object bean, Set<String> includedProperties) {
         String name = bean.getClass().getName();
@@ -283,5 +285,23 @@ public class EntityPersistAdapter extends BeanPersistAdapter {
                 }
             }
         }
+
+        /*
+        Class cls = bean.getClass();    
+        try {
+            
+            Method m =cls.getMethod("_ebean_intercept", (Class[])null);
+            EntityBeanIntercept intercept =
+                (EntityBeanIntercept)m.invoke(bean, null);
+            intercept.addPropertyChangeListener(listener);
+            Set<String> props = intercept.getLoadedProps();
+            if (props != null) {
+                Logger.debug("Entity "+bean+" loaded props="+props);
+            }
+        }
+        catch (Exception ex) {
+            ex.printStackTrace();
+        }
+        */
     }
 }

@@ -7,6 +7,8 @@ import ix.core.models.XRef;
 import ix.idg.models.Expression;
 import ix.idg.models.Target;
 import ix.ncats.controllers.App;
+import ix.core.plugins.IxCache;
+
 import org.w3c.dom.*;
 import play.Play;
 import play.Logger;
@@ -344,7 +346,7 @@ public class ExpressionApp extends App {
             return _badRequest("Must specify a target accession");
         final String key = "expression/homunculus/" + acc + "/" + source;
         response().setContentType("image/svg+xml");
-        return getOrElse(key, new Callable<Result>() {
+        return IxCache.getOrElse(key, new Callable<Result>() {
             public Result call() throws Exception {
                 String xml = getHomunculusXml (acc, source);
                 if (xml == null)
