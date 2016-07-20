@@ -30,7 +30,7 @@ function wordcloud (id, width, height, url, data) {
             .data(words)
             .enter()
             .append("svg:a").attr("xlink:href", function(d){
-                return url+(url.indexOf('?') > 0 ? '&' : '?')+'q='+d.text;
+                return url+(url.indexOf('?') > 0 ? '&' : '?')+'q="'+d.text+'"';
             })
             .append("text")
             .style("font-size", function(d) { return d.size + "px"; })

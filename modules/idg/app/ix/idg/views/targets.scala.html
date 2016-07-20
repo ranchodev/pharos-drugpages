@@ -38,7 +38,7 @@ facets: Array[FacetDecorator], targets: List[Target], ctx: String )
          @if(aln != null) {
          <tr class="default">
 	    <td colspan="10">
-	      <pre class="pre-scrollable" style="max-width:600px;overflow-x:auto;">@{"identity = %.3f".format(aln.alignments(0).iden)}
+	      <pre class="pre-scrollable" style="max-width:600px;overflow-x:auto;">@{"identity = %.3f".format(aln.alignments(0).iden)} @{"score = %d".format(aln.alignments(0).score)}
 @aln.alignments(0).alignment
 </pre>
 	    </td>

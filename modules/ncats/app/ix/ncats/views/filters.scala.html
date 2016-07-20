@@ -23,7 +23,7 @@
       @** move all selected filters upfront **@
       @for(i <- 0 until f.size()) {
         @if(App.hasFacet(f.facet,i)) {
-	<tr>
+	<tr @colorbar(f.percent(i))>
 	  @defining(App.sha1(f.facet,i)) { id =>
 	     <td>
 	       <input type="checkbox" checked="true"
@@ -40,9 +40,9 @@
 	     </script>
           }
 	 @if(f.raw) {
-            <td>@HtmlFormat.raw(f.label(i))</td>
+            <td style="width:100%;">@HtmlFormat.raw(f.label(i))</td>
          } else {
-            <td class = "text-capitalize">@f.label(i)</td>
+            <td style="width:100%;"class = "text-capitalize">@f.label(i)</td>
          }
 	 <td>
            @if(f.raw) {
@@ -56,7 +56,7 @@
       }
       @for(i <- 0 until Math.min(f.max, f.size())) {
         @if(!App.hasFacet(f.facet,i)) {
-	<tr>
+	<tr @colorbar(f.percent(i))>
 	  @defining(App.sha1(f.facet,i)) { id =>
 	     <td>
 	       <input type="checkbox" onclick="filterToggle(this)" 
@@ -72,9 +72,9 @@
 	     </script>
           }
           @if(f.raw) {
-            <td>@HtmlFormat.raw(f.label(i))</td>
+            <td style="width:100%;">@HtmlFormat.raw(f.label(i))</td>
           } else {
-            <td class = "text-capitalize">@f.label(i)</td>
+            <td style="width:100%;" class="text-capitalize">@f.label(i)</td>
           }
 	 <td>
            @if(f.raw) {

@@ -200,6 +200,14 @@ public class App extends Authentication {
             }
             return count.toString();
         }
+        public Integer percent (int i) {
+            Integer total = this.total[i];
+            if (total != null) {
+                double p = (double)facet.getCount(i)/total;
+                return (int)(100*p+0.5);
+            }
+            return null;
+        }
     }
     /**
      * This returns links to up to 10 pages of interest.
@@ -821,6 +829,7 @@ public class App extends Authentication {
                 result = getOrElse
                     (sha1, new Callable<SearchResult>() {
                             public SearchResult call () throws Exception {
+                                Logger.debug("### cache missed: "+sha1);
                                 SearchResult result = SearchFactory.search
                                 (kind, hasFacets ? null : q,
                                  total, 0, FACET_DIM, query);
@@ -867,8 +876,8 @@ public class App extends Authentication {
         if (key.length() > 10) {
             key = key.substring(0, 10);
         }
-        IxCache.set(key, result); // create alias       
-        result.setKey(key);
+        result.setKey(key);     
+        IxCache.set(key, result); // create alias 
         return result;
     }
 
@@ -1344,8 +1353,8 @@ public class App extends Authentication {
         }
 
         SearchResultContext (SearchResult result) {
+            id = result.getKey();
             start = result.getTimestamp();          
-            results = result.getMatches();
             total = result.count();
             if (result.finished()) {
                 stop = result.getStopTime();
@@ -1354,6 +1363,9 @@ public class App extends Authentication {
             else if (result.size() > 0)
                 status = Status.Running;
             
+            // prevent setStatus from caching this context with results
+            // set
+            results = result.getMatches();            
             if (status != Status.Done) {
                 mesg = String.format
                     ("Loading...%1$d%%",
@@ -1371,7 +1383,10 @@ public class App extends Authentication {
                 // update cache
                 for (String k : keys)
                     IxCache.set(k, this);
-                IxCache.set(id, this);
+                
+                // only update the cache if the instance in the cache
+                //  is stale
+                IxCache.setIfNewer(id, this, start);
             }
         }
         public String getMessage () { return mesg; }
@@ -1426,6 +1441,32 @@ public class App extends Authentication {
         }
         
         private void readObjectNoData() throws ObjectStreamException {
+        }
+    }
+
+    static protected class CachableContent
+        implements play.twirl.api.Content, Serializable {
+        static final long serialVersionUID = 0x98765432l;
+        String type;
+        String body;
+        
+        CachableContent (play.twirl.api.Content c) {
+            type = c.contentType();
+            body = c.body();
+        }
+
+        public String contentType () { return type; }
+        public String body () { return body; }
+
+        static public Object wrapIfContent (Object obj) {
+            if (obj instanceof play.twirl.api.Content) {
+                obj = new CachableContent ((play.twirl.api.Content)obj);
+            }
+            return obj;
+        }
+        
+        static public play.twirl.api.Content wrap (play.twirl.api.Content c) {
+            return new CachableContent (c);
         }
     }
     

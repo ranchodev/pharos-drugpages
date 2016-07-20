@@ -22,7 +22,10 @@ public class Util {
         "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_9_2) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/36.0.1944.0 Safari/537.36"
     };
 
-    static Random rand = new Random ();
+    static final Random rand = new Random ();
+    static final char[] alpha = {'a','b','c','d','e','f','g','h','i','j','k',
+                                 'l','m','n','o','p','q','r','s','t','u','v',
+                                 'x','y','z'};
     public static String randomUserAgent () {
         return UserAgents[rand.nextInt(UserAgents.length)];
     }
@@ -33,14 +36,27 @@ public class Util {
             r = new SecureRandom
                 (getSha1 (req, "q", "type", "facet", "filter", "order"));
         }
+        return randvar (size, r);
+    }
 
-        char[] alpha = {'a','b','c','d','e','f','g','h','i','j','k',
-                        'l','m','n','o','p','q','r','s','t','u','v',
-                        'x','y','z'};
+    public static String randvar (int size, String seed) {
+        Random r = rand;
+        if (seed != null) {
+            try {
+                r = new SecureRandom (seed.getBytes("utf-8"));
+            }
+            catch (Exception ex) {
+                Logger.error("utf-8 encoding is not available for seeding", ex);
+            }
+        }
+        return randvar (size, r);
+    }
+
+    public static String randvar (int size, Random r) {
         StringBuilder sb = new StringBuilder ();
         for (int i = 0; i < size; ++i)
-            sb.append(alpha[rand.nextInt(alpha.length)]);
-        return sb.toString();
+            sb.append(alpha[r.nextInt(alpha.length)]);
+        return sb.toString();           
     }
 
     public static String sha1 (Http.Request req) {

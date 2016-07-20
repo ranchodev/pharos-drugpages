@@ -376,6 +376,7 @@ public class TextIndexer {
         AtomicLong stop = new AtomicLong ();
 
         transient ReentrantLock lock = new ReentrantLock ();
+        transient ReentrantLock wlck = new ReentrantLock (); // write lock
         transient Condition finished = lock.newCondition();
         transient Set<String> keys = new HashSet<String>();
 
@@ -404,28 +405,34 @@ public class TextIndexer {
         }
         // fill the given list with value starting at start up to start+count
         public int copyTo (List list, int start, int count) {
-            if (start >= matches.size()) {
-                return 0;
-            }
+            wlck.lock();
+            try {
+                if (start >= matches.size()) {
+                    return 0;
+                }
                 
-            Iterator it = matches.iterator();
-            int i = 0;
-            for (; i < start && it.hasNext(); ++i)
-                it.next(); // skip
-
-            for (i = 0; i < count && it.hasNext(); ++i) {
-                list.add(it.next());
+                Iterator it = matches.iterator();
+                int i = 0;
+                for (; i < start && it.hasNext(); ++i)
+                    it.next(); // skip
+                
+                for (i = 0; i < count && it.hasNext(); ++i) {
+                    list.add(it.next());
+                }
+                return i;
             }
-            return i;
+            finally {
+                wlck.unlock();
+            }
         }
         
         public List getMatches () {
-            lock.lock();
+            wlck.lock();
             try {
                 return new ArrayList (matches);
             }
             finally {
-                lock.unlock();
+                wlck.unlock();
             }
         }
         public List getMatchesAndWaitIfNotFinished () {
@@ -433,11 +440,11 @@ public class TextIndexer {
             try {
                 while (!finished())
                     finished.await();
-                return new ArrayList (matches);
+                return getMatches ();
             }
             catch (InterruptedException ex) {
                 ex.printStackTrace();
-                return new ArrayList (matches);
+                return getMatches ();
             }
             finally {
                 lock.unlock();
@@ -462,12 +469,12 @@ public class TextIndexer {
         }
 
         protected void add (Object obj) {
-            lock.lock();
+            wlck.lock();
             try {
                 matches.add(obj);
             }
             finally {
-                lock.unlock();
+                wlck.unlock();
             }
         }
         
@@ -487,29 +494,30 @@ public class TextIndexer {
 
         private void writeObject(java.io.ObjectOutputStream out)
             throws IOException {
-            lock.lock();
+            wlck.lock();
             try {
                 out.defaultWriteObject();
             }
             finally {
-                lock.unlock();
+                wlck.unlock();
             }
         }
         
         private void readObject(java.io.ObjectInputStream in)
             throws IOException, ClassNotFoundException {
-            if (lock == null) {
+            if (wlck == null) {
                 lock = new ReentrantLock ();
+                wlck = new ReentrantLock ();
                 finished = lock.newCondition();
                 keys = new HashSet<String>();
             }
             
-            lock.lock();
+            wlck.lock();
             try {
                 in.defaultReadObject();
             }
             finally {
-                lock.unlock();
+                wlck.unlock();
             }
         }
         

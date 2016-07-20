@@ -71,6 +71,10 @@ public class IxCache extends Plugin
         }
 
         public Object deserialize () throws Exception {
+            if (!file.exists())
+                throw new RuntimeException
+                    ("Cache file "+file+" is not available!");
+            
             ObjectInputStream ois = new ObjectInputStream
                 (Files.newInputStream(file.toPath(), StandardOpenOption.READ));
             Object obj = ois.readObject();
@@ -79,17 +83,41 @@ public class IxCache extends Plugin
         }
     }
 
+    static class CacheObject implements Serializable {
+        static final long serialVersionUID = 0x123456l;
+        public long created;
+        public long lastUpdated;
+        public Object data;
+
+        CacheObject (long created, long lastUpdated, Object data) {
+            this.created = created;
+            this.lastUpdated = lastUpdated;
+            this.data = data;
+        }
+
+        CacheObject (Object data) {
+            if (data instanceof Element) {
+                Element elm = (Element)data;
+                this.created = elm.getCreationTime();
+                this.lastUpdated = elm.getLastUpdateTime();
+                this.data = elm.getValue();
+            }
+            else {
+                this.data = data;
+                this.created = this.lastUpdated = System.currentTimeMillis();
+            }
+        }
+    }
+
+
     class SerializePayload {
-        final Object value;
-        final Serializable key;
+        final Element elm;
         
         SerializePayload () {
-            key = null;
-            value = null;
+            elm = null;
         }
         SerializePayload (Element elm) {
-            this.key = elm.getKey();
-            this.value = elm.getObjectValue();
+            this.elm = elm;
         }
 
         public void persists () throws Exception {
@@ -98,28 +126,29 @@ public class IxCache extends Plugin
             
             //Logger.debug(Thread.currentThread().getName()+" >>> caching key: '"+key+"'");
             do {
-                buf = serialize (value);
+                buf = serialize (elm);
                 if (buf != null) {
                     DatabaseEntry data = new DatabaseEntry (buf);
-                    DatabaseEntry dkey = getKeyEntry (key);
+                    DatabaseEntry dkey = getKeyEntry (elm.getKey());
                     OperationStatus status = db.put(null, dkey, data);
                     if (status != OperationStatus.SUCCESS)
                         Logger.warn
-                            ("** PUT for key "+key+" returns status "+status);
+                            ("** PUT for key "+elm.getKey()
+                             +" returns status "+status);
                 }
                 else {
                     // this is just a bad way but is needed because there
                     // isn't a good way for us to know when an entity bean
                     // is done with lazy loading..
-                    Thread.sleep(100);
+                    Thread.sleep(500);
                 }
                 ++tries;
             }
-            while (buf == null && tries < 5);
+            while (buf == null && tries < 10);
             
             if (buf == null) {
                 Logger.error("Serialization of "
-                             +value+" failed after "+tries+" attempts!");
+                             +elm.getKey()+" failed after "+tries+" attempts!");
             }
         }
     }
@@ -140,7 +169,7 @@ public class IxCache extends Plugin
                     catch (Exception ex) {
                         Logger.error
                             (name+": can't persist cache payload: "
-                             +p.value, ex);
+                             +p.elm.getKey(), ex);
                     }
                 }
                 Logger.debug(name+": complete...shutting down");
@@ -218,6 +247,15 @@ public class IxCache extends Plugin
     static protected void put (Element elm) {
         if (elm.isSerializable()) {
             _instance.cache.putWithWriter(elm);
+            if (false) {
+                Logger.debug("caching key="+elm.getKey()
+                             +" value="+elm.getObjectValue());
+                for (StackTraceElement st :
+                         Thread.currentThread().getStackTrace()) {
+                    Logger.debug(st.getFileName()+":"+st.getLineNumber()+":"
+                                 +":"+st.getClassName()+":"+st.getMethodName());
+                }
+            }
         }
         else {
             // not serializable
@@ -274,7 +312,7 @@ public class IxCache extends Plugin
             T v = generator.call();
             if (v != null || elm == null) {
                 elm = new Element (key, v);
-                IxCache.put (elm);
+                IxCache.put(elm);
             }
         }
         return (T)elm.getObjectValue();
@@ -307,7 +345,8 @@ public class IxCache extends Plugin
             if (_instance.ctx.debug(2))
                 Logger.debug("IxCache missed: "+key);
             T v = generator.call();
-            IxCache.put(new Element (key, v, seconds <= 0, seconds, seconds));
+            IxCache.put(new Element (key, v,
+                                     seconds <= 0, seconds, seconds));
             return v;
         }
         return (T)value;
@@ -337,6 +376,23 @@ public class IxCache extends Plugin
         IxCache.put(new Element (key, value));
     }
 
+    public static boolean setIfNewer (String key, Object value, long time) {
+        if (_instance == null)
+            throw new IllegalStateException ("Cache hasn't been initialized!");
+        boolean set = true;
+        Element elm = getElm (key);
+        if (elm != null) {
+            if (time > elm.getLastUpdateTime())
+                IxCache.put(new Element (key, value));
+            else
+                set = false;
+        }
+        else {
+            IxCache.put(new Element (key, value));
+        }
+        return set;
+    }
+    
     public static void set (String key, Object value, int expiration) {
         if (_instance == null)
             throw new IllegalStateException ("Cache hasn't been initialized!");
@@ -359,7 +415,21 @@ public class IxCache extends Plugin
     public static boolean contains (String key) {
         if (_instance == null)
             throw new IllegalStateException ("Cache hasn't been initialized!");
-        return _instance.cache.isKeyInCache(key);
+        boolean found = _instance.cache.isKeyInCache(key);
+        if (!found) {
+            // try persistence
+            try {
+                DatabaseEntry dkey = _instance.getKeyEntry(key);
+                DatabaseEntry data = new DatabaseEntry ();
+                data.setPartial(0, 0, true); // don't return the data
+                found = OperationStatus.SUCCESS ==
+                    _instance.db.get(null, dkey, data, null);
+            }
+            catch (Exception ex) {
+                Logger.error("Can't search persistence database for "+key, ex);
+            }
+        }
+        return found;
     }
 
     DatabaseEntry getKeyEntry (Object value) throws Exception {
@@ -381,9 +451,12 @@ public class IxCache extends Plugin
             DatabaseEntry data = new DatabaseEntry ();
             OperationStatus status = db.get(null, dkey, data, null);
             switch (status) {
-            case SUCCESS: 
-                elm = new Element (key, deserialize (data));
-                //cache.put(elm);
+            case SUCCESS:
+                {   CacheObject obj = (CacheObject) deserialize (data);
+                    elm = new Element (key, obj.data, 0l, obj.created,
+                                       System.currentTimeMillis(),
+                                       obj.lastUpdated, 1l);
+                }
                 break;
                 
             case NOTFOUND: 
@@ -420,7 +493,9 @@ public class IxCache extends Plugin
             md.reset();
             ObjectOutputStream oos = new ObjectOutputStream
                 (new DigestOutputStream (new FileOutputStream (file), md));
-            oos.writeObject(obj);
+
+            CacheObject entry = new CacheObject (obj);
+            oos.writeObject(entry);
             oos.close();
 
             if (file.length() > maxCacheObjectSize) {
@@ -432,6 +507,9 @@ public class IxCache extends Plugin
                 else {
                     Logger.warn("Can't rename file "+file+" to "+sha1);
                 }
+                Logger.debug(Thread.currentThread().getName()+": large ("
+                             +file.length()+") cache "+file.getName()
+                             +" saved; "+queue.size() +" remains in queue!");
                 
                 ByteArrayOutputStream bytes = new ByteArrayOutputStream ();
                 oos = new ObjectOutputStream (bytes);

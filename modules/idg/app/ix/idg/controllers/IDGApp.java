@@ -39,6 +39,8 @@ import play.libs.Akka;
 import play.mvc.BodyParser;
 import play.mvc.Call;
 import play.mvc.Result;
+import play.twirl.api.Content;
+
 import tripod.chem.indexer.StructureIndexer;
 
 import java.io.*;
@@ -247,6 +249,7 @@ public class IDGApp extends App implements Commons {
 
         DiseaseRelevance () {}
         public int compareTo (DiseaseRelevance dr) {
+            /*
             double d = 0.;
             if (dr.zscore != null && zscore != null)
                 d = dr.zscore - zscore;
@@ -254,7 +257,8 @@ public class IDGApp extends App implements Commons {
                 d = dr.conf - conf;
             if (d < 0) return -1;
             if (d > 0) return 1;
-            return 0;
+            */
+            return disease.name.compareTo(dr.disease.name);
         }
     }
 
@@ -1515,13 +1519,33 @@ public class IDGApp extends App implements Commons {
     }
 
     static Result createTargetResult
-            (TextIndexer.SearchResult result, int rows, int page) {
+            (final SearchResult result, final int rows, final int page) {
+        try {
+            if (result.finished()) {
+                final String key = Util.sha1(request ());               
+                return ok (getOrElse (key, new Callable<Content>() {
+                        public Content call () throws Exception {
+                            return CachableContent.wrap
+                                (createTargetContent (result, rows, page));
+                        }
+                    }));
+            }
+            return ok (createTargetContent (result, rows, page));
+        }
+        catch (Exception ex) {
+            return _internalServerError (ex);
+        }
+    }
 
+    static Content createTargetContent
+        (SearchResult result, int rows, int page) {
         String[] reqf = request().queryString().get("facet");
 
-        // Expand TARGET_FACETS to add in facets that were selected via the full facet
+        // Expand TARGET_FACETS to add in facets that were selected via
+        //  the full facet
         // listing page but aren't part of the default set of facets
-        List<String> facetFilter = new ArrayList<String>(Arrays.asList(TARGET_FACETS));
+        List<String> facetFilter =
+            new ArrayList<String>(Arrays.asList(TARGET_FACETS));
         if (reqf != null) {
             for (String af : reqf) {
                 String fname = af.split("/")[0];
@@ -1529,9 +1553,9 @@ public class IDGApp extends App implements Commons {
                     facetFilter.add(fname);
             }
         }
+        
         TextIndexer.Facet[] facets = filter
                 (result.getFacets(), facetFilter.toArray(new String[]{}));
-
         List<Target> targets = new ArrayList<Target>();
         int[] pages = new int[0];
         if (result.count() > 0) {
@@ -1539,12 +1563,10 @@ public class IDGApp extends App implements Commons {
             pages = paging (rows, page, result.count());
             result.copyTo(targets, (page-1)*rows, rows);
         }
-
-        return ok(ix.idg.views.html.targets.render
-                  (page, rows, result.count(),
-                   pages, decorate (Target.class, facets),
-                   targets, result.getKey()));
-
+        
+        return ix.idg.views.html.targets.render
+            (page, rows, result.count(), pages,
+             decorate (Target.class, facets), targets, result.getKey());
     }
 
     static Result createLigandResult
