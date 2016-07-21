@@ -1,6 +1,7 @@
 package ix.idg.controllers;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import ix.core.models.Keyword;
@@ -12,6 +13,7 @@ import ix.ncats.controllers.App;
 import ix.utils.Util;
 import play.Logger;
 import play.mvc.Result;
+import play.twirl.api.Content;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -241,9 +243,27 @@ public class HarmonogramApp extends App {
     }   
 
     // only valid for single target
-    public static Result _hgForRadar(final String q, String type) throws Exception {
+    public static Result _hgForRadar (final String q, final String type)
+        throws Exception {
         if (q == null || q.contains(",") || !type.contains("-"))
-            return _badRequest("Must specify a single Uniprot ID and/or type must be of the form radar-XXX");
+            return _badRequest
+                ("Must specify a single Uniprot ID and/or type must be "
+                 +"of the form radar-XXX");
+        
+        final String key = "hgForRadar/"+q+"/"+type;
+        Content content = getOrElse (key, new Callable<Content>() {
+                public Content call () throws Exception {
+                    JsonNode json = _hgForRadarJson (q, type);
+                    return json != null ? CachableContent.wrap(json) : null;
+                }
+            });
+        
+        return content != null ? ok (content)
+            : _notFound("No harmonogram data found for q="+ q+" type="+type);
+    }
+    
+    public static JsonNode _hgForRadarJson (final String q, String type)
+        throws Exception {
 
         final String fieldName = type.split("-")[1];
 
@@ -332,7 +352,7 @@ public class HarmonogramApp extends App {
 //            }
 //        });
         if (attrMap.isEmpty()) {
-            return _notFound("No harmonogram data found for " + theQuery);
+            return null;
         }
 
         ArrayNode anode = mapper.createArrayNode();
@@ -350,14 +370,29 @@ public class HarmonogramApp extends App {
         container.put("axes", anode);
         ArrayNode root = mapper.createArrayNode();
         root.add(container);
-        return ok(root);
+        
+        return root;
     }
 
-    public static Result _hgForTargets(String[] accs, String format) throws Exception {
+    public static Result _hgForTargets (final String[] accs,
+                                        final String format) throws Exception {
+        final String key = "hgForTargets/"+Arrays.hashCode(accs)+"/"+format;
+        Content content = getOrElse (key, new Callable<Content> () {
+                public Content call () throws Exception {
+                    return App.CachableContent.wrap
+                       (_hgForTargetsContent (accs, format));
+                }
+            });
+        return content != null ? ok (content)
+            : _notFound("No harmonogram data found for targets");
+    }
+    
+    public static Content _hgForTargetsContent
+        (String[] accs, String format) throws Exception {
         List<HarmonogramCDF> hg = HarmonogramFactory.finder
                 .where().in("uniprotId", Arrays.asList(accs)).findList();
         if (hg.isEmpty()) {
-            return _notFound("No harmonogram data found for targets");
+            return null;
         }
 
         Map<String, Map<String, HarmonogramCDF>> allValues = new TreeMap<>();
@@ -378,7 +413,7 @@ public class HarmonogramApp extends App {
         Arrays.sort(header);
 
         if (format != null && format.toLowerCase().equals("tsv")) {
-            return (ok(_hgmapToTsv(allValues, header)));
+            return new play.twirl.api.Txt(_hgmapToTsv(allValues, header));
         } else {
 
             // Construct data matrix for clustering
@@ -478,8 +513,8 @@ public class HarmonogramApp extends App {
             root.put("row_nodes", rowNodes);
             root.put("col_nodes", colNodes);
             root.put("links", links);
-            return (ok(root));
+            
+            return new play.twirl.api.JavaScript(root.toString());
         }
     }
-
 }

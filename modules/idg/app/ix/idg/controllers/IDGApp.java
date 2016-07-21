@@ -1522,7 +1522,7 @@ public class IDGApp extends App implements Commons {
             (final SearchResult result, final int rows, final int page) {
         try {
             if (result.finished()) {
-                final String key = Util.sha1(request ());               
+                final String key = "createTargetResult/"+Util.sha1(request ()); 
                 return ok (getOrElse (key, new Callable<Content>() {
                         public Content call () throws Exception {
                             return CachableContent.wrap
@@ -1554,8 +1554,8 @@ public class IDGApp extends App implements Commons {
             }
         }
         
-        TextIndexer.Facet[] facets = filter
-                (result.getFacets(), facetFilter.toArray(new String[]{}));
+        Facet[] facets = filter
+            (result.getFacets(), facetFilter.toArray(new String[]{}));
         List<Target> targets = new ArrayList<Target>();
         int[] pages = new int[0];
         if (result.count() > 0) {
@@ -1570,7 +1570,26 @@ public class IDGApp extends App implements Commons {
     }
 
     static Result createLigandResult
-            (TextIndexer.SearchResult result, int rows, int page) {
+        (final SearchResult result, final int rows, final int page) {
+        try {
+            if (result.finished()) {
+                final String key = "createLigandResult/"+Util.sha1(request());
+                return ok (getOrElse (key, new Callable<Content>() {
+                        public Content call () throws Exception {
+                            return CachableContent.wrap
+                                (createLigandContent (result, rows, page));
+                        }
+                    }));
+            }
+            return ok (createLigandContent (result, rows, page));
+        }
+        catch (Exception ex) {
+            return _internalServerError (ex);
+        }
+    }
+
+    static Content createLigandContent
+        (SearchResult result, int rows, int page) {
         TextIndexer.Facet[] facets = filter
                 (result.getFacets(), LIGAND_FACETS);
 
@@ -1582,14 +1601,34 @@ public class IDGApp extends App implements Commons {
             result.copyTo(ligands, (page-1)*rows, rows);
         }
 
-        return ok(ix.idg.views.html.ligandsgallery.render
-                  (page, rows, result.count(),
-                   pages, decorate (facets), ligands, null));
+        return ix.idg.views.html.ligandsgallery.render
+            (page, rows, result.count(),
+             pages, decorate (facets), ligands, null);
+    }
+
+    static Result createDiseaseResult
+            (final SearchResult result, final int rows, final int page) {
+        try {
+            if (result.finished()) {
+                final String key =
+                    "createDiseaseResult/"+Util.sha1(request ()); 
+                return ok (getOrElse (key, new Callable<Content>() {
+                        public Content call () throws Exception {
+                            return CachableContent.wrap
+                                (createDiseaseContent (result, rows, page));
+                        }
+                    }));
+            }
+            return ok (createDiseaseContent (result, rows, page));
+        }
+        catch (Exception ex) {
+            return _internalServerError (ex);
+        }
     }
     
-    static Result createDiseaseResult
-            (TextIndexer.SearchResult result, int rows, int page) {
-        TextIndexer.Facet[] facets = filter
+    static Content createDiseaseContent
+            (SearchResult result, int rows, int page) {
+        Facet[] facets = filter
                 (result.getFacets(), DISEASE_FACETS);
 
         List<Disease> diseases = new ArrayList<Disease>();
@@ -1600,9 +1639,9 @@ public class IDGApp extends App implements Commons {
             result.copyTo(diseases, (page-1)*rows, rows);
         }
 
-        return ok(ix.idg.views.html.diseases.render
-                  (page, rows, result.count(),
-                   pages, decorate (facets), diseases));
+        return ix.idg.views.html.diseases.render
+            (page, rows, result.count(),
+             pages, decorate (facets), diseases);
     }
 
     public static Result targets (String q, final int rows, final int page) {
@@ -1636,14 +1675,13 @@ public class IDGApp extends App implements Commons {
         }
     }
 
-
     static Result _targets (final String q, final int rows, final int page)
         throws Exception {
-
-        final String key = "targets/"+Util.sha1(request ());
-        Logger.debug("Targets: q="+q+" rows="+rows+" page="+page+" key="+key);
         
         final int total = TargetFactory.finder.findRowCount();
+        Logger.debug("Targets: q="+q+" rows="+rows+" page="
+                     +page+" total="+total);
+
         if (request().queryString().containsKey("facet") || q != null) {
             Map<String, String[]> query = getRequestQuery ();
             if (!query.containsKey("order") && q == null) {
@@ -1660,45 +1698,37 @@ public class IDGApp extends App implements Commons {
                 return DownloadEntities.download(result);
             }
 
-            if (result.finished()) {
-                // now we can cache the result
-                return getOrElse
-                    (key+"/result", new Callable<Result> () {
-                            public Result call () throws Exception {
-                                return createTargetResult
-                                    (result, rows, page);
-                            }
-                        });
-            }
-
             return createTargetResult (result, rows, page);
         }
         else {
-            final SearchResult result = getSearchFacets(Target.class);
-            return getOrElse (key+"/result", new Callable<Result> () {
-                    public Result call () throws Exception {
-                        TextIndexer.Facet[] facets = filter
-                            (result.getFacets(), TARGET_FACETS);
-                        int _rows = Math.min(total, Math.max(1, rows));
-                        int[] pages = paging (_rows, page, total);
-                        
-                        List<Target> targets = TargetFactory.getTargets
-                            (_rows, (page-1)*_rows, null);
-
-                        long start = System.currentTimeMillis();
-                        Result r = ok (ix.idg.views.html.targets.render
-                                       (page, _rows, total, pages,
-                                        decorate (facets),
-                                        targets, result.getKey()));
-                        Logger.debug("rendering "+key+" in "
-                                     + (System.currentTimeMillis()-start)+"ms...");
-                        return r;
+            // this is just paging..
+            final String key = "targets/"+total+"/"+Util.sha1(request ());
+            return ok (getOrElse (key+"/result", new Callable<Content> () {
+                    public Content call () throws Exception {
+                        return getTargetContent (total, rows, page);
                     }
-                });
+                }));
         }
     }
 
-    
+    /*
+     * this is different from createTargetContent in that it's just 
+     * paging through (no facets and/or queries)
+     */
+    static Content getTargetContent (int total, int rows, int page) {
+        SearchResult result = getSearchFacets(Target.class);    
+        Facet[] facets = filter (result.getFacets(), TARGET_FACETS);
+        rows = Math.min(total, Math.max(1, rows));
+        int[] pages = paging (rows, page, total);
+        
+        List<Target> targets = TargetFactory.getTargets
+            (rows, (page-1)*rows, null);
+        
+        return ix.idg.views.html.targets.render
+            (page, rows, total, pages, decorate (facets),
+             targets, result.getKey());
+    }
+
     public static Result sequences (final String q,
                                     final int rows, final int page) {
         String param = request().getQueryString("identity");
@@ -2238,17 +2268,6 @@ public class IDGApp extends App implements Commons {
                     response().setHeader("Content-Disposition", "attachment;filename=export-ligand.csv");
                     return ok(contents).as(DownloadEntities.getDownloadMimeType(Ligand.class));
                 }
-            }
-
-            if (result.finished()) {
-                // now we can cache the result
-                return getOrElse
-                        (key+"/result", new Callable<Result> () {
-                            public Result call () throws Exception {
-                                return createLigandResult
-                                    (result, rows, page);
-                            }
-                        });
             }
 
             return createLigandResult (result, rows, page);

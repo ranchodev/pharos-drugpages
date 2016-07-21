@@ -1444,7 +1444,7 @@ public class App extends Authentication {
         }
     }
 
-    static protected class CachableContent
+    static public class CachableContent
         implements play.twirl.api.Content, Serializable {
         static final long serialVersionUID = 0x98765432l;
         String type;
@@ -1467,6 +1467,11 @@ public class App extends Authentication {
         
         static public play.twirl.api.Content wrap (play.twirl.api.Content c) {
             return new CachableContent (c);
+        }
+
+        static public play.twirl.api.Content wrap (JsonNode json) {
+            return new CachableContent
+                (new play.twirl.api.JavaScript(json.toString()));
         }
     }
     
