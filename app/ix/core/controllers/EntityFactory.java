@@ -3,6 +3,7 @@ package ix.core.controllers;
 import java.io.*;
 import java.security.*;
 import java.util.*;
+import java.net.URLDecoder;
 import java.util.regex.*;
 import java.util.concurrent.*;
 import java.lang.reflect.Field;
@@ -511,6 +512,37 @@ public class EntityFactory extends Controller {
             return internalServerError (ex.getMessage());
         }
     }
+
+    static boolean eval (Object inst, String field, String value) {
+        try {
+            Field f = inst.getClass().getField(field);
+            Object val = f.get(inst);
+            if (Number.class.isAssignableFrom(val.getClass())) {
+                return ((Number)val).longValue() == Long.parseLong(value);
+            }
+            else {
+                String s = val.toString();
+                int index = value.indexOf('*');
+                if (index >= 0) {
+                    // regex
+                    String regex = value.substring(0, index);
+                    regex = regex + ".*";
+                    if (index+1 < value.length()) {
+                        regex +=  value.substring(index+1);
+                    }
+                    //Logger.debug("regex: "+field+"="+regex);
+                    Pattern p = Pattern.compile
+                        (regex, Pattern.CASE_INSENSITIVE);
+                    Matcher m = p.matcher(s);
+                    return m.find();
+                }
+                return value.equalsIgnoreCase(s);
+            }
+        }
+        catch (Exception ex) {
+            return false;
+        }
+    }
     
     protected static <T> Result field (Object inst, String field) {
         /*
@@ -531,7 +563,10 @@ public class EntityFactory extends Controller {
         }
         */
         String[] paths = field.split("/");
-        Pattern regex = Pattern.compile("([^\\(]+)\\((-?\\d+)\\)");
+        // properties(0)
+        Pattern regex1 = Pattern.compile("([^\\(]+)\\((-?\\d+)\\)");
+        // properties(label=GO Function)
+        Pattern regex2 = Pattern.compile("([^\\(]+)\\(([^=]+)=([^\\)]+)\\)");   
         StringBuilder uri = new StringBuilder ();
 
         boolean isRaw = paths[paths.length-1].charAt(0) == '$'; 
@@ -542,18 +577,35 @@ public class EntityFactory extends Controller {
         for (; i < paths.length && obj != null; ++i) {
             String pname = paths[i]; // field name
             Integer pindex = null; // field index if field is a list
+            String pcon = null, pval = null;
             
-            Matcher matcher = regex.matcher(pname);
+            Matcher matcher = regex1.matcher(pname);
             if (matcher.find()) {
                 pname = matcher.group(1);
                 pindex = Integer.parseInt(matcher.group(2));
+            }
+            else {
+                matcher = regex2.matcher(pname);
+                if (matcher.find()) {
+                    pname = matcher.group(1);
+                    pcon = matcher.group(2);
+                    String v = matcher.group(3);
+                    try {
+                        pval = URLDecoder.decode(v, "utf-8");
+                        pval = pval.replaceAll("['\"]","");
+                    }
+                    catch (Exception ex) {
+                        Logger.error("Invalid value: '"+v+"'", ex);
+                    }
+                }
             }
 
             if (pname.charAt(0) == '$')
                 pname = pname.substring(1);
 
             Logger.debug("obj="+obj+"["+obj.getClass()
-                         +"] pname="+pname+" pindex="+pindex);
+                         +"] pname="+pname+" pindex="+pindex
+                         +" pcon="+pcon+" pval="+pval);
             
             try {
                 uri.append("/"+paths[i]);
@@ -566,20 +618,43 @@ public class EntityFactory extends Controller {
                 Class<?> ftype = f.getType();
                 
                 Object val = f.get(obj);
-                if (val != null && pindex != null) {
+                if (val != null) {
                     if (ftype.isArray()) {
-                        if (pindex >= Array.getLength(val)) {
-                            return badRequest
-                                (uri+": array index out of bound "
-                                 +pindex);
+                        if (pindex != null) {
+                            if (pindex >= Array.getLength(val) || pindex < 0) {
+                                return badRequest
+                                    (uri+": array index out of bound "
+                                     +pindex);
+                            }
+                            val = Array.get(val, pindex);
                         }
-                        val = Array.get(val, pindex);
+                        else if (pcon != null && pval != null) {
+                            List vals = new ArrayList ();
+                            for (int k = 0; k < Array.getLength(val); ++k) {
+                                Object a = Array.get(val, k);
+                                if (eval (a, pcon, pval))
+                                    vals.add(a);
+                            }
+                            val = vals.size()==1? vals.get(0) : vals;
+                        }
                     }
                     else if (Collection.class.isAssignableFrom(ftype)) {
-                        if (pindex >= ((Collection)val).size() || pindex < 0)
-                            return badRequest
-                                (uri+": list index out bound "+pindex);
-                        val = ((Collection)val).toArray()[pindex];
+                        if (pindex != null) {
+                            if (pindex >= ((Collection)val).size()
+                                || pindex < 0)
+                                return badRequest
+                                    (uri+": list index out bound "+pindex);
+                            val = ((Collection)val).toArray()[pindex];
+                        }
+                        else if (pcon != null && pval != null) {
+                            List vals = new ArrayList ();
+                            for (Object a : (Collection)val) {
+                                if (eval (a, pcon, pval))
+                                    vals.add(a);
+                            }
+                            
+                            val = vals.size()==1 ?vals.get(0) : vals;
+                        }
                     }
                 }
                 obj = val;
@@ -652,10 +727,18 @@ public class EntityFactory extends Controller {
                             pname = paths[i]; // field name
                             pindex = null; // field index if field is a list
             
-                            matcher = regex.matcher(pname);
+                            matcher = regex1.matcher(pname);
                             if (matcher.find()) {
                                 pname = matcher.group(1);
                                 pindex = Integer.parseInt(matcher.group(2));
+                            }
+                            else {
+                                matcher = regex2.matcher(pname);
+                                if (matcher.find()) {
+                                    pname = matcher.group(1);
+                                    pcon = matcher.group(2);
+                                    pval = matcher.group(3);
+                                }
                             }
                             
                             if (pname.charAt(0) == '$')
@@ -1265,6 +1348,4 @@ public class EntityFactory extends Controller {
         }
         return UUID.fromString(id);
     }
-    
-    
 }
