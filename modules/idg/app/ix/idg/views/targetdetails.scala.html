@@ -590,7 +590,18 @@ This is TCRD target <a href='@ix.core.controllers.v1.routes.RouteFactory.get("ta
               }
           }
 
-         @defining(IDGApp.getProperties(target, "Count", 1)) { props =>
+        @if(target.patentCount != null && target.patentCount > 0) {
+          <div class="panel panel-default">
+            <div class="panel-heading">
+              <h3 class="panel-title">Patent (@target.patentCount)</h3>
+            </div>
+            <div class="panel-body">
+                   <div id="patent-line-plot" style="height:180px;"></div>
+            </div>
+          </div>
+        }
+
+        @defining(IDGApp.getProperties(target, "Count", 1)) { props =>
             @if(!props.isEmpty()) {
                <div class="panel panel-default" >
                    <a name="properties" tocname="Properties"></a>
@@ -744,26 +755,7 @@ This is TCRD target <a href='@ix.core.controllers.v1.routes.RouteFactory.get("ta
 		 </div>
       	       </div>
 	   }
-	}
-        
-        @**
-        @if(target.patentCount != null && target.patentCount > 0) {
-          <div class="panel panel-default">
-            <div class="panel-heading">
-              <h3 class="panel-title">Patent (@target.patentCount)</h3>
-            </div>
-            <div class="panel-body">
-              <div class="row">
-                <div class="col-md-2"></div>
-                <div class="col-md-8">
-                   <div id="patent-line-plot" style="height:180px;"></div>
-                </div>
-                <div class="col-md-2"></div>
-              </div>
-            </div>
-          </div>
-        }
-        **@
+	}        
       </div>
       <div class="col-md-4">
         @techdev(target)
@@ -1687,13 +1679,13 @@ $('.tree').treegrid({
 
    plotAAProfile('#aa-profile');
 
-   @*new Morris.Line({*@
-      @*element: 'patent-line-plot',*@
-      @*data: @HtmlFormat.raw(IDGApp.getPatents(target).toString),*@
-      @*xkey: 'year',*@
-      @*ykeys: ['count'],*@
-      @*labels: ['Count']*@
-   @*});*@
+   new Morris.Line({
+      element: 'patent-line-plot',
+      data: @HtmlFormat.raw(IDGApp.getPatents(target).toString),
+      xkey: 'year',
+      ykeys: ['count'],
+      labels: ['Count']
+   });
 
    $('#pmscore-sparkline').sparkline('html', {width:'100px'});
    tinx_target_plot("#tinx-plot", "@IDGApp.getId(target)");

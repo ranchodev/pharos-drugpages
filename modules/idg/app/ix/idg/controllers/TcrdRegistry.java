@@ -568,6 +568,7 @@ public class TcrdRegistry extends Controller implements Commons {
             pstm13.setLong(1, protein);
             ResultSet rset = pstm13.executeQuery();
             Timeline timeline = null;
+            int np = 0;
             while (rset.next()) {
                 long year = rset.getLong("year");
                 long count = rset.getLong("count");
@@ -579,6 +580,7 @@ public class TcrdRegistry extends Controller implements Commons {
                 event.end = count; // abusing notation
                 event.unit = Event.Resolution.YEARS;
                 timeline.events.add(event);
+                ++np;
             }
             rset.close();
             
@@ -586,6 +588,7 @@ public class TcrdRegistry extends Controller implements Commons {
                 timeline.save();
                 target.links.add(new XRef (timeline));
             }
+            Logger.debug("Target "+target.id+" has "+np+" patent(s)!");
         }
 
         void addPMScore (Target target, long protein) throws Exception {
@@ -1539,6 +1542,9 @@ public class TcrdRegistry extends Controller implements Commons {
                         (KeywordFactory.registerIfAbsent
                          (IDG_DRUG, drug, rset.getString("reference")));
                 }
+
+                ligand.addIfAbsent((Value)KeywordFactory.registerIfAbsent
+                                   (LIGAND_DRUG, "YES", null));
                 
                 if (chemblId != null) {
                     LIGS.put(chemblId, ligand);
@@ -3033,34 +3039,12 @@ public class TcrdRegistry extends Controller implements Commons {
                  +"on (a.target_id = b.id and a.protein_id = c.id)\n"
                  +"left join tinx_novelty d\n"
                  +"    on d.protein_id = a.protein_id \n"
-                 //+"where d.protein_id in (9671,9849,11534,15077,658,11534)"
-                 //+"where d.protein_id in (137,734,6845)\n"
-                 //+"where c.id in (11521)\n"
+                 +"where c.id in (18204,862,74,6571)\n"
                  //+"where a.target_id in (12241)\n"
                  //+"where c.uniprot = 'Q9H3Y6'\n"
                  //+"where b.tdl in ('Tclin','Tchem')\n"
                  //+"where b.idgfam = 'kinase'\n"
                  //+" where c.uniprot = 'Q8N568'\n"
-                 //+"where c.uniprot = 'Q9Y5X4'\n"
-                 //+"where c.uniprot = 'Q9Y691'\n"
-                 //+" where c.uniprot = 'Q6NV75'\n"
-                 //+"where c.uniprot = 'P31749'\n"
-                 //+"where c.uniprot in ('O00444', 'P07333')\n"
-                 //+"where c.uniprot in ('Q8NE63','O14976')\n"
-                 //+"where c.uniprot in ('O14976','O43293','O75385','O75582','P07949','P09619')\n"
-                 //+"where c.uniprot in ('P35968')\n"
-                 //+"where c.uniprot in ('Q15743')\n"
-                 //+"where c.uniprot in ('P42685')\n"
-                 //+"where c.uniprot in ('Q6PIU1')\n"
-                 //+"where c.uniprot in ('A5X5Y0')\n"
-                 //+"where c.uniprot in ('Q7RTX7')\n"
-                 //+"where c.uniprot in ('Q00537','Q8WXA8')\n"
-                 //+"where c.uniprot in ('Q401N2')\n"
-                 //+"where c.uniprot in ('O94921','Q96Q40','Q00536','Q00537','Q00526','P50613','P49761','P20794')\n"
-                 //+"where c.uniprot in ('Q8WXA8')\n"
-                 //+"where c.uniprot in ('Q7RTX7','Q86YV6','P07333','P07949')\n"
-//                 +"where c.uniprot in ('A5X5Y0','O00329','O00329', 'O95069')\n"
-//                                +"where c.uniprot in ('O00141','O00168','O00299')\n"
                  +"order by d.score desc, c.id\n"
                  +(rows > 0 ? ("limit "+rows) : "")
                  );
