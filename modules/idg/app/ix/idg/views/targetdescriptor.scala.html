@@ -44,8 +44,19 @@
 		<td>Some popular terms</td>
 		<td>@for(i <- 0 until Math.min(tvs.termRank.length,5)) {
 	             <div>
+		       @if(tvs.termRank(i).length > 40) {
+		       <a class="label label-primary loader" 
+			  data-toggle="tooltip"
+       			  data-html="true"
+       			  data-trigger="hover"
+       			  data-placement="top"
+       			  title="@tvs.termRank(i)"
+       			  data-content="<p align='left'>@tvs.termRank(i)</p>"
+			  href='@{ix.idg.controllers.routes.IDGApp.targets()+"?facet="+URLEncoder.encode(tvs.field,"utf8")+"/"}@URLEncoder.encode(tvs.termRank(i), "utf8")'>@tvs.termRank(i).substring(0,40)... <span class="badge">@tvs.termCount(i)</span></a>
+		       } else {
 		       <a class="label label-primary loader" 
 			  href='@{ix.idg.controllers.routes.IDGApp.targets()+"?facet="+URLEncoder.encode(tvs.field,"utf8")+"/"}@URLEncoder.encode(tvs.termRank(i), "utf8")'>@tvs.termRank(i) <span class="badge">@tvs.termCount(i)</span></a>
+		       }
 		     </div>
 	            }
 		</td>
@@ -90,6 +101,11 @@
 }
 
 <script>
+$(function () {
+  $('[data-toggle="popover"]').popover();
+  $('[data-toggle="tooltip"]').tooltip();
+});
+
 $(document).ready(function () {
     $('#term-count-profile').highcharts({
         chart: {
