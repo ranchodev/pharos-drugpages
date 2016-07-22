@@ -49,6 +49,7 @@ public class IxCache extends Plugin
     public static final String CACHE_MAX_ELEMENTS = "ix.cache.maxElements";
     public static final String CACHE_TIME_TO_LIVE = "ix.cache.timeToLive";
     public static final String CACHE_TIME_TO_IDLE = "ix.cache.timeToIdle";
+    public static final String CACHE_QUEUE_SIZE = "ix.cache.queueSize";
 
     private ExecutorService persistencePool;
     private final Application app;
@@ -140,7 +141,7 @@ public class IxCache extends Plugin
                     // this is just a bad way but is needed because there
                     // isn't a good way for us to know when an entity bean
                     // is done with lazy loading..
-                    Thread.sleep(500);
+                    Thread.sleep(100);
                 }
                 ++tries;
             }
@@ -155,8 +156,7 @@ public class IxCache extends Plugin
 
     final SerializePayload POISON_PAYLOAD = new SerializePayload ();
 
-    private final BlockingQueue<SerializePayload> queue =
-        new LinkedBlockingQueue<SerializePayload> ();
+    private ArrayBlockingQueue<SerializePayload> queue;
     class PersistenceQueue implements Runnable {
         public void run () {
             String name = Thread.currentThread().getName();
@@ -211,7 +211,9 @@ public class IxCache extends Plugin
                 });
         */
         cache.registerCacheWriter(this);
-
+        queue = new ArrayBlockingQueue<SerializePayload>
+            (app.configuration().getInt(CACHE_QUEUE_SIZE, 10000));
+        
         try {
             md = MessageDigest.getInstance("sha1");
         }
@@ -245,7 +247,7 @@ public class IxCache extends Plugin
     }
 
     static protected void put (Element elm) {
-        if (elm.isSerializable()) {
+        if (elm.isSerializable() && _instance.queue.remainingCapacity() > 0) {
             _instance.cache.putWithWriter(elm);
             if (false) {
                 Logger.debug("caching key="+elm.getKey()
@@ -501,15 +503,22 @@ public class IxCache extends Plugin
             if (file.length() > maxCacheObjectSize) {
                 // rename this file to something permanent
                 File sha1 = new File (payload, Util.toHex(md.digest()));
-                if (file.renameTo(sha1)) {
-                    file = sha1;
+                if (!sha1.exists()) {
+                    if (file.renameTo(sha1)) {
+                        file = sha1;
+                    }
+                    else {
+                        Logger.warn("Can't rename file "+file+" to "+sha1);
+                    }
+                    Logger.debug(Thread.currentThread().getName()+": large ("
+                                 +file.length()+") cache "+file.getName()
+                                 +" saved; "+queue.size()
+                                 +" remains in queue!");
                 }
                 else {
-                    Logger.warn("Can't rename file "+file+" to "+sha1);
+                    file.delete();
+                    file = sha1;
                 }
-                Logger.debug(Thread.currentThread().getName()+": large ("
-                             +file.length()+") cache "+file.getName()
-                             +" saved; "+queue.size() +" remains in queue!");
                 
                 ByteArrayOutputStream bytes = new ByteArrayOutputStream ();
                 oos = new ObjectOutputStream (bytes);
@@ -613,7 +622,11 @@ public class IxCache extends Plugin
         Serializable key = elm.getKey();
         if (key != null) {
             try {
-                queue.put(new SerializePayload (elm));
+                if (!queue.offer(new SerializePayload (elm),
+                                 1000, TimeUnit.MILLISECONDS)) {
+                    Logger.warn("Persistence queue is full; cache "+key
+                                +" not persisted within alotted time!");
+                }
             }
             catch (Exception ex) {
                 Logger.error("Can't queue cache element: key="

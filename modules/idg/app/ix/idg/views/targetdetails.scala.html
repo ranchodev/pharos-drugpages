@@ -4,6 +4,7 @@
 @import ix.idg.models.Ligand
 @import ix.idg.models.Disease
 @import ix.idg.models.Techdev
+@import ix.idg.models.Assay
 @import ix.idg.models.Compartment
 @import ix.core.models.Value
 @import ix.core.models.VStr
@@ -394,6 +395,26 @@
 </tr>
 }
 
+@ligandcell(lig: Ligand) = {
+   @defining(IDGApp.getStructure(lig)) { struc =>
+      @if(struc != null) {
+      <div class="thumbnail" style="border:0px; padding:0px;">
+        <img class="carousel-image" alt="Structure of @IDGApp.getId(lig)"
+             src='@ix.ncats.controllers.routes.App.structure(struc.getId,"svg",150,null)'>
+	<div class="caption" style="padding:0px;">
+          <p class="text-center"><a class="loader" href='@ix.idg.controllers.routes.IDGApp.ligand(IDGApp.getId(lig))'>@lig.getName()</a>
+         @defining(IDGApp.getActivity(target, lig)) { act =>
+            @if(act != null) {
+               <br>@{act.label} @{"%1$.2f".format(act.getValue())}
+            }
+	 }
+	 </p>
+	 </div>
+      </div>
+      }
+   }
+}
+
 @techdev(t: Target) = {
   @defining(IDGApp.getLinkedObjects(t, classOf[Techdev])){ techdev =>
      @if(techdev != null && !techdev.isEmpty) {
@@ -580,7 +601,7 @@ This is TCRD target <a href='@ix.core.controllers.v1.routes.RouteFactory.get("ta
                        style="max-height: 300px; overflow-y: auto;">
                       <a name="pdb" tocname="PDB"></a>
                       <div class="panel-heading">
-                          <h3 class="panel-title">PDB <i class="fa fa-external-link"></i></h3>
+                          <h3 class="panel-title">PDB <i class="fa fa-external-link"></i> <a class="pull-right" href='@{ix.core.controllers.v1.routes.RouteFactory.get("targets",target.id,null)+"/synonyms(label="+PDB_ID+")"}'><i class="fa fa-code"></i></a></h3>
                       </div>
                       <div class="panel-body">
                           @for(aval <- pdbids){
@@ -799,37 +820,9 @@ This is TCRD target <a href='@ix.core.controllers.v1.routes.RouteFactory.get("ta
              </div>
           }
         }
-        @defining(IDGApp.getLigands(target)) { ligands =>
-              @if(!ligands.isEmpty()) {
-                 <div class="panel panel-default">
-                 <a name="ligands" tocname="Ligands"></a>
-                    <div class="panel-heading">
-                       <h3 class="panel-title"><a class="loader" href='@{ix.idg.controllers.routes.IDGApp.ligands() + "?facet=" + IDG_TARGET+"/"+target.getSynonym(UNIPROT_GENE).term}'>Ligand (@ligands.size)</a> <a class="pull-right" href='@{ix.core.controllers.v1.routes.RouteFactory.get("targets",target.id,null)+"/links(kind="+classOf[Ligand].getName+")"}'><i class="fa fa-code"></i></a></h3>
-                    </div>
-                    <div class="panel-body"
-                         style="max-height: 400px;overflow-y: auto;">
-                      <table class="table table-striped">
-                        @if(ligands.size > 20) {
-                           @for(l <- ligands.subList(0, 20)) {
-                              @ligandrow(l)
-                           }
-                        } else {
-                           @for(lig <- ligands) {
-                              @ligandrow(lig)
-                           }
-                        }
-                      </table>
-                   </div>
-                   @if(ligands.size > 20) {
-                   <div class="panel-footer">
-                      <a class="loader" href='@{ix.idg.controllers.routes.IDGApp.ligands() + "?facet=" + IDG_TARGET+"/"+target.getSynonym(UNIPROT_GENE).term}'>See all @ligands.size ligands...</a>
-                   </div>
-                   }
-                </div>
-             }
-         }
        </div>
     </div> <!-- row -->
+        
     <!--
       -- Disease Relevance
       -->
@@ -1163,6 +1156,43 @@ This is TCRD target <a href='@ix.core.controllers.v1.routes.RouteFactory.get("ta
   </div>
   }
 
+    @defining(IDGApp.getLigands(target)) { ligands =>
+       @if(!ligands.isEmpty()) {
+         <div class="row">
+	    <div class="col-md-12">
+               <div class="panel panel-default">
+                  <a name="ligands" tocname="Ligands"></a>
+                  <div class="panel-heading">
+                       <h3 class="panel-title"><a class="loader" href='@{ix.idg.controllers.routes.IDGApp.ligands() + "?facet=" + IDG_TARGET+"/"+target.getSynonym(UNIPROT_GENE).term}'>Ligand (@ligands.size)</a> <a class="pull-right" href='@{ix.core.controllers.v1.routes.RouteFactory.get("targets",target.id,null)+"/links(kind="+classOf[Ligand].getName+")"}'><i class="fa fa-code"></i></a></h3>
+                  </div>
+		  <div class="panel-body" style="height:250px;">
+		    <div class="ligand-carousel">
+                       @if(ligands.size > 20) {
+                           @for(l <- ligands.subList(0, 20)) {
+			      <div class="carousel-cell">
+			        @ligandcell(l)
+			      </div>
+			   }
+			   <div class="carousel-cell">
+			     <div style="position:absolute;top:70px;margin-left:30px;">
+			       <a class="loader" href='@{ix.idg.controllers.routes.IDGApp.ligands() + "?facet=" + IDG_TARGET+"/"+target.getSynonym(UNIPROT_GENE).term}'><i class="fa fa-plus fa-5x"></i><br> See all @ligands.size ligands...</a>
+			     </div>
+			   </div>
+		       } else {
+		          @for(l <- ligands) {
+		             <div class="carousel-cell">
+			        @ligandcell(l)
+			     </div>
+			  }
+		       }
+		     </div>
+		   </div>
+	       </div>
+	    </div>
+	 </div>
+       }
+    }
+
   @**************
     Assay
   **************@
@@ -1176,7 +1206,7 @@ This is TCRD target <a href='@ix.core.controllers.v1.routes.RouteFactory.get("ta
           <div class="panel-heading">
             <h3 class="panel-title"><span data-toggle="tooltip"
                         data-html="true"
-                        title="<p align='left'>MLP Assays</p>">MLP Assay (@assays.size)</span></h3>
+                        title="<p align='left'>MLP Assays</p>">MLP Assay (@assays.size)</span> <a class="pull-right" href='@{ix.core.controllers.v1.routes.RouteFactory.get("targets",target.id,null)+"/links(kind="+classOf[Assay].getName+")"}'><i class="fa fa-code"></i></a></h3>
           </div>
           <div class="panel-body">
             <div class="panel-body">
@@ -1434,6 +1464,27 @@ role="dialog" aria-labelledby="modalLabelFolder" aria-hidden="true">
 
 
 <head>
+    <script src='@routes.WebJarAssets.at(WebJarAssets.locate("highcharts.js"))' type='text/javascript'></script>
+    <script type="text/javascript" src='@routes.Assets.at("javascripts/d3.js")'></script>
+    <script type="text/javascript" src='@routes.Assets.at("javascripts/tinx.js")'></script>
+    <script type="text/javascript" src='@routes.Assets.at("javascripts/d3-tip.js")'></script>
+    <script type="text/javascript" src='@routes.Assets.at("javascripts/radar-chart.js")'></script>
+    <script type="text/javascript" src='@routes.WebJarAssets.at(WebJarAssets.locate("raphael-min.js"))'></script>
+    <script type="text/javascript" src='@routes.WebJarAssets.at(WebJarAssets.locate("morris.min.js"))'></script>
+    <script type="text/javascript" src='@routes.Assets.at("javascripts/underscore.js")'></script>
+    <script type="text/javascript" src='@routes.Assets.at("javascripts/underscore.string.js")'></script>
+    <script type="text/javascript" src='@routes.Assets.at("javascripts/cart.js")'></script>
+    <script type="text/javascript" src='@routes.Assets.at("javascripts/d3.layout.cloud.js")'></script>
+    <script type="text/javascript" src='@routes.Assets.at("javascripts/wordcloud.js")'></script>
+    <script type="text/javascript" src='@routes.Assets.at("javascripts/jquery.sparkline.js")'></script>
+    <script type="text/javascript" src='@routes.Assets.at("javascripts/flickity.pkgd.min.js")'></script>    
+    <link type="text/css" rel="stylesheet" href='@routes.Assets.at("stylesheets/d3-tip.css")' />
+    <link type="text/css" rel="stylesheet" href='@routes.Assets.at("stylesheets/radar-chart.css")' />
+    <link type="text/css" rel="stylesheet" href='@routes.WebJarAssets.at(WebJarAssets.locate("morris.css"))' />
+    <link type="text/css" rel="stylesheet" href='@routes.Assets.at("ncats/css/loader.css")'/>
+    <link type="text/css" rel="stylesheet" href='@routes.Assets.at("stylesheets/flickity.css")'/>
+    <link type="text/css" rel="stylesheet" href='@routes.Assets.at("stylesheets/main.css")'/>
+
     <style type="text/css">
     .axis path,
     .axis line {
@@ -1454,25 +1505,20 @@ role="dialog" aria-labelledby="modalLabelFolder" aria-hidden="true">
     .tick text {
     visibility:inherit;
     }
+    
+    .carousel-image {
+       min-width: 100px;
+       min-height: 190px;
+    }
+    
+    .carousel-cell {
+       width: 150px;
+    }
+    
+    .flickity-page-dots {
+       bottom: -2px;
+    }
     </style>
-    <script src='@routes.WebJarAssets.at(WebJarAssets.locate("highcharts.js"))' type='text/javascript'></script>
-    <script type="text/javascript" src='@routes.Assets.at("javascripts/d3.js")'></script>
-    <script type="text/javascript" src='@routes.Assets.at("javascripts/tinx.js")'></script>
-    <script type="text/javascript" src='@routes.Assets.at("javascripts/d3-tip.js")'></script>
-    <script type="text/javascript" src='@routes.Assets.at("javascripts/radar-chart.js")'></script>
-    <script type="text/javascript" src='@routes.WebJarAssets.at(WebJarAssets.locate("raphael-min.js"))'></script>
-    <script type="text/javascript" src='@routes.WebJarAssets.at(WebJarAssets.locate("morris.min.js"))'></script>
-    <script type="text/javascript" src='@routes.Assets.at("javascripts/underscore.js")'></script>
-    <script type="text/javascript" src='@routes.Assets.at("javascripts/underscore.string.js")'></script>
-    <script type="text/javascript" src='@routes.Assets.at("javascripts/cart.js")'></script>
-    <script type="text/javascript" src='@routes.Assets.at("javascripts/d3.layout.cloud.js")'></script>
-    <script type="text/javascript" src='@routes.Assets.at("javascripts/wordcloud.js")'></script>
-    <script type="text/javascript" src='@routes.Assets.at("javascripts/jquery.sparkline.js")'></script>    
-    <link type="text/css" rel="stylesheet" href='@routes.Assets.at("stylesheets/d3-tip.css")' />
-    <link type="text/css" rel="stylesheet" href='@routes.Assets.at("stylesheets/radar-chart.css")' />
-    <link type="text/css" rel="stylesheet" href='@routes.WebJarAssets.at(WebJarAssets.locate("morris.css"))' />
-    <link type="text/css" rel="stylesheet" href='@routes.Assets.at("ncats/css/loader.css")'/>    
-    <link type="text/css" rel="stylesheet" href='@routes.Assets.at("stylesheets/main.css")'/>    
 </head>
 
 <script>
@@ -1506,7 +1552,13 @@ $(document).ready(function () {
         ]);
     }
 
-    $("a[id|='exprtab']").click(function () {
+   $('.ligand-carousel').flickity({
+      cellAlign: 'center',
+      contain: true,
+      freeScroll: true
+   });
+
+   $("a[id|='exprtab']").click(function () {
        var p = $(this).attr("id").indexOf('-');
        if (p > 0) {
           var tissue = $(this).attr("id").substring(p+1);

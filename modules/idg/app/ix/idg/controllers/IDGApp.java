@@ -1202,12 +1202,28 @@ public class IDGApp extends App implements Commons {
     
     static Result _getTargetResult (final List<Target> targets)
         throws Exception {
-        final Target t = targets.iterator().next(); // guarantee not empty
+        try {
+            final String key = "getTargetResult/"+Util.sha1(request ());
+            return ok (getOrElse (key, new Callable<Content> () {
+                    public Content call () throws Exception {
+                        return CachableContent.wrap
+                            (getTargetContent (targets));
+                    }
+                }));
+        }
+        catch (Exception ex) {
+            return _internalServerError (ex);
+        }
+    }
+
+    static Content getTargetContent (final List<Target> targets)
+        throws Exception {
+        final Target t = targets.get(0); // guarantee not empty
         List<DiseaseRelevance> diseases = getDiseases (t);
         List<Keyword> breadcrumb = getBreadcrumb (t);
         
-        return ok (ix.idg.views.html
-                   .targetdetails.render(t, diseases, breadcrumb));
+        return ix.idg.views.html
+            .targetdetails.render(t, diseases, breadcrumb);
     }
 
     public static Result targetWarmCache (String secret) {
