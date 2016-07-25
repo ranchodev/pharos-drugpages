@@ -514,16 +514,16 @@ public class IDGApp extends App implements Commons {
                                     }
                                     else {
                                         if (!kw.term.equals(name))
-                                            IxCache.set(cls.getName()+"/"
-                                                        +kw.term, valid);
+                                            IxCache.alias(cls.getName()+"/"
+                                                          +kw.term, key);
                                         if (!kw.term.toUpperCase().equals(name))
-                                            IxCache.set(cls.getName()+"/"
-                                                        +kw.term.toUpperCase(),
-                                                        valid);
+                                            IxCache.alias
+                                                (cls.getName()+"/"
+                                                 +kw.term.toUpperCase(), key);
                                         if (!kw.term.toLowerCase().equals(name))
-                                            IxCache.set(cls.getName()+"/"
-                                                        +kw.term.toLowerCase(),
-                                                        valid);
+                                            IxCache.alias
+                                                (cls.getName()+"/"
+                                                 +kw.term.toLowerCase(), key);
                                     }
                                 }
                             }
@@ -550,15 +550,17 @@ public class IDGApp extends App implements Commons {
                     +"/"+cls.getName()+"/"+name+"/result/"
                     +(view != null?view:"");
                 
-                return getOrElse (key, new Callable<Result> () {
-                        public Result call () throws Exception {
+                Content content = getOrElse (key, new Callable<Content> () {
+                        public Content call () throws Exception {
                             List<T> e = find (name);
-                            if (e == null || e.isEmpty()) {
-                                return _notFound ("Unknown name: "+name);
+                            if (e != null && !e.isEmpty()) {
+                                return CachableContent.wrap(getContent (e));
                             }
-                            return getResult (e);
+                            return null;
                         }
                     });
+                return content != null ? ok (content)
+                    : _notFound ("Unknown name: "+name);
             }
             catch (Exception ex) {
                 Logger.error("Unable to generate Result for \""+name+"\"", ex);
@@ -566,7 +568,7 @@ public class IDGApp extends App implements Commons {
             }
         }
 
-        abstract Result getResult (List<T> e) throws Exception;
+        abstract Content getContent (List<T> e) throws Exception;
     }
 
     static class TargetCacheWarmer implements Runnable {
@@ -1166,8 +1168,8 @@ public class IDGApp extends App implements Commons {
     
     static final GetResult<Target> TargetResult =
         new GetResult<Target>(Target.class, TargetFactory.finder) {
-            public Result getResult (List<Target> targets) throws Exception {
-                return _getTargetResult (targets);
+            public Content getContent (List<Target> targets) throws Exception {
+                return getTargetContent (targets);
             }
             @Override
             protected boolean matchedLabelsValid (Set<String> labels) {
@@ -1200,21 +1202,6 @@ public class IDGApp extends App implements Commons {
                 });
     }
     
-    static Result _getTargetResult (final List<Target> targets)
-        throws Exception {
-        try {
-            final String key = "getTargetResult/"+Util.sha1(request ());
-            return ok (getOrElse (key, new Callable<Content> () {
-                    public Content call () throws Exception {
-                        return CachableContent.wrap
-                            (getTargetContent (targets));
-                    }
-                }));
-        }
-        catch (Exception ex) {
-            return _internalServerError (ex);
-        }
-    }
 
     static Content getTargetContent (final List<Target> targets)
         throws Exception {
@@ -1788,17 +1775,18 @@ public class IDGApp extends App implements Commons {
             
             return App.fetchResult
                 (context, rows, page, new DefaultResultRenderer<Target> () {
-                        public Result render (SearchResultContext context,
-                                              int page, int rows,
-                                              int total, int[] pages,
-                                              List<Facet> facets,
-                                              List<Target> targets) {
-                            return ok (ix.idg.views.html.targets.render
-                                       (page, rows, total,
-                                        pages, decorate
-                                        (Target.class,
-                                         filter (facets, TARGET_FACETS)),
-                                        targets, context.getId()));
+                        public Content getContent
+                            (SearchResultContext context,
+                             int page, int rows,
+                             int total, int[] pages,
+                             List<Facet> facets,
+                             List<Target> targets) {
+                            return ix.idg.views.html.targets.render
+                                (page, rows, total,
+                                 pages, decorate
+                                 (Target.class,
+                                  filter (facets, TARGET_FACETS)),
+                                 targets, context.getId());
                         }
                     });
         }
@@ -1825,17 +1813,18 @@ public class IDGApp extends App implements Commons {
             
             return App.fetchResult
                 (context, rows, page, new DefaultResultRenderer<Target> () {
-                        public Result render (SearchResultContext context,
-                                              int page, int rows,
-                                              int total, int[] pages,
-                                              List<Facet> facets,
-                                              List<Target> targets) {
-                            return ok (ix.idg.views.html.targets.render
-                                       (page, rows, total,
-                                        pages, decorate
-                                        (Target.class,
-                                         filter (facets, TARGET_FACETS)),
-                                        targets, context.getId()));
+                        public Content getContent
+                            (SearchResultContext context,
+                             int page, int rows,
+                             int total, int[] pages,
+                             List<Facet> facets,
+                             List<Target> targets) {
+                            return ix.idg.views.html.targets.render
+                                (page, rows, total,
+                                 pages, decorate
+                                 (Target.class,
+                                  filter (facets, TARGET_FACETS)),
+                                 targets, context.getId());
                         }
                     });
         }
@@ -2321,8 +2310,8 @@ public class IDGApp extends App implements Commons {
 
     static final GetResult<Ligand> LigandResult =
         new GetResult<Ligand>(Ligand.class, LigandFactory.finder) {
-            public Result getResult (List<Ligand> ligands) throws Exception {
-                return _getLigandResult (ligands);
+            public Content getContent (List<Ligand> ligands) throws Exception {
+                return getLigandContent (ligands);
             }
         };
 
@@ -2346,7 +2335,7 @@ public class IDGApp extends App implements Commons {
         return null;
     }
 
-    static Result _getLigandResult (List<Ligand> ligands) throws Exception {
+    static Content getLigandContent (List<Ligand> ligands) throws Exception {
         // force it to show only one since it's possible that the provided
         // name isn't unique
         if (true || ligands.size() == 1) {
@@ -2389,8 +2378,8 @@ public class IDGApp extends App implements Commons {
                 }
             }
             
-            return ok (ix.idg.views.html
-                       .liganddetails.render(ligand, acts, breadcrumb));
+            return ix.idg.views.html
+                .liganddetails.render(ligand, acts, breadcrumb);
         }
         else {
             TextIndexer indexer = _textIndexer.createEmptyInstance();
@@ -2410,9 +2399,9 @@ public class IDGApp extends App implements Commons {
                 (result.getFacets(), LIGAND_FACETS);
             indexer.shutdown();
         
-            return ok (ix.idg.views.html.ligands.render
-                       (1, result.count(), result.count(),
-                        new int[0], decorate (facets), ligands));
+            return ix.idg.views.html.ligands.render
+                (1, result.count(), result.count(),
+                 new int[0], decorate (facets), ligands);
         }
     }
     
@@ -2478,18 +2467,19 @@ public class IDGApp extends App implements Commons {
         throws Exception {
         return App.fetchResult
             (context, rows, page, new DefaultResultRenderer<Ligand> () {
-                    public Result render (SearchResultContext context,
-                                          int page, int rows,
-                                          int total, int[] pages,
-                                          List<TextIndexer.Facet> facets,
-                                          List<Ligand> ligands) {
-                        return ok (ix.idg.views.html.ligandsgallery.render
-                                   (page, rows, total,
-                                    pages, decorate (filter
-                                                     (facets, LIGAND_FACETS)),
-                                    ligands, context.getId()));
+                    public Content getContent
+                        (SearchResultContext context,
+                         int page, int rows,
+                         int total, int[] pages,
+                         List<TextIndexer.Facet> facets,
+                         List<Ligand> ligands) {
+                        return ix.idg.views.html.ligandsgallery.render
+                            (page, rows, total,
+                             pages, decorate (filter
+                                              (facets, LIGAND_FACETS)),
+                             ligands, context.getId());
                     }
-            });
+                });
     }
 
     public static Result similarity (final String query,
@@ -2538,8 +2528,9 @@ public class IDGApp extends App implements Commons {
     
     static final GetResult<Disease> DiseaseResult =
         new GetResult<Disease>(Disease.class, DiseaseFactory.finder) {
-            public Result getResult (List<Disease> diseases) throws Exception {
-                return _getDiseaseResult (diseases);
+            public Content getContent (List<Disease> diseases)
+                throws Exception {
+                return getDiseaseContent (diseases);
             }
         };
 
@@ -2549,7 +2540,7 @@ public class IDGApp extends App implements Commons {
                 long id = Long.parseLong(name.substring(5));
                 Disease d = DiseaseFactory.getDisease(id);
                 if (d != null)
-                    return _getDiseaseResult (d);
+                    return ok (getDiseaseContent (d));
             }
             catch (Exception ex) {
                 ex.printStackTrace();
@@ -2558,12 +2549,12 @@ public class IDGApp extends App implements Commons {
         return DiseaseResult.get(name);
     }
 
-    static Result _getDiseaseResult (final List<Disease> diseases)
+    static Content getDiseaseContent (final List<Disease> diseases)
         throws Exception {
-        return _getDiseaseResult (diseases.iterator().next());
+        return getDiseaseContent (diseases.iterator().next());
     }
 
-    static Result _getDiseaseResult (final Disease d) throws Exception {
+    static Content getDiseaseContent (final Disease d) throws Exception {
         // resolve the targets for this disease
         final String key = "diseases/"+d.id+"/targets";
         List<Target> targets = getOrElse
@@ -2595,9 +2586,9 @@ public class IDGApp extends App implements Commons {
             }
         });
         
-        return ok(ix.idg.views.html.diseasedetails.render
-                  (d, ligs.toArray(new Ligand[0]),
-                   targets.toArray(new Target[0]), getBreadcrumb (d)));
+        return ix.idg.views.html.diseasedetails.render
+            (d, ligs.toArray(new Ligand[0]),
+             targets.toArray(new Target[0]), getBreadcrumb (d));
     }
 
     public static List<Keyword> getBreadcrumb (Disease d) {
@@ -3387,16 +3378,18 @@ public class IDGApp extends App implements Commons {
 
             return App.fetchResult
                 (context, rows, page, new DefaultResultRenderer<Target> () {
-                        public Result render (SearchResultContext context,
-                                              int page, int rows,
-                                              int total, int[] pages,
-                                              List<Facet> facets,
-                                              List<Target> targets) {
-                            return ok (ix.idg.views.html.targets.render
-                                       (page, rows, total,
-                                        pages, decorate(Target.class,
-                                                       filter (facets, TARGET_FACETS)),
-                                               targets, context.getId()));
+                        public Content getContent
+                            (SearchResultContext context,
+                             int page, int rows,
+                             int total, int[] pages,
+                             List<Facet> facets,
+                             List<Target> targets) {
+                            return ix.idg.views.html.targets.render
+                                (page, rows, total,
+                                 pages, decorate
+                                 (Target.class,
+                                  filter (facets, TARGET_FACETS)),
+                                 targets, context.getId());
                         }
                     });
         }
@@ -3817,18 +3810,18 @@ public class IDGApp extends App implements Commons {
                         return App.fetchResult
                             (processor.getContext(), rows, page,
                              new DefaultResultRenderer<Target> () {
-                                public Result render
+                                public Content getContent
                                     (SearchResultContext context,
                                      int page, int rows,
                                      int total, int[] pages,
                                      List<Facet> facets,
                                      List<Target> targets) {
-                                    return ok (ix.idg.views.html.targets.render
-                                               (page, rows, total,
-                                                pages, decorate(Target.class,
-                                                                filter (facets,
-                                                                        TARGET_FACETS)),
-                                                targets, context.getId()));
+                                    return ix.idg.views.html.targets.render
+                                        (page, rows, total,
+                                         pages, decorate
+                                         (Target.class,
+                                          filter (facets, TARGET_FACETS)),
+                                         targets, context.getId());
                                 }
                             });
                     }

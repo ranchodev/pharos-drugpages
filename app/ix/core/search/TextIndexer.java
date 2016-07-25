@@ -363,7 +363,7 @@ public class TextIndexer {
         }
     }
 
-    public static class SearchResult implements java.io.Serializable {
+    public static class SearchResult /*implements java.io.Serializable*/ {
 
         String key;
         String query;

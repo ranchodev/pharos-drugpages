@@ -110,6 +110,13 @@ public class IxCache extends Plugin
         }
     }
 
+    static class CacheAlias implements Serializable {
+        static final long serialVersionUID = 0x121212l;
+        public String key;
+        CacheAlias (String key) {
+            this.key = key;
+        }
+    }
 
     class SerializePayload {
         final Element elm;
@@ -125,7 +132,6 @@ public class IxCache extends Plugin
             int tries = 0;
             byte[] buf = null;
             
-            //Logger.debug(Thread.currentThread().getName()+" >>> caching key: '"+key+"'");
             do {
                 buf = serialize (elm);
                 if (buf != null) {
@@ -136,6 +142,7 @@ public class IxCache extends Plugin
                         Logger.warn
                             ("** PUT for key "+elm.getKey()
                              +" returns status "+status);
+                    //Logger.debug(Thread.currentThread().getName()+" >>> cached key: '"+elm.getKey()+"' ["+elm.getObjectValue().getClass()+"] = "+buf.length);
                 }
                 else {
                     // this is just a bad way but is needed because there
@@ -268,34 +275,44 @@ public class IxCache extends Plugin
     public static Element getElm (String key) {
         if (_instance == null)
             throw new IllegalStateException ("Cache hasn't been initialized!");
-        return _instance.cache.get(key);
+        
+        Element elm = _instance.cache.get(key);
+        if (elm != null) {
+            Object obj = elm.getObjectValue();
+            while (obj instanceof CacheAlias) {
+                elm = _instance.cache.get(((CacheAlias)obj).key);
+                obj = elm != null ? elm.getObjectValue() : null;
+            }
+        }
+        return elm;
     }
     
     public static Object get (String key) {
-        if (_instance == null)
-            throw new IllegalStateException ("Cache hasn't been initialized!");
-        Element elm = _instance.cache.get(key);
+        Element elm = getElm (key);
         return elm != null ? elm.getObjectValue() : null;
     }
 
+    public static boolean alias (String key, String oldKey) {
+        boolean ok = false;
+        if (!key.equals(oldKey)) {
+            Logger.debug("creating alias "+key+" => "+oldKey);
+            put (new Element (key, new CacheAlias (oldKey)));
+        }
+        return ok;
+    }
+
     public static long getLastAccessTime (String key) {
-        if (_instance == null)
-            throw new IllegalStateException ("Cache hasn't been initialized!");
-        Element elm = _instance.cache.get(key);
+        Element elm = getElm (key);
         return elm != null ? elm.getLastAccessTime() : 0l;
     }
 
     public static long getExpirationTime (String key) {
-        if (_instance == null)
-            throw new IllegalStateException ("Cache hasn't been initialized!");
-        Element elm = _instance.cache.get(key);
+        Element elm = getElm (key);
         return elm != null ? elm.getExpirationTime() : 0l;
     }
 
     public static boolean isExpired (String key) {
-        if (_instance == null)
-            throw new IllegalStateException ("Cache hasn't been initialized!");
-        Element elm = _instance.cache.get(key);
+        Element elm = getElm (key);
         return elm != null ? elm.isExpired() : false;
     }
 
@@ -305,10 +322,7 @@ public class IxCache extends Plugin
     public static <T> T getOrElse (long epoch,
                                    String key, Callable<T> generator)
         throws Exception {
-        if (_instance == null)
-            throw new IllegalStateException ("Cache hasn't been initialized!");
-
-        Element elm = _instance.cache.get(key);
+        Element elm = getElm (key);
         if (elm == null || elm.getObjectValue() == null
             || elm.getCreationTime() < epoch) {
             T v = generator.call();
@@ -322,9 +336,6 @@ public class IxCache extends Plugin
     
     public static <T> T getOrElse (String key, Callable<T> generator)
         throws Exception {
-        if (_instance == null)
-            throw new IllegalStateException ("Cache hasn't been initialized!");
-        
         Object value = get (key);
         if (value == null) {
             if (_instance.ctx.debug(2))
@@ -339,9 +350,6 @@ public class IxCache extends Plugin
     // mimic play.Cache 
     public static <T> T getOrElse (String key, Callable<T> generator,
                                    int seconds) throws Exception {
-        if (_instance == null)
-            throw new IllegalStateException ("Cache hasn't been initialized!");
-        
         Object value = get (key);
         if (value == null) {
             if (_instance.ctx.debug(2))

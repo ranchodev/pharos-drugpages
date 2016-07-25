@@ -398,19 +398,21 @@
 @ligandcell(lig: Ligand) = {
    @defining(IDGApp.getStructure(lig)) { struc =>
       @if(struc != null) {
-      <div class="thumbnail" style="border:0px; padding:0px;">
-        <img class="carousel-image" alt="Structure of @IDGApp.getId(lig)"
+       <div class="carousel-cell">
+         <div class="thumbnail" style="border:0px; padding:0px;">
+           <img class="carousel-image" alt="Structure of @IDGApp.getId(lig)"
              src='@ix.ncats.controllers.routes.App.structure(struc.getId,"svg",150,null)'>
-	<div class="caption" style="padding:0px;">
-          <p class="text-center"><a class="loader" href='@ix.idg.controllers.routes.IDGApp.ligand(IDGApp.getId(lig))'>@lig.getName()</a>
-         @defining(IDGApp.getActivity(target, lig)) { act =>
-            @if(act != null) {
-               <br>@{act.label} @{"%1$.2f".format(act.getValue())}
-            }
-	 }
-	 </p>
-	 </div>
-      </div>
+	   <div class="caption" style="padding:0px;">
+             <p class="text-center"><a class="loader" href='@ix.idg.controllers.routes.IDGApp.ligand(IDGApp.getId(lig))'>@lig.getName()</a>
+             @defining(IDGApp.getActivity(target, lig)) { act =>
+               @if(act != null) {
+                 <br>@{act.label} @{"%1$.2f".format(act.getValue())}
+               }
+	     }
+	     </p>
+	   </div>
+         </div>
+       </div>
       }
    }
 }
@@ -1169,9 +1171,7 @@ This is TCRD target <a href='@ix.core.controllers.v1.routes.RouteFactory.get("ta
 		    <div class="ligand-carousel">
                        @if(ligands.size > 20) {
                            @for(l <- ligands.subList(0, 20)) {
-			      <div class="carousel-cell">
 			        @ligandcell(l)
-			      </div>
 			   }
 			   <div class="carousel-cell">
 			     <div style="position:absolute;top:70px;margin-left:30px;">
@@ -1180,9 +1180,7 @@ This is TCRD target <a href='@ix.core.controllers.v1.routes.RouteFactory.get("ta
 			   </div>
 		       } else {
 		          @for(l <- ligands) {
-		             <div class="carousel-cell">
-			        @ligandcell(l)
-			     </div>
+		             @ligandcell(l)
 			  }
 		       }
 		     </div>
