@@ -1911,15 +1911,10 @@ public class TcrdRegistry extends Controller implements Commons {
                 int cnt = 0;
                 while (rset.next()) {
                     final String name = rset.getString("name");
-                    Disease d = IxCache.getOrElse
-                        (name, new Callable<Disease>() {
-                                public Disease call() throws Exception {
-                                    return registerDiseaseIfAbsent
-                                    (name, type, tcrd, rset);
-                                }
-                            });
+                    Disease d = registerDiseaseIfAbsent
+                        (name, type, tcrd, rset);
                     
-                    XRef xref = target.addIfAbsent(new XRef (d));                    
+                    XRef xref = target.addIfAbsent(new XRef (d));
                     String dtype = rset.getString("datype");
                     Keyword source = datasources.get(dtype);
                     if (source == null) {
@@ -3039,7 +3034,7 @@ public class TcrdRegistry extends Controller implements Commons {
                  +"on (a.target_id = b.id and a.protein_id = c.id)\n"
                  +"left join tinx_novelty d\n"
                  +"    on d.protein_id = a.protein_id \n"
-                 +"where c.id in (18204,862,74,6571)\n"
+                 //+"where c.id in (18204,862,74,6571)\n"
                  //+"where a.target_id in (12241)\n"
                  //+"where c.uniprot = 'Q9H3Y6'\n"
                  //+"where b.tdl in ('Tclin','Tchem')\n"
