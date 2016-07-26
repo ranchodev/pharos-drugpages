@@ -15,6 +15,7 @@ data
 /.project
 /RUNNING_PID
 /.settings
+.sbtopts
 target
 text
 modules/*/target

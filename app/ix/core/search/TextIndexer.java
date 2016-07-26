@@ -95,7 +95,6 @@ public class TextIndexer {
     static final String DIM_CLASS = "ix.Class";
 
     static final DateFormat YEAR_DATE_FORMAT = new SimpleDateFormat ("yyyy");
-    static final SearchResultPayload POISON_PAYLOAD = new SearchResultPayload ();
     static final Object POISON_PILL = new Object ();
 
     static final FieldType TermVectorFieldType = new FieldType ();
@@ -363,7 +362,7 @@ public class TextIndexer {
         }
     }
 
-    public static class SearchResult implements java.io.Serializable {
+    public static class SearchResult /*implements java.io.Serializable*/ {
 
         String key;
         String query;
@@ -463,7 +462,8 @@ public class TextIndexer {
         public long elapsed () { return stop.get() - timestamp; }
         public long getStopTime () { return stop.get(); }
         public boolean finished () { return stop.get() >= timestamp; }
-        
+
+        public String toString () { return getClass().getName()+"@"+key; }
         public SearchContextAnalyzer getSearchContextAnalyzer(){
             return null;
         }
@@ -648,14 +648,15 @@ public class TextIndexer {
         }
     }
 
-    static class SearchResultPayload {
+    final SearchResultPayload POISON_PAYLOAD = new SearchResultPayload ();    
+    class SearchResultPayload {
         SearchResult result;
         TopDocs hits;
         IndexSearcher searcher;
         Map<String, Model.Finder> finders =
             new HashMap<String, Model.Finder>();
         SearchOptions options;
-        int total, offset;
+        int total, offset, requeued = 0;
         
         SearchResultPayload () {}
         SearchResultPayload (SearchResult result, TopDocs hits,
@@ -669,12 +670,37 @@ public class TextIndexer {
             offset = Math.min(options.skip, total);
         }
 
-        void fetch () throws IOException {
+        void fetch () throws Exception {
             try {
-                fetch (total);
+                int size = fetch (total);
+                if (size < total) {
+                    // FIXME: make this configurable
+                    if (requeued < 20) {
+                        // requeue this payload
+                        Logger.warn(Thread.currentThread().getName()
+                                    +": unable to fetch payload "+result
+                                    +" within alotted time; requeuing this "
+                                    +"payload "+result.size()+"!");
+                        ++requeued;
+                        fetchQueue.put(this);
+                    }
+                    else {
+                        Logger.warn(Thread.currentThread().getName()
+                                    +": payload "+result+" has been requeued "
+                                    +requeued+" times; it's time to move on "
+                                    +"dude!");
+                        result.done();
+                    }
+                }
+                if (DEBUG (1)) {
+                    Logger.debug(Thread.currentThread().getName()
+                                 +": **** fetchQueue size = "
+                                 +fetchQueue.size()+" ****");
+                }
             }
             finally {
-                result.done();
+                if (result.size() == total)
+                    result.done();
             }
         }
 
@@ -714,9 +740,15 @@ public class TextIndexer {
         }
         
             
-        void fetch (int size)  throws IOException {
+        int fetch (int size)  throws IOException {
             size = Math.min(options.top, Math.min(total - offset, size));
-            for (int i = result.size(); i < size; ++i) {
+            int i = result.size();
+            long start = System.currentTimeMillis();
+            // give each payload a small amount of time to do its business..
+            // if it isn't done by then, we push it back to the end of the
+            // queue!
+            // FIXME: make this configurable!
+            for (long elapsed = 0l; i < size && elapsed < 500l; ++i) {
                 Document doc = searcher.doc(hits.scoreDocs[i+offset].doc);
                 final IndexableField kind = doc.getField(FIELD_KIND);
                 if (kind != null) {
@@ -751,7 +783,16 @@ public class TextIndexer {
                                      +"doesn't have field "+field);
                     }
                 }
+                elapsed = System.currentTimeMillis() - start;
             }
+            
+            if (DEBUG (1)) {
+                Logger.debug(Thread.currentThread().getName()+": fetched "+i
+                             +"/"+size+" for payload "+result+" in "
+                             +(System.currentTimeMillis()-start)+"ms!");
+            }
+            
+            return i;
         }
     }
         
@@ -1375,6 +1416,12 @@ public class TextIndexer {
                 payload.fetch(fetch);
 
                 if (hits.totalHits > fetch) {
+                    if (DEBUG (1)) {
+                        Logger.debug("## Fetching remaining "
+                                     +(hits.totalHits-fetch)
+                                     +" in the background; fetchQueue "
+                                     +"size is "+fetchQueue.size());
+                    }
                     // now queue the payload so the remainder is fetched in
                     // the background
                     fetchQueue.put(payload);

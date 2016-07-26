@@ -38,7 +38,7 @@ public class PPIProteinMeSH {
         ResultSet rset = stm.executeQuery
             ("select a.id,a.uniprot \n"+
              "from protein a, ppi b\n"+
-             "where a.id = b.protein1_id\n"+
+             "where a.id = b.protein2_id\n"+
              "and b.ppitype = 'BioPlex'\n");
         while (rset.next()) {
             long protein = rset.getLong(1);

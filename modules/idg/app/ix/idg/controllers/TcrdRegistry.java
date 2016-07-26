@@ -3039,7 +3039,7 @@ public class TcrdRegistry extends Controller implements Commons {
                  //+"where c.uniprot = 'Q9H3Y6'\n"
                  //+"where b.tdl in ('Tclin','Tchem')\n"
                  //+"where b.idgfam = 'kinase'\n"
-                 //+" where c.uniprot = 'Q8N568'\n"
+                 //+" where c.uniprot = 'P15291'\n"
                  +"order by d.score desc, c.id\n"
                  +(rows > 0 ? ("limit "+rows) : "")
                  );

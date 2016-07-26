@@ -13,6 +13,7 @@ import java.util.concurrent.locks.*;
 import controllers.AssetsBuilder;
 import play.Play;
 import play.Logger;
+import play.twirl.api.Content;
 import play.api.mvc.Action;
 import play.api.mvc.AnyContent;
 import play.mvc.Controller;
@@ -138,9 +139,10 @@ public class App extends Authentication {
      * interface for rendering a result page
      */
     public interface ResultRenderer<T> {
-        Result render (SearchResultContext context,
-                       int page, int rows, int total, int[] pages,
-                       List<TextIndexer.Facet> facets, List<T> results);
+        Content getContent
+            (SearchResultContext context,
+             int page, int rows, int total, int[] pages,
+             List<TextIndexer.Facet> facets, List<T> results);
         int getFacetDim ();
     }
 
@@ -763,7 +765,7 @@ public class App extends Authentication {
                     public SearchResult call () throws Exception {
                         SearchResult result = SearchFactory.search
                             (kind, null, 0, 0, fdim, null);
-                        return cacheKey (result, sha1);
+                        return cacheKey (result, sha1, sha1);
                     }
                 });
         }
@@ -820,7 +822,7 @@ public class App extends Authentication {
                                          max.equals("")
                                          ? null : Integer.parseInt(max));
                                     result.updateCacheWhenComplete(sha1);
-                                    return cacheKey (result, sha1);
+                                    return cacheKey (result, sha1, sha1);
                                 }
                             });
                     }
@@ -834,7 +836,7 @@ public class App extends Authentication {
                                 (kind, hasFacets ? null : q,
                                  total, 0, FACET_DIM, query);
                                 result.updateCacheWhenComplete(sha1);
-                                return cacheKey (result, sha1);
+                                return cacheKey (result, sha1, sha1);
                             }
                         });
 
@@ -872,12 +874,13 @@ public class App extends Authentication {
         return null;
     }
 
-    static protected SearchResult cacheKey (SearchResult result, String key) {
+    static protected SearchResult cacheKey (SearchResult result,
+                                            String key, String cacheKey) {
         if (key.length() > 10) {
             key = key.substring(0, 10);
         }
-        result.setKey(key);     
-        IxCache.set(key, result); // create alias 
+        result.setKey(key);
+        IxCache.alias(key, cacheKey); // create alias 
         return result;
     }
 
@@ -1330,7 +1333,7 @@ public class App extends Authentication {
         protected abstract Object instrument (T r) throws Exception;
     }
 
-    public static class SearchResultContext implements Serializable {
+    public static class SearchResultContext /*implements Serializable*/ {
         public enum Status {
             Pending,
             Running,
@@ -1444,8 +1447,7 @@ public class App extends Authentication {
         }
     }
 
-    static public class CachableContent
-        implements play.twirl.api.Content, Serializable {
+    static public class CachableContent implements Content, Serializable {
         static final long serialVersionUID = 0x98765432l;
         String type;
         String body;
@@ -1759,7 +1761,7 @@ public class App extends Authentication {
                         searchResult.updateCacheWhenComplete(key);
                         // make an alias for the context.id to this search
                         // result
-                        return cacheKey (searchResult, context.getId());
+                        return cacheKey (searchResult, context.getId(), key);
                     }
                 });
 
@@ -1803,21 +1805,26 @@ public class App extends Authentication {
                 final int[] _pages = pages;
             
                 // result is cached
-                return getOrElse(result.getStopTime(),
-                                 k, new Callable<Result> () {
-                        public Result call () throws Exception {
-                            Logger.debug("Cache misses: "+k+" count="+_count
-                                         +" rows="+_rows+" page="+_page);
-                            return renderer.render
-                                (context, _page, _rows, _count, _pages,
-                                 facets, results);
-                        }
-                    });
+                return ok (getOrElse
+                           (result.getStopTime(),
+                            k, new Callable<Content> () {
+                                    public Content call () throws Exception {
+                                        Logger.debug("Cache misses: "+k
+                                                     +" count="+_count
+                                                     +" rows="+_rows
+                                                     +" page="+_page);
+                                        return CachableContent.wrap
+                                            (renderer.getContent
+                                             (context, _page, _rows,
+                                              _count, _pages,
+                                              facets, results));
+                                    }
+                                }));
             }
         }
         
-        return renderer.render(context, page, rows, count,
-                               pages, facets, results);
+        return ok (renderer.getContent(context, page, rows, count,
+                                       pages, facets, results));
     }
 
     static ObjectNode toJson (Element elm) {
