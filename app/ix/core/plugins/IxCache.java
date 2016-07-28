@@ -18,6 +18,8 @@ import net.sf.ehcache.Cache;
 import net.sf.ehcache.CacheManager;
 import net.sf.ehcache.Element;
 import net.sf.ehcache.config.CacheConfiguration;
+import net.sf.ehcache.config.PersistenceConfiguration;
+import net.sf.ehcache.config.CacheWriterConfiguration;
 import net.sf.ehcache.Statistics;
 import net.sf.ehcache.Status;
 import net.sf.ehcache.Ehcache;
@@ -59,7 +61,6 @@ public class IxCache extends Plugin
     private File payload; // payload for cache that's too big (>5MB)
     private long maxCacheObjectSize;
     protected Database db;
-    private MessageDigest md;
 
     static private IxCache _instance;
 
@@ -198,16 +199,40 @@ public class IxCache extends Plugin
 
         int maxElements = app.configuration()
             .getInt(CACHE_MAX_ELEMENTS, MAX_ELEMENTS);
+
         cache = new SelfPopulatingCache
             (CacheManager.getInstance().addCacheIfAbsent(CACHE_NAME), this);
+        //cache = CacheManager.getInstance().addCacheIfAbsent(CACHE_NAME);
+        
+        cache.registerCacheWriter(this);
+        CacheWriterConfiguration wconf = new CacheWriterConfiguration ();
+        wconf.maxWriteDelay(5)
+            .minWriteDelay(1)
+            .writeMode(CacheWriterConfiguration.WriteMode.WRITE_BEHIND)
+            .rateLimitPerSecond(100)
+            .writeBehindMaxQueueSize(app.configuration()
+                                     .getInt(CACHE_QUEUE_SIZE, 1000))
+            .writeBatching(true)
+            .writeBatchSize(100)
+            .writeCoalescing(true)
+            .retryAttempts(20)
+            .retryAttemptDelaySeconds(2)
+            ;
+        
         cache.getCacheConfiguration()
+            .cacheWriter(wconf)
+            .eternal(true)
             .overflowToOffHeap(true)
+            .overflowToDisk(true)
             .maxElementsOnDisk(0)
+            .diskPersistent(true)
             .maxEntriesLocalHeap(maxElements)
             .timeToLiveSeconds(app.configuration()
                                .getInt(CACHE_TIME_TO_LIVE, TIME_TO_LIVE))
             .timeToIdleSeconds(app.configuration()
-                               .getInt(CACHE_TIME_TO_IDLE, TIME_TO_IDLE));
+                               .getInt(CACHE_TIME_TO_IDLE, TIME_TO_IDLE))
+            
+            ;
         /*
         cache.getCacheEventNotificationService()
             .registerListener(new CacheEventListenerAdapter () {
@@ -217,17 +242,9 @@ public class IxCache extends Plugin
                     }
                 });
         */
-        cache.registerCacheWriter(this);
+
         queue = new ArrayBlockingQueue<SerializePayload>
             (app.configuration().getInt(CACHE_QUEUE_SIZE, 10000));
-        
-        try {
-            md = MessageDigest.getInstance("sha1");
-        }
-        catch (Exception ex) {
-            Logger.error
-                ("Can't initialize plugin "+getClass().getName()+"!", ex);
-        }
         
         maxCacheObjectSize = app.configuration()
             .getLong(CACHE_MAX_OBJECT_SIZE, 1024*1024*5l);
@@ -254,7 +271,7 @@ public class IxCache extends Plugin
     }
 
     static protected void put (Element elm) {
-        if (elm.isSerializable() && _instance.queue.remainingCapacity() > 0) {
+        if (elm.isSerializable() /*&& _instance.queue.remainingCapacity() > 0*/) {
             _instance.cache.putWithWriter(elm);
             if (false) {
                 Logger.debug("caching key="+elm.getKey()
@@ -426,7 +443,7 @@ public class IxCache extends Plugin
         if (_instance == null)
             throw new IllegalStateException ("Cache hasn't been initialized!");
         boolean found = _instance.cache.isKeyInCache(key);
-        if (!found) {
+        if (!found && _instance.db != null) {
             // try persistence
             try {
                 DatabaseEntry dkey = _instance.getKeyEntry(key);
@@ -500,7 +517,7 @@ public class IxCache extends Plugin
         
         byte[] ret = null;      
         try {
-            md.reset();
+            MessageDigest md = MessageDigest.getInstance("sha1");
             ObjectOutputStream oos = new ObjectOutputStream
                 (new DigestOutputStream (new FileOutputStream (file), md));
 
@@ -630,11 +647,14 @@ public class IxCache extends Plugin
         Serializable key = elm.getKey();
         if (key != null) {
             try {
+                /*
                 if (!queue.offer(new SerializePayload (elm),
                                  1000, TimeUnit.MILLISECONDS)) {
                     Logger.warn("Persistence queue is full; cache "+key
                                 +" not persisted within alotted time!");
                 }
+                */
+                new SerializePayload(elm).persists();
             }
             catch (Exception ex) {
                 Logger.error("Can't queue cache element: key="
