@@ -675,11 +675,12 @@ public class TextIndexer {
                 int size = fetch (total);
                 if (size < total) {
                     // FIXME: make this configurable
-                    if (requeued < 20) {
+                    if (true || requeued < 20) {
                         // requeue this payload
                         Logger.warn(Thread.currentThread().getName()
                                     +": unable to fetch payload "+result
-                                    +" within alotted time; requeuing this "
+                                    +" within alotted time; requeuing ("
+                                    +(requeued+1)+") this "
                                     +"payload "+result.size()+"!");
                         ++requeued;
                         fetchQueue.put(this);
