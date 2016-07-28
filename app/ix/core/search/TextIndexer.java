@@ -209,6 +209,7 @@ public class TextIndexer {
                 tvec.terms.put(me.getKey(), map);
             }
             counts = null;
+            releaseSearcher (searcher);
         }
         
         public void setScorer (Scorer scorer) {
@@ -671,22 +672,28 @@ public class TextIndexer {
         }
 
         void fetch () throws Exception {
+            String thread = Thread.currentThread().getName();
             try {
                 int size = fetch (total);
                 if (size < total) {
                     // FIXME: make this configurable
                     if (true || requeued < 20) {
                         // requeue this payload
-                        Logger.warn(Thread.currentThread().getName()
+                        Logger.warn(thread
                                     +": unable to fetch payload "+result
                                     +" within alotted time; requeuing ("
                                     +(requeued+1)+") this "
                                     +"payload "+result.size()+"!");
                         ++requeued;
-                        fetchQueue.put(this);
+                        if (!fetchQueue.offer(this, 5, TimeUnit.SECONDS)) {
+                            Logger.warn
+                                (thread+": payload "+result+" fails "
+                                 +"to load fully due to fetchQueue timeout!");
+                            result.done();
+                        }
                     }
                     else {
-                        Logger.warn(Thread.currentThread().getName()
+                        Logger.warn(thread
                                     +": payload "+result+" has been requeued "
                                     +requeued+" times; it's time to move on "
                                     +"dude!");
@@ -694,14 +701,18 @@ public class TextIndexer {
                     }
                 }
                 if (DEBUG (1)) {
-                    Logger.debug(Thread.currentThread().getName()
+                    Logger.debug(thread
                                  +": **** fetchQueue size = "
                                  +fetchQueue.size()+" ****");
                 }
             }
             finally {
-                if (result.size() == total)
+                if (result.size() == total) {
                     result.done();
+                }
+
+                if (result.finished())
+                    releaseSearcher (searcher);
             }
         }
 
@@ -762,15 +773,15 @@ public class TextIndexer {
                         }
                         
                         try {
-                            /*
+
                             Object value = IxCache.getOrElse
                                 (field+":"+id.stringValue(), new Callable () {
                                         public Object call () throws Exception {
                                             return findObject (kind, id);
                                         }
                                     });
-                            */
-                            Object value = findObject (kind, id);
+
+                            //Object value = findObject (kind, id);
                             if (value != null)
                                 result.add(value);
                         }
@@ -851,8 +862,10 @@ public class TextIndexer {
     
     private ExecutorService threadPool = Executors.newCachedThreadPool();
     private Future[] fetchWorkers;
+    //FIXME: make this a parameter!
     private BlockingQueue<SearchResultPayload> fetchQueue =
-        new LinkedBlockingQueue<SearchResultPayload>();
+        new ArrayBlockingQueue<SearchResultPayload>(100);
+    private SearcherManager searcherManager;
         
     static ConcurrentMap<File, TextIndexer> indexers = 
         new ConcurrentHashMap<File, TextIndexer>();
@@ -900,6 +913,7 @@ public class TextIndexer {
         IndexWriterConfig conf = new IndexWriterConfig 
             (LUCENE_VERSION, indexAnalyzer);
         indexWriter = new IndexWriter (indexDir, conf);
+        searcherManager = new SearcherManager (indexWriter, true, null);
         indexReader = DirectoryReader.open(indexWriter, true);  
         taxonWriter = new DirectoryTaxonomyWriter (taxonDir);
 
@@ -964,7 +978,13 @@ public class TextIndexer {
     }
 
     protected IndexSearcher getSearcher () throws IOException {
-        return new IndexSearcher (getReader ());
+        //return new IndexSearcher (getReader ());
+        searcherManager.maybeRefresh();
+        return searcherManager.acquire();
+    }
+
+    protected void releaseSearcher (IndexSearcher searcher) throws IOException {
+        searcherManager.release(searcher);
     }
 
     static boolean DEBUG (int level) {
@@ -1469,15 +1489,17 @@ public class TextIndexer {
     }
     
     public Document getDoc (Object entity) throws Exception {
+        Document doc = null;
         Term term = getTerm (entity);
         if (term != null) {
             IndexSearcher searcher = getSearcher ();
             TopDocs docs = searcher.search(new TermQuery (term), 1);
             //Logger.debug("TermQuery: term="+term+" => "+docs.totalHits);
             if (docs.totalHits > 0)
-                return searcher.doc(docs.scoreDocs[0].doc);
+                doc = searcher.doc(docs.scoreDocs[0].doc);
+            releaseSearcher (searcher);
         }
-        return null;
+        return doc;
     }
 
     public JsonNode getDocJson (Object entity) throws Exception {
@@ -2216,6 +2238,7 @@ public class TextIndexer {
                 look.close();
             }
 
+            searcherManager.close();
             if (indexReader != null)
                 indexReader.close();
             if (indexWriter != null)

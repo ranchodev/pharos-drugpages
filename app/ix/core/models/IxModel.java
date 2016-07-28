@@ -11,7 +11,7 @@ import com.fasterxml.jackson.annotation.JsonView;
 import ix.utils.Global;
 
 @MappedSuperclass
-public class IxModel extends Model implements java.io.Serializable {
+public class IxModel extends Model /*implements java.io.Serializable*/ {
     @Id public Long id;
     @Version public Long version;
 

@@ -1911,15 +1911,10 @@ public class TcrdRegistry extends Controller implements Commons {
                 int cnt = 0;
                 while (rset.next()) {
                     final String name = rset.getString("name");
-                    Disease d = IxCache.getOrElse
-                        (name, new Callable<Disease>() {
-                                public Disease call() throws Exception {
-                                    return registerDiseaseIfAbsent
-                                    (name, type, tcrd, rset);
-                                }
-                            });
+                    Disease d = registerDiseaseIfAbsent
+                        (name, type, tcrd, rset);
                     
-                    XRef xref = target.addIfAbsent(new XRef (d));                    
+                    XRef xref = target.addIfAbsent(new XRef (d));
                     String dtype = rset.getString("datype");
                     Keyword source = datasources.get(dtype);
                     if (source == null) {
