@@ -438,13 +438,13 @@ public class IDGApp extends App implements Commons {
             }
             else if (name.equals(TECHDEV_PI)) {
                 if (label.equalsIgnoreCase("Bryan Roth")) {
-                    return "<a href=\"https://pdspdb.unc.edu/rothlab/\">"+label+"</a> <i class='fa fa-external-link'></i>";
+                    return "<a href=\"http://targetcentral.ws/TechDev2\">"+label+"</a> <i class='fa fa-external-link'></i>";
                 }
                 else if (label.equalsIgnoreCase("Susumu Tomita")) {
-                    return "<a href=\"http://medicine.yale.edu/cnnr/people/susumu_tomita.profile\">"+label+"</a> <i class='fa fa-external-link'></i>";
+                    return "<a href=\"http://targetcentral.ws/TechDev5\">"+label+"</a> <i class='fa fa-external-link'></i>";
                 }
                 else if (label.equalsIgnoreCase("Gaia Skibinski")) {
-                    return "<a href=\"https://labs.gladstone.org/finkbeiner/\">"+label+"</a> <i class='fa fa-external-link'></i>";
+                    return "<a href=\"http://targetcentral.ws/TechDev6\">"+label+"</a> <i class='fa fa-external-link'></i>";
                 }
             }
             

@@ -240,7 +240,7 @@ public class TcrdRegistry extends Controller implements Commons {
                 ("select * from panther_class a, p2pc b "
                  +"where a.id = b.panther_class_id and b.protein_id = ?");
             pstm11 = con.prepareStatement
-                ("select * from pathway where protein_id = ?");
+                ("select * from pathway where protein_id = ? or target_id = ?");
             pstm12 = con.prepareStatement
                 ("select * from xref where protein_id = ?");
             pstm13 = con.prepareStatement
@@ -715,6 +715,8 @@ public class TcrdRegistry extends Controller implements Commons {
         
         void addPathway (Target target, long protein) throws Exception {
             pstm11.setLong(1, protein);
+            pstm11.setLong(2, protein); // target_id = protein_id
+            
             ResultSet rset = pstm11.executeQuery();
             Map<String, Integer> counts = new TreeMap<String, Integer>();
             while (rset.next()) {
