@@ -979,12 +979,12 @@ public class TextIndexer {
 
     protected IndexSearcher getSearcher () throws IOException {
         //return new IndexSearcher (getReader ());
-        searcherManager.maybeRefresh();
         return searcherManager.acquire();
     }
 
     protected void releaseSearcher (IndexSearcher searcher) throws IOException {
         searcherManager.release(searcher);
+        searcherManager.maybeRefresh();
     }
 
     static boolean DEBUG (int level) {

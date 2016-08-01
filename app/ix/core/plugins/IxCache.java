@@ -61,6 +61,7 @@ public class IxCache extends Plugin
     private File payload; // payload for cache that's too big (>5MB)
     private long maxCacheObjectSize;
     protected Database db;
+    protected Environment env;
 
     static private IxCache _instance;
 
@@ -138,12 +139,18 @@ public class IxCache extends Plugin
                 if (buf != null) {
                     DatabaseEntry data = new DatabaseEntry (buf);
                     DatabaseEntry dkey = getKeyEntry (elm.getKey());
-                    OperationStatus status = db.put(null, dkey, data);
-                    if (status != OperationStatus.SUCCESS)
-                        Logger.warn
-                            ("** PUT for key "+elm.getKey()
-                             +" returns status "+status);
-                    //Logger.debug(Thread.currentThread().getName()+" >>> cached key: '"+elm.getKey()+"' ["+elm.getObjectValue().getClass()+"] = "+buf.length);
+                    Transaction tx = env.beginTransaction(null, null);
+                    try {
+                        OperationStatus status = db.put(tx, dkey, data);
+                        if (status != OperationStatus.SUCCESS)
+                            Logger.warn
+                                ("** PUT for key "+elm.getKey()
+                                 +" returns status "+status);
+                        //Logger.debug(Thread.currentThread().getName()+" >>> cached key: '"+elm.getKey()+"' ["+elm.getObjectValue().getClass()+"] = "+buf.length);
+                    }
+                    finally {
+                        tx.commit();
+                    }
                 }
                 else {
                     // this is just a bad way but is needed because there
@@ -449,8 +456,14 @@ public class IxCache extends Plugin
                 DatabaseEntry dkey = _instance.getKeyEntry(key);
                 DatabaseEntry data = new DatabaseEntry ();
                 data.setPartial(0, 0, true); // don't return the data
-                found = OperationStatus.SUCCESS ==
-                    _instance.db.get(null, dkey, data, null);
+                Transaction tx = _instance.env.beginTransaction(null, null);
+                try {
+                    found = OperationStatus.SUCCESS ==
+                        _instance.db.get(tx, dkey, data, null);
+                }
+                finally {
+                    tx.commit();
+                }
             }
             catch (Exception ex) {
                 Logger.error("Can't search persistence database for "+key, ex);
@@ -476,31 +489,41 @@ public class IxCache extends Plugin
         DatabaseEntry dkey = getKeyEntry (key); 
         try {
             DatabaseEntry data = new DatabaseEntry ();
-            OperationStatus status = db.get(null, dkey, data, null);
-            switch (status) {
-            case SUCCESS:
-                {   CacheObject obj = (CacheObject) deserialize (data);
-                    elm = new Element (key, obj.data, 0l, obj.created,
-                                       System.currentTimeMillis(),
-                                       obj.lastUpdated, 1l);
+            Transaction tx = env.beginTransaction(null, null);
+            try {
+                OperationStatus status = db.get(tx, dkey, data, null);
+                switch (status) {
+                case SUCCESS:
+                    {   CacheObject obj = (CacheObject) deserialize (data);
+                        elm = new Element (key, obj.data, 0l, obj.created,
+                                           System.currentTimeMillis(),
+                                           obj.lastUpdated, 1l);
+                    }
+                    break;
+                    
+                case NOTFOUND: 
+                    //Logger.warn("Can't find cache entry: '"+key+"'");
+                    break;
+                    
+                default:
+                    Logger.warn("Unknown status for key "+key+": "+status);
                 }
-                break;
-                
-            case NOTFOUND: 
-                //Logger.warn("Can't find cache entry: '"+key+"'");
-                break;
-                
-            default:
-                Logger.warn("Unknown status for key "+key+": "+status);
+            }
+            finally {
+                tx.commit();
             }
         }
         catch (Exception ex) {
             Logger.warn("Can't recreate entry for "+key
                         +"; removing this entry from cache!", ex);
+            Transaction tx = env.beginTransaction(null, null);
             try {
-                db.delete(null, dkey);
+                db.delete(tx, dkey);
             }
             catch (Exception exx) {
+            }
+            finally {
+                tx.commit();
             }
         }
         return elm;
@@ -597,12 +620,22 @@ public class IxCache extends Plugin
             dir.mkdirs();
             EnvironmentConfig envconf = new EnvironmentConfig ();
             envconf.setAllowCreate(true);
-            Environment env = new Environment (dir, envconf);
-            DatabaseConfig dbconf = new DatabaseConfig ();
-            dbconf.setAllowCreate(true);
-            db = env.openDatabase(null, CACHE_NAME, dbconf);
-            Logger.debug("## persistence cache "+dir
-                         +" contains "+db.count()+" entries!");
+            envconf.setTransactional(true);
+            envconf.setTxnTimeout(5, TimeUnit.SECONDS);
+            envconf.setLockTimeout(5, TimeUnit.SECONDS);
+            env = new Environment (dir, envconf);
+            Transaction tx = env.beginTransaction(null, null);
+            try {
+                DatabaseConfig dbconf = new DatabaseConfig ();
+                dbconf.setAllowCreate(true);
+                dbconf.setTransactional(true);
+                db = env.openDatabase(tx, CACHE_NAME, dbconf);
+                Logger.debug("## persistence cache "+dir
+                             +" contains "+db.count()+" entries!");
+            }
+            finally {
+                tx.commit();
+            }
         }
         catch (Exception ex) {
             Logger.error("Can't initialize lucene for "+ctx.cache(), ex);
@@ -616,7 +649,7 @@ public class IxCache extends Plugin
                 Logger.debug("#### closing cache writer "+cache.getName()
                              +"; "+db.count()+" entries #####");
                 db.close();
-                db.getEnvironment().close();
+                env.close();
             }
             catch (Exception ex) {
                 Logger.error("Can't close cache database!", ex);
@@ -632,10 +665,16 @@ public class IxCache extends Plugin
 
         try {
             DatabaseEntry dkey = getKeyEntry (key);
-            OperationStatus status = db.delete(null, dkey);
-            if (status != OperationStatus.SUCCESS)
-                Logger.warn("Delete cache key '"
-                            +key+"' returns status "+status);
+            Transaction tx = env.beginTransaction(null, null);
+            try {
+                OperationStatus status = db.delete(tx, dkey);
+                if (status != OperationStatus.SUCCESS)
+                    Logger.warn("Delete cache key '"
+                                +key+"' returns status "+status);
+            }
+            finally {
+                tx.commit();
+            }
         }
         catch (Exception ex) {
             Logger.error("Deleting cache "+key+" from persistence!", ex);
