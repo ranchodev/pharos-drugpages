@@ -17,8 +17,8 @@
         <link rel="stylesheet" type="text/css"
         href='@routes.WebJarAssets.at(WebJarAssets.locate("font-awesome.min.css"))'>
         <link rel="stylesheet" type="text/css"
-        href='@routes.Assets.at("ncats/css/idg-landing-hex.css")'>
-        <link rel="icon" type="image/png" href='@routes.Assets.at("images/favicon.png")'>
+        href='@routes.Assets.versioned("ncats/css/idg-landing-hex.css")'>
+        <link rel="icon" type="image/png" href='@routes.Assets.versioned("images/favicon.png")'>
 
         <script type="text/javascript" src='https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML'></script>
 
@@ -59,7 +59,7 @@
 
                 <center>
                     <a href='@ix.idg.controllers.routes.IDGApp.index()'>
-                        <img src='@routes.Assets.at("ncats/images/Pharos_Logo_Rd8.svg")' class = "img-responsive" id="pharos" />
+                        <img src='@routes.Assets.versioned("ncats/images/Pharos_Logo_Rd8.svg")' class = "img-responsive" id="pharos" />
                     </a>
                 </center>
                 <h2>Fractional counting of protein mentions</h2>

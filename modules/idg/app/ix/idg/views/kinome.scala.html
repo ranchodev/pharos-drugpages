@@ -2502,7 +2502,7 @@
     }
   
     var canvas = new fabric.Canvas('kinome-canvas');
-    fabric.Image.fromURL('@routes.Assets.at("ncats/images/kinome.png")',
+    fabric.Image.fromURL('@routes.Assets.versioned("ncats/images/kinome.png")',
        function (img) {
         scaleX = canvas.getWidth()/img.getWidth();
         scaleY = canvas.getHeight()/img.getHeight();

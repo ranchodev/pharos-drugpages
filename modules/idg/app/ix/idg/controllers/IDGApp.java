@@ -512,7 +512,9 @@ public class IDGApp extends App implements Commons {
                                 for (Keyword kw : v.getSynonyms()) {
                                     if (kw.term == null) {
                                     }
-                                    else {
+                                    else if
+                                        (matchedLabelsValid
+                                         (Collections.singleton(kw.label))) {
                                         if (!kw.term.equals(name))
                                             IxCache.alias(cls.getName()+"/"
                                                           +kw.term, key);

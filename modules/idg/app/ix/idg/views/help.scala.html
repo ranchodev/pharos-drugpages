@@ -24,13 +24,13 @@
         <meta http-equiv="X-UA-Compatible" content="IE=edge">
 
         <title>@title</title>
-        <link rel="icon" type="image/png" href='@routes.Assets.at("images/favicon.png")'>
+        <link rel="icon" type="image/png" href='@routes.Assets.versioned("images/favicon.png")'>
         <link rel="stylesheet"
         href='@routes.WebJarAssets.at(WebJarAssets.locate("bootstrap.min.css"))'>
         <link rel="stylesheet" type="text/css"
         href='@routes.WebJarAssets.at(WebJarAssets.locate("font-awesome.min.css"))'>
         <link rel="stylesheet" type="text/css"
-        href='@routes.Assets.at("ncats/css/idg-landing-hex.css")'>
+        href='@routes.Assets.versioned("ncats/css/idg-landing-hex.css")'>
             <!--[if lte IE 9]>
      <style>
      .count {
@@ -75,7 +75,7 @@
             <div class="row">
                 <center>
                     <a href='@ix.idg.controllers.routes.IDGApp.index()'>
-                        <img src='@routes.Assets.at("ncats/images/Pharos_Logo_Rd8.svg")' class = "img-responsive" id="pharos" />
+                        <img src='@routes.Assets.versioned("ncats/images/Pharos_Logo_Rd8.svg")' class = "img-responsive" id="pharos" />
                     </a>
                 </center>
                 <p>This page provides a variety of information on concepts and methods used in the Pharos inerface as well as

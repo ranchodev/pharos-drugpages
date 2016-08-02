@@ -176,7 +176,7 @@ facets: Array[FacetDecorator], targets: List[Target], ctx: String )
      aria-labelledby="mySmallModalLabel" aria-hidden="true">
   <div class="modal-dialog modal-sm">
     <div class="modal-content">
-      <center><img src='@routes.Assets.at("ncats/images/spinners/294.GIF")'></center>
+      <center><img src='@routes.Assets.versioned("ncats/images/spinners/294.GIF")'></center>
     </div>
   </div>
 </div>
@@ -301,26 +301,26 @@ role="dialog" aria-labelledby="modalLabelFolder" aria-hidden="true">
     .jqstooltip { box-sizing: content-box;}
     </style>
     <script src='@routes.WebJarAssets.at(WebJarAssets.locate("highcharts.js"))' type='text/javascript'></script>
-    <script type="text/javascript" src='@routes.Assets.at("javascripts/d3.js")'></script>
-    <script type="text/javascript" src='@routes.Assets.at("javascripts/d3-tip.js")'></script>
-    <script type="text/javascript" src='@routes.Assets.at("javascripts/underscore.js")'></script>
-    <script type="text/javascript" src='@routes.Assets.at("javascripts/underscore.string.js")'></script>
-    <script type="text/javascript" src='@routes.Assets.at("javascripts/d3_clustergram.js")'></script>
-    <script type="text/javascript" src='@routes.Assets.at("javascripts/load_clustergram.js")'></script>
-    <script type="text/javascript" src='@routes.Assets.at("javascripts/sunburst.js")'></script>
-    <script type="text/javascript" src='@routes.Assets.at("javascripts/d3.layout.cloud.js")'></script>
-    <script type="text/javascript" src='@routes.Assets.at("javascripts/kinome.js")'></script>
-    <script type="text/javascript" src='@routes.Assets.at("javascripts/radar-chart.js")'></script>
-    <script type="text/javascript" src='@routes.Assets.at("javascripts/cart.js")'></script>
-    <script type="text/javascript" src='@routes.Assets.at("javascripts/jquery.sparkline.js")'></script>
+    <script type="text/javascript" src='@routes.Assets.versioned("javascripts/d3.js")'></script>
+    <script type="text/javascript" src='@routes.Assets.versioned("javascripts/d3-tip.js")'></script>
+    <script type="text/javascript" src='@routes.Assets.versioned("javascripts/underscore.js")'></script>
+    <script type="text/javascript" src='@routes.Assets.versioned("javascripts/underscore.string.js")'></script>
+    <script type="text/javascript" src='@routes.Assets.versioned("javascripts/d3_clustergram.js")'></script>
+    <script type="text/javascript" src='@routes.Assets.versioned("javascripts/load_clustergram.js")'></script>
+    <script type="text/javascript" src='@routes.Assets.versioned("javascripts/sunburst.js")'></script>
+    <script type="text/javascript" src='@routes.Assets.versioned("javascripts/d3.layout.cloud.js")'></script>
+    <script type="text/javascript" src='@routes.Assets.versioned("javascripts/kinome.js")'></script>
+    <script type="text/javascript" src='@routes.Assets.versioned("javascripts/radar-chart.js")'></script>
+    <script type="text/javascript" src='@routes.Assets.versioned("javascripts/cart.js")'></script>
+    <script type="text/javascript" src='@routes.Assets.versioned("javascripts/jquery.sparkline.js")'></script>
     <script type="text/javascript" src='@routes.WebJarAssets.at(WebJarAssets.locate("raphael-min.js"))'></script>
     <script type="text/javascript" src='@routes.WebJarAssets.at(WebJarAssets.locate("morris.min.js"))'></script>
     <script type="text/javascript" src='@routes.WebJarAssets.at(WebJarAssets.locate("fabric.min.js"))'></script>
-    <link type="text/css" rel="stylesheet" href='@routes.Assets.at("stylesheets/clustergram.css")' />
-    <link type="text/css" rel="stylesheet" href='@routes.Assets.at("stylesheets/radar-chart.css")' />
+    <link type="text/css" rel="stylesheet" href='@routes.Assets.versioned("stylesheets/clustergram.css")' />
+    <link type="text/css" rel="stylesheet" href='@routes.Assets.versioned("stylesheets/radar-chart.css")' />
     <link type="text/css" rel="stylesheet" href='@routes.WebJarAssets.at(WebJarAssets.locate("morris.css"))' />
-    <link type="text/css" rel="stylesheet" href='@routes.Assets.at("ncats/css/loader.css")'/>        
-    <link type="text/css" rel="stylesheet" href='@routes.Assets.at("stylesheets/main.css")'/>    
+    <link type="text/css" rel="stylesheet" href='@routes.Assets.versioned("ncats/css/loader.css")'/>        
+    <link type="text/css" rel="stylesheet" href='@routes.Assets.versioned("stylesheets/main.css")'/>    
 </head>
 <script>
 
@@ -399,7 +399,7 @@ $(document).ready(function () {
    $('#modal-kinome').on('shown.bs.modal', function (e) {
         console.log('kinome tree modal shown...');
         new Kinome('kinome-canvas',
-            '@routes.Assets.at("images/kinome400.png")',
+            '@routes.Assets.versioned("images/kinome400.png")',
         '@HtmlFormat.raw(ix.idg.controllers.routes.IDGApp.getKinases(null)+App.queryString("q", "facet"))'
         );
    });

@@ -1,7 +1,7 @@
 @import play.api.mvc.Call
 
 @(method: String, action: Call)
-<script src='@routes.Assets.at("javascripts/marvin/js/marvinjslauncher.js")'></script>
+<script src='@routes.Assets.versioned("javascripts/marvin/js/marvinjslauncher.js")'></script>
 <script>
 /*
 ** global variables
@@ -102,7 +102,7 @@ function setStructure (struc) {
      aria-labelledby="mySmallModalLabel" aria-hidden="true">
   <div class="modal-dialog modal-lg">
     <div class="modal-content">
-      <center><img src='@routes.Assets.at("ncats/images/Preloader_10.gif")'></center>
+      <center><img src='@routes.Assets.versioned("ncats/images/Preloader_10.gif")'></center>
     </div>
   </div>
 </div>

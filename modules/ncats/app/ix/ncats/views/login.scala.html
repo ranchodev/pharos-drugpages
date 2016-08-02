@@ -9,7 +9,7 @@
     <meta name="description" content="Responsive HTML template for Your company">
     <!-- Le styles -->
     <link rel="stylesheet" href='@routes.WebJarAssets.at(WebJarAssets.locate("bootstrap.min.css"))'>
-    <link rel="stylesheet" href='@routes.Assets.at("ncats/css/login.css")'>
+    <link rel="stylesheet" href='@routes.Assets.versioned("ncats/css/login.css")'>
 
     <!-- Le HTML5 shim, for IE6-8 support of HTML5 elements -->
     <!--[if lt IE 9]>
@@ -35,7 +35,7 @@
       <div id="login-wraper">
 	          <a class="brand" href="https://ncats.nih.gov">
 	    <img height="50"
-		 src='@routes.Assets.at("ncats/images/NIH_NCATS_Master_Logo.png")' alt="NCATS logo"/>
+		 src='@routes.Assets.versioned("ncats/images/NIH_NCATS_Master_Logo.png")' alt="NCATS logo"/>
 	  </a>
 
           <form class="form login-form" method="POST"

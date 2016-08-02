@@ -140,7 +140,7 @@ public class BuildInfo {
 
   val idg = Project("idg", file("modules/idg"))
     .enablePlugins(PlayJava).settings(commonSettings:_*).settings(
-    libraryDependencies ++= commonDependencies,
+      libraryDependencies ++= commonDependencies,
       libraryDependencies += "org.webjars" % "morrisjs" % "0.5.1",
       libraryDependencies += "org.webjars" % "fabric.js" % "1.4.12",
       libraryDependencies += "org.webjars" % "datatables" % "1.10.12",

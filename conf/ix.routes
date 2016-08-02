@@ -2,7 +2,7 @@
 # assets; the prefix should be modified accordingly to localize
 # to a specific app
 #
-GET        /assets/*file         controllers.Assets.at(path="/public", file)
+GET        /assets/*file         controllers.Assets.versioned(path="/public", file: Asset)
 GET        /webjars/*file        controllers.WebJarAssets.at(file)
 
 ->         /api                  ix.core.api.Routes

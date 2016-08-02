@@ -8,14 +8,14 @@
     <link rel="stylesheet" href='@routes.WebJarAssets.at(WebJarAssets.locate("bootstrap.min.css"))'>
     <link rel="stylesheet" href='@routes.WebJarAssets.at(WebJarAssets.locate("font-awesome.min.css"))'>
     <link rel="stylesheet" type="text/css"
-	  href='@routes.Assets.at("ncats/stylesheets/main.css")'>
+	  href='@routes.Assets.versioned("ncats/stylesheets/main.css")'>
     <link rel="stylesheet" type="text/css"
-	  href='@routes.Assets.at("ncats/css/idg-landing-sq.css")'>
+	  href='@routes.Assets.versioned("ncats/css/idg-landing-sq.css")'>
     <script src='@routes.WebJarAssets.at(WebJarAssets.locate("jquery.min.js"))' type='text/javascript'></script>
     <script src='@routes.WebJarAssets.at(WebJarAssets.locate("bootstrap.min.js"))'></script>
     <script src='@routes.WebJarAssets.at(WebJarAssets.locate("typeahead.bundle.min.js"))'></script>
     <script src='@routes.WebJarAssets.at(WebJarAssets.locate("bloodhound.min.js"))'></script>
-    <script src='@routes.Assets.at("ncats/js/search.js")' type='text/javascript'></script>
+    <script src='@routes.Assets.versioned("ncats/js/search.js")' type='text/javascript'></script>
   </head>
   <body>
     <div class="container vertical-center" id = "main-box">
@@ -27,7 +27,7 @@
 	      <h1>Diseases</h1>
 	      <span class="fa fa-stethoscope big"></span>
 	      -->
-              <img src='@routes.Assets.at("ncats/images/Diseases-icon.svg")'/>
+              <img src='@routes.Assets.versioned("ncats/images/Diseases-icon.svg")'/>
 	      <span class="badge">@diseases</span>
 	    </div>
 	  </a>
@@ -40,7 +40,7 @@
 	      <h1>Targets</h1>
 	      <span class="fa fa-bullseye big"></span>
 	      -->
-	      <img src='@routes.Assets.at("ncats/images/Targets-icon.svg")'/>
+	      <img src='@routes.Assets.versioned("ncats/images/Targets-icon.svg")'/>
 	      <span class="badge">@targets</span>
 	    </div>
 	  </a>
@@ -54,14 +54,14 @@
 	      <h1>Ligands</h1>
 	      <span class="fa fa-link big"></span>
 	      -->
-	      <img src='@routes.Assets.at("ncats/images/Ligands-icon.svg")'/>
+	      <img src='@routes.Assets.versioned("ncats/images/Ligands-icon.svg")'/>
 	      <span class="badge">@ligands</span>
 	    </div>
 	  </a>
 	</div>
 	<div class="col-md-3" >
 	  <div class="alert" id ="logo">
-	    <img src ='@routes.Assets.at("ncats/images/Pharos_Logo_Rd8.svg")'
+	    <img src ='@routes.Assets.versioned("ncats/images/Pharos_Logo_Rd8.svg")'
 		 class = "img-responsive" id="pharos" alt="Pharos Logo"/>
 	  </div>
 	</div>
