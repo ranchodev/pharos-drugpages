@@ -8,7 +8,11 @@ import java.util.zip.ZipInputStream;
 import java.io.BufferedInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+
 import java.security.*;
+import java.lang.reflect.Field;
+import java.lang.annotation.Annotation;
+import javax.persistence.Id;
 
 import play.Logger;
 import play.mvc.Http;
@@ -100,7 +104,7 @@ public class Util {
             return md.digest();
         }
         catch (Exception ex) {
-            Logger.trace("Can't generate hash for request: "+req.uri(), ex);
+            Logger.error("Can't generate hash for request: "+req.uri(), ex);
         }
         return null;
     }
@@ -206,5 +210,40 @@ public class Util {
             is2 = getUncompressedInputStream(is2, test);
         }
         return is2;
+    }
+
+    public static <T extends Annotation> Field
+        getField (Class cls, Class<T> annotation) {
+        for (Field f : cls.getFields()) {
+            if (f.isAnnotationPresent(annotation)) {
+                return f;
+            }
+        }
+        return null;
+    }
+
+    public static Field getIdField (Class cls) {
+        return getField (cls, Id.class);
+    }
+
+    public static <T extends Annotation> Object getFieldValue
+        (Object inst, Class<T> annotation) throws Exception {
+        Field f = getField (inst.getClass(), annotation);
+        return f != null ? f.get(inst) : null;
+    }
+
+    public static String sha1 (Collection values) {
+        Set<String> vals = new TreeSet<String>();
+        for (Object obj : values) {
+            try {
+                Object val = getFieldValue (obj, Id.class);
+                vals.add(val != null ? (obj.getClass().getName()
+                                        +":"+val.toString()) : obj.toString());
+            }
+            catch (Exception ex) {
+                Logger.error("Can't get Id value for "+obj, ex);
+            }
+        }
+        return sha1 (vals.toArray(new String[0]));
     }
 }

@@ -334,7 +334,7 @@ function download () {
 	.attr('disabled','true')
 	.html('<i class="fa fa-lg fa-spinner fa-spin"></i>');
 	
-   var url = '@request.uri';
+   var url = '@HtmlFormat.raw(request.uri)';
    url += (url.indexOf('?') < 0 ? '?' : '&')+'action=download';
    console.log('downloading '+url+'...');
 
@@ -351,7 +351,7 @@ function download () {
 	 }
 
 	 status = data.status;
-	 //console.log('download...'+data.count+'/'+data.total);
+	 console.log('download...'+data.count+'/'+data.total);
 	 //$('#download-console-body').html("downloading..."+data.count);
          if (data.url) {
 	    $('#download-iframe').attr('src', data.url);
@@ -409,7 +409,7 @@ $(document).ready(function () {
        if (p > 0) {
           var facet = $(this).attr("id").substring(p+1);
 	  html = '<a href="@ix.idg.controllers.routes.IDGApp.targetdescriptor("")'+facet+'"><i class="fa fa-bar-chart"></i></a>&nbsp;'+html;
-	  console.log('facet header => '+html);
+	  //console.log('facet header => '+html);
        }
        return html;
    });

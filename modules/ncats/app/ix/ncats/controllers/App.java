@@ -70,9 +70,7 @@ import chemaxon.struc.MolBond;
 import chemaxon.util.MolHandler;
 
 import java.awt.Dimension;
-
 import javax.imageio.ImageIO;
-
 import java.awt.image.BufferedImage;
 
 import org.freehep.graphicsio.svg.SVGGraphics2D;
@@ -756,6 +754,30 @@ public class App extends Authentication {
         }
         return getSearchFacets (kind, fdim);
     }
+
+    public static SearchResult getSearchFacets
+        (final Class kind, final Collection subset) {
+        return getSearchFacets (kind, subset, FACET_DIM);
+    }
+    
+    public static SearchResult getSearchFacets
+        (final Class kind, final Collection subset, final int fdim) {
+        final String sha1 = kind.getName()+"/"+Util.sha1(subset)+"/"+fdim;
+        try {
+            return getOrElse (sha1, new Callable<SearchResult>() {
+                    public SearchResult call () throws Exception {
+                        return SearchFactory.search
+                            (subset, null, subset.size(), 0, fdim,
+                             request().queryString());
+                    }
+                });
+        }
+        catch (Exception ex) {
+            ex.printStackTrace();
+            Logger.error("Can't get search facets!", ex);
+        }
+        return null;
+    }
     
     public static SearchResult getSearchFacets (final Class kind,
                                                 final int fdim) {
@@ -771,7 +793,7 @@ public class App extends Authentication {
         }
         catch (Exception ex) {
             ex.printStackTrace();
-            Logger.trace("Can't get search facets!", ex);
+            Logger.error("Can't get search facets!", ex);
         }
         return null;
     }

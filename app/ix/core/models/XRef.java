@@ -12,6 +12,8 @@ import play.Logger;
 import play.db.ebean.Model;
 
 import ix.utils.Global;
+import ix.utils.Util;
+import ix.core.ObjectFactory;
 
 import com.fasterxml.jackson.annotation.JsonView;
 import com.fasterxml.jackson.annotation.JsonIgnore;
@@ -64,7 +66,7 @@ public class XRef extends IxModel {
             throw new IllegalArgumentException
                 ("Can't create XRef for non-Entity instance");
         try {
-            Field fid = getIdField (cls);
+            Field fid = Util.getIdField(cls);
             if (fid != null) {
                 Object id = fid.get(instance);
                 if (id != null) {
@@ -98,16 +100,18 @@ public class XRef extends IxModel {
         if (_instance == null || force) {
             try {
                 Class cls = Class.forName(kind);
-                Field fid = getIdField (cls);
+                Field fid = Util.getIdField(cls);
                 if (fid != null) {
                     Class type = fid.getType();
-                    Model.Finder finder = new Model.Finder(type, cls);
                     if (Long.class.isAssignableFrom(type))
-                        _instance = finder.byId(Long.parseLong(refid));
+                        _instance =
+                            ObjectFactory.get(cls, Long.parseLong(refid));
                     else if (UUID.class.isAssignableFrom(type))
-                        _instance = finder.byId(UUID.fromString(refid));
+                        _instance =
+                            ObjectFactory.get(cls, UUID.fromString(refid));
                     else
-                        _instance = finder.byId(refid);
+                        _instance = ObjectFactory.get(cls, refid);
+                    fid = null;
                 }
                 else {
                     throw new RuntimeException
@@ -116,7 +120,7 @@ public class XRef extends IxModel {
                 }
             }
             catch (Exception ex) {
-                Logger.trace("Can't retrieve XRef "+kind+":"+refid, ex);
+                Logger.error("Can't retrieve XRef "+kind+":"+refid, ex);
             }
         }
         return _instance;
@@ -136,13 +140,6 @@ public class XRef extends IxModel {
         return value;
     }
     
-    static Field getIdField (Class cls) {
-        for (Field f : cls.getFields())
-            if (null != f.getAnnotation(Id.class))
-                return f;
-        return null;
-    }
-
     public String getHRef () {
         return Global.getRef(kind, refid);
     }
@@ -152,7 +149,7 @@ public class XRef extends IxModel {
             Class cls = Class.forName(kind);
             Class type = instance.getClass();
             if (cls.isAssignableFrom(type) || type.isAssignableFrom(cls)) {
-                Field fid = getIdField (type);
+                Field fid = Util.getIdField(type);
                 if (fid != null) {
                     Object id = fid.get(instance);
                     if (id != null)

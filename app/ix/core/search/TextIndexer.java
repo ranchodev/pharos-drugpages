@@ -9,6 +9,9 @@ import ix.core.models.DynamicFacet;
 import ix.core.models.Indexable;
 import ix.core.plugins.IxCache;
 import ix.utils.Global;
+import ix.utils.Util;
+import ix.core.ObjectFactory;
+
 import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.analysis.core.KeywordAnalyzer;
 import org.apache.lucene.analysis.miscellaneous.PerFieldAnalyzerWrapper;
@@ -720,28 +723,11 @@ public class TextIndexer {
             throws Exception {
             
             Number n = id.numericValue();
-            Object value = null;
+            Object value = ObjectFactory.get
+                (Class.forName(kind.stringValue()),
+                 n != null ? n.longValue() : id.stringValue(),
+                 options.expand.toArray(new String[0]));
             
-            Model.Finder finder = finders.get(kind.stringValue());
-            if (finder == null) {
-                Class c = n != null ? Long.class : String.class;
-                finder = new Model.Finder
-                    (c, Class.forName(kind.stringValue()));
-                finders.put(kind.stringValue(), finder);
-            }
-            
-            if (options.expand.isEmpty()) {
-                value = finder.byId(n != null
-                                    ? n.longValue() : id.stringValue());
-            }
-            else {
-                com.avaje.ebean.Query ebean = finder.setId
-                    (n != null ? n.longValue() : id.stringValue());
-                for (String path : options.expand)
-                    ebean = ebean.fetch(path);
-                value = ebean.findUnique();
-            }
-                    
             if (value == null) {
                 Logger.warn
                     (kind.stringValue()+":"+id
@@ -773,15 +759,7 @@ public class TextIndexer {
                         }
                         
                         try {
-
-                            Object value = IxCache.getOrElse
-                                (field+":"+id.stringValue(), new Callable () {
-                                        public Object call () throws Exception {
-                                            return findObject (kind, id);
-                                        }
-                                    });
-
-                            //Object value = findObject (kind, id);
+                            Object value = findObject (kind, id);
                             if (value != null)
                                 result.add(value);
                         }
@@ -1462,30 +1440,24 @@ public class TextIndexer {
 
 
     protected Term getTerm (Object entity) {
-        if (entity == null)
-            return null;
-
-        Class cls = entity.getClass();
-        Object id = null;
-        for (Field f : cls.getFields()) {
-            if (null != f.getAnnotation(Id.class)) {
-                try {
-                    id = f.get(entity);
-                    break;
+        Term term = null;
+        if (entity != null) {
+            try {
+                Object id = Util.getFieldValue(entity, Id.class);
+                if (id == null) {
+                    Logger.warn("Entity "+entity+"["
+                                +entity.getClass()+"] has no Id field!");
                 }
-                catch (Exception ex) {
-                    Logger.error("Can't retrieve entity Id", ex);
+                else {
+                    term = new Term (entity.getClass().getName()+".id",
+                                     id.toString());
                 }
             }
+            catch (Exception ex) {
+                Logger.error("Can't retrieve @Id value for "+entity, ex);
+            }
         }
-
-        if (id == null) {
-            Logger.warn("Entity "+entity+"["
-                        +entity.getClass()+"] has no Id field!");
-            return null;
-        }
-
-        return new Term (cls.getName()+".id", id.toString());
+        return term;
     }
     
     public Document getDoc (Object entity) throws Exception {

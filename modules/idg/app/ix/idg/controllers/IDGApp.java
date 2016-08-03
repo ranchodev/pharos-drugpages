@@ -471,66 +471,7 @@ public class IDGApp extends App implements Commons {
             List<T> e = getOrElse
                 (key, new Callable<List<T>> () {
                         public List<T> call () throws Exception {
-                            List<T> values = finder.where()
-                            .eq("synonyms.term", name).findList();
-                            if (values.isEmpty()) {
-                                // let try name directly
-                                values = finder.where()
-                                    .eq("name", name).findList();
-                            }
-                                                        
-                            // also cache all the synonyms
-                            List<T> valid = new ArrayList<T>();
-                            for (T v : values) {
-                                Set<String> labels = new HashSet<String>();
-                                for (Keyword kw : v.getSynonyms()) {
-                                    if (kw.term == null) {
-                                        Logger.warn("NULL term for synonym"
-                                                    +" keyword label: "
-                                                    +kw.label);
-                                    }
-                                    else if (kw.term.equalsIgnoreCase(name)) {
-                                        labels.add(kw.label);
-                                    }
-                                }
-                                
-                                if (matchedLabelsValid (labels)) {
-                                    valid.add(v);
-                                }
-                            }
-
-                            if (values.size() > 1) {
-                                Logger.warn("\""+name+"\" yields "
-                                            +values.size()+" matches; "
-                                            +valid.size()+" after filter!");
-                            }
-                            
-                            if (valid.isEmpty())
-                                valid.addAll(values);
-
-                            for (T v : valid) {
-                                for (Keyword kw : v.getSynonyms()) {
-                                    if (kw.term == null) {
-                                    }
-                                    else if
-                                        (matchedLabelsValid
-                                         (Collections.singleton(kw.label))) {
-                                        if (!kw.term.equals(name))
-                                            IxCache.alias(cls.getName()+"/"
-                                                          +kw.term, key);
-                                        if (!kw.term.toUpperCase().equals(name))
-                                            IxCache.alias
-                                                (cls.getName()+"/"
-                                                 +kw.term.toUpperCase(), key);
-                                        if (!kw.term.toLowerCase().equals(name))
-                                            IxCache.alias
-                                                (cls.getName()+"/"
-                                                 +kw.term.toLowerCase(), key);
-                                    }
-                                }
-                            }
-                            
-                            return valid;
+                            return _find (key, name);
                         }
                     });
             double elapsed = (System.currentTimeMillis()-start)*1e-3;
@@ -538,6 +479,70 @@ public class IDGApp extends App implements Commons {
                          +" to retrieve "+(e!=null?e.size():-1)
                          +" matches for "+name);
             return e;
+        }
+
+        protected void cacheAlias (Keyword kw, String name, String key) {
+            Set<String> aliases = new HashSet<String>();
+            if (!kw.term.equals(name))
+                aliases.add(cls.getName()+"/"+kw.term);
+            if (!kw.term.toUpperCase().equals(name))
+                aliases.add(cls.getName()+"/"+kw.term.toUpperCase());
+            if (!kw.term.toLowerCase().equals(name))
+                aliases.add(cls.getName()+"/"+kw.term.toLowerCase());
+            for (String a : aliases)
+                IxCache.alias(a, key);
+        }
+
+        protected List<T> _find (String key, String name) throws Exception {
+            List<T> values = finder.where()
+                .eq("synonyms.term", name).findList();
+            if (values.isEmpty()) {
+                // let try name directly
+                values = finder.where()
+                    .eq("name", name).findList();
+            }
+                                                        
+            // also cache all the synonyms
+            List<T> valid = new ArrayList<T>();
+            for (T v : values) {
+                Set<String> labels = new HashSet<String>();
+                for (Keyword kw : v.getSynonyms()) {
+                    if (kw.term == null) {
+                        Logger.warn("NULL term for synonym"
+                                    +" keyword label: "
+                                    +kw.label);
+                    }
+                    else if (kw.term.equalsIgnoreCase(name)) {
+                        labels.add(kw.label);
+                    }
+                }
+                                
+                if (matchedLabelsValid (labels)) {
+                    valid.add(v);
+                }
+            }
+
+            if (values.size() > 1) {
+                Logger.warn("\""+name+"\" yields "
+                            +values.size()+" matches; "
+                            +valid.size()+" after filter!");
+            }
+                            
+            if (valid.isEmpty())
+                valid.addAll(values);
+            else {
+                for (T v : valid) {
+                    for (Keyword kw : v.getSynonyms()) {
+                        if (kw.term != null
+                            && matchedLabelsValid
+                            (Collections.singleton(kw.label))) {
+                            cacheAlias (kw, name, key);
+                        }
+                    }
+                }
+            }
+                            
+            return valid;
         }
 
         // override by subclass
@@ -555,7 +560,7 @@ public class IDGApp extends App implements Commons {
                 Content content = getOrElse (key, new Callable<Content> () {
                         public Content call () throws Exception {
                             List<T> e = find (name);
-                            if (e != null && !e.isEmpty()) {
+                            if (!e.isEmpty()) {
                                 return CachableContent.wrap(getContent (e));
                             }
                             return null;
@@ -1175,20 +1180,28 @@ public class IDGApp extends App implements Commons {
             }
             @Override
             protected boolean matchedLabelsValid (Set<String> labels) {
-                return !labels.contains(UNIPROT_SHORTNAME);
+                return (!labels.contains(UNIPROT_SHORTNAME)
+                        && !labels.contains(PDB_ID));
             }
         };
 
     public static Result target(final String name) throws Exception {
         String action = request().getQueryString("action");
         if (action != null && action.toLowerCase().equals("download")) {
-            List<Target> targets = TargetFactory.finder.where().eq("synonyms.term", name).findList();
+            List<Target> targets = TargetFactory.finder
+                .where().eq("synonyms.term", name).findList();
             if (targets == null || targets.size() != 1)
                 return notFound("No target for " + name);
-            byte[] targetDownload = DownloadEntities.downloadEntities(targets);
-            String suffix = DownloadEntities.getDownloadMimeType(Target.class).endsWith("zip") ? ".zip" : ".csv";
-            response().setHeader("Content-Disposition", "attachment;filename=export-target-" + name + suffix);
-            return ok(targetDownload).as(DownloadEntities.getDownloadMimeType(Target.class));
+            byte[] targetDownload =
+                DownloadEntities.downloadEntities(targets);
+            String suffix = DownloadEntities
+                .getDownloadMimeType(Target.class).endsWith("zip")
+                ? ".zip" : ".csv";
+            response().setHeader("Content-Disposition",
+                                 "attachment;filename=export-target-"
+                                 + name + suffix);
+            return ok(targetDownload)
+                .as(DownloadEntities.getDownloadMimeType(Target.class));
         }
         return TargetResult.get(name);
     }
@@ -1207,12 +1220,21 @@ public class IDGApp extends App implements Commons {
 
     static Content getTargetContent (final List<Target> targets)
         throws Exception {
-        final Target t = targets.get(0); // guarantee not empty
-        List<DiseaseRelevance> diseases = getDiseases (t);
-        List<Keyword> breadcrumb = getBreadcrumb (t);
-        
-        return ix.idg.views.html
-            .targetdetails.render(t, diseases, breadcrumb);
+        if (targets.size() == 1) {
+            final Target t = targets.get(0); // guarantee not empty
+            List<DiseaseRelevance> diseases = getDiseases (t);
+            List<Keyword> breadcrumb = getBreadcrumb (t);
+            
+            return ix.idg.views.html
+                .targetdetails.render(t, diseases, breadcrumb);
+        }
+        else {
+            SearchResult result = getSearchFacets (Target.class, targets);
+            Facet[] facets = filter (result.getFacets(), TARGET_FACETS);
+            return ix.idg.views.html.targets.render
+                (0, targets.size(), targets.size(), new int[0],
+                 decorate (facets), targets, result.getKey());
+        }
     }
 
     public static Result targetWarmCache (String secret) {
