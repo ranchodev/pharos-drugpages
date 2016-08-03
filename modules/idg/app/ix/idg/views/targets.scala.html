@@ -210,12 +210,14 @@ facets: Array[FacetDecorator], targets: List[Target], ctx: String )
            <h4 class="modal-title" id="download-modal-header">Target Download</h4>
       </div>
       <div class="modal-body" id="download-console-body">
-	Please wait; this might take a few minutes...
+	@*Please wait; this might take a few minutes...*@
+	Sorry, we're currently reworking the batch download feature. In the
+	mean time, please consider using our <a href='@ix.core.controllers.v1.routes.RouteFactory.listResources'>API</a> instead.
       </div>
       <div class="modal-footer">
 	<button type="button" class="btn btn-primary"
 		data-dismiss="modal"
-		id="download-modal-download-btn">...</button>
+		id="download-modal-download-btn">Close</button>
       </div>
     </div>
   </div>
@@ -490,7 +492,7 @@ $(document).ready(function () {
         $('#download-modal').modal('show');
     });
     $("#download-modal").on('shown.bs.modal', function () {
-        download ();
+        //download ();
     });
 
     // iterate over all .radar-XXX elements and draw the radar chart
