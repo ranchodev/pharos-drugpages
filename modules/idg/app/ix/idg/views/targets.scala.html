@@ -94,7 +94,8 @@ facets: Array[FacetDecorator], targets: List[Target], ctx: String )
     </ol>
     } {
     <form>
-    <table id="target-table" class="table table-striped">
+    <div class="table-responsive">
+      <table id="target-table" class="table table-striped">
         <tr>
           <th><button id="cb-addall" alt="Toggle check all"
 	  	      style="padding: 3px"
@@ -117,8 +118,9 @@ facets: Array[FacetDecorator], targets: List[Target], ctx: String )
         @for(t <- targets) {
             @tabrow(t)
         }
-    </table>
-    </form>
+      </table>
+    </div>
+  </form>
 } {  @* viz *@
    <button class="btn btn-default" type="button"
 	      id="carousel-toggle"
