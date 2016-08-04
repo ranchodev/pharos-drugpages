@@ -1,7 +1,7 @@
 function wordcloud (id, width, height, url, data) {
     var fill = d3.scale.category20();
 
-    d3.layout.cloud().size([width, height])
+    var wc = d3.layout.cloud().size([width, height])
         .words(data)
         .padding(5)
         .rotate(function(d) {
@@ -42,4 +42,5 @@ function wordcloud (id, width, height, url, data) {
             } )
             .text(function(d) { return d.text; });
     }
+    return wc;
 }

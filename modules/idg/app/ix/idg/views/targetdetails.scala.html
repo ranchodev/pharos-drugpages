@@ -857,7 +857,8 @@ This is TCRD target <a href='@ix.core.controllers.v1.routes.RouteFactory.get("ta
                         data-html="true"
                         title="<p align='left'>Disease-gene associations mined from Medline Franklid et al, Methods, 2015, 83-89</p>">Disease Relevance</span> (@diseases.size()) <a class="pull-right" href='@{ix.core.controllers.v1.routes.RouteFactory.get("targets",target.id,null)+"/links(kind="+classOf[Disease].getName+")"}'><i class="fa fa-code"></i></a></h3>
           </div>
-          <div class="panel-body" style="max-height:300px;overflow-y:auto;">
+          <div class="panel-body table-responsive"
+	       style="max-height:300px;overflow-y:auto;">
                <table class="tree table table-striped">
                           <tr>
                               <th>Disease</th>
@@ -1108,7 +1109,7 @@ This is TCRD target <a href='@ix.core.controllers.v1.routes.RouteFactory.get("ta
             </h3>
           </div>
           <div class="panel-body">
-            <div class="panel-body">
+            <div class="panel-body table-responsive">
               <table class="table table-striped">
                 <tr>
                   <th>PMID <i class="fa fa-external-link"></i></th>
@@ -1274,7 +1275,7 @@ This is TCRD target <a href='@ix.core.controllers.v1.routes.RouteFactory.get("ta
                         title="<p align='left'>Number of GeneRIF annotations from NCBI Gene</p>">Gene RIF (@generifs.size)</span> <a class="pull-right" href='@{ix.core.controllers.v1.routes.RouteFactory.get("targets",target.id,null)+"/links(kind="+classOf[Text].getName+")"}'><i class="fa fa-code"></i></a></h3>
           </div>
           <div class="panel-body">
-            <div class="panel-body">
+            <div class="panel-body table-responsive">
               <table class="table table-striped">
                 <tr>
                   <th>PMID <i class="fa fa-external-link"></i></th>
@@ -1544,12 +1545,26 @@ $(document).ready(function () {
 
     /* Word cloud for text mined pubs */
     @defining(WordCloud.textHistogram(target, "title", "sqrt")) { counts =>
-        wordcloud ("tpub-wc", 600, 300,
+        wordcloud ("tpub-wc", 800, 300,
                 '@ix.idg.controllers.routes.IDGApp.targets(null,10,1)', [
             @for(count <- counts) {
                 {text:'@count.label', size:@count.numval},
             }
         ]);
+
+        var tpubwc = $('#tpub-wc svg:first-child');
+	    tpubpanel = $('#tpub-wc'),	
+	    tpubasp = tpubpanel.width()/tpubpanel.height();
+
+        $(window).on("resize", function() {
+	   var w = tpubpanel.width();
+	   var h = Math.round(w/tpubasp);
+	   //tpubwc.attr("preserveAspectRatio", "xMinYMin meet");
+   	   //tpubwc.attr("viewBox", "0 0 "+w+" "+h);
+	   tpubwc.attr("width", w);
+	   tpubwc.attr("height", h);
+	   //tpubwc.attr("transform", "translate("+w/2+","+h/2+")");
+	}).trigger("resize");
     }
 
    $('.ligand-carousel').flickity({
