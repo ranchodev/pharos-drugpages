@@ -62,7 +62,7 @@ facets: Array[FacetDecorator], targets: List[Target], ctx: String )
     current, rows, total, pages, facets, faceturl()) {
     @targetmenu(ctx)
 } {
-    <ol class="breadcrumb">
+    <ol class="breadcrumb" style="margin-top:60px;">
         <li><a href="@ix.idg.controllers.routes.IDGApp.index()"><span class="fa fa-home"></span> Home</a></li>
         @defining(request().queryString.get("facet")) { facets =>
             @if(facets != null) {

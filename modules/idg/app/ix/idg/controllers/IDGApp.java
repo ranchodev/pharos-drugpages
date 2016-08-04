@@ -481,6 +481,29 @@ public class IDGApp extends App implements Commons {
             return e;
         }
 
+        /*
+         * perform basic validation; subclass should override to provide
+         * more control.
+         */
+        protected boolean validation (String name) {
+            int len = name.length();
+            if (name == null || len == 0 || len > 128)
+                return false;
+
+            for (int i = 0; i < len; ++i) {
+                char ch = name.charAt(i);
+                if (Character.isLetterOrDigit(ch) 
+                    || Character.isWhitespace(ch)
+                    || ch == '-' || ch == '+' 
+                    || ch == ',' || ch == '.')
+                    ;
+                else
+                    return false;
+            }
+
+            return true;
+        }
+
         protected void cacheAlias (Keyword kw, String name, String key) {
             Set<String> aliases = new HashSet<String>();
             if (!kw.term.equals(name))
@@ -503,7 +526,8 @@ public class IDGApp extends App implements Commons {
             }
                                                         
             // also cache all the synonyms
-            List<T> valid = new ArrayList<T>();
+            T best = null;
+            int rank = 0;
             for (T v : values) {
                 Set<String> labels = new HashSet<String>();
                 for (Keyword kw : v.getSynonyms()) {
@@ -516,41 +540,39 @@ public class IDGApp extends App implements Commons {
                         labels.add(kw.label);
                     }
                 }
-                                
-                if (matchedLabelsValid (labels)) {
-                    valid.add(v);
+
+                int r = 0;
+                for (String l : labels)
+                    r += getLabelRank (l);
+
+                if (best == null || r > rank) {
+                    rank = r;
+                    best = v;
                 }
             }
 
-            if (values.size() > 1) {
-                Logger.warn("\""+name+"\" yields "
-                            +values.size()+" matches; "
-                            +valid.size()+" after filter!");
-            }
-                            
-            if (valid.isEmpty())
-                valid.addAll(values);
-            else {
-                for (T v : valid) {
-                    for (Keyword kw : v.getSynonyms()) {
-                        if (kw.term != null
-                            && matchedLabelsValid
-                            (Collections.singleton(kw.label))) {
-                            cacheAlias (kw, name, key);
-                        }
-                    }
+            List<T> matches = new ArrayList<T>();
+            if (best != null) {
+                for (Keyword kw : best.getSynonyms()) {
+                    if (kw.term != null && getLabelRank (kw.label) > 0)
+                        cacheAlias (kw, name, key);
                 }
+                matches.add(best);
             }
                             
-            return valid;
+            return matches;
         }
 
         // override by subclass
-        protected boolean matchedLabelsValid (Set<String> labels) {
-            return true;
+        protected int getLabelRank (String label) {
+            return 1;
         }
 
         public Result get (final String name) {
+            if (!validation (name)) {
+                return _badRequest ("Not a valid name: '"+name+"'");
+            }
+
             try {
                 String view = request().getQueryString("view");
                 final String key = getClass().getName()
@@ -1175,13 +1197,17 @@ public class IDGApp extends App implements Commons {
     
     static final GetResult<Target> TargetResult =
         new GetResult<Target>(Target.class, TargetFactory.finder) {
+        
             public Content getContent (List<Target> targets) throws Exception {
                 return getTargetContent (targets);
             }
+
             @Override
-            protected boolean matchedLabelsValid (Set<String> labels) {
-                return (!labels.contains(UNIPROT_SHORTNAME)
-                        && !labels.contains(PDB_ID));
+            protected int getLabelRank (String label) {
+                if (label.equalsIgnoreCase(UNIPROT_SHORTNAME)
+                    || label.equalsIgnoreCase(PDB_ID))
+                    return -1;
+                return 1;
             }
         };
 
@@ -1220,21 +1246,11 @@ public class IDGApp extends App implements Commons {
 
     static Content getTargetContent (final List<Target> targets)
         throws Exception {
-        if (targets.size() == 1) {
-            final Target t = targets.get(0); // guarantee not empty
-            List<DiseaseRelevance> diseases = getDiseases (t);
-            List<Keyword> breadcrumb = getBreadcrumb (t);
-            
-            return ix.idg.views.html
-                .targetdetails.render(t, diseases, breadcrumb);
-        }
-        else {
-            SearchResult result = getSearchFacets (Target.class, targets);
-            Facet[] facets = filter (result.getFacets(), TARGET_FACETS);
-            return ix.idg.views.html.targets.render
-                (0, targets.size(), targets.size(), new int[0],
-                 decorate (facets), targets, result.getKey());
-        }
+        Target t = targets.get(0);
+        List<DiseaseRelevance> diseases = getDiseases (t);
+        List<Keyword> breadcrumb = getBreadcrumb (t);
+        return ix.idg.views.html
+            .targetdetails.render(t, diseases, breadcrumb);
     }
 
     public static Result targetWarmCache (String secret) {

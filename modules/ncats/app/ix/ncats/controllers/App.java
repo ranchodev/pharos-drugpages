@@ -762,13 +762,15 @@ public class App extends Authentication {
     
     public static SearchResult getSearchFacets
         (final Class kind, final Collection subset, final int fdim) {
-        final String sha1 = kind.getName()+"/"+Util.sha1(subset)+"/"+fdim;
+        final String sha1 = Util.sha1(kind.getName()+"/"+fdim,
+                                      Util.sha1(subset));
         try {
             return getOrElse (sha1, new Callable<SearchResult>() {
                     public SearchResult call () throws Exception {
-                        return SearchFactory.search
+                        SearchResult result = SearchFactory.search
                             (subset, null, subset.size(), 0, fdim,
                              request().queryString());
+                        return cacheKey (result, sha1, sha1);
                     }
                 });
         }
