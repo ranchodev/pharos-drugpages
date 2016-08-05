@@ -578,6 +578,13 @@ public class IDGApp extends App implements Commons {
                 final String key = getClass().getName()
                     +"/"+cls.getName()+"/"+name+"/result/"
                     +(view != null?view:"");
+                String refresh = request().getQueryString("refresh");
+                if (refresh != null
+                    && ("true".equalsIgnoreCase(refresh)
+                        || "yes".equalsIgnoreCase(refresh)
+                        || "y".equalsIgnoreCase(refresh))) {
+                    IxCache.remove(key);
+                }
                 
                 Content content = getOrElse (key, new Callable<Content> () {
                         public Content call () throws Exception {
@@ -3981,5 +3988,9 @@ public class IDGApp extends App implements Commons {
                    (new TermVectorSummary (Target.class, name),
                     new TermVectorConditional (Target.class, name,
                                                IDG_DEVELOPMENT)));
+    }
+
+    public static Result sketcher (String s) {
+        return ok (ix.idg.views.html.sketcher.render(s));
     }
 }

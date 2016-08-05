@@ -33,7 +33,7 @@
     current, rows, total, pages, facets) {
     @diseasemenu()
 } {
-    <ol class="breadcrumb">
+    <ol class="breadcrumb" style="margin-top:60px;">
         <li><a href="@ix.idg.controllers.routes.IDGApp.index()"><span class="fa fa-home"></span> Home</a></li>
         @defining(request().queryString.get("facet")) { facets =>
             @if(facets != null) {
@@ -54,6 +54,7 @@
     </ol>
     @inprogress("diseases")
 } {
+  <div class="table-responsive">    
     <table class="table table-striped" id="disease-table">
         <tr>
             <th><button id="cb-addall" alt="Toggle check all"
@@ -68,6 +69,7 @@
             @tabrow(t)
         }
     </table>
+  </div>
 } {
     <div class="dropdown pull-right">
         <button type="button" class="btn btn-default dropdown-toggle"

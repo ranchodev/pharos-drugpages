@@ -53,7 +53,7 @@
 @ix.ncats.views.html.content("Ligands", "ix.idg.models.Ligand",
 ix.idg.controllers.routes.IDGApp.ligands().url,
 current, rows, total, pages, facets){ @ligandmenu() }{
-<ol class="breadcrumb">
+<ol class="breadcrumb" style="margin-top:60px;">
   <li><a href="@ix.idg.controllers.routes.IDGApp.index()"><span class="fa fa-home"></span> Home</a></li>
   @defining(request().queryString.get("facet")) { facets =>
      @if(facets != null) {

@@ -112,12 +112,12 @@
 </script>
 
 <div class="sticky">
-  <a class="btn btn-primary loader"
+  <button role="btn" class="btn btn-primary circular-btn loader"
      data-toggle="tooltip"
      data-title="Apply filter(s)"
-     href="#" onclick="applyFilters(this)">
+     onclick="applyFilters(this)">
     <span class="fa fa-check fa-2x" aria-hidden="true"></span>
-  </a>
+  </button>
 </div>
 <div class="container-fluid" style="padding-top:50px;">
         <div class="page-header">
@@ -280,6 +280,16 @@ $(document).ready(function() {
     }
     .sticky:hover {
       opacity: 1;
+    }
+    .circular-btn {
+    padding: 5px 5px;
+    border-radius: 5em;
+    }
+    .circular-btn:focus,
+    .circular-btn:active,
+    .circular-btn:visited {
+    outline: 0;
+    border: none;
     }
   </style>
 </head>

@@ -17,15 +17,22 @@
 	   style="width:200px;"
 	   class="typeahead form-control" placeholder="Search..."/>
     <input type="hidden" name="kind" value="ix.idg.models.Disease">
+    <div class="dropdown pull-right">
+        <button type="submit" class="btn btn-default" style="margin-left: 2px">
+         <span class="fa fa-search fa-fw" aria-hidden="true"></span>
+        </button>
+        <button type="button" class="btn btn-default dropdown-toggle"
+	      data-toggle="dropdown" aria-haspopup="true"
+	      aria-expanded="false">
+        <span class="fa fa-navicon fa-fw"></span>
+        </button>
+        <ul class="dropdown-menu pull-left">
+	  <li><a href="@ix.idg.controllers.routes.IDGApp.about()">About</a></li>
+	  <li><a href="@ix.idg.controllers.routes.IDGApp.help()">Help</a></li>
+        </ul>
+    </div>
   </div>
-  <button type="submit" class="btn btn-default">
-    <span class="fa fa-search" aria-hidden="true"></span>
-  </button>
 </form>
-<ul class="nav navbar-nav navbar-right">  
-  <li role="presentation"><a href="@ix.idg.controllers.routes.IDGApp.about()">About</a></li>
-  <li role="presentation"><a href="@ix.idg.controllers.routes.IDGApp.help()">Help</a></li>
-</ul>
 }
 
 @**

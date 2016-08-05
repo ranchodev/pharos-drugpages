@@ -485,7 +485,8 @@ This is TCRD target <a href='@ix.core.controllers.v1.routes.RouteFactory.get("ta
          <td style="padding:5px;"></td>
          <td>@target.name</td>
             <td style="text-align:right;">
-                <div class="dropdown pull-right">
+	      <div class="btn-group-vertical" role="group">
+                <div class="dropdown btn-group pull-right" role="group">
                     <button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown">
                         <i class="fa fa-list"></i>
                     </button>
@@ -493,11 +494,7 @@ This is TCRD target <a href='@ix.core.controllers.v1.routes.RouteFactory.get("ta
 
                     </ul>
                 </div>
-
-                <a class="btn btn-default loader" href="@HtmlFormat.raw(request.uri)?action=download" role="button" style="margin-right:1px; margin-left:1px;">
-                    <i class="fa fa-download fa-lg "></i></a>
-
-                <div class="dropdown pull-right">
+                <div class="dropdown btn-group pull-right" role="group">
                     <button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown">
                         <i class="fa fa-shopping-cart"></i>&nbsp;<span id="sc-count"></span>
                     </button>
@@ -507,6 +504,7 @@ This is TCRD target <a href='@ix.core.controllers.v1.routes.RouteFactory.get("ta
                         <li><a href="#" id="sc-empty">Empty Collection</a></li>
                     </ul>
                 </div>
+	      </div>
             </td>
         </tr>
         </table>
@@ -1541,7 +1539,8 @@ $(document).ready(function () {
         $("#toc" ).append("<li><a href='#"+ o.aname+"'>"+ o.tname+"</a></li>");
     });
     $('#toc').append('<li role="separator" class="divider"></li>');
-    $('#toc').append('<li><a href="@ix.core.controllers.v1.routes.RouteFactory.get("targets", target.id, null)">View JSON</li>');
+    $('#toc').append('<li><a href="@ix.core.controllers.v1.routes.RouteFactory.get("targets", target.id, null)">View JSON</a></li>');
+    $('#toc').append('<li><a class="loader" href="@HtmlFormat.raw(request.uri)?action=download">Download</a></li>');
 
     /* Word cloud for text mined pubs */
     @defining(WordCloud.textHistogram(target, "title", "sqrt")) { counts =>
