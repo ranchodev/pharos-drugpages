@@ -494,7 +494,7 @@ public class IDGApp extends App implements Commons {
                 char ch = name.charAt(i);
                 if (Character.isLetterOrDigit(ch) 
                     || Character.isWhitespace(ch)
-                    || ch == '-' || ch == '+' 
+                    || ch == '-' || ch == '+' || ch == ':'
                     || ch == ',' || ch == '.')
                     ;
                 else
@@ -586,8 +586,9 @@ public class IDGApp extends App implements Commons {
                     IxCache.remove(key);
                 }
                 
-                Content content = getOrElse (key, new Callable<Content> () {
-                        public Content call () throws Exception {
+                CachableContent content =
+                    getOrElse (key, new Callable<CachableContent> () {
+                        public CachableContent call () throws Exception {
                             List<T> e = find (name);
                             if (!e.isEmpty()) {
                                 return CachableContent.wrap(getContent (e));
@@ -595,8 +596,9 @@ public class IDGApp extends App implements Commons {
                             return null;
                         }
                     });
-                return content != null ? ok (content)
-                    : _notFound ("Unknown name: "+name);
+
+                return content != null ? content.ok()
+                    :  _notFound ("Unknown name: "+name);
             }
             catch (Exception ex) {
                 Logger.error("Unable to generate Result for \""+name+"\"", ex);
@@ -3983,11 +3985,27 @@ public class IDGApp extends App implements Commons {
         return tvs != null ? tvs.getTermCount(term) : null;
     }
 
-    public static Result targetdescriptor (String name) {
-        return ok (ix.idg.views.html.targetdescriptor.render
-                   (new TermVectorSummary (Target.class, name),
-                    new TermVectorConditional (Target.class, name,
-                                               IDG_DEVELOPMENT)));
+    public static Result targetdescriptor (final String name) {
+        try {
+            final String key = "targets/descriptor/"+name;
+            CachableContent content = getOrElse
+                (key, new Callable<CachableContent>() {
+                        public CachableContent call () throws Exception {
+                            return CachableContent.wrap
+                            (ix.idg.views.html.targetdescriptor.render
+                             (new TermVectorSummary (Target.class, name),
+                              new TermVectorConditional (Target.class, name,
+                                                         IDG_DEVELOPMENT)));
+                        }
+                    });
+            
+            return content != null ? content.ok()
+                : _badRequest ("Not a valid target descriptor: "+name);
+        }
+        catch (Exception ex) {
+            Logger.error("Can't generate target descriptor content", ex);
+            return _internalServerError (ex);
+        }
     }
 
     public static Result sketcher (String s) {

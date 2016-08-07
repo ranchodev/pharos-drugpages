@@ -19,6 +19,7 @@ import play.api.mvc.AnyContent;
 import play.mvc.Controller;
 import play.mvc.Security;
 import play.mvc.Result;
+import play.mvc.Results;
 import play.mvc.Call;
 import play.mvc.BodyParser;
 import play.libs.ws.*;
@@ -1472,17 +1473,31 @@ public class App extends Authentication {
     }
 
     static public class CachableContent implements Content, Serializable {
-        static final long serialVersionUID = 0x98765432l;
-        String type;
-        String body;
+        // change this value when the class evolve so as to invalidate
+        // any cached instance
+        static final long serialVersionUID = 0x2l;
+        final String type;
+        final String body;
+        final String sha1;
         
         CachableContent (play.twirl.api.Content c) {
             type = c.contentType();
             body = c.body();
+            sha1 = Util.sha1(body);
         }
 
         public String contentType () { return type; }
         public String body () { return body; }
+        public String etag () { return sha1; }
+        public Result ok () {
+            String ifNoneMatch = request().getHeader("If-None-Match");
+            if (ifNoneMatch != null
+                && (ifNoneMatch.equals(sha1) || "*".equals(ifNoneMatch)))
+                return Results.status(304);
+
+            response().setHeader(ETAG, sha1);
+            return Results.ok(this);
+        }
 
         static public Object wrapIfContent (Object obj) {
             if (obj instanceof play.twirl.api.Content) {
@@ -1491,11 +1506,11 @@ public class App extends Authentication {
             return obj;
         }
         
-        static public play.twirl.api.Content wrap (play.twirl.api.Content c) {
+        static public CachableContent wrap (play.twirl.api.Content c) {
             return new CachableContent (c);
         }
 
-        static public play.twirl.api.Content wrap (JsonNode json) {
+        static public CachableContent wrap (JsonNode json) {
             return new CachableContent
                 (new play.twirl.api.JavaScript(json.toString()));
         }
