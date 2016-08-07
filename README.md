@@ -1,52 +1,77 @@
-NCATS InXight Platform
-======================
+Pharos UI
+=========
 
-Please consult the wiki for additional details. The InXight plaform
-consists of two core components ```core``` and ```ncats```. The ```core```
-component comprises of only models and core logic controllers. The
-```ncats``` component provides a common layer for controllers and views
-to build an app. All existing apps developed within the InXight platform
-are available in the ```modules``` directory.
+This repository contains the source code for the front end user
+interface (UI) [Pharos](https://pharos.nih.gov) as part of the
+Knowledge Management Center (KMC) within the [Illuminating the
+Druggable Genome (IDG)](http://commonfund.nih.gov/idg/index)
+project. Please forward questions and/or feedback about the code to us
+at [pharos@mail.nih.gov](mailto:pharos@mail.nih.gov).
 
-To build a particular app, simply use ```sbt``` or the provided
-```activator``` script. Here is an example of running a local instance
-of the GInAS app:
+Requirements
+============
+
++ Java JDK 1.7
++ (Optional) Database server (e.g., MySQL, Postgresql, Oracle,
+etc.). The embedded database ```H2``` can be used if no external
+database is available.
++ (Optional) The [SBT](http://www.scala-sbt.org/) build system.
+
+Building and Running
+====================
+
+Prior to building the code, please edit the database information
+(```db.default.*```) in the file ```modules/idg/conf/pharos-dev.conf```
+as appropriate to match your local setup. To build the code, simply
+type
 
 ```
-sbt -Dconfig.file=modules/ginas/conf/ginas.conf ginas/run
+./activator -Dconfig.file=modules/idg/conf/pharos-dev.conf idg/compile
 ```
 
-(Instead of ```sbt```, you can also use ```./activator``` instead.)
-Now simply point your browser to [http://localhost:9000/ginas](http://localhost:9000/ginas).
+Note that if you have ```SBT``` installed, you can replace
+```activator``` with ```sbt```, e.g.,
+
+```
+sbt -Dconfig.file=modules/idg/conf/pharos-dev.conf idg/run
+```
+
+If all goes well, a functional version of Pharos is available at
+[http://localhost:9000/idg](http://localhost:9000/idg). Of course,
+this version doesn't have any data yet. To load some data, you'll
+first need to have the [TCRD](http://juniper.health.unm.edu/idg-kmc/)
+MySQL instance available, then visit
+[http://localhost:9000/idg/tcrd](http://localhost:9000/idg/tcrd) to
+load the data.
 
 To build a self-contained distribution for production use, simply run
 the following command:
 
 ```
-sbt -Dconfig.file=modules/ginas/conf/ginas.conf ginas/dist
+sbt -Dconfig.file=modules/idg/conf/pharos-dev.conf idg/dist
 ```
 
 If all goes well, this should create a zip file under
-```modules/ginas/target/universal/``` of the form
+```modules/idg/target/universal/``` of the form
 
 ```
-{app}-{branch}-{commit}-{date}-{time}.zip
+idg-{branch}-{date}-{commit}.zip
 ```
 
-where ```{app}``` is the app name (e.g., ```ginas```), ```{branch}``` is
-the current git branch, ```{commit}``` is the 7-character git commit hash,
-```{date}``` is the current date, and ```{time}``` is the current time.
-Now this self-contained zip file can be deployed in production, e.g.,
+where ```{branch}``` is the current git branch (e.g., ```master```),
+```{commit}``` is the 7-character git commit hash, 
+and ```{date}``` is the current date. Now this self-contained zip file
+can be deployed in production, e.g., 
 
 ```
-unzip ginas-alpha_v0-0f75de1-20150618-002011.zip
-cd ginas-alpha_v0-0f75de1-20150618-002011
-./bin/ginas -Dconfig.resource=ginas.conf -Dhttp.port=9000 -Djava.awt.headless=true
+unzip idg-master-20160807-1ade21f.zip
+cd idg-master-20160807-1ade21f
+./bin/idg -mem 8192 -Dconfig.resource=pharos-dev.conf -Dhttp.port=9000 -Djava.awt.headless=true
 ```
 
 To clean up, simply issue:
 
 ```
 sbt clean
-sbt ginas/clean
+sbt idg/clean
 ```
