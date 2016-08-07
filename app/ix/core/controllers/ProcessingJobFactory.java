@@ -4,7 +4,6 @@ import ix.core.NamedResource;
 import ix.core.controllers.EntityFactory.FetchOptions;
 import ix.core.models.ProcessingJob;
 import ix.core.models.ProcessingRecord;
-import ix.ginas.models.v1.Substance;
 
 import java.util.List;
 import java.util.concurrent.ExecutionException;
@@ -27,7 +26,7 @@ public class ProcessingJobFactory extends EntityFactory {
         return getEntity (id, finder);
     }
     
-    public static List<ProcessingRecord> getJobRecords (Long id) {    	
+    public static List<ProcessingRecord> getJobRecords (Long id) {      
         return recordFinder.where().eq("job.id", id).findList();
     }
     
@@ -37,19 +36,19 @@ public class ProcessingJobFactory extends EntityFactory {
     }
     public static List<ProcessingJob> getProcessingJobs
     (int top, int skip, String filter) {
-	    return filter (new FetchOptions (top, skip, filter), finder);
-	}
+            return filter (new FetchOptions (top, skip, filter), finder);
+        }
 
     public static ProcessingJob getJob (String key) {
-    	//finder.setDistinct(false).where().eq("keys.term", key).findUnique();
-    	
-    	// This is because the built SQL for oracle includes a "DISTINCT"
-    	// statement, which doesn't appear to be extractable.
-    	List<ProcessingJob> gotJobsv= finder.findList();
-    	for(ProcessingJob pj : gotJobsv){
-    		if(pj.hasKey(key))return pj;
-    	}
-    	return null;
+        //finder.setDistinct(false).where().eq("keys.term", key).findUnique();
+        
+        // This is because the built SQL for oracle includes a "DISTINCT"
+        // statement, which doesn't appear to be extractable.
+        List<ProcessingJob> gotJobsv= finder.findList();
+        for(ProcessingJob pj : gotJobsv){
+                if(pj.hasKey(key))return pj;
+        }
+        return null;
     }
     
     public static Integer getCount () 

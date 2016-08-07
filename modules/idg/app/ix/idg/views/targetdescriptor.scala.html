@@ -97,6 +97,11 @@
             <div id="term-bubble" class="panel-body"
 	         style="width:800px; height:800px; text { font: 10px sans-serif;}">
 	    </div>
+	    @if(ctv.terms.length > 10000) {
+	      <div class="panel-footer">
+                <em>@tvs.getSingletonCount singleton terms are not shown!</em>
+	      </div>
+	    }	    
 	  </div>
         </div>
       </div>	
@@ -178,7 +183,7 @@ $(document).ready(function () {
        }
        xAxis: {
           categories: [
-	    @for(i <- 0 until Math.min(2000, ctv.terms.length)){'@ctv.terms(i)',}
+	      @for(i <- 0 until Math.min(2000,ctv.terms.length)){'@ctv.terms(i)',}
 	  ]
        },
        yAxis: {
@@ -254,14 +259,27 @@ function bubbleChart (id, diameter) {
       node.append("text")
 	.attr("dy", ".3em")
       	.style("text-anchor", "middle")
-      	.text(function(d) { return d.name.substring(0, d.r / 4); });
+      	.text(function(d) {
+	   var name = d.name;
+	   if (d.name.startsWith("CHEMBL")) {
+	     name = d.name.substring(6);
+	   }
+	   return name.substring(0, d.r / 4);
+        });
     });
 
     function terms (json) {
        var nodes = [];
        for (var t in json.terms) {
           //console.log(t+' => '+json.terms[t].nDocs);
-          nodes.push({name: t, value: json.terms[t].nDocs});
+	  var cnt = json.terms[t].nDocs;
+          @if(ctv.terms.length > 10000) {
+            if (cnt > 1) {
+              nodes.push({name: t, value: cnt});
+	    }
+	  } else {
+	    nodes.push({name: t, value: cnt});
+	  }
        }
        return {children: nodes};
     }

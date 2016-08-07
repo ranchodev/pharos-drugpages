@@ -24,10 +24,17 @@ public class UniprotFactory extends Controller {
         new Model.Finder(Long.class, Target.class);
     
     public static Result index () {
+        if (Play.isProd()) {
+            return redirect (routes.IDGApp.index());
+        }
         return ok (ix.idg.views.html.uniprot.render());
     }
     
     public static Result fetch () {
+        if (Play.isProd()) {
+            return redirect (routes.IDGApp.index());
+        }
+        
         DynamicForm requestData = Form.form().bindFromRequest();
         String arg = requestData.get("accession");
         Logger.debug("## accession="+arg);

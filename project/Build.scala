@@ -35,7 +35,6 @@ object ApplicationBuild extends Build {
       ,"com.edulify" %% "play-hikaricp" % "2.1.0"
       ,"mysql" % "mysql-connector-java" % "5.1.31"
       ,"org.postgresql" % "postgresql" % "9.4-1201-jdbc41"     
-      ,"com.hazelcast" % "hazelcast" % "3.5.2" 
       ,"org.julienrf" %% "play-jsonp-filter" % "1.2"
       ,"commons-codec" % "commons-codec" % "1.9"
       ,"org.apache.lucene" % "lucene-core" % "4.10.0"
@@ -52,8 +51,6 @@ object ApplicationBuild extends Build {
       ,"org.webjars" % "handlebars" % "2.0.0-1"
       ,"org.webjars" % "jquery-ui" % "1.11.2"
       ,"org.webjars" % "jquery-ui-themes" % "1.11.2"
-      ,"org.webjars" % "angularjs" % "1.4.3-1"
-      ,"org.webjars" % "angular-ui-bootstrap" % "0.13.3"
       ,"org.webjars" % "font-awesome" % "4.2.0"
       ,"org.webjars" % "html5shiv" % "3.7.2"
       ,"org.webjars" % "requirejs" % "2.1.15"
@@ -129,15 +126,6 @@ public class BuildInfo {
         //javaOptions in Runtime += "-Dconfig.resource=ncats.conf"
   ).dependsOn(core).aggregate(core)
 
-  // needs to specify on the commandline during development and dist
-  //  sbt -Dconfig.file=modules/granite/conf/granite.conf granite/run
-  val granite = Project("granite", file("modules/granite"))
-    .enablePlugins(PlayJava).settings(commonSettings:_*).settings(
-      libraryDependencies ++= commonDependencies,
-      javacOptions ++= javaBuildOptions
-      //javaOptions in Runtime += "-Dconfig.resource=granite.conf"
-  ).dependsOn(ncats).aggregate(ncats)
-
   val idg = Project("idg", file("modules/idg"))
     .enablePlugins(PlayJava).settings(commonSettings:_*).settings(
       libraryDependencies ++= commonDependencies,
@@ -150,68 +138,4 @@ public class BuildInfo {
       unmanagedSourceDirectories in Compile += baseDirectory.value / "src"
       //javaOptions in Runtime += "-Dconfig.resource=pharos.conf"
   ).dependsOn(ncats).aggregate(ncats)
-
-  val ginas = Project("ginas", file("modules/ginas"))
-    .enablePlugins(PlayJava).settings(commonSettings:_*).settings(
-      libraryDependencies ++= commonDependencies,
-      libraryDependencies += "org.webjars" % "dojo" % "1.10.0",
-      libraryDependencies += "org.webjars" % "momentjs" % "2.10.3",
-      libraryDependencies += "org.webjars" % "angular-bootstrap-datetimepicker" % "0.3.8",
-      libraryDependencies += "org.webjars" % "angular-ui-select" % "0.11.2",
-      libraryDependencies += "org.webjars" % "lodash" % "3.9.0",
-      javacOptions ++= javaBuildOptions
-  ).dependsOn(ncats).aggregate(ncats)
-
-
-  val hcs = Project("hcs", file("modules/hcs"))
-    .enablePlugins(PlayJava).settings(commonSettings:_*).settings(
-      libraryDependencies ++= commonDependencies,
-      javacOptions ++= javaBuildOptions
-  ).dependsOn(ncats).aggregate(ncats)
-
-  val srs = Project("srs", file("modules/srs"))
-    .enablePlugins(PlayJava).settings(commonSettings:_*).settings(
-      libraryDependencies ++= commonDependencies,
-      javacOptions ++= javaBuildOptions
-  ).dependsOn(ncats).aggregate(ncats)
-
-  val reach = Project("reach", file("modules/reach"))
-    .enablePlugins(PlayJava).settings(commonSettings:_*).settings(
-      libraryDependencies ++= commonDependencies,
-      libraryDependencies +="org.webjars" % "highcharts" % "4.0.4",
-      libraryDependencies +="org.webjars" % "highslide" % "4.1.13",
-      javacOptions ++= javaBuildOptions
-  ).dependsOn(ncats).aggregate(ncats)
-
-  val qhts = Project("qhts", file("modules/qhts"))
-    .enablePlugins(PlayJava).settings(commonSettings:_*).settings(
-      libraryDependencies ++= commonDependencies,
-      javacOptions ++= javaBuildOptions
-  ).dependsOn(ncats).aggregate(ncats)
-
-  val tox21 = Project("tox21", file("modules/tox21"))
-    .enablePlugins(PlayJava).settings(commonSettings:_*).settings(
-      libraryDependencies ++= commonDependencies,
-      javacOptions ++= javaBuildOptions
-  ).dependsOn(qhts).aggregate(qhts)
-
-  val ntd = Project("ntd", file("modules/ntd"))
-    .enablePlugins(PlayJava).settings(commonSettings:_*).settings(
-      libraryDependencies ++= commonDependencies,
-      javacOptions ++= javaBuildOptions
-      //javaOptions in Runtime += "-Dconfig.resource=pharos.conf"
-    ).dependsOn(ncats).aggregate(ncats)
-
-  val cbc = Project("cbc", file("modules/cbc"))
-    .enablePlugins(PlayJava).settings(commonSettings:_*).settings(
-      libraryDependencies ++= commonDependencies,
-      javacOptions ++= javaBuildOptions
-  ).dependsOn(ncats).aggregate(ncats)
-
-  val ginasEvo = Project("ginas-evolution", file("modules/ginas-evolution"))
-    .settings(commonSettings: _*).settings(
-    libraryDependencies ++= commonDependencies,
-      libraryDependencies += "com.typesafe" % "config" % "1.2.0",
-      mainClass in (Compile,run) := Some("ix.ginas.utils.Evolution")
-  ).dependsOn(ginas).aggregate(ginas)
 }

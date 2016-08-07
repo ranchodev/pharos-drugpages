@@ -295,6 +295,12 @@ public class RouteFactory extends Controller {
     }
 
     public static Result create (String context) {
+        String user = request().username();
+        if (user == null) {
+            return forbidden ("You're not authorized to access this resource!");
+        }
+
+        Logger.debug("user "+user+": create("+context+")");
         try {
             Method m = getMethod (context, "create"); 
             if (m != null)
@@ -309,6 +315,12 @@ public class RouteFactory extends Controller {
     }
 
     public static Result update (String context, Long id, String field) {
+        String user = request().username();
+        if (user == null) {
+            return forbidden ("You're not authorized to access this resource!");
+        }
+
+        Logger.debug("user "+user+": update("+context+","+id+","+field);
         try {
             Method m = getMethod (context, "update", Long.class, String.class);
             if (m != null)
@@ -323,6 +335,12 @@ public class RouteFactory extends Controller {
     }
 
     public static Result updateUUID (String context, String id, String field) {
+        String user = request().username();
+        if (user == null) {
+            return forbidden ("You're not authorized to access this resource!");
+        }
+
+        Logger.debug("user "+user+": update("+context+","+id+","+field);
         try {
             Method m = getMethod (context, "update", UUID.class, String.class);
             if (m != null)

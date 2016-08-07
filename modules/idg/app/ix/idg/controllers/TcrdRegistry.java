@@ -2917,6 +2917,7 @@ public class TcrdRegistry extends Controller implements Commons {
     public static Result load () {
         DynamicForm requestData = Form.form().bindFromRequest();
         if (Play.isProd()) { // production..
+            /*
             String secret = requestData.get("secret-code");
             if (secret == null || secret.length() == 0
                 || !secret.equals(Play.application()
@@ -2924,6 +2925,8 @@ public class TcrdRegistry extends Controller implements Commons {
                 return unauthorized
                     ("You do not have permission to access resource!");
             }
+            */
+            return redirect (routes.IDGApp.index());
         }
         
         String jdbcUrl = requestData.get("jdbcUrl");

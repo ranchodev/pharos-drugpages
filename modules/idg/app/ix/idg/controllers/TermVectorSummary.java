@@ -66,4 +66,12 @@ public class TermVectorSummary implements Serializable {
             avgTermsPerDoc = 0.;
         }
     }
+
+    public int getSingletonCount () {
+        int singletons = 0;
+        for (int i = 0; i < termCount.length; ++i)
+            if (termCount[i] == 1)
+                ++singletons;
+        return singletons;
+    }
 }

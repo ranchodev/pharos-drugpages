@@ -3988,6 +3988,14 @@ public class IDGApp extends App implements Commons {
     public static Result targetdescriptor (final String name) {
         try {
             final String key = "targets/descriptor/"+name;
+            String refresh = request().getQueryString("refresh");
+            if (refresh != null
+                && ("true".equalsIgnoreCase(refresh)
+                    || "yes".equalsIgnoreCase(refresh)
+                    || "y".equalsIgnoreCase(refresh))) {
+                IxCache.remove(key);
+            }
+            
             CachableContent content = getOrElse
                 (key, new Callable<CachableContent>() {
                         public CachableContent call () throws Exception {
