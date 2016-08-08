@@ -63,10 +63,6 @@ public class Util {
         return sb.toString();           
     }
 
-    public static String sha1 (Http.Request req) {
-        return sha1 (req, (String[])null);
-    }
-    
     public static String sha1 (Http.Request req, String... params) {
         byte[] sha1 = getSha1 (req, params);
         return sha1 != null ? toHex (sha1) : "";

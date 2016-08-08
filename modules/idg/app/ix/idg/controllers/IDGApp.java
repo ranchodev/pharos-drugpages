@@ -578,16 +578,9 @@ public class IDGApp extends App implements Commons {
                 final String key = getClass().getName()
                     +"/"+cls.getName()+"/"+name+"/result/"
                     +(view != null?view:"");
-                String refresh = request().getQueryString("refresh");
-                if (refresh != null
-                    && ("true".equalsIgnoreCase(refresh)
-                        || "yes".equalsIgnoreCase(refresh)
-                        || "y".equalsIgnoreCase(refresh))) {
-                    IxCache.remove(key);
-                }
                 
                 CachableContent content =
-                    getOrElse (key, new Callable<CachableContent> () {
+                    getOrElse_ (key, new Callable<CachableContent> () {
                         public CachableContent call () throws Exception {
                             List<T> e = find (name);
                             if (!e.isEmpty()) {
@@ -993,7 +986,29 @@ public class IDGApp extends App implements Commons {
         return redirect (routes.IDGApp.index());
     }
 
-    public static Result targetfacets (String ctx) {
+    public static Result targetfacets (final String ctx) {
+        final String key = Util.sha1
+            (request (), "ctx", "q", "facet", "filter");
+        try {
+            // refresh version
+            CachableContent content =
+                getOrElse_ (key, new Callable<CachableContent> () {
+                        public CachableContent call () throws Exception {
+                            return CachableContent.wrap
+                            (getTargetFacetsContent (ctx));
+                        }
+                    });
+            return content != null ? content.ok() : _internalServerError
+                ("Bad stuff is going on at 9800 medical center dr; "
+                 +"please forgive us!");
+        }
+        catch (Exception ex) {
+            Logger.error("Can't generate target facets content", ex);
+            return _internalServerError (ex);
+        }
+    }
+
+    public static Content getTargetFacetsContent (String ctx) {
         SearchResult result = null;
         if (ctx != null) {
             result = getSearchContext (ctx);
@@ -1054,9 +1069,9 @@ public class IDGApp extends App implements Commons {
             }
         }
         
-        return ok (ix.idg.views.html.targetfacets.render
-                   (request().getQueryString("q"),
-                    uri.toString(), toMatrix (3, decors)));
+        return ix.idg.views.html.targetfacets.render
+            (request().getQueryString("q"),
+             uri.toString(), toMatrix (3, decors));
     }
 
     @Cached(key="_kinome", duration = Integer.MAX_VALUE)
@@ -1075,12 +1090,16 @@ public class IDGApp extends App implements Commons {
     public static Result _badRequest (String mesg) {
         return badRequest (ix.idg.views.html.error.render(400, mesg));
     }
-
-    public static Result _internalServerError (Throwable t) {
-        t.printStackTrace();
+    
+    public static Result _internalServerError (String mesg) {
         return internalServerError
             (ix.idg.views.html.error.render
-             (500, "Internal server error: "+t.getMessage()));
+             (500, "Internal server error: "+mesg));    
+    }
+    
+    public static Result _internalServerError (Throwable t) {
+        t.printStackTrace();
+        return _internalServerError (t.getMessage());
     }
 
     static void getLineage (Map<Long, Disease> lineage, Disease d) {
@@ -3988,15 +4007,7 @@ public class IDGApp extends App implements Commons {
     public static Result targetdescriptor (final String name) {
         try {
             final String key = "targets/descriptor/"+name;
-            String refresh = request().getQueryString("refresh");
-            if (refresh != null
-                && ("true".equalsIgnoreCase(refresh)
-                    || "yes".equalsIgnoreCase(refresh)
-                    || "y".equalsIgnoreCase(refresh))) {
-                IxCache.remove(key);
-            }
-            
-            CachableContent content = getOrElse
+            CachableContent content = getOrElse_
                 (key, new Callable<CachableContent>() {
                         public CachableContent call () throws Exception {
                             return CachableContent.wrap

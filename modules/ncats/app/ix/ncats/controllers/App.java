@@ -920,11 +920,24 @@ public class App extends Authentication {
         return getOrElse (key, callable);
     }
     
-    public static <T> T getOrElse(String key, Callable<T> callable)
+    public static <T> T getOrElse (String key, Callable<T> callable)
         throws Exception {
         return getOrElse (_textIndexer.lastModified(), key, callable);
     }
 
+    public static <T> T getOrElse_ (String key, Callable<T> callable)
+        throws Exception {
+        String refresh = request().getQueryString("refresh");
+        if (refresh != null
+            && ("true".equalsIgnoreCase(refresh)
+                || "yes".equalsIgnoreCase(refresh)
+                || "y".equalsIgnoreCase(refresh))) {
+            IxCache.remove(key);
+        }
+        
+        return getOrElse (_textIndexer.lastModified(), key, callable);
+    }
+    
     public static <T> T getOrElse (long modified,
                                    String key, Callable<T> callable)
         throws Exception {
