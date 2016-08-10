@@ -97,7 +97,7 @@
             <div id="term-bubble" class="panel-body"
 	         style="width:800px; height:800px; text { font: 10px sans-serif;}">
 	    </div>
-	    @if(ctv.terms.length > 10000) {
+	    @if(tvs.termRank.length > 10000) {
 	      <div class="panel-footer">
                 <em>@tvs.getSingletonCount singleton terms are not shown!</em>
 	      </div>
@@ -273,7 +273,7 @@ function bubbleChart (id, diameter) {
        for (var t in json.terms) {
           //console.log(t+' => '+json.terms[t].nDocs);
 	  var cnt = json.terms[t].nDocs;
-          @if(ctv.terms.length > 10000) {
+          @if(tvs.termRank.length > 10000) {
             if (cnt > 1) {
               nodes.push({name: t, value: cnt});
 	    }

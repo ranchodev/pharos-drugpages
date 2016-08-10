@@ -242,4 +242,29 @@ public class Util {
         }
         return sha1 (vals.toArray(new String[0]));
     }
+
+    public static boolean isValidSQL (String s) {
+        int len = s.length();
+        for (int i = 0; i < len; ++i) {
+            char ch = s.charAt(i);
+            switch (ch) {
+            case '<': case '>': case '|': 
+            case ';': case '(': case ')': 
+            case '&':
+                return false;
+            }
+        }
+        return true;
+    }
+
+    public static boolean isValidFieldName (String s) {
+        int len = s.length();
+        for (int i = 0; i < len; ++i) {
+            char ch = s.charAt(i);
+            if ((i == 0 && !Character.isJavaIdentifierStart(ch))
+                || !Character.isJavaIdentifierPart(ch))
+                return false;
+        }
+        return true;
+    }
 }
