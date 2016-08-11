@@ -77,16 +77,28 @@ public class EntityFactory extends Controller {
                      : request().queryString().entrySet()) {
                 String param = me.getKey();
                 if ("order".equalsIgnoreCase(param)) {
-                    for (String s : me.getValue())
-                        order.add(s);
+                    for (String s : me.getValue()) {
+                        if (Util.isValidFieldName(s))
+                            order.add(s);
+                        else 
+                            Logger.warn("Bogus order field: "+s);
+                    }
                 }
                 else if ("expand".equalsIgnoreCase(param)) {
-                    for (String s : me.getValue())
-                        expand.add(s);
+                    for (String s : me.getValue()) {
+                        if (Util.isValidFieldName(s))
+                            expand.add(s);
+                        else
+                            Logger.warn("Bogus expand field: "+s);
+                    }
                 }
                 else if ("select".equalsIgnoreCase(param)) {
-                    for (String s : me.getValue())
-                        select.add(s);
+                    for (String s : me.getValue()) {
+                        if (Util.isValidFieldName(s))
+                            select.add(s);
+                        else
+                            Logger.warn("Bogus select field: "+s);
+                    }
                 }
                 else if ("top".equalsIgnoreCase(param)) {
                     String n = me.getValue()[0];
@@ -113,22 +125,31 @@ public class EntityFactory extends Controller {
         }
         
         public FetchOptions (int top, int skip, String filter) {
-                try{
-                    for (Map.Entry<String, String[]> me
-                             : request().queryString().entrySet()) {
-                        String param = me.getKey();
-                        if ("order".equalsIgnoreCase(param)) {
-                            for (String s : me.getValue())
+            try {
+                for (Map.Entry<String, String[]> me
+                         : request().queryString().entrySet()) {
+                    String param = me.getKey();
+                    if ("order".equalsIgnoreCase(param)) {
+                        for (String s : me.getValue()) {
+                            if (Util.isValidFieldName(s))
                                 order.add(s);
-                        }
-                        else if ("expand".equalsIgnoreCase(me.getKey())) {
-                            for (String s : me.getValue())
-                                expand.add(s);
+                            else
+                                Logger.warn("Bogus order field: "+s);
                         }
                     }
-                }catch(Exception e){
-                        
+                    else if ("expand".equalsIgnoreCase(me.getKey())) {
+                        for (String s : me.getValue()) {
+                            if (Util.isValidFieldName(s))
+                                expand.add(s);
+                            else
+                                Logger.warn("Bogus expand field: "+s);
+                        }
+                    }
                 }
+            } 
+            catch (Exception ex) {
+                ex.printStackTrace();
+            }
             this.top = top;
             this.skip = skip;
             this.filter = filter;
@@ -178,9 +199,9 @@ public class EntityFactory extends Controller {
     protected static <K,T> List<T> filter (FetchOptions options,
                                            Model.Finder<K, T> finder) {
 
-        try{
-                Logger.debug(request().uri()+": "+options);
-        }catch(Exception e){
+        try {
+            Logger.debug(request().uri()+": "+options);
+        } catch (Exception e) {
                 Logger.debug("non-request-bound: "+options);
         }
         Query<T> query = finder.query();
@@ -202,7 +223,7 @@ public class EntityFactory extends Controller {
                     if (ch == '^') {
                         order = order.substring(1);
                     }
-                // default to asc
+                    // default to asc
                     query = query.order(order+" asc");
                 }
             }
@@ -217,7 +238,8 @@ public class EntityFactory extends Controller {
                 .setFirstRow(options.skip)
                 .setMaxRows(options.top)
                 .findList();
-            Logger.debug(" => "+results.size()+" in "+(System.currentTimeMillis()-start)+"ms");
+            Logger.debug(" => "+results.size()
+                         +" in "+(System.currentTimeMillis()-start)+"ms");
 
             return results;
         }
