@@ -2187,7 +2187,7 @@ public class TcrdRegistry extends Controller implements Commons {
             try {
                 while (rset.next()) {
                     Techdev dev = new Techdev ();
-                    dev.pi = rset.getString("name");
+                    dev.pi = rset.getString("pi");
                     dev.grantNum = rset.getString("grant_number");
                     dev.comment = rset.getString("comment");
                     dev.pmcid = rset.getString("publication_pcmid");

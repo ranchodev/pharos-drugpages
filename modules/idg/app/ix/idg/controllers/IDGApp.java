@@ -249,15 +249,6 @@ public class IDGApp extends App implements Commons {
 
         DiseaseRelevance () {}
         public int compareTo (DiseaseRelevance dr) {
-            /*
-            double d = 0.;
-            if (dr.zscore != null && zscore != null)
-                d = dr.zscore - zscore;
-            else if (dr.conf != null && conf != null)
-                d = dr.conf - conf;
-            if (d < 0) return -1;
-            if (d > 0) return 1;
-            */
             return disease.name.compareTo(dr.disease.name);
         }
     }
@@ -437,14 +428,27 @@ public class IDGApp extends App implements Commons {
                 }
             }
             else if (name.equals(TECHDEV_PI)) {
+                // TODO: sigh.. these should be in a config file somewhere!
                 if (label.equalsIgnoreCase("Bryan Roth")) {
                     return "<a href=\"http://targetcentral.ws/TechDev2\">"+label+"</a> <i class='fa fa-external-link'></i>";
                 }
                 else if (label.equalsIgnoreCase("Susumu Tomita")) {
                     return "<a href=\"http://targetcentral.ws/TechDev5\">"+label+"</a> <i class='fa fa-external-link'></i>";
                 }
-                else if (label.equalsIgnoreCase("Gaia Skibinski")) {
+                else if (label.equalsIgnoreCase("Steve Finkbeiner")) {
                     return "<a href=\"http://targetcentral.ws/TechDev6\">"+label+"</a> <i class='fa fa-external-link'></i>";
+                }
+                else if (label.equalsIgnoreCase("Gary Johnson")) {
+                    return "<a href=\"http://targetcentral.ws/TechDev1\">"+label+"</a> <i class='fa fa-external-link'></i>";
+                }
+                else if (label.equalsIgnoreCase("Jing-Ruey Yeh")) {
+                    return "<a href=\"http://targetcentral.ws/TechDev3\">"+label+"</a> <i class='fa fa-external-link'></i>";
+                }
+                else if (label.equalsIgnoreCase("Michael McManus")) {
+                    return "<a href=\"http://targetcentral.ws/TechDev4\">"+label+"</a> <i class='fa fa-external-link'></i>";
+                }
+                else if (label.equalsIgnoreCase("Jun Qin")) {
+                    return "<a href=\"http://targetcentral.ws/TechDev7\">"+label+"</a> <i class='fa fa-external-link'></i>";
                 }
             }
             
@@ -1519,6 +1523,7 @@ public class IDGApp extends App implements Commons {
     static List<DiseaseRelevance>
         getDiseaseRelevances (Target t) throws Exception {
         List<DiseaseRelevance> diseases = new ArrayList<DiseaseRelevance>();
+        List<DiseaseRelevance> diseases2 = new ArrayList<DiseaseRelevance>();
         List<DiseaseRelevance> uniprot = new ArrayList<DiseaseRelevance>();
         Map<Long, Disease> lineage = new HashMap<Long, Disease>();
         Map<Long, DiseaseRelevance> diseaseRel =
@@ -1554,7 +1559,10 @@ public class IDGApp extends App implements Commons {
                         dr.comment = ((Text)p).text;
                     }
                 }
-                diseases.add(dr);
+                if (dr.zscore != null)
+                    diseases.add(dr);
+                else
+                    diseases2.add(dr);
                 
                 if (dr.comment != null) {
                     for (Keyword kw : dr.disease.synonyms) {
@@ -1568,7 +1576,29 @@ public class IDGApp extends App implements Commons {
                 }
             }
         }
-        Collections.sort(diseases);
+
+        Collections.sort(diseases2); // sort by name..
+        // sort by zscore
+        Collections.sort(diseases, new Comparator<DiseaseRelevance>() {
+                public int compare (DiseaseRelevance dr1, 
+                                    DiseaseRelevance dr2) {
+                    double d = 0.;
+                    if (dr1.zscore != null && dr2.zscore != null)
+                        d = dr2.zscore - dr1.zscore;
+                    else if (dr1.conf != null && dr2.conf != null)
+                        d = dr2.conf - dr1.conf;
+                    else if (dr1.zscore == null && dr2.zscore != null)
+                        d = dr2.zscore;
+                    else if (dr2.zscore == null && dr1.zscore != null)
+                        d = -dr1.zscore;
+
+                    if (d < 0) return -1;
+                    if (d > 0) return 1;
+                    return dr1.disease.name.compareTo(dr2.disease.name);
+                }
+            });
+        diseases.addAll(diseases2);
+
         double elapsed = (System.currentTimeMillis()-start)*1e-3;
         Logger.debug("Elapsed time "+String.format("%1$.3fs", elapsed)
                      +" to retrieve disease relevance for target "+t.id);
