@@ -1804,12 +1804,11 @@ public class IDGApp extends App implements Commons {
             final SearchResult result =
                 getSearchResult (Target.class, q, total, query);
             
-            /*
             String action = request().getQueryString("action");
-            if (action != null && action.equalsIgnoreCase("download")) {
+            if (action != null && action.equalsIgnoreCase("download")
+                && result.size() < 500) {
                 return DownloadEntities.download(result);
             }
-            */
             
             return createTargetResult (result, rows, page);
         }

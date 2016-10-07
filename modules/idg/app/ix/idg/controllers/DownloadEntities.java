@@ -73,9 +73,12 @@ public class DownloadEntities extends Controller {
                 File file = getDownloadFile
                     ("export-target-"+status.key+suffix);
                 if (!file.exists()) {
+                    Logger.debug("Preparing to generate file "+file+" for "
+                                 +targets.size()+" target(s)...");
                     FileOutputStream fos = new FileOutputStream (file);
                     downloadTargets (fos, targets);
                     fos.close();
+                    Logger.debug("File complete!");
                 }
                 status.url = routes.DownloadEntities.download
                     (file.getName()).url();
@@ -410,6 +413,7 @@ public class DownloadEntities extends Controller {
 
         StringBuilder sb = new StringBuilder();
 
+        Logger.debug("generating target info...");
         // basic target info
         String tmp = "URL,Uniprot ID,GeneSymbol,Name,Description,Development Level,DTOClass,PantherClass,ChemblClass,Novelty,Target Family,Function," +
                 "GrantCount,R01Count,PatentCount,AntibodyCount,PubmedCount,PMIDs";
@@ -421,6 +425,7 @@ public class DownloadEntities extends Controller {
         }
         byte[] targetFile = sb.toString().getBytes();
 
+        Logger.debug("generating GO terms...");
         // GO terms
         sb = new StringBuilder();
         tmp = "URL,Uniprot ID,GOTerm,GOType";
@@ -432,6 +437,7 @@ public class DownloadEntities extends Controller {
         }
         byte[] goFile = sb.toString().getBytes();
 
+        Logger.debug("generating pathways...");
         // Pathways
         sb = new StringBuilder();
         tmp = "URL,Uniprot ID,Name,Source,Link";
@@ -454,6 +460,7 @@ public class DownloadEntities extends Controller {
         }
         byte[] upkwdFile = sb.toString().getBytes();
 
+        Logger.debug("generating ligands...");
         // Ligands
         sb = new StringBuilder();
         tmp = "URL,Uniprot ID,Name,Type,Description,SMILES,Link,ChEMBL Activity,ChEMBL Activity Type";
@@ -465,6 +472,7 @@ public class DownloadEntities extends Controller {
 //        }
         byte[] ligandFile = sb.toString().getBytes();
 
+        Logger.debug("generating geneRIF...");
         // Gene RIFs
         sb = new StringBuilder();
         tmp = "URL,Uniprot ID,PMID,Abstract";
@@ -476,6 +484,7 @@ public class DownloadEntities extends Controller {
         }
         byte[] generifFile = sb.toString().getBytes();
 
+        Logger.debug("generating publications...");
         // Publications
         sb = new StringBuilder();
         tmp = "URL,Uniprot ID,PMID,Title,Abstract";
@@ -487,6 +496,7 @@ public class DownloadEntities extends Controller {
         }
         byte[] pubsFile = sb.toString().getBytes();
 
+        Logger.debug("generating expression...");
         // Expression
         sb = new StringBuilder();
         tmp = "URL,Uniprot ID,Source,Tissue,NumericValue,QualitativeValue,Confidence,Evidence";
@@ -498,6 +508,7 @@ public class DownloadEntities extends Controller {
         }
         byte[] exprFile = sb.toString().getBytes();
 
+        Logger.debug("generating diseases...");
         // Diseases
         sb = new StringBuilder();
         tmp = "URL,Uniprot ID,DOID,Name,Description,ZScore,Confidence,Link";
