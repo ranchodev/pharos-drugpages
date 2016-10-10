@@ -456,6 +456,28 @@ public class IDGApp extends App implements Commons {
                     return "<a href=\"http://targetcentral.ws/TechDev7\">"+label+"</a> <i class='fa fa-external-link'></i>";
                 }
             }
+            else if (name.equals(COLLECTION)) {
+                List<Keyword> keywords = KeywordFactory.finder
+                    .where(Expr.and(Expr.eq("label", COLLECTION),
+                                    Expr.eq("term", label)))
+                    .findList();
+                if (keywords != null && !keywords.isEmpty()) {
+                    Keyword kw = keywords.get(0);
+                    if (kw.href != null) {
+                        if (kw.href.startsWith("http")) {
+                            return "<a href='"+kw.href+"'>"+label
+                                +"</a> <i class='fa fa-external-link'></i>";
+                        }
+                        else {
+                            return "<span "
+                                +" data-toggle=\"tooltip\" data-placement=\"right\""
+                                +" data-html=\"true\" title=\"<p align='left'>"
+                                +kw.href+"</p>\">"+label+"</span>";
+                        }
+                    }
+                }
+            }
+            
             
             if (label.length() > 30) {
                 return "<span data-toggle='tooltip' data-html='false'"

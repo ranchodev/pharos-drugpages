@@ -231,13 +231,25 @@ public class SearchFactory extends EntityFactory {
         }
     }
 
+    static String getConditionalTermVectorCacheKey (Class kind, String field,
+                                                    String conditional) {
+        return SearchFactory.class.getName()+"/termVectors/"
+            +kind.getName()+"/"+field+"/"+conditional;
+    }
+    
+    public static boolean removeCachedConditionalTermVectors
+        (Class kind, String field, String conditional) {
+        return IxCache.remove(getConditionalTermVectorCacheKey
+                              (kind, field, conditional));
+    }
+    
     public static Map<String, TermVectors>
         getConditionalTermVectors (final Class kind,
                                    final String field,
                                    final String conditional) {
         try {
-            final String key = SearchFactory.class.getName()+"/termVectors/"
-                +kind.getName()+"/"+field+"/"+conditional;
+            final String key = getConditionalTermVectorCacheKey
+                (kind, field, conditional);
             return IxCache.getOrElse
                 (key, new Callable<Map<String, TermVectors>>() {
                         public Map<String, TermVectors> call ()

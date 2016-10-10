@@ -80,28 +80,29 @@ public class CRUD implements Commons {
 
     public static void addCollection (String name, String desc, Target t)
         throws Exception {
+        // abuse the href for description
+        Keyword kw = KeywordFactory.registerIfAbsent(COLLECTION, name, desc);
         Transaction tx = Ebean.beginTransaction();
         try {
-            Keyword kw = new Keyword (COLLECTION, name);
-            kw.href = desc; // abuse the href for description
-            
             Value v = t.addIfAbsent((Value)kw);
-            if (v.id == null) {
-                kw.save();
+            if (v == kw) {
                 t.update();
                 tx.commit();
                 
                 INDEXER.update(t);
-                SearchFactory.removeCachedTermVectors
-                    (Target.class, COLLECTION);
+                clearCaches ();
                 
-                Logger.debug("collection '"+name
-                             +"' added to target "+t.id+" ("+t.name+")");
+                Logger.debug("Target "+t.id+" added to collection '"
+                             +name+"' ("+kw.id+")");
+            }
+            else {
+                Logger.warn("Target "+t.id+" is already part of collection '"
+                            +name+"' ("+v.id+")");
             }
         }
         catch (Exception ex) {
-            Logger.trace("Can't add collection '"
-                         +name+"' to target "+t.id, ex);
+            Logger.trace("Can't add target "+t.id+" to collection '"
+                         +name+"' ("+kw.id+")", ex);
         }
         finally {
             Ebean.endTransaction();
@@ -136,13 +137,21 @@ public class CRUD implements Commons {
                     }
                     t.update();
                 }
+
+                /*
+                List<Keyword> keywords = KeywordFactory.finder
+                    .where(Expr.and(Expr.eq("label", COLLECTION),
+                                    Expr.eq("term", name)))
+                    .findList();
+                for (Keyword kw : keywords)
+                    kw.delete();
+                */
+                
                 tx.commit();
 
                 for (Target t : targets)
                     INDEXER.update(t);
-                SearchFactory.removeCachedTermVectors
-                    (Target.class, COLLECTION);
-
+                clearCaches ();
                 ok = true;
             }
         }
@@ -150,5 +159,11 @@ public class CRUD implements Commons {
             Ebean.endTransaction();
         }
         return ok;
+    }
+
+    public static void clearCaches () {
+        SearchFactory.removeCachedTermVectors(Target.class, COLLECTION);
+        SearchFactory.removeCachedConditionalTermVectors
+            (Target.class, COLLECTION, IDG_DEVELOPMENT);
     }
 }
