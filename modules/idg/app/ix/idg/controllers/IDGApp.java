@@ -29,8 +29,10 @@ import ix.seqaln.SequenceIndexer;
 import ix.utils.Util;
 import ix.utils.Global;
 import org.apache.commons.lang3.StringUtils;
+
 import play.Logger;
 import play.Play;
+import play.mvc.Security;
 import play.api.mvc.Action;
 import play.api.mvc.AnyContent;
 import play.cache.Cached;
@@ -39,6 +41,9 @@ import play.libs.Akka;
 import play.mvc.BodyParser;
 import play.mvc.Call;
 import play.mvc.Result;
+import play.mvc.Http;
+import static play.mvc.Http.MultipartFormData;
+import play.data.*;
 import play.twirl.api.Content;
 
 import tripod.chem.indexer.StructureIndexer;
@@ -670,6 +675,7 @@ public class IDGApp extends App implements Commons {
             IDG_DEVELOPMENT,
             IDG_FAMILY,
             TECHDEV_PI,
+            COLLECTION,
             IDG_DISEASE,
             IDG_TISSUE,
             //"R01 Grant Count",
@@ -681,6 +687,7 @@ public class IDGApp extends App implements Commons {
         IDG_DEVELOPMENT,
         IDG_FAMILY,
         TECHDEV_PI,
+        COLLECTION,
         IDG_DISEASE,
         IDG_LIGAND,
         IDG_DRUG,
@@ -1634,7 +1641,7 @@ public class IDGApp extends App implements Commons {
         try {
             if (result.finished()) {
                 final String key = "createTargetResult/"+Util.sha1(request ()); 
-                return ok (getOrElse (key, new Callable<Content>() {
+                return ok (getOrElse_ (key, new Callable<Content>() {
                         public Content call () throws Exception {
                             return CachableContent.wrap
                                 (createTargetContent (result, rows, page));
@@ -1815,7 +1822,7 @@ public class IDGApp extends App implements Commons {
         else {
             // this is just paging..
             final String key = "targets/"+total+"/"+Util.sha1(request ());
-            return ok (getOrElse (key+"/result", new Callable<Content> () {
+            return ok (getOrElse_ (key+"/result", new Callable<Content> () {
                     public Content call () throws Exception {
                         return getTargetContent (total, rows, page);
                     }
@@ -4058,5 +4065,51 @@ public class IDGApp extends App implements Commons {
 
     public static Result sketcher (String s) {
         return ok (ix.idg.views.html.sketcher.render(s));
+    }
+
+    @Security.Authenticated(Secured.class)
+    @BodyParser.Of(value = BodyParser.MultipartFormData.class,
+                   maxLength = 1024 * 1024)    
+    public static Result createCollection () {
+        MultipartFormData form = request().body().asMultipartFormData();
+        MultipartFormData.FilePart part = form.getFile("file");
+        if (part != null) {
+            Logger.debug("createCollection => "+part.getFilename());
+            File file = part.getFile();
+            try {
+                ObjectMapper mapper = new ObjectMapper ();
+                JsonNode json = mapper.readTree(file);
+                CRUD.addCollection(json);
+                
+                return redirect (routes.IDGApp.index());
+            }
+            catch (Exception ex) {
+                Logger.trace("Can't create collection from file "
+                             +part.getFilename(), ex);
+                return _internalServerError (ex);
+            }
+        }
+        
+        return badRequest ("No collection file!");
+    }
+
+    @Security.Authenticated(Secured.class)    
+    public static Result editCollection () {
+        return ok (ix.idg.views.html.editcollection.render());
+    }
+
+    @Security.Authenticated(Secured.class)    
+    public static Result delCollection (String name) {
+        try {
+            if (CRUD.delCollection(name)) {
+                return ok(routes.IDGApp.targets(null, 10, 1)+"?refresh=y");
+            }
+            
+            return ok (routes.IDGApp.editCollection().url());
+        }
+        catch (Exception ex) {
+            Logger.trace("Can't delete collection '"+name+"'", ex);
+            return _internalServerError (ex);
+        }
     }
 }

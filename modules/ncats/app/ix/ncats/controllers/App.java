@@ -638,7 +638,7 @@ public class App extends Authentication {
         for (String f : filters)
             key.append("."+f);
         try {
-            TextIndexer.Facet[] facets = getOrElse
+            TextIndexer.Facet[] facets = getOrElse_
                 (key.toString(), new Callable<TextIndexer.Facet[]>() {
                         public TextIndexer.Facet[] call () {
                             return filter (getFacets (cls, FACET_DIM), filters);
@@ -766,7 +766,7 @@ public class App extends Authentication {
         final String sha1 = Util.sha1(kind.getName()+"/"+fdim,
                                       Util.sha1(subset));
         try {
-            return getOrElse (sha1, new Callable<SearchResult>() {
+            return getOrElse_ (sha1, new Callable<SearchResult>() {
                     public SearchResult call () throws Exception {
                         SearchResult result = SearchFactory.search
                             (subset, null, subset.size(), 0, fdim,
@@ -786,7 +786,7 @@ public class App extends Authentication {
                                                 final int fdim) {
         final String sha1 = Util.sha1(kind.getName()+"/"+fdim);
         try {
-            return getOrElse (sha1, new Callable<SearchResult>() {
+            return getOrElse_ (sha1, new Callable<SearchResult>() {
                     public SearchResult call () throws Exception {
                         SearchResult result = SearchFactory.search
                             (kind, null, 0, 0, fdim, null);
@@ -836,7 +836,7 @@ public class App extends Authentication {
                         Logger.debug
                             ("range: field="+field+" min="+min+" max="+max);
                         
-                        return getOrElse (sha1, new Callable<SearchResult> () {
+                        return getOrElse_ (sha1, new Callable<SearchResult> () {
                                 public SearchResult call () throws Exception {
                                     SearchOptions options =
                                         new SearchOptions (query);
@@ -853,7 +853,7 @@ public class App extends Authentication {
                     }
                 }
 
-                result = getOrElse
+                result = getOrElse_
                     (sha1, new Callable<SearchResult>() {
                             public SearchResult call () throws Exception {
                                 Logger.debug("### cache missed: "+sha1);
@@ -917,7 +917,7 @@ public class App extends Authentication {
             return status (304);
 
         response().setHeader(ETAG, key);
-        return getOrElse (key, callable);
+        return getOrElse_ (key, callable);
     }
     
     public static <T> T getOrElse (String key, Callable<T> callable)
@@ -1105,7 +1105,7 @@ public class App extends Authentication {
              +Util.sha1(mol.toFormat("mrv"))+"/"+format+"/"+size
              +Arrays.hashCode(amap)+"/"
              +(newDisplay!=null?newDisplay.hashCode():0);
-         return getOrElse (key, new Callable<byte[]> () {
+         return getOrElse_ (key, new Callable<byte[]> () {
                  public byte[] call () throws Exception {
                      return _render (mol, format, size, amap, newDisplay);
                  }
@@ -1248,7 +1248,7 @@ public class App extends Authentication {
                 +(atomMap != null ? ":" + atomMap:"");
             String mime = format.equals("svg") ? "image/svg+xml" : "image/png";
             try {
-                Result result = getOrElse (key, new Callable<Result> () {
+                Result result = getOrElse_ (key, new Callable<Result> () {
                         public Result call () throws Exception {
                             Structure struc = StructureFactory.getStructure(id);
                             if (struc != null) {
@@ -1273,7 +1273,7 @@ public class App extends Authentication {
         else {
             final String key = Structure.class.getName()+"/"+id+"."+format;
             try {
-                return getOrElse (key, new Callable<Result> () {
+                return getOrElse_ (key, new Callable<Result> () {
                         public Result call () throws Exception {
                             Structure struc = StructureFactory.getStructure(id);
                             if (struc != null) {
@@ -1682,7 +1682,7 @@ public class App extends Authentication {
         try {
             final String key = "batch/"+Util.sha1(q);
             Logger.debug("batch: q="+q+" rows="+rows);
-            return getOrElse (key, new Callable<SearchResultContext> () {
+            return getOrElse_ (key, new Callable<SearchResultContext> () {
                     public SearchResultContext call () throws Exception {
                         processor.setResults(rows, tokenizer.tokenize(q));
                         SearchResultContext ctx = processor.getContext();
@@ -1795,7 +1795,7 @@ public class App extends Authentication {
          * the results of structure/sequence search context merged
          * together with facets, sorting, etc.
          */
-        final SearchResult result = getOrElse
+        final SearchResult result = getOrElse_
             (key, new Callable<SearchResult> () {
                     public SearchResult call () throws Exception {
                         List results = context.getResults();

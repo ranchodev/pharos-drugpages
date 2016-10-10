@@ -82,6 +82,7 @@ public class Util {
             }
             else {
                 uparams.addAll(req.queryString().keySet());
+                uparams.remove("refresh"); // we ignore this param
             }
 
             Set<String> sorted = new TreeSet (req.queryString().keySet());

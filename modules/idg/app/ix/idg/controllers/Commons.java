@@ -4,6 +4,7 @@ import ix.idg.models.Target;
 
 public interface Commons {
     public static final String SOURCE = "Data Source";
+    public static final String COLLECTION = "Collection";
     
     public static final String IDG_DISEASE = "IDG Disease";
     public static final String IDG_DEVELOPMENT = Target.IDG_DEVELOPMENT;

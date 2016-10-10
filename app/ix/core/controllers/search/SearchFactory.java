@@ -205,11 +205,19 @@ public class SearchFactory extends EntityFactory {
         return ok (_indexer.getFacetsConfig());
     }
 
+    static String getTermVectorCacheKey (Class kind, String field) {
+        return SearchFactory.class.getName()+"/termVectors/"
+            +kind.getName()+"/"+field;
+    }
+
+    public static boolean removeCachedTermVectors (Class kind, String field) {
+        return IxCache.remove(getTermVectorCacheKey (kind, field));
+    }
+        
     public static TermVectors getTermVectors
         (final Class kind, final String field) {
         try {
-            final String key = SearchFactory.class.getName()+"/termVectors/"
-                +kind.getName()+"/"+field;
+            final String key = getTermVectorCacheKey (kind, field);
             return IxCache.getOrElse(key, new Callable<TermVectors> () {
                     public TermVectors call ()
                         throws Exception {

@@ -31,7 +31,7 @@ type
 ```
 
 Note that if you have ```SBT``` installed, you can replace
-```activator``` with ```sbt```, e.g.,
+```activator``` with ```sbt```, i.e.,
 
 ```
 sbt -Dconfig.file=modules/idg/conf/pharos-dev.conf idg/run
