@@ -317,11 +317,18 @@ public class IDGApp extends App implements Commons {
     static class IDGFacetDecorator extends FacetDecorator {
         IDGFacetDecorator (Facet facet) {
             super (facet, true, FACET_DIM);
+            if (COLLECTION.equals(facet.getName()))
+                raw = true;
         }
 
         @Override
         public String name () {
-            return super.name().replaceAll("IDG", "")
+            String name = super.name();
+            if (name.equals(COLLECTION)) {
+                return name+" <a class='pull-right' href='"+routes.IDGApp.editCollection()+"'><i class='fa fa-pencil'></i></a>";
+            }
+
+            return name.replaceAll("IDG", "")
                 .replaceAll("Consensus", "IDG").trim();
         }
 
@@ -4068,6 +4075,8 @@ public class IDGApp extends App implements Commons {
             CachableContent content = getOrElse_
                 (key, new Callable<CachableContent>() {
                         public CachableContent call () throws Exception {
+                            SearchFactory.clearCaches
+                            (Target.class, COLLECTION, IDG_DEVELOPMENT);
                             return CachableContent.wrap
                             (ix.idg.views.html.targetdescriptor.render
                              (new TermVectorSummary (Target.class, name),

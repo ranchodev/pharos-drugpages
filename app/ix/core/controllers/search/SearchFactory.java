@@ -209,10 +209,6 @@ public class SearchFactory extends EntityFactory {
         return SearchFactory.class.getName()+"/termVectors/"
             +kind.getName()+"/"+field;
     }
-
-    public static boolean removeCachedTermVectors (Class kind, String field) {
-        return IxCache.remove(getTermVectorCacheKey (kind, field));
-    }
         
     public static TermVectors getTermVectors
         (final Class kind, final String field) {
@@ -236,11 +232,24 @@ public class SearchFactory extends EntityFactory {
         return SearchFactory.class.getName()+"/termVectors/"
             +kind.getName()+"/"+field+"/"+conditional;
     }
-    
-    public static boolean removeCachedConditionalTermVectors
-        (Class kind, String field, String conditional) {
-        return IxCache.remove(getConditionalTermVectorCacheKey
-                              (kind, field, conditional));
+
+    public static int clearCaches (Class kind, String... fields) {
+        List keys = IxCache.getKeys();
+        int caches = 0;
+        for (Object key : keys) {
+            String k = key.toString();
+            if (k.startsWith(SearchFactory.class.getName())
+                && k.indexOf("/"+kind.getName()) > 0) {
+                for (String f : fields) {
+                    if (k.indexOf("/"+f) > 0) {
+                        Logger.debug("removing cache..."+k);
+                        IxCache.remove(k);
+                        ++caches;
+                    }
+                }
+            }
+        }
+        return caches;
     }
     
     public static Map<String, TermVectors>

@@ -75,6 +75,8 @@ public class CRUD implements Commons {
                     Logger.warn("Unknown target '"+n.asText()+"'");
                 }
             }
+            
+            clearCaches ();
         }
     }
 
@@ -90,8 +92,6 @@ public class CRUD implements Commons {
                 tx.commit();
                 
                 INDEXER.update(t);
-                clearCaches ();
-                
                 Logger.debug("Target "+t.id+" added to collection '"
                              +name+"' ("+kw.id+")");
             }
@@ -162,8 +162,6 @@ public class CRUD implements Commons {
     }
 
     public static void clearCaches () {
-        SearchFactory.removeCachedTermVectors(Target.class, COLLECTION);
-        SearchFactory.removeCachedConditionalTermVectors
-            (Target.class, COLLECTION, IDG_DEVELOPMENT);
+        SearchFactory.clearCaches(Target.class, COLLECTION, IDG_DEVELOPMENT);
     }
 }

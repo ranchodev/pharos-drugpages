@@ -28,6 +28,7 @@
                 <div class="col-sm-offset-2 col-sm-10">
                   <button type="submit" class="btn btn-default">Add</button>
 		  <button type="button" class="btn btn-default" id="delete-btn">Delete</button>
+		  <button type="button" class="btn btn-default" id="cancel-btn">Cancel</button>		  
                 </div>
               </div>
             </form>
@@ -54,6 +55,9 @@ $(document).ready(function () {
 	    console.log('delete error: '+error);
 	 }
       });
+   });
+   $('#cancel-btn').on('click', function () {
+       window.location = '@ix.idg.controllers.routes.IDGApp.index';
    });
 });
 </script>
