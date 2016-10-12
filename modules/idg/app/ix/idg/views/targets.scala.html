@@ -1,8 +1,7 @@
-@import ix.idg.models.Target
-@import ix.idg.controllers.IDGApp
 @import ix.idg.controllers.Commons._
-@import ix.ncats.controllers.App.FacetDecorator
+@import ix.idg.controllers.IDGApp
 @import ix.ncats.controllers.App
+@import ix.ncats.controllers.App.FacetDecorator
 
 @(current: Int, rows: Int, total: Int, pages: Array[Int],
 facets: Array[FacetDecorator], targets: List[Target], ctx: String )
@@ -580,8 +579,11 @@ $(document).ready(function () {
             pud = $.get('@ix.idg.controllers.routes.HarmonogramApp.hgForTarget(null,null,null,null)'+'?q='+overlay+'&type='+aggType);
         $.when(ptd, pud).then(function(atd, aud) {
             var chartData = atd[0];
-            if (overlay != 'none')
-                chartData.push(aud[0][0]);
+            if (typeof chartData == 'string' || chartData instanceof String)
+                chartData = JSON.parse(chartData);
+            if (overlay != 'none') {
+                chartData.push(JSON.parse(aud[0])[0]);
+            }
             $("#modalLabelRadar" ).text("Data type summary for "+target);
             renderChart(chartData, chartConfig);
         });
@@ -599,8 +601,10 @@ $(document).ready(function () {
             pud = $.get('@ix.idg.controllers.routes.HarmonogramApp.hgForTarget(null,null,null,null)'+'?q='+overlay+'&type='+aggType);
         $.when(ptd, pud).then(function(atd, aud) {
             var chartData = atd[0];
+            if (typeof chartData == 'string' || chartData instanceof String)
+                chartData = JSON.parse(chartData);
             if (overlay != 'none')
-                chartData.push(aud[0][0]);
+                chartData.push(JSON.parse(aud[0])[0]);
             $("#modalLabelRadar" ).text("Data type summary for "+target);
             renderChart(chartData, chartConfig);
         });
