@@ -1,28 +1,13 @@
 
-@import ix.idg.models.Target
-@import ix.idg.models.Target.TDL
-@import ix.idg.models.Ligand
-@import ix.idg.models.Disease
-@import ix.idg.models.Techdev
-@import ix.idg.models.Assay
-@import ix.idg.models.Compartment
-@import ix.core.models.Value
-@import ix.core.models.VStr
-@import ix.core.models.Keyword
-@import ix.core.models.Text
-@import ix.core.models.VInt
-@import ix.core.models.VNum
-@import ix.core.models.Publication
-@import ix.ncats.controllers.App
-@import ix.idg.controllers.ExpressionApp
-@import ix.idg.controllers.IDGApp
-@import ix.idg.controllers.WordCloud
-@import ix.idg.controllers.IDGApp._
-@import ix.idg.controllers.Commons._
-@import ix.idg.controllers.TcrdRegistry
-@import ix.idg.controllers.UniprotRegistry
-@import ix.utils.Util
 @import java.net.URLEncoder
+
+@import ix.core.models.{Keyword, Publication, Text, VInt, Value}
+@import ix.idg.controllers.Commons._
+@import ix.idg.controllers.IDGApp._
+@import ix.idg.controllers.{ExpressionApp, IDGApp, WordCloud}
+@import ix.idg.models.Target.TDL
+@import ix.idg.models.{Assay, Compartment, Disease, Ligand, Target, Techdev}
+@import ix.utils.Util
 
 @(target: Target, diseases: List[DiseaseRelevance], breadcrumb: List[Keyword])
 
@@ -1723,8 +1708,11 @@ $('.tree').treegrid({
             pud = $.get('@ix.idg.controllers.routes.HarmonogramApp.hgForTarget(null,null,null,null)'+'?q='+overlay+'&type='+aggType);
         $.when(ptd, pud).then(function(atd, aud) {
             var chartData = atd[0];
-            if (overlay != 'none')
-                chartData.push(aud[0][0]);
+            if (typeof chartData == 'string' || chartData instanceof String)
+                chartData = JSON.parse(chartData);
+            if (overlay != 'none') {
+                chartData.push(JSON.parse(aud[0])[0]);
+            }
             renderChart(chartData, aggType, target);
         });
     });
@@ -1740,8 +1728,12 @@ $('.tree').treegrid({
             pud = $.get('@ix.idg.controllers.routes.HarmonogramApp.hgForTarget(null,null,null,null)'+'?q='+overlay+'&type='+aggType);
         $.when(ptd, pud).then(function(atd, aud) {
             var chartData = atd[0];
-            if (overlay != 'none')
-                chartData.push(aud[0][0]);
+            if (typeof chartData == 'string' || chartData instanceof String)
+                chartData = JSON.parse(chartData);
+            if (overlay != 'none') {
+                chartData.push(JSON.parse(aud[0])[0]);
+            }
+
             renderChart(chartData, aggType, target);
         });
     });
