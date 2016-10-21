@@ -61,4 +61,27 @@ public class ObjectFactory {
                     }
                 });
     }
+
+    public static Model.Finder finder (Class kind) {
+        Model.Finder finder = finders.get(kind);
+        if (finder == null) {
+            Class idtype = null;
+            for (Field f : kind.getFields()) {
+                if (null != f.getAnnotation(Id.class)) {
+                    idtype = f.getType();
+                    break;
+                }
+            }
+            
+            if (idtype != null) {
+                finders.putIfAbsent
+                    (kind, finder = new Model.Finder(idtype, kind));
+            }
+            else {
+                throw new IllegalArgumentException
+                    ("Class "+kind+" doesn't have @Id annotation!");
+            }
+        }
+        return finder;
+    }
 }

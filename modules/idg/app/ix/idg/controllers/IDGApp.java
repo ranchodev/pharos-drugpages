@@ -324,12 +324,17 @@ public class IDGApp extends App implements Commons {
         @Override
         public String name () {
             String name = super.name();
-            if (name.equals(COLLECTION)) {
-                return name+" <a class='pull-right' href='"+routes.IDGApp.editCollection()+"'><i class='fa fa-pencil'></i></a>";
-            }
-
             return name.replaceAll("IDG", "")
                 .replaceAll("Consensus", "IDG").trim();
+        }
+
+        @Override
+        public String url () {
+            if (COLLECTION.equals(super.name()))
+                return "<a class='pull-right' href='"
+                    +routes.IDGApp.editCollection()
+                    +"'><i class='fa fa-pencil'></i></a>";
+            return null;
         }
 
         @Override
@@ -4079,9 +4084,9 @@ public class IDGApp extends App implements Commons {
                             (Target.class, COLLECTION, IDG_DEVELOPMENT);
                             return CachableContent.wrap
                             (ix.idg.views.html.targetdescriptor.render
-                             (new TermVectorSummary (Target.class, name),
-                              new TermVectorConditional (Target.class, name,
-                                                         IDG_DEVELOPMENT)));
+                             (DictVector.getInstance(Target.class, name),
+                              DictVectorConditional.getInstance
+                              (Target.class, name, IDG_DEVELOPMENT)));
                         }
                     });
             

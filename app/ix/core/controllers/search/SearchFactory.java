@@ -388,4 +388,26 @@ public class SearchFactory extends EntityFactory {
         ObjectMapper mapper = new ObjectMapper ();
         return ok (mapper.valueToTree(_indexer.getSuggestFields()));
     }
+
+    public static List<Facet> getFacets (final Class kind) {
+        return getFacets (kind, 100);
+    }
+    
+    public static List<Facet> getFacets (final Class kind, final int fdim) {
+        final String sha1 = Util.sha1(SearchFactory.class.getName()
+                                      +"/facets/"+kind.getName()+"/"+fdim);
+        try {
+            return IxCache.getOrElse(sha1, new Callable<List<Facet>>() {
+                    public List<Facet> call () throws Exception {
+                        SearchResult result = search
+                            (kind, null, 0, 0, fdim, null);
+                        return result.getFacets();
+                    }
+                });
+        }
+        catch (Exception ex) {
+            Logger.trace("Can't retrieve facets for "+kind, ex);
+        }
+        return null;
+    }
 }

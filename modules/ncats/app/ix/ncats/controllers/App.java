@@ -193,6 +193,7 @@ public class App extends Authentication {
         public String label (int i) {
             return facet.getLabel(i);
         }
+        public String url () { return null; }
         public String value (int i) {
             Integer total = this.total[i];
             Integer count = facet.getCount(i);
@@ -784,7 +785,8 @@ public class App extends Authentication {
     
     public static SearchResult getSearchFacets (final Class kind,
                                                 final int fdim) {
-        final String sha1 = Util.sha1(kind.getName()+"/"+fdim);
+        final String sha1 = Util.sha1
+            (App.class.getName()+"/facets/"+kind.getName()+"/"+fdim);
         try {
             return getOrElse_ (sha1, new Callable<SearchResult>() {
                     public SearchResult call () throws Exception {

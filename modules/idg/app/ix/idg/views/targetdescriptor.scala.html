@@ -3,19 +3,19 @@
 @import ix.core.search.TextIndexer._
 @import ix.core.controllers.search.SearchFactory
 @import ix.idg.models._
-@import ix.idg.controllers.TermVectorSummary
-@import ix.idg.controllers.TermVectorConditional
+@import ix.idg.controllers.DictVector
+@import ix.idg.controllers.DictVectorConditional
 @import ix.idg.controllers.IDGApp
 @import ix.idg.controllers.Commons._
 
-@(tvs: TermVectorSummary, ctv: TermVectorConditional)
+@(dv: DictVector, dvc: DictVectorConditional)
 
-@ix.ncats.views.html.main("Summary of "+tvs.field){
+@ix.ncats.views.html.main("Summary of "+dv.field){
 @targetmenu(null)
 }{@HtmlFormat.empty}{
 <div class="container-fluid" style="padding-top:50px;">
     <div class="page-header">
-      <h1><a href='@ix.core.controllers.v1.routes.RouteFactory.termVectors("targets", tvs.field)'><i class="fa fa-code"></i></a> Summary of <em>@tvs.field</em>
+      <h1><a href='@ix.core.controllers.v1.routes.RouteFactory.termVectors("targets", dv.field)'><i class="fa fa-code"></i></a> Summary of <em>@dv.field</em>
        <div class="pull-right">
            <a href="@ix.idg.controllers.routes.IDGApp.targets()"
                     class="btn btn-default btn-lg">Close</a>
@@ -29,32 +29,32 @@
             <table class="table table-striped">
               <tr>
 		<td>Dimension</td>
-		<td>@tvs.termRank.length</td>
+		<td>@dv.termRank.length</td>
 	      </tr>
 	      <tr>
 		<td>Average terms per target</td>
-		  @if(tvs.avgTermsPerDoc != null) {
-		     <td>@{"%1$.3f".format(tvs.avgTermsPerDoc)}</td>
+		  @if(dv.avgTermsPerDoc != null) {
+		     <td>@{"%1$.3f".format(dv.avgTermsPerDoc)}</td>
 		  } else {
 		     <td></td>
 		  }
 	      </tr>
 	      <tr>
 		<td>Some popular terms</td>
-		<td>@for(i <- 0 until Math.min(tvs.termRank.length,5)) {
+		<td>@for(i <- 0 until Math.min(dv.termRank.length,5)) {
 	             <div>
-		       @if(tvs.termRank(i).length > 40) {
+		       @if(dv.termRank(i).length > 40) {
 		       <a class="label label-primary loader" 
 			  data-toggle="tooltip"
        			  data-html="true"
        			  data-trigger="hover"
        			  data-placement="top"
-       			  title="@tvs.termRank(i)"
-       			  data-content="<p align='left'>@tvs.termRank(i)</p>"
-			  href='@{ix.idg.controllers.routes.IDGApp.targets()+"?facet="+URLEncoder.encode(tvs.field,"utf8")+"/"}@URLEncoder.encode(tvs.termRank(i), "utf8")'>@tvs.termRank(i).substring(0,40)... <span class="badge">@tvs.termCount(i)</span></a>
+       			  title="@dv.termRank(i)"
+       			  data-content="<p align='left'>@dv.termRank(i)</p>"
+			  href='@{ix.idg.controllers.routes.IDGApp.targets()+"?facet="+URLEncoder.encode(dv.field,"utf8")+"/"}@URLEncoder.encode(dv.termRank(i), "utf8")'>@dv.termRank(i).substring(0,40)... <span class="badge">@dv.termCount(i)</span></a>
 		       } else {
 		       <a class="label label-primary loader" 
-			  href='@{ix.idg.controllers.routes.IDGApp.targets()+"?facet="+URLEncoder.encode(tvs.field,"utf8")+"/"}@URLEncoder.encode(tvs.termRank(i), "utf8")'>@tvs.termRank(i) <span class="badge">@tvs.termCount(i)</span></a>
+			  href='@{ix.idg.controllers.routes.IDGApp.targets()+"?facet="+URLEncoder.encode(dv.field,"utf8")+"/"}@URLEncoder.encode(dv.termRank(i), "utf8")'>@dv.termRank(i) <span class="badge">@dv.termCount(i)</span></a>
 		       }
 		     </div>
 	            }
@@ -62,7 +62,7 @@
 	      </tr>
 	      <tr>
 		<td>Top targets with term counts</td>
-		<td>@for(e <- tvs.targets.entrySet) {
+		<td>@for(e <- dv.getDictObjectMap(classOf[Target]).entrySet) {
 		       @defining(IDGApp.getGeneSymbol(e.getKey)){ gene =>
 		         <div><a class="label label-primary loader"
 			    title='@e.getKey.idgTDL: @e.getKey.name'
@@ -97,9 +97,9 @@
             <div id="term-bubble" class="panel-body"
 	         style="width:800px; height:800px; text { font: 10px sans-serif;}">
 	    </div>
-	    @if(tvs.termRank.length > 10000) {
+	    @if(dv.termRank.length > 10000) {
 	      <div class="panel-footer">
-                <em>@tvs.getSingletonCount singleton terms are not shown!</em>
+                <em>@dv.getSingletonCount singleton terms are not shown!</em>
 	      </div>
 	    }	    
 	  </div>
@@ -122,7 +122,7 @@ $(function () {
 
 var url = '@ix.idg.controllers.routes.IDGApp.targets(null,10,1)';
 function filter (term) {
-  window.location = url+(url.indexOf('?')>0?'&':'?')+'facet=@tvs.field'+'/'+term;
+  window.location = url+(url.indexOf('?')>0?'&':'?')+'facet=@dv.field'+'/'+term;
 }
 
 $(document).ready(function () {
@@ -132,7 +132,7 @@ $(document).ready(function () {
 	   zoomType: 'x'
 	},
 	title: {
-	   text: 'Distribution of counts of <b>@tvs.field</b>'
+	   text: 'Distribution of counts of <b>@dv.field</b>'
 	},
 	xAxis: {
 	   min: 0,
@@ -147,21 +147,21 @@ $(document).ready(function () {
 	   }
 	},
 	tooltip: {
-	   pointFormat: '<b>{point.y}</b> target(s) with <b>{point.x}</b> value(s) for <b>@tvs.field</b>'
+	   pointFormat: '<b>{point.y}</b> target(s) with <b>{point.x}</b> value(s) for <b>@dv.field</b>'
 	},
         credits: {enabled: false},
 	legend: { enabled: false},
 	series: [{
 	   data: [
-	     @for(i <- 0 until Math.min(2000,tvs.termCountProfile.length)) {
-	        [@i,@tvs.termCountProfile(i)],
+	     @for(i <- 0 until Math.min(2000,dv.termCountProfile.length)) {
+	        [@i,@dv.termCountProfile(i)],
 	     }
 	   ]
 	}]
     });
 
     $('#term-profile').highcharts({
-       @if(ctv.condition.equals(IDG_DEVELOPMENT)) {
+       @if(dvc.condition.equals(IDG_DEVELOPMENT)) {
        colors: [
     	'#f0ad4e', // Tbio
     	'#5bc0de', // Tchem
@@ -174,16 +174,16 @@ $(document).ready(function () {
 	  zoomType: 'x'
        },
        title: {
-          text: 'Term distribution of <b>@tvs.field</b> per<br><b>@ctv.condition</b>'
+          text: 'Term distribution of <b>@dv.field</b> per<br><b>@dvc.condition</b>'
        },
-       @if(ctv.terms.length > 2000) {
+       @if(dvc.terms.length > 2000) {
          subtitle: {
-            text: '[Plot truncated due to large (@ctv.terms.length > 2000) number of terms.]' 
+            text: '[Plot truncated due to large (@dvc.terms.length > 2000) number of terms.]' 
          },
        }
        xAxis: {
           categories: [
-	      @for(i <- 0 until Math.min(2000,ctv.terms.length)){'@ctv.terms(i)',}
+	      @for(i <- 0 until Math.min(2000,dvc.terms.length)){'@dvc.terms(i)',}
 	  ]
        },
        yAxis: {
@@ -210,8 +210,8 @@ $(document).ready(function () {
 	     }
           }
        },
-       series: [ @for(i <- 0 until ctv.categories.length) {
-             {name: '@ctv.categories(i)', data: [ @for(j <- 0 until Math.min(2000,ctv.terms.length)) {@ctv.count(j, i),} ]},
+       series: [ @for(i <- 0 until dvc.categories.length) {
+             {name: '@dvc.categories(i)', data: [ @for(j <- 0 until Math.min(2000,dvc.terms.length)) {@dvc.count(j, i),} ]},
 	  } ]
     });
 
@@ -233,14 +233,14 @@ function bubbleChart (id, diameter) {
 	.attr("height", diameter)
     	.attr("class", "bubble");
 
-    d3.json('@ix.core.controllers.v1.routes.RouteFactory.termVectors("targets", tvs.field)', function(error, json) {
+    d3.json('@ix.core.controllers.v1.routes.RouteFactory.termVectors("targets", dv.field)', function(error, json) {
       if (error) throw error;
       
       var node = svg.selectAll(".node")
       	  .data(bubble.nodes(terms (json))
 	  	.filter(function(d) { return !d.children; }))
     	  .enter().append("svg:a").attr("xlink:href", function(d) {
-	        return url+(url.indexOf('?')>0?'&':'?')+'facet=@tvs.field'+'/'+d.name;
+	        return url+(url.indexOf('?')>0?'&':'?')+'facet=@dv.field'+'/'+d.name;
 	     })
 	    .append("g")
       	    .attr("class", "node")
@@ -273,7 +273,7 @@ function bubbleChart (id, diameter) {
        for (var t in json.terms) {
           //console.log(t+' => '+json.terms[t].nDocs);
 	  var cnt = json.terms[t].nDocs;
-          @if(tvs.termRank.length > 10000) {
+          @if(dv.termRank.length > 10000) {
             if (cnt > 1) {
               nodes.push({name: t, value: cnt});
 	    }

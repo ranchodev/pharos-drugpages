@@ -657,8 +657,6 @@ public class TextIndexer {
         SearchResult result;
         TopDocs hits;
         IndexSearcher searcher;
-        Map<String, Model.Finder> finders =
-            new HashMap<String, Model.Finder>();
         SearchOptions options;
         int total, offset, requeued = 0;
         

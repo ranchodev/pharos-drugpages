@@ -10,6 +10,7 @@ POST	/uniprot	ix.idg.controllers.UniprotFactory.fetch
 GET     /tcrd   ix.idg.controllers.TcrdRegistry.index
 POST    /tcrd   ix.idg.controllers.TcrdRegistry.load
 
+GET	/targets/@vectors		ix.idg.controllers.TargetVectorFactory.targetVectors
 #
 # main app
 #
@@ -61,6 +62,7 @@ GET /sitemap.txt ix.idg.controllers.IDGApp.sitemap()
 GET	/edit/collection	ix.idg.controllers.IDGApp.editCollection
 POST	/edit/collection	ix.idg.controllers.IDGApp.createCollection
 DELETE	/edit/collection/:name	ix.idg.controllers.IDGApp.delCollection(name: String)
+
 
 ->	/	ix.ncats.Routes
 ->	/	ix.core.test.Routes
