@@ -1,3 +1,4 @@
+@import ix.idg.models.Target
 @import ix.idg.controllers.Commons._
 @import ix.idg.controllers.IDGApp
 @import ix.ncats.controllers.App
@@ -128,7 +129,8 @@ facets: Array[FacetDecorator], targets: List[Target], ctx: String )
 	      aria-expanded="true"
 	      aria-controls="carousel-highlight"
 	      style="margin-right:1px">
-	<i class="fa fa-dashboard"></i></button>
+     <i class="fa fa-dashboard" data-toggle="tooltip"
+	title="Toggle visualization carousel"></i></button>
 
     <a id="compare-selected" class="btn btn-default" href="#"
        data-toggle="tooltip" title="Target comparison"
