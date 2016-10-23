@@ -3800,7 +3800,7 @@ public class IDGApp extends App implements Commons {
                 public Predicate call () throws Exception {
                     List<Predicate> preds = PredicateFactory.finder.where
                     (Expr.and(Expr.eq("subject.refid", target.id),
-                              Expr.eq("predicate", TARGET_PUBLICATIONS)))
+                              Expr.eq("predicate", IDG_PUBLICATIONS)))
                     .findList();
                     return preds.isEmpty() ? null : preds.iterator().next();
                 }
@@ -3869,7 +3869,7 @@ public class IDGApp extends App implements Commons {
                     List<Target> targets = new ArrayList<Target>();                 
                     if (pub != null) {
                         List<Predicate> preds = PredicateFactory.finder.where
-                            (Expr.and(Expr.eq("predicate", TARGET_PUBLICATIONS),
+                            (Expr.and(Expr.eq("predicate", IDG_PUBLICATIONS),
                                       Expr.eq("objects.refid", pub.id)))
                             .findList();
 

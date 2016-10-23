@@ -10,7 +10,9 @@ POST	/uniprot	ix.idg.controllers.UniprotFactory.fetch
 GET     /tcrd   ix.idg.controllers.TcrdRegistry.index
 POST    /tcrd   ix.idg.controllers.TcrdRegistry.load
 
-GET	/targets/@vectors		ix.idg.controllers.TargetVectorFactory.targetVectors
+GET	/targets/descriptors	ix.idg.controllers.TargetVectorFactory.descriptorVectors
+GET	/targets/:id/descriptor	ix.idg.controllers.TargetVectorFactory.targetDescriptor(id: Long)
+
 #
 # main app
 #

@@ -7,14 +7,10 @@ import java.io.Serializable;
 import java.util.*;
 import java.lang.reflect.Field;
 
-import ix.core.models.Indexable;
-import ix.idg.models.Target;
 import ix.core.plugins.IxCache;
 import ix.core.ObjectFactory;
-import ix.core.search.TextIndexer;
 import ix.core.controllers.search.SearchFactory;
 import static ix.core.search.TextIndexer.TermVectors;
-import static ix.core.search.TextIndexer.Facet;
 
 
 public class DictVector extends Vector {
@@ -62,6 +58,7 @@ public class DictVector extends Vector {
                     Long id = (Long)docs.get(i).get("doc");
                     dict.put(id, nterms);
                 }
+                
                 if (nterms < min) min = nterms;
                 if (nterms > max) max = nterms;
                 this.values.add(nterms);
@@ -117,35 +114,5 @@ public class DictVector extends Vector {
             }
         }
         return map;
-    }
-
-    public synchronized static DictVector[]
-        getInstances (final Class kind) {
-        final String key = DictVector.class.getName()
-            +"/termVectors/"+kind.getName();
-        try {
-            return IxCache.getOrElse
-                (key, new Callable<DictVector[]> () {
-                        public DictVector[] call () throws Exception {
-                            return _getInstances (kind);
-                        }
-                    });
-        }
-        catch (Exception ex) {
-            Logger.trace("Can't generate term vector summaries for "+kind, ex);
-        }
-        return null;
-    }
-
-    public static DictVector[] _getInstances (Class kind)
-        throws Exception {
-        List<DictVector> dictVectors = new ArrayList<DictVector>();
-
-        for (Facet f : SearchFactory.getFacets(kind)) {
-            DictVector dv = getInstance (kind, f.getName());
-            dictVectors.add(dv);
-        }
-        
-        return dictVectors.toArray(new DictVector[0]);
     }
 }
