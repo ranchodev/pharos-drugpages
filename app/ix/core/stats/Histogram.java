@@ -161,6 +161,7 @@ public class Histogram implements Serializable {
         out.writeObject(bin);
         out.writeDouble(negInfBin);
         out.writeDouble(posInfBin);
+        out.writeDouble(weight);
     }
 
     private void readObject (ObjectInputStream in) 
@@ -169,6 +170,7 @@ public class Histogram implements Serializable {
         bin = (double[])in.readObject();
         negInfBin = in.readDouble();
         posInfBin = in.readDouble();
+        weight = in.readDouble();
     }
 
     public static void main (String[] argv) throws Exception {

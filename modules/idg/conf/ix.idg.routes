@@ -11,7 +11,8 @@ GET     /tcrd   ix.idg.controllers.TcrdRegistry.index
 POST    /tcrd   ix.idg.controllers.TcrdRegistry.load
 
 GET	/targets/descriptors	ix.idg.controllers.TargetVectorFactory.descriptorVectors
-GET	/targets/:id/descriptor	ix.idg.controllers.TargetVectorFactory.targetDescriptor(id: Long)
+GET	/targets/:id/descriptor	ix.idg.controllers.TargetVectorFactory.targetVector(id: Long)
+GET	/targets/:ids/similarity	ix.idg.controllers.TargetVectorFactory.targetSimilarity(ids: String)
 
 #
 # main app
