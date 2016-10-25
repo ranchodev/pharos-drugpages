@@ -16,6 +16,7 @@
         <h3 class="panel-title">
 	  <a class="loader" href="@ix.idg.controllers.routes.IDGApp.targetdescriptor(f.facet.getName)"><i class="fa fa-bar-chart"></i></a>
           @f.name
+	  @if(f.url != null) { @HtmlFormat.raw(f.url) }
           @if(f.size() > 6) {  <a id="search" href="#"><i class="fa fa-caret-down" aria-hidden="true"></i></a> }
           </h3>
 

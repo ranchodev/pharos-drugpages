@@ -193,6 +193,7 @@ public class App extends Authentication {
         public String label (int i) {
             return facet.getLabel(i);
         }
+        public String url () { return null; }
         public String value (int i) {
             Integer total = this.total[i];
             Integer count = facet.getCount(i);
