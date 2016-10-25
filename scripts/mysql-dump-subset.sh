@@ -1,6 +1,6 @@
 #!/bin/sh
 
-tcrd="tcrd302"
+tcrd="tcrd307"
 p_cond="(select protein_id from techdev_info)"
 t_cond="(select target_id from t2tc a, techdev_info b where a.protein_id = b.protein_id)"
 
