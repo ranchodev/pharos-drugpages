@@ -19,6 +19,8 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 
 import play.mvc.*;
 import play.*;
@@ -27,6 +29,7 @@ public class TargetVectorFactory extends Controller implements Commons {
     static final int DIM = 10;
     
     static public class TargetVector {
+        @JsonIgnore
         final public Target target;
         final public Map<String, Number> descriptor;
         final public Map<String, Number> vector;
@@ -46,7 +49,78 @@ public class TargetVectorFactory extends Controller implements Commons {
                     double mass = hist.eval(me.getValue().doubleValue());
                     vector.put(me.getKey(), mass/hist.getWeight());
                 }
+                else {
+                    // pass through
+                    vector.put(me.getKey(), me.getValue());
+                }
             }
+        }
+
+        @JsonProperty("target")
+        public String getTargetLink () {
+            return Global.getRef(target);
+        }
+    }
+
+    static public class TanimotoSimilarity {
+        @JsonIgnore
+        final public TargetVector target1;
+        @JsonIgnore
+        final public TargetVector target2;
+        
+        public final double similarity;
+        public final Map<String, Double> contribution;
+        
+        TanimotoSimilarity (TargetVector target1, TargetVector target2) {
+            this.target1 = target1;
+            this.target2 = target2;
+
+            double a = 0., b = 0., c = 0.;
+            final Map<String, Double> contrib = new HashMap<String, Double>();
+            for (Map.Entry<String, Number> me : target1.vector.entrySet()) {
+                String name = me.getKey();
+                double x = me.getValue().doubleValue();
+                Number z = target2.vector.get(name);
+                if (z != null && name.indexOf("Protein Class") < 0) {
+                    double y = z.doubleValue();
+                    c += x*y;
+                    contrib.put(name, x*y);
+                }
+                a += x*x;       
+            }
+            
+            for (Map.Entry<String, Number> me : target2.vector.entrySet()) {
+                double y = me.getValue().doubleValue();
+                b += y*y;
+            }
+
+            double z = a+b-c;
+            for (Map.Entry<String, Double> me : contrib.entrySet()) {
+                me.setValue(me.getValue()/z);
+            }
+            similarity = c / z;
+
+            contribution = new TreeMap<String, Double>
+                (new Comparator<String>() {
+                        public int compare (String k1, String k2) {
+                            Double v1 = contrib.get(k1);
+                            Double v2 = contrib.get(k2);
+                            if (v2 > v1) return 1;
+                            if (v2 < v1) return -1;
+                            return k1.compareTo(k2);
+                        }
+                    });
+            contribution.putAll(contrib);
+        }
+
+        @JsonProperty("target_1")
+        public String getTarget1 () {
+            return Global.getRef(target1.target);
+        }
+        
+        @JsonProperty("target_2")
+        public String getTarget2 () {
+            return Global.getRef(target2.target);
         }
     }
 
@@ -79,26 +153,6 @@ public class TargetVectorFactory extends Controller implements Commons {
         return ok (json);
     }
 
-    public static double tanimoto (Map<String, Number> v1,
-                                   Map<String, Number> v2) {
-        double a = 0., b = 0., c = 0.;
-        for (Map.Entry<String, Number> me : v1.entrySet()) {
-            double x = me.getValue().doubleValue();
-            Number z = v2.get(me.getKey());
-            if (z != null) {
-                double y = z.doubleValue();
-                c += x*y;
-            }
-            a += x*x;       
-        }
-        
-        for (Map.Entry<String, Number> me : v2.entrySet()) {
-            double y = me.getValue().doubleValue();
-            b += y*y;
-        }
-            
-        return c / (a+b-c);
-    }
 
     public static Result targetSimilarity (String ids) {
         try {
@@ -121,18 +175,15 @@ public class TargetVectorFactory extends Controller implements Commons {
                 TargetVector ti = new TargetVector (targets.get(i));
                 for (int j = i+1; j < targets.size(); ++j) {
                     TargetVector tj = new TargetVector (targets.get(j));
-                    double tan = tanimoto (ti.vector, tj.vector);
-                    ObjectNode node = mapper.createObjectNode();
-                    node.put("target_1", Global.getRef(ti.target));
-                    node.put("target_2", Global.getRef(tj.target));
-                    node.put("tanimoto", tan);
-                    json.add(node);
+                    TanimotoSimilarity sim = new TanimotoSimilarity (ti, tj);
+                    json.add(mapper.valueToTree(sim));
                 }
             }
             
             return ok (json);
         }
         catch (Exception ex) {
+            Logger.error("Can't calculate similarity", ex);
             return internalServerError (ex.getMessage());
         }
     }

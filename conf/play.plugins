@@ -8,6 +8,7 @@
 # this plugin must be first!
 2005:ix.core.plugins.IxCache
 2006:ix.core.plugins.ThreadPoolPlugin
+2007:ix.core.plugins.SleepycatStore
 2010:ix.core.plugins.PersistenceQueue
 2015:ix.core.plugins.TextIndexerPlugin
 2020:ix.core.plugins.EutilsPlugin

@@ -88,9 +88,23 @@ public class EntityDescriptor implements Commons {
         }
         
         for (Map.Entry<String, Set> me : map.entrySet()) {
+            String name = me.getKey();
             Set set = me.getValue();
-            if (!set.isEmpty())
-                props.put(me.getKey(), set.size());
+            if (!set.isEmpty()) {
+                props.put(name, set.size());
+                DictVector dv = DictVector.getInstance(model.getClass(), name);
+                if (dv != null) {
+                    for (Object term : set) {
+                        if (term != null) {
+                            Integer count = dv.getTermCount(term.toString());
+                            if (count != null)
+                                // special annotated term
+                                props.put("@"+name+"/"+term,
+                                          1.-(double)count/dv.getNumDocs());
+                        }
+                    }
+                }
+            }
         }
         props.put(IDG_PUBLICATIONS, model.getPublications().size());
 
@@ -191,18 +205,20 @@ public class EntityDescriptor implements Commons {
                 Map<String, Number> desc = instrument (model);
                 for (Map.Entry<String, Number> me : desc.entrySet()) {
                     String name = me.getKey();
-                    Vector vec = vectors.get(name);
-                    if (vec == null) {
-                        vectors.put(name, vec = new Vector (kind, name));
+                    if (name.charAt(0) != '@') {
+                        Vector vec = vectors.get(name);
+                        if (vec == null) {
+                            vectors.put(name, vec = new Vector (kind, name));
+                        }
+                        Number nv = me.getValue();
+                        if (vec.min == null
+                            || vec.min.doubleValue() > nv.doubleValue())
+                            vec.min = nv;
+                        if (vec.max == null
+                            || vec.max.doubleValue() < nv.doubleValue())
+                            vec.max = nv;
+                        vec.values.add(nv);
                     }
-                    Number nv = me.getValue();
-                    if (vec.min == null
-                        || vec.min.doubleValue() > nv.doubleValue())
-                        vec.min = nv;
-                    if (vec.max == null
-                        || vec.max.doubleValue() < nv.doubleValue())
-                        vec.max = nv;
-                    vec.values.add(nv);
                 }
                 Logger.debug("descriptors instrumented for "
                              +kind+":"+model.getName());

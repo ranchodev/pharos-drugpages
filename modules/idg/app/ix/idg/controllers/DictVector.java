@@ -101,6 +101,13 @@ public class DictVector extends Vector {
         return singletons;
     }
 
+    public Integer getTermCount (String term) {
+        return tvec.getTermCount(term);
+    }
+    
+    public int getNumTerms () { return tvec.getNumTerms(); }
+    public int getNumDocs () { return tvec.getNumDocs(); }
+
     public <T> Map<T, Integer> getDictObjectMap (Class<T> cls) {
         Map<T, Integer> map = new HashMap<T,Integer>();
         for (Map.Entry<Long, Integer> me : dict.entrySet()) {
