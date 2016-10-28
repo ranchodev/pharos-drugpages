@@ -15,6 +15,7 @@
   <div class="panel-heading"  id='@fname'>
     <h3 class="panel-title" id="facetheader-@f.facet.getName">
       @if(f.raw) { @HtmlFormat.raw(f.name())  } else { @f.name() }
+      @if(f.url != null) { @HtmlFormat.raw(f.url) }
     </h3>
   </div>
   <div class='panel-body facet-panel-body @{fname}-panel-body'
