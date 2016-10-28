@@ -14,7 +14,14 @@
   <li role="presentation" class="active"><a href="#">Targets</a></li>
   <li role="presentation"><a href="@ix.idg.controllers.routes.IDGApp.ligands(null, 16, 1)">Ligands</a></li>
   <li role="presentation"><a href="@ix.idg.controllers.routes.IDGApp.discussion">Discussion</a></li>
-  <li role="presentation"><a href="@ix.idg.controllers.routes.IDGApp.help">Help</a></li>  
+  <li class="dropdown">
+    <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">
+      Help <span class="caret"></span></a>
+    <ul class="dropdown-menu">
+      <li><a href="@ix.idg.controllers.routes.IDGApp.help">General information</a></li>
+      <li><a href="@ix.idg.controllers.routes.IDGApp.about">About</a></li>
+    </ul>
+  </li>
 </ul>
 
   @*
