@@ -1,6 +1,6 @@
 
+@import play.Play
 @import java.net.URLEncoder
-
 @import ix.core.models.{Keyword, Publication, Text, VInt, Value}
 @import ix.idg.controllers.Commons._
 @import ix.idg.controllers.IDGApp._
@@ -8,6 +8,7 @@
 @import ix.idg.models.Target.TDL
 @import ix.idg.models.{Assay, Compartment, Disease, Ligand, Target, Techdev}
 @import ix.utils.Util
+@import ix.utils.Global
 
 @(target: Target, diseases: List[DiseaseRelevance], breadcrumb: List[Keyword])
 
@@ -519,6 +520,8 @@ This is TCRD target <a href='@ix.core.controllers.v1.routes.RouteFactory.get("ta
           </div>
         }
       }
+      
+    <br><i class="fa fa-comments"></i>&nbsp;<a href="#disqus_thread"></a>
     </div>
     <div class="row">
       <!--
@@ -1416,9 +1419,9 @@ This is TCRD target <a href='@ix.core.controllers.v1.routes.RouteFactory.get("ta
          </div>
        }
     }
+    <div id="disqus_thread"></div>	 
     </div>
 </div>
-}
 
 <div class="modal fade" tabindex="-1" role="dialog" id="loadmodal"
      aria-labelledby="mySmallModalLabel" aria-hidden="true">
@@ -1512,6 +1515,21 @@ role="dialog" aria-labelledby="modalLabelFolder" aria-hidden="true">
     }
     </style>
 </head>
+
+<script>
+var disqus_config = function () {
+   this.page.url = '@{Global.getHost()+ix.idg.controllers.routes.IDGApp.target(IDGApp.getId(target))}';
+   this.page.identifier = '@ix.idg.controllers.routes.IDGApp.target(IDGApp.getId(target))';
+};
+
+(function() { // DON'T EDIT BELOW THIS LINE
+var d = document, s = d.createElement('script');
+s.src = '//pharos-idg.disqus.com/embed.js';
+s.setAttribute('data-timestamp', +new Date());
+(d.head || d.body).appendChild(s);
+})();
+</script>
+<noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
 
 <script>
 $(function () {
@@ -1812,3 +1830,7 @@ $(window).unload(function () {
     $('#loadmodal').modal('hide');    
 });
 </script>
+
+<script id="dsq-count-scr" src="//pharos-idg.disqus.com/count.js" async></scrip>
+
+}
