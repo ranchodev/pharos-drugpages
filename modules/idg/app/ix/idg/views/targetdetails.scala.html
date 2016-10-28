@@ -465,7 +465,7 @@ This is TCRD target <a href='@ix.core.controllers.v1.routes.RouteFactory.get("ta
 <div id="page-loader"></div>
 <div class="container-fluid">
   <div class="col-md-12">
-    <div class="page-header">
+    <div class="page-header" style="top:6%;  width:98%; position: fixed; background: #e6e9ed; z-index:999; padding-right:10px; margin-bottom: 5px;">
       <h1>
         <table style="width:100%;">
         <tr>
@@ -501,11 +501,14 @@ This is TCRD target <a href='@ix.core.controllers.v1.routes.RouteFactory.get("ta
             </td>
         </tr>
         </table>
-
-
       </h1>
+        </div> <!-- page-header -->
+
+      <!-- ensures that divs after this are appropriateley below target title div -->
+      <div style="margin-top:18%;"></div>
+
       @if(target.description != null) {
-        <div class="panel panel-default">
+        <div class="panel panel-default" >
           <div class="panel-body">
             <p>@target.description
           </div>
@@ -520,9 +523,11 @@ This is TCRD target <a href='@ix.core.controllers.v1.routes.RouteFactory.get("ta
           </div>
         }
       }
-      
+<!--
     <p><i class="fa fa-comments"></i>&nbsp;<a href="#disqus_thread"></a>
     </div>
+-->
+
     <div class="row">
       <!--
         -- Synonyms
