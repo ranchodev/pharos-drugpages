@@ -6,6 +6,7 @@ import java.nio.file.*;
 import java.nio.channels.FileChannel;
 import java.util.*;
 import java.util.concurrent.*;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.security.MessageDigest;
 import java.security.DigestOutputStream;
 
@@ -60,6 +61,7 @@ public class IxCache extends Plugin
     
     private File payload; // payload for cache that's too big (>5MB)
     private long maxCacheObjectSize;
+    private AtomicBoolean shuttingDown = new AtomicBoolean (false);
     protected Database db;
     protected Environment env;
 
@@ -224,6 +226,7 @@ public class IxCache extends Plugin
             .writeCoalescing(true)
             .retryAttempts(20)
             .retryAttemptDelaySeconds(2)
+            .notifyListenersOnException(true)
             ;
         
         cache.getCacheConfiguration()
@@ -233,12 +236,7 @@ public class IxCache extends Plugin
             .overflowToDisk(true)
             .maxElementsOnDisk(0)
             .diskPersistent(true)
-            .maxEntriesLocalHeap(maxElements)
-            .timeToLiveSeconds(app.configuration()
-                               .getInt(CACHE_TIME_TO_LIVE, TIME_TO_LIVE))
-            .timeToIdleSeconds(app.configuration()
-                               .getInt(CACHE_TIME_TO_IDLE, TIME_TO_IDLE))
-            
+            .maxEntriesLocalHeap(maxElements)            
             ;
         /*
         cache.getCacheEventNotificationService()
@@ -268,6 +266,7 @@ public class IxCache extends Plugin
     public void onStop () {
         Logger.info("Stopping plugin "+getClass().getName());   
         try {
+            shuttingDown.set(true);
             queue.put(POISON_PAYLOAD);
             cache.dispose();
             CacheManager.getInstance().removeCache(cache.getName());
@@ -644,7 +643,16 @@ public class IxCache extends Plugin
     
     @Override
     public void dispose () {
-        if (db != null) {       
+        if (!shuttingDown.get()) {
+            Logger.error
+                ("!!! Cache writer isn't being disposed in shutdown !!!");
+            for (StackTraceElement st :
+                     Thread.currentThread().getStackTrace()) {
+                Logger.debug(st.getFileName()+":"+st.getLineNumber()+":"
+                             +":"+st.getClassName()+":"+st.getMethodName());
+            }
+        }
+        else if (db != null) {       
             try {
                 Logger.debug("#### closing cache writer "+cache.getName()
                              +"; "+db.count()+" entries #####");
