@@ -443,6 +443,39 @@
   }
 }
 
+@assayrow(a: Assay) = {
+  @defining(a.getProperty(MLP_ASSAY_AID)) { aid =>
+      @if(aid != null) {
+         <tr>
+           <td align="right">
+             <a href="https://pubchem.ncbi.nlm.nih.gov/bioassay/@aid.getValue">@aid.getValue</a>
+           </td>
+           <td><code>@a.getType</code></td>
+           <td>
+             @defining(a.getProperty(MLP_ASSAY_ACTIVE)) { p =>
+                @if(p != null) {
+                   <a href="https://www.ncbi.nlm.nih.gov/pcsubstance?linkname=pcassay_pcsubstance_active&from_uid=@aid.getValue">@p.getValue</a>
+                }
+             }
+             /
+             @defining(a.getProperty(MLP_ASSAY_INCONCLUSIVE)) { p =>
+                @if(p != null) {
+                   @p.getValue
+                }
+             }       
+             /
+             @defining(a.getProperty(MLP_ASSAY_INACTIVE)) { p =>
+                @if(p != null) {
+                   <a href="https://www.ncbi.nlm.nih.gov/pcsubstance?linkname=pcassay_pcsubstance_inactive&from_uid=@aid.getValue">@p.getValue</a>
+                }
+             }
+           </td>
+           <td>@a.name</td>
+         </tr>
+      }
+  }
+}
+
 @targetsummary(target: Target) = {
         @defining(IDGApp.getProperties(target, "Count", 1)) { props =>
             @if(!props.isEmpty()) {
@@ -633,7 +666,7 @@ This is TCRD target <a href='@ix.core.controllers.v1.routes.RouteFactory.get("ta
 	 </div>
       </div>
       
-    <p><i class="fa fa-comments"></i>&nbsp;<a href="#disqus_thread">Comments</a>
+    <br><i class="fa fa-comments"></i>&nbsp;<a href="#disqus_thread">Comments</a>
     </div>
     <div class="row">
       <!--
@@ -1231,37 +1264,27 @@ This is TCRD target <a href='@ix.core.controllers.v1.routes.RouteFactory.get("ta
                   <th>Active&nbsp;/&nbsp;Inconclusive&nbsp;/&nbsp;Inactive</th>
                   <th>Description</th>
                 </tr>
-                @for(a <- assays) {
-                  @defining(a.getProperty(MLP_ASSAY_AID)) { aid =>
-                      @if(aid != null) {
-                      <tr>
-                        <td align="right">
-                          <a href="https://pubchem.ncbi.nlm.nih.gov/bioassay/@aid.getValue">@aid.getValue</a>
-                        </td>
-                        <td><code>@a.getType</code></td>
-                        <td>
-                        @defining(a.getProperty(MLP_ASSAY_ACTIVE)) { p =>
-                          @if(p != null) {
-                             <a href="https://www.ncbi.nlm.nih.gov/pcsubstance?linkname=pcassay_pcsubstance_active&from_uid=@aid.getValue">@p.getValue</a>
-                          }
-                        }
-                        /
-                        @defining(a.getProperty(MLP_ASSAY_INCONCLUSIVE)) { p =>
-                          @if(p != null) {
-                             @p.getValue
-                          }
-                        }       
-                        /
-                        @defining(a.getProperty(MLP_ASSAY_INACTIVE)) { p =>
-                          @if(p != null) {
-                             <a href="https://www.ncbi.nlm.nih.gov/pcsubstance?linkname=pcassay_pcsubstance_inactive&from_uid=@aid.getValue">@p.getValue</a>
-                          }
-                        }
-                        </td>
-                        <td>@a.name</td>
-                      </tr>
-                    }
-                  }
+		@defining(request().getQueryString("view")) { view =>
+		   @view match {
+		      case "full" => {	
+                         @for(a <- assays) {
+                            @assayrow(a)
+			 }
+		      }
+		      case _ => {
+		         @for(i <- 0 until Math.min(assays.size, 10)) {
+			    @assayrow(assays(i))
+			 }
+			 @if(assays.size > 10) {
+			   <tr>
+			     <td><a href="@request.uri?view=full">More...</a></td>
+			     <td></td>
+			     <td></td>
+			     <td></td>
+			   </tr>
+			 }
+		      }
+		   }
                 }
               </table>
              </div>
