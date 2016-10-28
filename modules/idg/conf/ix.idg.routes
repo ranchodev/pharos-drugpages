@@ -22,6 +22,7 @@ GET	/about	ix.idg.controllers.IDGApp.about
 GET	/impc	ix.idg.controllers.IDGApp.impc
 GET	/pmscore ix.idg.controllers.IDGApp.pmscore
 GET	/help   ix.idg.controllers.IDGApp.help
+GET	/faq   ix.idg.controllers.IDGApp.faq
 GET	/discussion	ix.idg.controllers.IDGApp.discussion
 GET	/index	ix.idg.controllers.IDGApp.index
 GET	/kinome	ix.idg.controllers.IDGApp.kinome

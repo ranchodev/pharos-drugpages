@@ -918,6 +918,11 @@ public class IDGApp extends App implements Commons {
     public static Result discussion () {
         return ok (ix.idg.views.html.discussion.render());
     }
+
+    @Cached(key="_faq", duration= Integer.MAX_VALUE)
+    public static Result faq () {
+            return ok (ix.idg.views.html.faq.render());
+        }
     
     @Cached(key="_help", duration= Integer.MAX_VALUE)
     public static Result help() {

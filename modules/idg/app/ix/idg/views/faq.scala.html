@@ -1,0 +1,189 @@
+@import ix.idg.controllers.IDGApp
+@import ix.idg.controllers.Commons
+
+
+@ix.ncats.views.html.main("Pharos: Frequently Asked Questions") {
+    @helpmenu()
+} {
+    @HtmlFormat.empty
+} {
+    <div class="container vertical-center" id="main-box" style="padding-top : 60px ;">
+        <div class="col-md-12">
+
+            <div class="page-header">
+              <h1>Frequently Asked Questions</h1>
+            </div>
+
+            <div class="row">
+
+
+            <div class="alert alert-warning" role="alert">
+                We collected answers to some frequently asked questions about how to use Pharos and the data
+                contained within it. If you cannot find an answer to your question, make sure to contact us at
+                <a href="mailto:pharos@@mail.nih.gov"><code>pharos@@mail.nih.gov</code></a>
+            </div>
+
+
+            <div class="panel-group" id="accordion">
+
+
+                    <!-- Section -->
+                <div class="faqHeader">Using Pharos</div>
+
+                    <!-- Question -->
+                <div class="panel panel-default">
+                    <div class="panel-heading">
+                        <h4 class="panel-title">
+                            <a class="accordion-toggle" data-toggle="collapse" data-parent="#accordion" data-target="#collapse1" href="#collapse1">
+                                Are logins required?</a>
+                        </h4>
+                    </div>
+                    <div id="collapse1" class="panel-collapse collapse">
+                        <div class="panel-body">
+                            Logins will not be required to access and download data. In the future we may enable logins
+                            to enable features such as personal dossiers.
+                        </div>
+                    </div>
+                </div>
+
+
+                    <!-- Section -->
+                <div class="faqHeader">Data</div>
+
+                    <!-- Question -->
+                <div class="panel panel-default">
+                    <div class="panel-heading">
+                        <h4 class="panel-title">
+                            <a class="accordion-toggle" data-toggle="collapse" data-parent="#accordion" href="#collapse2">
+                                How can I download all the data?</a>
+                        </h4>
+                    </div>
+                    <div id="collapse2" class="panel-collapse collapse">
+                        <div class="panel-body">
+                            The Pharos user interface does not support downloads of the complete dataset.
+                            <p>
+                                You can obtain a MySQL dump of the complete dataset
+                                <a href="https://pharos.nih.gov/downloads/XXX">here</a>. A reduced version of the
+                                dataset that is comprised of summary counts is available
+                                <<a href="https://pharos.nih.gov/downloads/XXX">here</a>. For more details on
+                                the contents of the datasets visit the <a href="http://juniper.health.unm.edu/tcrd/">
+                                TCRD</a>
+                                website.
+                        </div>
+                    </div>
+                </div>
+
+
+                    <!-- Question -->
+                <div class="panel panel-default">
+                    <div class="panel-heading">
+                        <h4 class="panel-title">
+                            <a class="accordion-toggle" data-toggle="collapse" data-parent="#accordion" href="#collapse7">
+                                How are the IDG expression results computed?</a>
+                        </h4>
+                    </div>
+                    <div id="collapse7" class="panel-collapse collapse">
+                        <div class="panel-body">
+                            The function which computes consensus expression level aggregates expression values from
+                            GTEx, HPM and HPA into 11 tissue types (e.g., Digestive Tract, Endocrine System, etc.).
+                            A consensus expression value for a given target is simply the mode (most frequent) of
+                            the qualitative expression values in the aggregated set. The confidence value associated
+                            with a consensus expression value is derived taking into consideration both the number and
+                            consistency of supporting data. Confidence for Low and Medium levels should be interpreted
+                            to mean confidence for that level of expression or higher.
+                        </div>
+                    </div>
+                </div>
+
+                    <!-- Section -->
+                <div class="faqHeader">Visualizations</div>
+
+                    <!-- Question -->
+                <div class="panel panel-default">
+                    <div class="panel-heading">
+                        <h4 class="panel-title">
+                            <a class="accordion-toggle" data-toggle="collapse" data-parent="#accordion" href="#collapse4">
+                                How do I read a sunburst visualization?</a>
+                        </h4>
+                    </div>
+                    <div id="collapse4" class="panel-collapse collapse">
+                        <div class="panel-body">
+                            From the Wikipedia <a href="https://en.wikipedia.org/wiki/Pie_chart#Ring_chart_.2F_Sunburst_chart_.2F_Multilevel_pie_chart">
+                            entry</a>,
+                            A ring chart, also known as a sunburst chart or a multilevel pie chart, is used to visualize
+                            hierarchical data, depicted by concentric circles. The circle in the centre
+                            represents the root node, with the hierarchy moving outward from the center. A segment of the
+                            inner circle bears a hierarchical relationship to those segments of the outer circle which
+                            lie within the angular sweep of the parent segment.Also see this <a href="http://www.neoformix.com/2006/MultiLevelPieChart.html">
+                            discussion.
+                        </a>
+                        </div>
+                    </div>
+                </div>
+
+                    <!-- Question -->
+                <div class="panel panel-default">
+                    <div class="panel-heading">
+                        <h4 class="panel-title">
+                            <a class="accordion-toggle" data-toggle="collapse" data-parent="#accordion" href="#collapse5">
+                                What do the numbers on the radar chart mean?</a>
+                        </h4>
+                    </div>
+                    <div id="collapse5" class="panel-collapse collapse">
+                        <div class="panel-body">
+                            <p>The radar chart is a visualization of gene-attribute associations as recorded by the
+                                <a href="http://amp.pharm.mssm.edu/Harmonizome/">Harmonizome</a>.</p>
+                            <p>
+                                These radial plots summarize the level of accumulated knowledge about each target.
+                                The further the point is away from the center of the radial plot, the more knowledge exists
+                                about the target. By mouse hovering the labels, the list of associated resources with links
+                                are presented on the left. To compare the relative knowledge for the target to knowledge for
+                                the target family, select to "overlay another dataset". The normalized knowledge for the target
+                                family will show in orange.
+                            </p>To construct these plots we
+                            <ol>
+                                <li>Begin with a set of gene-attribute associations. The attributes may be pathways,
+                                    GO terms, phenotypes, diseases, drugs, tissues, proteins, etc., depending on the
+                                    dataset. Some datasets require a few preprocessing steps to get here.</li>
+                                <li>Count the number of associations for each gene.</li>
+                                <li>Normalize the counts by Calculate the empirical cumulative probability of
+                                    the count for each gene, which is equal to the fraction of genes with count less
+                                    than or equal to the count for each gene.ount for each gene.</li>
+                            </ol>
+                            <p>The normalized counts/CDF values/empirical cumulative probabilities indicate the relative
+                                amount of knowledge about a gene compared to other genes in a given dataset.  Genes with
+                                relatively high numbers of associations get assigned values near 1 and genes with relatively
+                                low numbers of associations get assigned values near 0.</p>
+
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+        </div>
+
+
+    <head>
+        <link type="text/css" rel="stylesheet" href='@routes.Assets.versioned("stylesheets/main.css")'/>
+
+        <style>
+        .faqHeader {
+        font-size : xx-large ;
+        padding: 10px;
+        }
+
+        .panel-heading a:after {
+        font-family : 'Glyphicons Halflings' ;
+        content : "\e114" ; /* "play" icon */
+        float : right ;
+        color : #F58723 ;
+        }
+
+        .panel-heading a.collapsed:after {
+        content : "\e080" ;
+        }
+        </style>
+    </head>
+}
