@@ -707,13 +707,12 @@ public class IDGApp extends App implements Commons {
 
     public static final String[] TARGET_FACETS = {
             IDG_DEVELOPMENT,
-            IDG_FAMILY,
-            TECHDEV_PI,
+            //TECHDEV_PI,
             COLLECTION,
+            IMPC_TERM,      
             IDG_DISEASE,
             IDG_TISSUE,
-            //"R01 Grant Count",
-            //"Jensen Score"
+            IDG_FAMILY      
     };
 
     public static final String[] ALL_TARGET_FACETS = {
@@ -906,11 +905,11 @@ public class IDGApp extends App implements Commons {
     public static Result sitemap() {
         StringBuilder sb = new StringBuilder();
         for (Target t : TargetFactory.finder.all()) {
-            sb.append("https://pharos.nih.gov/idg/targets/").append(getId(t)).append("\n");
+            sb.append(Global.getHost()+routes.IDGApp.target(getId(t))).append("\n");
         }
         for (Disease d : DiseaseFactory.finder.all()) {
             if (!getId(d).equals(""))
-                sb.append("https://pharos.nih.gov/idg/diseases/").append(getId(d)).append("\n");
+                sb.append(Global.getHost()+routes.IDGApp.disease(getId(d))).append("\n");
         }
         return(ok(sb.toString()).as("text/plain"));
     }
@@ -4152,5 +4151,19 @@ public class IDGApp extends App implements Commons {
             Logger.trace("Can't delete collection '"+name+"'", ex);
             return _internalServerError (ex);
         }
+    }
+
+    public static String[] getDescriptions (Target t) {
+        List<String> desc = new ArrayList<String>();
+        if (t.description != null && t.description.length() > 0) {
+            desc.add(t.description);
+        }
+        
+        Value val = t.getProperty("NCBI Gene Summary");
+        if (val != null && val.getValue() != null) {
+            desc.add(val.getValue().toString());
+        }
+        
+        return desc.toArray(new String[0]);
     }
 }
