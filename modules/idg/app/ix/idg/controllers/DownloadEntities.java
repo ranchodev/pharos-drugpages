@@ -3,6 +3,7 @@ package ix.idg.controllers;
 import ix.core.models.*;
 import ix.idg.models.Disease;
 import ix.idg.models.Expression;
+import ix.idg.models.HarmonogramCDF;
 import ix.idg.models.Ligand;
 import ix.idg.models.Target;
 
@@ -12,8 +13,14 @@ import play.mvc.Controller;
 import play.mvc.Result;
 
 import java.io.*;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.ArrayList;
+import java.util.Map;
+import java.util.Set;
+import java.util.TreeMap;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 import java.util.concurrent.Callable;
@@ -284,6 +291,30 @@ public class DownloadEntities extends Controller {
         return sb2.toString();
     }
 
+    static String harmonizomeFromTarget(Target t) {
+        StringBuilder sb2 = new StringBuilder();
+        String turl = routes.IDGApp.target(csvQuote(IDGApp.getId(t))).toString();
+        String uniprot = csvQuote(IDGApp.getId(t));
+
+        List<HarmonogramCDF> hg = HarmonogramFactory.finder
+                .where().eq("uniprotId", uniprot).findList();
+        if (hg.isEmpty()) {
+            return "";
+        }
+
+        for (HarmonogramCDF cdf : hg) {
+            sb2.append(csvQuote(turl)).append(",").
+                    append(csvQuote(uniprot)).append(",").
+                    append(cdf.getDataSource()).append(",").
+                    append(cdf.getDataSourceUrl()).append(",").
+                    append(cdf.getDataType()).append(",").
+                    append(cdf.getAttrGroup()).append(",").
+                    append(cdf.getAttrType()).append(",").
+                    append(cdf.getCdf()).append("\n");
+        }
+        return sb2.toString();
+  }
+
     static String goFromTarget(Target t) {
         StringBuilder sb2 = new StringBuilder();
         String turl = routes.IDGApp.target(csvQuote(IDGApp.getId(t))).toString();
@@ -520,6 +551,18 @@ public class DownloadEntities extends Controller {
         }
         byte[] diseaseFile = sb.toString().getBytes();
 
+        Logger.debug("generating harmonizome");
+        // Harmonizome
+        sb = new StringBuilder();
+        tmp = "URL,Uniprot ID,Data Source,Data Type,CDF";
+        tmp = tmp.replace(",", "\",\"");
+        tmp = "\"" + tmp + "\"\n";
+        sb.append(tmp);
+        for (Target t : targets) {
+            sb.append(harmonizomeFromTarget(t));
+        }
+        byte[] harmonizomeFile = sb.toString().getBytes();
+
         // Generate zip file with the components
         ZipOutputStream zip = new ZipOutputStream(os);
         ZipEntry entry = new ZipEntry("targets.csv");
@@ -565,6 +608,11 @@ public class DownloadEntities extends Controller {
         entry = new ZipEntry("diseases.csv");
         zip.putNextEntry(entry);
         zip.write(diseaseFile);
+        zip.closeEntry();
+
+        entry = new ZipEntry("harmonizome.csv");
+        zip.putNextEntry(entry);
+        zip.write(harmonizomeFile);
         zip.closeEntry();
 
         entry = new ZipEntry("README.txt");

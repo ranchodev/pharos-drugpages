@@ -92,7 +92,6 @@ publications.csv
 This file lists publications associated with a target, obtained via text mining. Each line is a target-publication
 association.
 
-
 URL - the partial URL to the disease entry on the Pharos website. You should prepend it with the host name (e.g.,
 https://pharos.nih.gov/) to get the complete URL.
 Uniprot ID - the Uniprot ID of the target associated with this disease
@@ -134,3 +133,21 @@ https://pharos.nih.gov/) to get the complete URL.
 Uniprot ID - the Uniprot ID of the target associated with this disease
 Keyword - the Uniprot keyword
 Link - link to the keyword on Uniprot
+
+harmonizome.csv
+---------------
+
+This file lists the cumulative distribution function (CDF) values obtained from the Harmonizome
+(http://amp.pharm.mssm.edu/Harmonizome/). In contrast to the other files, this is in "long" format
+so that CDF values for a given target are on seperate lines.
+
+URL - the partial URL to the disease entry on the Pharos website. You should prepend it with the host name (e.g.,
+https://pharos.nih.gov/) to get the complete URL.
+Uniprot ID - the Uniprot ID of the target associated with this disease
+Data Source - the data source used to calculate the CDF
+DSURL - the URL to the data source
+Data Type - the type of the data source
+Attribute Group - the attribute group
+Attribute Type - the attribute type
+CDF - the value of the CDF for this target with respect to this data source. High values indicate that this data
+source has more associations with this target
