@@ -22,6 +22,7 @@ GET	/about	ix.idg.controllers.IDGApp.about
 GET	/impc	ix.idg.controllers.IDGApp.impc
 GET	/pmscore ix.idg.controllers.IDGApp.pmscore
 GET	/help   ix.idg.controllers.IDGApp.help
+GET	/discussion	ix.idg.controllers.IDGApp.discussion
 GET	/index	ix.idg.controllers.IDGApp.index
 GET	/kinome	ix.idg.controllers.IDGApp.kinome
 GET	/targets	ix.idg.controllers.IDGApp.targets(q: String ?= null, rows: Int ?= 10, page: Int ?= 1)

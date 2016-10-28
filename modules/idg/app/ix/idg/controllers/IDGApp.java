@@ -915,6 +915,11 @@ public class IDGApp extends App implements Commons {
         return(ok(sb.toString()).as("text/plain"));
     }
 
+    @Cached(key="_discussion", duration= Integer.MAX_VALUE)
+    public static Result discussion () {
+        return ok (ix.idg.views.html.discussion.render());
+    }
+    
     @Cached(key="_help", duration= Integer.MAX_VALUE)
     public static Result help() {
         final String key = "idg/help";
@@ -927,7 +932,7 @@ public class IDGApp extends App implements Commons {
                             getFacets (Disease.class, "Namespace");
                         TextIndexer.Facet[] ligand =
                             getFacets (Ligand.class, "Namespace");
-                        return ok (ix.idg.views.html.help.render
+                        return ok (ix.idg.views.html.help2.render
                                    ("Pharos: Illuminating the Druggable Genome",
                                     target.length > 0 ? target[0] : null,
                                     disease.length > 0 ? disease[0] : null,

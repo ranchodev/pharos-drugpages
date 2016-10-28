@@ -1,0 +1,43 @@
+
+@import ix.utils.Global
+
+@ix.ncats.views.html.main("Pharos Discussion"){
+@discussionmenu()}{@HtmlFormat.empty}{
+<div class="container-fluid" style="padding-top:50px;">
+    <div class="page-header">
+      <h1>General Discussion</h1>
+
+      <br>This page provides a forum to discuss general topics related
+      to the <a href="https://commonfund.nih.gov/idg/index">IDG
+      Commond Fund</a> program and/or the Pharos resource. Please
+      contact us directly 
+      at <a href="mailto:pharos@@mail.nih.gov"><code>pharos@@mail.nih.gov</code></a>
+      if you have specific questions.
+    </div>
+    <div class="row">
+      <div class="col-md-12">
+	<div id="disqus_thread"></div>
+      </div>
+    </div>
+</div>
+<head>
+  <link type="text/css" rel="stylesheet" href='@routes.Assets.versioned("stylesheets/main.css")'/>
+</head>
+
+<script>
+var disqus_config = function () {
+   this.page.url = '@{Global.getHost()+ix.idg.controllers.routes.IDGApp.discussion}';
+   this.page.identifier = '@ix.idg.controllers.routes.IDGApp.discussion';
+   this.page.title='General Discussion';
+};
+
+(function() { // DON'T EDIT BELOW THIS LINE
+var d = document, s = d.createElement('script');
+s.src = '//pharos-idg.disqus.com/embed.js';
+s.setAttribute('data-timestamp', +new Date());
+(d.head || d.body).appendChild(s);
+})();
+</script>
+<noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+
+}

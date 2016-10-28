@@ -1,8 +1,9 @@
 package ix.idg.controllers;
 
 import java.util.*;
+import java.io.*;
 import java.lang.reflect.Field;
-import java.util.concurrent.Callable;
+import java.util.concurrent.*;
 
 import ix.core.models.*;
 import ix.core.stats.Histogram;
@@ -15,14 +16,74 @@ import ix.core.ObjectFactory;
 import ix.core.controllers.search.SearchFactory;
 import static ix.core.search.TextIndexer.TermVectors;
 import static ix.core.search.TextIndexer.Facet;
+import ix.core.plugins.SleepycatStore;
+
+import com.sleepycat.je.*;
+import com.sleepycat.bind.serial.StoredClassCatalog;
+import com.sleepycat.bind.serial.ClassCatalog;
+import com.sleepycat.bind.tuple.IntegerBinding;
+import com.sleepycat.bind.tuple.StringBinding;
+import com.sleepycat.bind.tuple.LongBinding;
 
 import play.Logger;
+import play.Play;
 import com.avaje.ebean.Query;
 import com.avaje.ebean.QueryIterator;
 import play.db.ebean.Model;
 
 public class EntityDescriptor implements Commons {
-    protected EntityDescriptor () {}
+    static final SleepycatStore STORE =
+        Play.application().plugin(SleepycatStore.class);
+    static final String BASE = EntityDescriptor.class.getName();
+    static final String MODIFIED = "LastModified";
+
+    static ConcurrentMap<Class, EntityDescriptor> _instances =
+        new ConcurrentHashMap<Class, EntityDescriptor>();
+
+    final Class kind;
+    Database metaDb;
+    protected EntityDescriptor (Class kind) throws IOException {
+        this.kind = kind;
+        init ();
+    }
+
+    static DatabaseConfig createDefaultDbConfig () {
+        DatabaseConfig dbconf = new DatabaseConfig ();
+        dbconf.setAllowCreate(true);
+        dbconf.setTransactional(true);
+        return dbconf;
+    }
+
+    protected void init () throws IOException {
+        Environment env = STORE.getEnv();
+        Transaction tx = env.beginTransaction(null, null);
+        try {
+            metaDb = env.openDatabase
+                (tx, BASE+".meta", createDefaultDbConfig ());
+        }
+        finally {
+            tx.commit();
+        }
+    }
+
+    public <T extends EntityModel> EntityDescriptor
+        getInstance (Class<T> kind) {
+        EntityDescriptor inst = _instances.get(kind);
+        if (inst == null) {
+            try {
+                EntityDescriptor prev = _instances.putIfAbsent
+                    (kind, inst = new EntityDescriptor (kind));
+                if (prev != null)
+                    inst = prev;
+            }
+            catch (Exception ex) {
+                Logger.error("Can't initialize "
+                             +EntityDescriptor.class.getName()
+                             +" instance for "+kind.getName()+"!", ex);
+            }
+        }
+        return inst;
+    }
 
     public static <T extends EntityModel> Map<String, Number>
         get (final Class<T> kind, final Long id) {
