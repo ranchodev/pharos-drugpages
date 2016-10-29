@@ -34,6 +34,47 @@
                 <div class="panel panel-default">
                     <div class="panel-heading">
                         <h4 class="panel-title">
+                            <a class="accordion-toggle" data-toggle="collapse" data-parent="#accordion" data-target="#collapse9" href="#collapse9">
+                                When I search for <emph>"abl kinase"</emph>, why do I get non kinase targets?</a>
+                        </h4>
+                    </div>
+                    <div id="collapse9" class="panel-collapse collapse">
+                        <div class="panel-body">
+                            <p>
+                            The results for this <a href="https://pharos.nih.gov/idg/targets?q=%22abl+kinase%22">query</a>
+                            will include non-kinase targets because Pharos indexes many pieces of information associated
+                            with a target including publications, drug labels, Gene RIFs and so on. Thus if a
+                            publication refers to <a href="https://pharos.nih.gov/idg/targets/P00519">ABL1</a> but also
+                            discusses a nuclear hormone receptor (NHR) then the phrase <emph>"abl kinase</emph> is also associated
+                            with the NHR target.
+                            <p>
+                            In this scenario consider using the facets (in particular the <emph>Target Family</emph> facet)
+                            to drill down to the appropriate class.
+                        </div>
+                    </div>
+                </div>
+
+                    <!-- Question -->
+                 <div class="panel panel-default">
+                     <div class="panel-heading">
+                         <h4 class="panel-title">
+                             <a class="accordion-toggle" data-toggle="collapse" data-parent="#accordion" data-target="#collapse10" href="#collapse10">
+                                 Are there any other filters than are shown on the browse page?</a>
+                         </h4>
+                     </div>
+                     <div id="collapse10" class="panel-collapse collapse">
+                         <div class="panel-body">
+                             <p>
+                             Yes, there are more than 50 filters available. To see the full list go to the
+                             <a href="https://pharos.nih.gov/idg/targets/facets">Target Filters</a> page
+                         </div>
+                     </div>
+                 </div>
+
+                    <!-- Question -->
+                <div class="panel panel-default">
+                    <div class="panel-heading">
+                        <h4 class="panel-title">
                             <a class="accordion-toggle" data-toggle="collapse" data-parent="#accordion" data-target="#collapse1" href="#collapse1">
                                 Are logins required?</a>
                         </h4>
@@ -45,6 +86,24 @@
                         </div>
                     </div>
                 </div>
+
+                    <!-- Question -->
+                <div class="panel panel-default">
+                    <div class="panel-heading">
+                        <h4 class="panel-title">
+                            <a class="accordion-toggle" data-toggle="collapse" data-parent="#accordion" data-target="#collapse8" href="#collapse8">
+                                Where can I get the source code for Pharos?</a>
+                        </h4>
+                    </div>
+                    <div id="collapse8" class="panel-collapse collapse">
+                        <div class="panel-body">
+                            The sources for the Pharos web interface are available from <a href="https://spotlite.nih.gov/ncats/pharos">
+                                https://spotlite.nih.gov/ncats/pharos</a>. The repository provides
+                                <a href="https://spotlite.nih.gov/ncats/pharos">instructions</a> on building and installation.
+                        </div>
+                    </div>
+                </div>
+
 
 
                     <!-- Section -->
@@ -60,10 +119,14 @@
                     </div>
                     <div id="collapse2" class="panel-collapse collapse">
                         <div class="panel-body">
+                            <p>
                             The Pharos user interface does not support downloads of the complete dataset.
                             <p>
-                                You can obtain a MySQL dump of the complete dataset
-                                <a href="https://pharos.nih.gov/downloads/XXX">here</a>. A reduced version of the
+                                You can obtain a MySQL dump of the complete TCRD dataset (v3.0.7)
+                                <a href="https://pharos.nih.gov/download/tcrd_v3.0.7.sql.gz">here</a>. A subset of the dataset
+                                    that can be used for testing and development is available
+                                    <a href="https://pharos.nih.gov/download/tcrd307_small.tgz">here</a>.
+                                    A reduced version of the
                                 dataset that is comprised of summary counts is available
                                 <<a href="https://pharos.nih.gov/downloads/XXX">here</a>. For more details on
                                 the contents of the datasets visit the <a href="http://juniper.health.unm.edu/tcrd/">
@@ -169,6 +232,7 @@
         <link type="text/css" rel="stylesheet" href='@routes.Assets.versioned("stylesheets/main.css")'/>
 
         <style>
+            p { margin-bottom: 0.5em;}
         .faqHeader {
         font-size : xx-large ;
         padding: 10px;
