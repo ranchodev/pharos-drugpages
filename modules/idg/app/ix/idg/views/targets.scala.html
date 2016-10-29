@@ -151,10 +151,10 @@ facets: Array[FacetDecorator], targets: List[Target], ctx: String )
         <i class="fa fa-download fa-lg "></i></a>
     </button>
 
-    <div class="dropdown pull-right">
+    <div class="dropdown pull-right" data-toggle="tooltip" title="Dossier">
       <button type="button" class="btn btn-default dropdown-toggle"
 	      data-toggle="dropdown"  style="margin-right:1px">
-        <i class="fa fa-shopping-cart" data-toggle="tooltip" title="Dossier"></i>&nbsp;<span id="sc-count"></span>
+        <i class="fa fa-shopping-cart" ></i>&nbsp;<span id="sc-count"></span>
       </button>
       <ul class="dropdown-menu pull-left">
         <li><a href="#" id="sc-add-selected">Add Selected</a></li>
@@ -163,11 +163,11 @@ facets: Array[FacetDecorator], targets: List[Target], ctx: String )
 	<li><a href="#" id="sc-empty">Empty Collection</a></li>
       </ul>
     </div>
-    <div class="dropdown pull-right">
+    <div class="dropdown pull-right" data-toggle="tooltip" title="Visualization tools">
       <button type="button" class="btn btn-default dropdown-toggle @if(request.getQueryString("q") == null && request.getQueryString("facet") == null) { disabled }"
       data-toggle="dropdown"  aria-haspopup="true" aria-expanded="false"
       style="margin-right: 1px">
-        <i class="fa fa-eye" data-toggle="tooltip" title="Visualization tools"></i>
+        <i class="fa fa-eye" ></i>
       </button>
         <ul class="dropdown-menu pull-left">
             <li><a href="#modal-kinome" data-toggle="modal" ><i class="fa fa-pagelines"></i>&nbsp;Kinome Tree</a></li>
