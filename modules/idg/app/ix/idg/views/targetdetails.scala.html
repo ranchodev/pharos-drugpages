@@ -410,6 +410,39 @@
    }
 }
 
+@ligandcarousel(title: String, ligands: List[Ligand]) = {
+       @if(!ligands.isEmpty()) {
+         <div class="row">
+	    <div class="col-md-12">
+               <div class="panel panel-default">
+                  <a name="ligands" tocname="Ligands"></a>
+                  <div class="panel-heading">
+                       <h3 class="panel-title"><a class="loader" href='@{ix.idg.controllers.routes.IDGApp.ligands() + "?facet=" + IDG_TARGET+"/"+target.getSynonym(UNIPROT_GENE).term}'>@title (@ligands.size)</a> <a class="pull-right" href='@{ix.core.controllers.v1.routes.RouteFactory.get("targets",target.id,null)+"/links(kind="+classOf[Ligand].getName+")"}'><i class="fa fa-code"></i></a></h3>
+                  </div>
+		  <div class="panel-body" style="height:250px;">
+		    <div class="ligand-carousel">
+                       @if(ligands.size > 20) {
+                           @for(l <- ligands.subList(0, 20)) {
+			        @ligandcell(l)
+			   }
+			   <div class="carousel-cell">
+			     <div style="position:absolute;top:70px;margin-left:30px;">
+			       <a class="loader" href='@{ix.idg.controllers.routes.IDGApp.ligands() + "?facet=" + IDG_TARGET+"/"+target.getSynonym(UNIPROT_GENE).term}'><i class="fa fa-plus fa-5x"></i><br> See all @ligands.size ligands...</a>
+			     </div>
+			   </div>
+		       } else {
+		          @for(l <- ligands) {
+		             @ligandcell(l)
+			  }
+		       }
+		     </div>
+		   </div>
+	       </div>
+	    </div>
+	 </div>
+       }
+}
+
 @techdev(t: Target) = {
   @defining(IDGApp.getLinkedObjects(t, classOf[Techdev])){ techdev =>
      @if(techdev != null && !techdev.isEmpty) {
@@ -1206,37 +1239,12 @@ This is TCRD target <a href='@ix.core.controllers.v1.routes.RouteFactory.get("ta
   </div>
   }
 
-    @defining(IDGApp.getLigands(target)) { ligands =>
-       @if(!ligands.isEmpty()) {
-         <div class="row">
-	    <div class="col-md-12">
-               <div class="panel panel-default">
-                  <a name="ligands" tocname="Ligands"></a>
-                  <div class="panel-heading">
-                       <h3 class="panel-title"><a class="loader" href='@{ix.idg.controllers.routes.IDGApp.ligands() + "?facet=" + IDG_TARGET+"/"+target.getSynonym(UNIPROT_GENE).term}'>Ligand (@ligands.size)</a> <a class="pull-right" href='@{ix.core.controllers.v1.routes.RouteFactory.get("targets",target.id,null)+"/links(kind="+classOf[Ligand].getName+")"}'><i class="fa fa-code"></i></a></h3>
-                  </div>
-		  <div class="panel-body" style="height:250px;">
-		    <div class="ligand-carousel">
-                       @if(ligands.size > 20) {
-                           @for(l <- ligands.subList(0, 20)) {
-			        @ligandcell(l)
-			   }
-			   <div class="carousel-cell">
-			     <div style="position:absolute;top:70px;margin-left:30px;">
-			       <a class="loader" href='@{ix.idg.controllers.routes.IDGApp.ligands() + "?facet=" + IDG_TARGET+"/"+target.getSynonym(UNIPROT_GENE).term}'><i class="fa fa-plus fa-5x"></i><br> See all @ligands.size ligands...</a>
-			     </div>
-			   </div>
-		       } else {
-		          @for(l <- ligands) {
-		             @ligandcell(l)
-			  }
-		       }
-		     </div>
-		   </div>
-	       </div>
-	    </div>
-	 </div>
-       }
+    @defining(IDGApp.getDrugLigands(target)) { drugs =>
+      @ligandcarousel("Drug", drugs)
+    }
+    
+    @defining(IDGApp.getChemblLigands(target)) { ligands =>
+      @ligandcarousel("Ligand", ligands)
     }
 
   @**************

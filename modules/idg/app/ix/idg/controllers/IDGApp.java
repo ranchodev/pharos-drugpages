@@ -1413,7 +1413,7 @@ public class IDGApp extends App implements Commons {
     public static List<Ligand> getChemblLigands(EntityModel e) {
         List<Ligand> ret = new ArrayList<>();
         for (Ligand lig : getLigands(e)) {
-            if (lig.getSynonym(ChEMBL_SYNONYM) != null) ret.add(lig);
+            if (lig.getSynonym(IDG_DRUG) == null) ret.add(lig);
         }
         return ret;
     }
