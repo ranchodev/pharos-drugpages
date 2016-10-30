@@ -514,6 +514,9 @@
             @if(!props.isEmpty()) {
                <div class="panel panel-default" >
                    <a name="properties" tocname="Properties"></a>
+                   <div class="panel-heading">
+                       <h3 class="panel-title">Property Summary</h3>
+                   </div>
                  <div class="panel-body">
                    <table class="table table-striped">
                    @for(p <- props) {
@@ -587,7 +590,7 @@
                    </tr>
 		   }
                    <tr>
-                     <td><a href="@ix.idg.controllers.routes.IDGApp.pmscore()">JensenLab PubMed Score</a></td>
+                     <td><a href="@ix.idg.controllers.routes.IDGApp.pmscore()">PubMed Score</a></td>
                      <td>@{"%.2f".format(target.jensenScore)}
                         <p><span id="pmscore-sparkline">@IDGApp.getPubMedScoreSparkline(target)</span></td>
                    </tr>

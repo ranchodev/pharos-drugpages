@@ -305,11 +305,11 @@ public class DownloadEntities extends Controller {
         for (HarmonogramCDF cdf : hg) {
             sb2.append(csvQuote(turl)).append(",").
                     append(csvQuote(uniprot)).append(",").
-                    append(cdf.getDataSource()).append(",").
-                    append(cdf.getDataSourceUrl()).append(",").
-                    append(cdf.getDataType()).append(",").
-                    append(cdf.getAttrGroup()).append(",").
-                    append(cdf.getAttrType()).append(",").
+                    append(csvQuote(cdf.getDataSource())).append(",").
+                    append(csvQuote(cdf.getDataSourceUrl())).append(",").
+                    append(csvQuote(cdf.getDataType())).append(",").
+                    append(csvQuote(cdf.getAttrGroup())).append(",").
+                    append(csvQuote(cdf.getAttrType())).append(",").
                     append(cdf.getCdf()).append("\n");
         }
         return sb2.toString();
@@ -554,7 +554,7 @@ public class DownloadEntities extends Controller {
         Logger.debug("generating harmonizome");
         // Harmonizome
         sb = new StringBuilder();
-        tmp = "URL,Uniprot ID,Data Source,Data Type,CDF";
+        tmp = "URL,Uniprot ID,Data Source,Data Source URL,Data Type,Attribute Group,Attribute Type,CDF";
         tmp = tmp.replace(",", "\",\"");
         tmp = "\"" + tmp + "\"\n";
         sb.append(tmp);

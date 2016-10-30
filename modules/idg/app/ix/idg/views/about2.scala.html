@@ -5,86 +5,21 @@
 
 @(title: String, target: Facet, disease: Facet, ligand: Facet)
 
-@fcol(name: String, facet: Facet) = {
-    <td>
-    @if(facet != null) {
-        @for(f <- facet.getValues()) {
-            @if(name.equals(f.getLabel())) {
-                @f.getCount()
-            }
-        }
-    }
-    </td>
-}
+@ix.ncats.views.html.main("Pharos: About") {
+    @helpmenu()
+} {
+    @HtmlFormat.empty
+} {
 
-<!DOCTYPE html>
-<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
-    <head>
-        <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-        <meta http-equiv="X-UA-Compatible" content="IE=edge">
 
-        <title>@title</title>
-        <link rel="stylesheet"
-        href='@routes.WebJarAssets.at(WebJarAssets.locate("bootstrap.min.css"))'>
-        <link rel="stylesheet" type="text/css"
-        href='@routes.WebJarAssets.at(WebJarAssets.locate("font-awesome.min.css"))'>
-        <link rel="stylesheet" type="text/css"
-        href='@routes.Assets.versioned("ncats/css/idg-landing-hex.css")'>
-        <link rel="icon" type="image/png" href='@routes.Assets.versioned("images/favicon.png")'>
-        <style type="text/css">
+    <div class="container vertical-center" id="main-box" style="padding-top : 60px ;">
 
-            .lead {
-                font-weight:bolder;
-            }
+        <div class="col-md-12">
 
-        h5 {
-        color : #666666 ;
-        display : inline ;
-        line-height : 1.75 ;
-        font-style : italic ;
-        padding-left: 1em;
-        }
-
-        </style>
-            <!--[if lte IE 9]>
-<style type="text/css">
-#ie6msg {border:3px solid #c33; margin:8px 0; background:#fcc; color:#000;}
-#ie6msg h4{margin:8px; padding:0;}
-#ie6msg p{margin:8px; padding:0;}
-#ie6msg p a.getie7{font-weight:bold; color:#006;}
-#ie6msg p a.ie6expl{font-weight:bold; color:#006;}
-</style>
-<div id="ie6msg">
-<h4>Did you know that your browser is out of date, and potentially poses a security risk?</h4>
-<p>To get the best possible experience using this website it is recommended that you upgrade your browser to a newer version.
-<p>You could also try some other popular browsers like <a class="ie6expl" href="http://mozilla.com">FireFox</a> or
- <a class="ie6expl" href="https://www.google.com/chrome/S">Chrome</a>.</p>
-</div>
-<![endif]-->
-        <script src='@routes.WebJarAssets.at(WebJarAssets.locate("jquery.min.js"))'
-        type='text/javascript'></script>
-        <script src='@routes.WebJarAssets.at(WebJarAssets.locate("bootstrap.min.js"))'></script>
-        <script src='@routes.WebJarAssets.at(WebJarAssets.locate("typeahead.bundle.min.js"))'></script>
-        <script src='@routes.WebJarAssets.at(WebJarAssets.locate("handlebars.min.js"))'></script>
-        <script src='@routes.WebJarAssets.at(WebJarAssets.locate("bloodhound.min.js"))'></script>
-        <script>
-        ( function ( i, s, o, g, r, a, m ) { i[ 'GoogleAnalyticsObject' ] = r ; i[ r ] = i[ r ] || function ( ) {
-        ( i[ r ].q = i[ r ].q ||[ ] ).push ( arguments ) }, i[ r ].l = 1 * new Date ( ) ; a = s.createElement ( o ),
-        m = s.getElementsByTagName ( o )[ 0 ] ; a.async = 1 ; a.src = g ; m.parentNode.insertBefore ( a, m )
-        } ) ( window, document, 'script', '//www.google-analytics.com/analytics.js', 'ga' ) ;
-
-        ga ( 'create', 'UA-53774738-1', 'auto' ) ;
-        ga ( 'send', 'pageview' ) ;
-        </script>
-    </head>
-    <body>
-        <div class="jumbotron">
-            <div class="container">
-                <center><h1>About Pharos</h1></center>
+            <div class="page-header">
+                <h1>About Pharos</h1>
             </div>
-        </div>
 
-        <div class="container vertical-center" id="main-box">
             <div class="row">
                 <p>Pharos is the user interface to the <a href="http://targetcentral.ws/">Knowledge Management Center</a>
                     (KMC) for the <a href="https://commonfund.nih.gov/idg/index">Illuminating the Druggable Genome</a>
@@ -108,15 +43,14 @@
                     <a href="mailto:pharos@@mail.nih.gov"><code>pharos@@mail.nih.gov</code></a>
                 </p>
 
-            </div>
-            <div class="row">
                 <p class="lead">Who's involved?</p>
                 <p>Pharos is developed at <a href="http://ncats.nih.gov">NCATS</a>, together with collaborators from
                     the <a href="http://hsc.unm.edu/">University of New Mexico</a>, <a href="http://icahn.mssm.edu/">
                     Icahn School of Medicine, Mount Sinai</a>, <a href="https://www.ebi.ac.uk/about">EMBL-EBI</a>,
-                    the <a href="http://www.cpr.ku.dk/">Novo Nordisk Foundation Center for Protein Research (U. Copenhagen)</a>
+                    the <a href="http://www.cpr.ku.dk/">
+                    Novo Nordisk Foundation Center for Protein Research (U. Copenhagen)</a>
                     and the <a href="http://ccs.miami.edu/?p=1103">University of Miami</a>.
-                    </p>
+                </p>
                 <p>
                     The IDG TechDev network is the experimental side of IDG. TechDev research aims to develop and
                     utilize technologies and streamlined experimental workflows for functional studies of poorly
@@ -125,10 +59,10 @@
                     gaps and druggability likelihood analyses.
                 </p>
                 <p>
-                    To find more details on our collaborators visit <a href="http://targetcentral.ws/">http://targetcentral.ws/</a>
+                    To find more details on our collaborators visit <a href="http://targetcentral.ws/">
+                    http://targetcentral.ws/</a>
                 </p>
-            </div>
-            <div class="row">
+
                 <p class="lead">What data is available?</p>
                 <p>The data available in Pharos is obtained from the <a href="http://juniper.health.unm.edu/tcrd/">
                     Target Central Resource Database</a> which integrates data from a variey of data sources including
@@ -165,62 +99,49 @@
                 Ontology</a>, <a href="http://www.pantherdb.org/panther/ontologies.jsp">PANTHER</a> and
                 <a href="http://geneontology.org/">GO</a>.
                 <p></p>
-            </div>
-            <div class="row">
+
                 <p class="lead">What license does Pharos use?</p>
                 <p>All data accessed from Pharos is made available under the <a href="https://creativecommons.org/licenses/by-sa/4.0/">
                     CC BY-SA 4.0</a> license.</p>
-            </div>
-            <div class="row">
+
                 <p class="lead">Where can I get the code?</p>
                 <p>The sources for the Pharos web interface are available from <a href="https://spotlite.nih.gov/ncats/pharos">
                     https://spotlite.nih.gov/ncats/pharos</a>. The repository provides
-                    <a href="https://spotlite.nih.gov/ncats/pharos/tree/master">instructions</a> on building and installation</p>
-            </div>
-            <div class="row">
+                    <a href="https://spotlite.nih.gov/ncats/pharos/tree/master">instructions</a>
+                    on building and installation</p>
+
                 <p class="lead">How can I cite Pharos?</p>
                 <p>If you use Pharos, please consider citing it as
-                    <blockquote>Nguyen, D.-T., Mathias, S. et al, "Pharos: Collating Protein Information to Shed Light on the Druggable Genome", Nucl. Acids Res., <b>2016</b>, <i>in press</i>. DOI: <a href="http://dx.doi.org/10.1093/nar/gkw1072">10.1093/nar/gkw1072</a></blockquote>
-                </p>
+            <blockquote>
+                Nguyen, D.-T., Mathias, S. et al, "Pharos: Collating Protein Information to Shed Light on the Druggable Genome", Nucl. Acids Res., <b>
+                2016</b>, <i>in press</i>. DOI: <a href="http://dx.doi.org/10.1093/nar/gkw1072">
+                10.1093/nar/gkw1072</a>
+            </blockquote>
             </div>
-
-            @*<div class="row">*@
-            @*<div class="col-md-6 col-md-offset-3">*@
-            @*<div class="panel panel-default">*@
-            @*<div class="panel-body">*@
-            @*<table class="table table-striped">*@
-            @*<tr>*@
-            @*<th>Source</th>*@
-            @*<th>Target</th>*@
-            @*<th>Disease</th>*@
-            @*<th>Ligand</th>*@
-            @*</tr>*@
-            @* @for(source <- IDGApp.getDataSources()) {*@
-            @*<tr>*@
-            @* @if(source.href != null) {*@
-            @*<td><a href="@source.href">@source.name</a></td>*@
-            @*} else {*@
-            @*<td>@source.name</td>*@
-            @*}*@
-            @*<td><a href='@{*@
-            @*ix.idg.controllers.routes.IDGApp.targets() + "?facet=" + URLEncoder.encode(Commons.SOURCE, "utf8") + "/" + URLEncoder.encode(source.name, "utf8")*@
-            @*}'>@source.targets</a>*@
-            @*</td>*@
-            @*<td><a href='@{*@
-            @*ix.idg.controllers.routes.IDGApp.diseases() + "?facet=" + URLEncoder.encode(Commons.SOURCE, "utf8") + "/" + URLEncoder.encode(source.name, "utf8")*@
-            @*}'>@source.diseases</a>*@
-            @*</td>*@
-            @*<td><a href='@{*@
-            @*ix.idg.controllers.routes.IDGApp.ligands() + "?facet=" + URLEncoder.encode(Commons.SOURCE, "utf8") + "/" + URLEncoder.encode(source.name, "utf8")*@
-            @*}'>@source.ligands</a>*@
-            @*</td>*@
-            @*</tr>*@
-            @*}*@
-            @*</table>*@
-            @*</div>*@
-            @*</div>*@
-            @*</div>*@
-            @*</div>*@
         </div>
-    </body>
-</html>
+
+
+    </div>
+
+    <head>
+            <link type="text/css" rel="stylesheet" href='@routes.Assets.versioned("stylesheets/main.css")'/>
+
+            <style type="text/css">
+
+            .lead {
+            font-weight : bolder ;
+            }
+
+            h5 {
+            color : #666666 ;
+            display : inline ;
+            line-height : 1.75 ;
+            font-style : italic ;
+            padding-left : 2em ;
+            }
+
+            </style>
+
+        </head>
+
+}
