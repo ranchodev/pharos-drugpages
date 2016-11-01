@@ -992,7 +992,7 @@ This is TCRD target <a href='@ix.core.controllers.v1.routes.RouteFactory.get("ta
         <div class="panel panel-default">
             <a name="genes" tocname="Genes"></a>
           <div class="panel-heading">
-            <h3 class="panel-title">Gene <i class="fa fa-external-link"></i> <a class="pull-right" href='@{ix.core.controllers.v1.routes.RouteFactory.get("targets",target.id,null)+"/synonyms(label="+UNIPROT_GENE+")"}'><i class="fa fa-code"></i></a></h3>
+            <h3 class="panel-title">Gene <a class="pull-right" href='@{ix.core.controllers.v1.routes.RouteFactory.get("targets",target.id,null)+"/synonyms(label="+UNIPROT_GENE+")"}'><i class="fa fa-code"></i></a></h3>
           </div>
           <div class="panel-body">
             @for(kw <- target.synonyms) {
@@ -1012,7 +1012,13 @@ This is TCRD target <a href='@ix.core.controllers.v1.routes.RouteFactory.get("ta
                        style="max-height: 300px; overflow-y: auto;">
                       <a name="pdb" tocname="PDB"></a>
                       <div class="panel-heading">
-                          <h3 class="panel-title">PDB <i class="fa fa-external-link"></i> <a class="pull-right" href='@{ix.core.controllers.v1.routes.RouteFactory.get("targets",target.id,null)+"/synonyms(label="+PDB_ID+")"}'><i class="fa fa-code"></i></a></h3>
+                          <h3 class="panel-title">PDB
+                              <a href="http://www.rcsb.org/pdb/protein/@IDGApp.getId(target)">
+                                  <span class="fa fa-external-link pull-right"></span>
+                              </a>
+
+                              <a href='@{ix.core.controllers.v1.routes.RouteFactory.get("targets",target.id,null)+"/synonyms(label="+PDB_ID+")"}'>
+                                  <span class="fa fa-code pull-right"></span></a></h3>
                       </div>
                       <div class="panel-body">
                           @for(aval <- pdbids){
@@ -1273,7 +1279,7 @@ This is TCRD target <a href='@ix.core.controllers.v1.routes.RouteFactory.get("ta
 	      <div class="table-responsive">
                <table class="table table-striped">
                 <tr>
-                  <th>AID <i class="fa fa-external-link"></i></th>
+                  <th>AID </th>
                   <th>Type</th>
                   <th>Active&nbsp;/&nbsp;Inconclusive&nbsp;/&nbsp;Inactive</th>
                   <th>Description</th>
