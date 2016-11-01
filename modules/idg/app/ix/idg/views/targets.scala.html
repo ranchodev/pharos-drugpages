@@ -139,16 +139,11 @@ facets: Array[FacetDecorator], targets: List[Target], ctx: String )
        role="button" style="margin-right:1px; margin-left:1px;">
         <i class="fa fa-exchange fa-lg "></i></a>
 
-    <button type="button"
-    	    @if(request.getQueryString("q") != null || request.getQueryString("facet") != null) {
-    	    class="btn btn-default"
-	    } else {
-	    class="btn btn-default disabled"
-	    }
+    <button type="button" class="btn btn-default"
             data-toggle="tooltip" title="Download data"
     	    id="download-all"
 	    style="margin-right:1px; margin-left:1px;">
-        <i class="fa fa-download fa-lg "></i></a>
+        <i class="fa fa-download fa-lg "></i>
     </button>
 
     <div class="dropdown pull-right" data-toggle="tooltip" title="Dossier">
@@ -405,6 +400,17 @@ $(document).ready(function () {
       return false;	
    });
 
+  /*
+   $(":checkbox").on('click',function () {
+      //console.log('row '+$(this).attr('id')+' checked? '+$(this).prop('checked'));
+      var checked = $(":checkbox").filter(function() {
+          return $(this).prop('checked');
+        });
+      console.log(checked.length+' checked!');
+      $('#download-all').prop('disabled', checked == 0);
+   });
+  */
+  
    $('#loadmodal').on('shown.bs.modal', function (e) {
       console.log('loadmodal is shown...');
    });
