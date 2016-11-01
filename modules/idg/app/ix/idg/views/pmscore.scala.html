@@ -5,64 +5,21 @@
 
 @(title: String)
 
-<!DOCTYPE html>
-<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
-    <head>
-        <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+@ix.ncats.views.html.main("Pharos: Frequently Asked Questions") {
+    @helpmenu()
+} {
+    @HtmlFormat.empty
+} {
 
-        <title>@title</title>
-        <link rel="stylesheet"
-        href='@routes.WebJarAssets.at(WebJarAssets.locate("bootstrap.min.css"))'>
-        <link rel="stylesheet" type="text/css"
-        href='@routes.WebJarAssets.at(WebJarAssets.locate("font-awesome.min.css"))'>
-        <link rel="stylesheet" type="text/css"
-        href='@routes.Assets.versioned("ncats/css/idg-landing-hex.css")'>
-        <link rel="icon" type="image/png" href='@routes.Assets.versioned("images/favicon.png")'>
+    <div class="container vertical-center" id="main-box" style="padding-top : 60px ;">
+        <div class="col-md-12">
 
-        <script type="text/javascript" src='https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML'></script>
+            <div class="page-header">
+                <h1>Fractional counting of protein mentions (Pubmed Score)</h1>
+            </div>
 
-            <!--[if lte IE 9]>
-<style type="text/css">
-#ie6msg {border:3px solid #c33; margin:8px 0; background:#fcc; color:#000;}
-#ie6msg h4{margin:8px; padding:0;}
-#ie6msg p{margin:8px; padding:0;}
-#ie6msg p a.getie7{font-weight:bold; color:#006;}
-#ie6msg p a.ie6expl{font-weight:bold; color:#006;}
-</style>
-<div id="ie6msg">
-<h4>Did you know that your browser is out of date, and potentially poses a security risk?</h4>
-<p>To get the best possible experience using this website it is recommended that you upgrade your browser to a newer version.
-<p>You could also try some other popular browsers like <a class="ie6expl" href="http://mozilla.com">FireFox</a> or
- <a class="ie6expl" href="https://www.google.com/chrome/S">Chrome</a>.</p>
-</div>
-<![endif]-->
-        <script src='@routes.WebJarAssets.at(WebJarAssets.locate("jquery.min.js"))'
-        type='text/javascript'></script>
-        <script src='@routes.WebJarAssets.at(WebJarAssets.locate("bootstrap.min.js"))'></script>
-        <script src='@routes.WebJarAssets.at(WebJarAssets.locate("typeahead.bundle.min.js"))'></script>
-        <script src='@routes.WebJarAssets.at(WebJarAssets.locate("handlebars.min.js"))'></script>
-        <script src='@routes.WebJarAssets.at(WebJarAssets.locate("bloodhound.min.js"))'></script>
-        <script>
-        ( function ( i, s, o, g, r, a, m ) { i[ 'GoogleAnalyticsObject' ] = r ; i[ r ] = i[ r ] || function ( ) {
-        ( i[ r ].q = i[ r ].q ||[ ] ).push ( arguments ) }, i[ r ].l = 1 * new Date ( ) ; a = s.createElement ( o ),
-        m = s.getElementsByTagName ( o )[ 0 ] ; a.async = 1 ; a.src = g ; m.parentNode.insertBefore ( a, m )
-        } ) ( window, document, 'script', '//www.google-analytics.com/analytics.js', 'ga' ) ;
-
-        ga ( 'create', 'UA-53774738-1', 'auto' ) ;
-        ga ( 'send', 'pageview' ) ;
-        </script>
-    </head>
-    <body>
-        <div class="container vertical-center" id="main-box">
             <div class="row">
 
-                <center>
-                    <a href='@ix.idg.controllers.routes.IDGApp.index()'>
-                        <img src='@routes.Assets.versioned("ncats/images/Pharos_Logo_Rd8.svg")' class = "img-responsive" id="pharos" />
-                    </a>
-                </center>
-                <h2>Fractional counting of protein mentions</h2>
                 <h3>Named entity recognition (NER)</h3>
                 <p>The recognition of protein and gene names in text builds upon the text-mining pipeline of the STRING database
                     (Franceschini et al., 2013). This relies heavily on a highly efficient and flexible NER engine, which is
@@ -101,7 +58,7 @@
                     document \(j\), \(n_j\) is total number of mentions of any protein in document \(j\).</p>
 
 
-                <h2>References</h2>
+                <h3>References</h3>
                 <p>Cunningham F, Amode MR, Barrell D, Beal K, Billis K, Brent S, Carvalho-Silva D, Clapham P, Coates G,
                     Fitzgerald S, Gil L, Girón CG, Gordon L, Hourlier T, Hunt SE, Janacek SH, Johnson N, Juettemann T,
                     Kähäri AK, Keenan S, Martin FJ, Maurel T, McLaren W, Murphy DN, Nag R, Overduin B, Parker A,
@@ -124,7 +81,8 @@
                 <p>Szklarczyk D, Franceschini A, Wyder S, Forslund K, Heller D, Huerte-Cepas J, Simonovic M, Roth A,
                     Santos A, Tsafou KP, Kuhn M, Bork P, Jensen LJ, von Mering C (2015).
                     <a href="http://dx.doi.org/10.1093/nar/gku1003">STRING v10: protein–protein
-                    interaction networks, integrated over the tree of life</a>. Nucleic Acids Research, 43:D447–D452.
+                        interaction networks, integrated over the tree of life</a>
+                    . Nucleic Acids Research, 43:D447–D452.
                 </p>
 
                 <p>UniProt Consortium (2015). <a href="http://dx.doi.org/10.1093/nar/gku989">UniProt: a hub for protein
@@ -132,5 +90,11 @@
                     43:D204–D212</p>
 
             </div>
-    </body>
-</html>
+        </div>
+    </div>
+
+    <head>
+        <link type="text/css" rel="stylesheet" href='@routes.Assets.versioned("stylesheets/main.css")'/>
+        <script type="text/javascript" src='https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML'></script>
+    </head>
+}
