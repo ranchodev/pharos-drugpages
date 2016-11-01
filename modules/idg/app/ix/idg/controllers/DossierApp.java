@@ -221,6 +221,55 @@ public class DossierApp extends App implements Commons {
         return ok(String.valueOf(_countEntities()));
     }
 
+    public static Result mergeFolders(String folderNames, String newFolderName) throws IOException {
+        String[] folderNameArray = folderNames.split(",");
+        if (folderNameArray.length < 2)
+            return _badRequest("Must specify 2 or more folders to merge");
+        if (newFolderName == null || newFolderName.trim().equals(""))
+            return _badRequest("Must provide a valid folder name for merged folder");
+
+        ArrayNode cart = getCartFromSession();
+        ObjectNode nfolder = mapper.createObjectNode();
+        nfolder.put("folder", newFolderName);
+        nfolder.put("entities", mapper.createArrayNode());
+
+        ArrayNode entities = (ArrayNode) nfolder.get("entities");
+        for (String folderName : folderNameArray) {
+            ObjectNode folder = getFolderFromCart(cart, folderName);
+            if (folder == null) continue;
+            ArrayNode es = (ArrayNode) folder.get("entities");
+            for (int i = 0; i < es.size(); i++) {
+                entities.add(es.get(i)); // should do a check for duplicatio
+            }
+        }
+        cart.add(nfolder);
+        session().put("cart", mapper.writeValueAsString(cart));
+        ObjectNode ret = mapper.createObjectNode();
+        ret.put("total_entries", _countEntities());
+        ret.put("total_collections", _countFolders());
+        return ok(ret);
+    }
+
+    public static Result copyFolder(String oldFolderName, String newFolderName) throws IOException {
+        if (oldFolderName == null || oldFolderName.trim().equals("") ||
+                newFolderName == null || newFolderName.trim().equals("") ||
+                oldFolderName.equals(newFolderName))
+            return _badRequest("Old and new folder names cannot be the same");
+        ArrayNode cart = getCartFromSession();
+        ObjectNode folder = getFolderFromCart(cart, oldFolderName);
+        if (folder == null)
+            return _badRequest("Invalid source folder name");
+        ObjectNode newFolder = folder.deepCopy();
+        newFolder.put("folder", newFolderName);
+        cart.add(newFolder);
+
+        session().put("cart", mapper.writeValueAsString(cart));
+        ObjectNode ret = mapper.createObjectNode();
+        ret.put("total_entries", _countEntities());
+        ret.put("total_collections", _countFolders());
+        return ok(ret);
+    }
+
     @BodyParser.Of(value = BodyParser.FormUrlEncoded.class,
             maxLength = 100000)
     public static Result addEntities() throws IOException {

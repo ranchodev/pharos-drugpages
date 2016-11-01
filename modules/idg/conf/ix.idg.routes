@@ -57,6 +57,8 @@ POST	/dossier ix.idg.controllers.DossierApp.addEntities
 GET	/dossier/count ix.idg.controllers.DossierApp.count
 GET	/dossier/view ix.idg.controllers.DossierApp.view(folder: String ?= null)
 GET	/dossier/empty	ix.idg.controllers.DossierApp.emptyCart
+GET /dossier/copyFolder ix.idg.controllers.DossierApp.copyFolder(oldFolderName: String ?= null, newFolderName: String ?= null)
+GET /dossier/mergeFolders ix.idg.controllers.DossierApp.mergeFolders(folderNames: String ?= null, newFolderName: String ?= null)
 GET	/dto		ix.idg.controllers.DTOHier.dto(node: String ?= null)
 GET	/dtoviz/:label	ix.idg.controllers.DTOHier.dtoViz(label: String)
 GET	/dto/:label	ix.idg.controllers.DTOHier.dtoNode(label: String)
