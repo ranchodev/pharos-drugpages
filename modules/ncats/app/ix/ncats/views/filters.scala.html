@@ -13,7 +13,31 @@
  @defining(f.name.toLowerCase.replaceAll("[\\(\\)]+","").replaceAll("[\\s]+","-")) { fname =>
 <div class="panel panel-default @{fname}-panel">
   <div class="panel-heading"  id='@fname'>
-    <h3 class="panel-title" id="facetheader-@f.facet.getName">
+    <h3 class="panel-title" id="facetheader-@f.facet.getName" data-toggle="tooltip"
+
+        @f.name() match {
+            case "Development Level" => {
+                title='Target development level (TDL) categorizing target based on known information and potential druggability with highest ranking of Tclin for targets with known mechanism of drug action to lowest ranking of Tdark for targest with least knowledge.'
+            }
+            case "IMPC Term" => {
+                title='Terminology describing phenotypes based on work by the International Mouse Phenotyping Consortium.'
+            }
+            case "Tissue" => {
+                title='Protein tissue expresison based on compilation of information from GTEx, HPM, HPA, IDG, UniProt, Jensen-KB, and Jensen-TM.'
+            }
+            case "Target Family" => {
+                title="Target grouping based on protein family.  Currently the groupings are restricted to the original four classes in Phase I of IDG (see RFA-RM-13-011)."
+            }
+            case "Collection" => {
+                title="Collection of targetsin different protein families highlighted by NIH based on RFA"
+            }
+            case "Disease" => {
+                title="Disease cataloging terms base on DOID and OMIM classifications."
+            }
+           case _ => {title=''}
+      }
+
+    >
       @if(f.raw) { @HtmlFormat.raw(f.name())  } else { @f.name() }
       @if(f.url != null) { @HtmlFormat.raw(f.url) }
     </h3>
