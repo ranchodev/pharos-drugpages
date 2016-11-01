@@ -722,6 +722,10 @@ public class TcrdRegistry extends Controller implements Commons {
             while (rset.next()) {
                 String source = rset.getString("pwtype");
                 String name = rset.getString("name");
+                if (name.length() > 255) {
+                    name = name.substring(0, 246)+"..."
+                        +name.substring(name.length()-6);
+                }
                 Keyword term = KeywordFactory.registerIfAbsent
                     (source+" Pathway", name, rset.getString("url"));
                 target.addIfAbsent((Value)term);
@@ -3028,7 +3032,7 @@ public class TcrdRegistry extends Controller implements Commons {
             if (rset.next()) {
                 source = KeywordFactory.registerIfAbsent
                     (SOURCE, "TCRDv"+rset.getString("data_ver"),
-                     "http://habanero.health.unm.edu");
+                     "http://targetcentral.ws");
             }
             rset.close();
 
