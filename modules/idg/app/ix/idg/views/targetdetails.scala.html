@@ -714,29 +714,29 @@ This is TCRD target <a href='@ix.core.controllers.v1.routes.RouteFactory.get("ta
       <div class="col-md-4">
         @targetpatent(target)
       </div>
-      <div class="col-md-4">
-         <div class="panel panel-default">
-            <div class="panel-heading">
-            <a name="datatypes" tocname="Data Types"></a>
-              <h3 class="panel-title">Knowledge Summary</h3>
-            </div>
-            <div class="panel-body">
-              <div class="row">
-                <div class="col-md-2"></div>
-                <div class="col-md-8">
-                   <div id="attr-type-radar"></div>
+        <div class="col-md-4">
+            <div class="panel panel-default">
+                <div class="panel-heading">
+                    <a name="datatypes" tocname="Data Types"></a>
+                    <h3 class="panel-title">Knowledge Summary
+                        <a href="#" id="modal-radar-btn" data-toggle="modal" data-target="#modal-radar">
+                            <span class="fa fa-external-link pull-right" aria-hidden="true"></span>
+                        </a>
+                    </h3>
                 </div>
-                <div class="col-md-2"></div>
-              </div>
-              <button type="button" class="btn btn-default"
-	      	      id="modal-radar-btn"
-                      data-toggle="modal" data-target="#modal-radar"
-                      aria-label="Left Align" style="float:right;">
-                  <span class="fa fa-external-link" aria-hidden="true"></span>
-              </button>
-          </div>
+                <div class="panel-body">
+                    <div class="row">
+                        <div class="col-md-2"></div>
+                        <div class="col-md-8">
+                            <div id="attr-type-radar"></div>
+                        </div>
+                        <div class="col-md-2"></div>
+                    </div>
+
+
+                </div>
+            </div>
         </div>
-      </div>
     </div>
 
     <!--
@@ -944,7 +944,10 @@ This is TCRD target <a href='@ix.core.controllers.v1.routes.RouteFactory.get("ta
         <a name="synonym"  tocname="Synonyms"></a>
         <div class="panel panel-default">
           <div class="panel-heading">
-            <h3 class="panel-title">Synonym <i class="fa fa-external-link"></i> <a class="pull-right" href='@{ix.core.controllers.v1.routes.RouteFactory.get("targets",target.id,null)+"/synonyms"}'><i class="fa fa-code"></i></a></h3>
+            <h3 class="panel-title">Synonym
+                <a href='@{ix.core.controllers.v1.routes.RouteFactory.get("targets",target.id,null)+"/synonyms"}'>
+                    <span class="fa fa-code pull-right"></span></a>
+            </h3>
           </div>
           <div class="panel-body">
             <table class="table">
