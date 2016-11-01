@@ -14,6 +14,8 @@ import java.lang.reflect.Field;
 import java.lang.annotation.Annotation;
 import javax.persistence.Id;
 
+import java.text.NumberFormat;
+
 import play.Logger;
 import play.mvc.Http;
 
@@ -267,5 +269,11 @@ public class Util {
                 return false;
         }
         return true;
+    }
+
+    public static String format (Number value) {
+        if (value != null)
+            return NumberFormat.getInstance().format(value);
+        return "";
     }
 }
