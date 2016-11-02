@@ -58,6 +58,7 @@ GET	/dossier/count ix.idg.controllers.DossierApp.count
 GET	/dossier/view ix.idg.controllers.DossierApp.view(folder: String ?= null)
 GET	/dossier/empty	ix.idg.controllers.DossierApp.emptyCart
 GET /dossier/copyFolder ix.idg.controllers.DossierApp.copyFolder(oldFolderName: String ?= null, newFolderName: String ?= null)
+GET /dossier/deleteFolder ix.idg.controllers.DossierApp.deleteFolder(folderName: String ?= null)
 GET /dossier/mergeFolders ix.idg.controllers.DossierApp.mergeFolders(folderNames: String ?= null, newFolderName: String ?= null)
 GET /dossier/intersectFolders ix.idg.controllers.DossierApp.intersectFolders(folder1: String ?= null, folder2: String ?= null, newFolderName: String ?= null)
 GET	/dto		ix.idg.controllers.DTOHier.dto(node: String ?= null)

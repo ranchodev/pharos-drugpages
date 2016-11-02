@@ -170,6 +170,16 @@ public class DossierApp extends App implements Commons {
         return folderNode;
     }
 
+    static ArrayNode deleteFolderFromCart(ArrayNode cart, String folderName) {
+        ArrayNode newCart = mapper.createArrayNode();
+        for (int i = 0; i < cart.size(); i++) {
+            ObjectNode tmp = (ObjectNode) cart.get(i);
+            if (!tmp.get("folder").textValue().equals(folderName))
+                newCart.add(tmp);
+        }
+        return newCart;
+    }
+
     static boolean cartContains(ArrayNode cart, String folder, String type, String id) {
         ObjectNode folderNode = null;
         for (int i = 0; i < cart.size(); i++) {
@@ -221,6 +231,18 @@ public class DossierApp extends App implements Commons {
         return ok(String.valueOf(_countEntities()));
     }
 
+    public static Result deleteFolder(String folderName) throws IOException {
+        if (folderName == null || folderName.trim().equals(""))
+            return _badRequest("Invalid folder name");
+        ArrayNode cart = getCartFromSession();
+        cart = deleteFolderFromCart(cart, folderName);
+        session().put("cart", mapper.writeValueAsString(cart));
+        ObjectNode ret = mapper.createObjectNode();
+        ret.put("total_entries", _countEntities());
+        ret.put("total_collections", _countFolders());
+        return ok(ret);
+    }
+
     public static Result intersectFolders(String folder1, String folder2, String newFolderName) throws IOException {
         if (newFolderName == null || newFolderName.trim().equals(""))
             return _badRequest("Must provide a valid folder name for merged folder");
@@ -229,6 +251,7 @@ public class DossierApp extends App implements Commons {
         ObjectNode nfolder = mapper.createObjectNode();
         nfolder.put("folder", newFolderName);
         nfolder.put("entities", mapper.createArrayNode());
+        cart.add(nfolder);
         ArrayNode entities = (ArrayNode) nfolder.get("entities");
 
         ObjectNode f1 = getFolderFromCart(cart, folder1);
@@ -239,15 +262,17 @@ public class DossierApp extends App implements Commons {
 
         for (int i = 0; i < e1.size(); i++) {
             ObjectNode node = (ObjectNode) e1.get(i);
-            if (cartContains(cart, folder2, node.get("type").textValue(), node.get("entity").textValue()))
+            if (cartContains(cart, folder2, node.get("type").textValue(), node.get("entity").textValue()) &&
+                    !cartContains(cart, newFolderName, node.get("type").textValue(), node.get("entity").textValue()))
                 entities.add(node);
         }
         for (int i = 0; i < e2.size(); i++) {
             ObjectNode node = (ObjectNode) e2.get(i);
-            if (cartContains(cart, folder1, node.get("type").textValue(), node.get("entity").textValue()))
+            if (cartContains(cart, folder1, node.get("type").textValue(), node.get("entity").textValue()) &&
+                    !cartContains(cart, newFolderName, node.get("type").textValue(), node.get("entity").textValue()))
                 entities.add(node);
         }
-        cart.add(nfolder);
+
         session().put("cart", mapper.writeValueAsString(cart));
         ObjectNode ret = mapper.createObjectNode();
         ret.put("total_entries", _countEntities());
@@ -268,6 +293,7 @@ public class DossierApp extends App implements Commons {
         ObjectNode nfolder = mapper.createObjectNode();
         nfolder.put("folder", newFolderName);
         nfolder.put("entities", mapper.createArrayNode());
+        cart.add(nfolder);
 
         ArrayNode entities = (ArrayNode) nfolder.get("entities");
         for (String folderName : folderNameArray) {
@@ -275,10 +301,12 @@ public class DossierApp extends App implements Commons {
             if (folder == null) continue;
             ArrayNode es = (ArrayNode) folder.get("entities");
             for (int i = 0; i < es.size(); i++) {
-                entities.add(es.get(i)); // should do a check for duplicatio
+                ObjectNode node = (ObjectNode) es.get(i);
+                if (!cartContains(cart, newFolderName, node.get("type").textValue(), node.get("entity").textValue()))
+                    entities.add(es.get(i)); // should do a check for duplicatio
             }
         }
-        cart.add(nfolder);
+
         session().put("cart", mapper.writeValueAsString(cart));
         ObjectNode ret = mapper.createObjectNode();
         ret.put("total_entries", _countEntities());

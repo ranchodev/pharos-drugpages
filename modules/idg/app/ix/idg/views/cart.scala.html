@@ -11,9 +11,9 @@
         ligands: List[Ligand], ctx: String)
 
 
-@folderItem(f: String) = {
-    <li class="folder-item @if(f.equals(currentFolder)){active}">
-        <i class="fa-li fa @if(f.equals(currentFolder)){fa-folder-open-o} else {fa-folder-o}"></i>
+    @folderItem(f: String) = {
+    <li class="folder-item @if(f.equals(currentFolder)) {active}">
+        <i class="fa-li fa @if(f.equals(currentFolder)) {fa-folder-open-o} else {fa-folder-o}"></i>
         @if(!f.equals(currentFolder)) {
             <a href='@ix.idg.controllers.routes.DossierApp.view(f)'>@f</a>
         } else {
@@ -22,7 +22,7 @@
     </li>
 }
 
-@getdoid(t: Disease) = {
+    @getdoid(t: Disease) = {
     @* We only consider the first DOID, even if there are alternates *@
     @defining(t.getSynonym("DOID", UNIPROT_DISEASE)) { id =>
         @if(id != null) {
@@ -31,7 +31,7 @@
     }
 }
 
-@diseaserow(d: Disease) = {
+    @diseaserow(d: Disease) = {
     <tr id="row-@IDGApp.getId(d)">
         <td><input type="checkbox" class="cb-table-row" id="cb-@IDGApp.getId(d)" /></td>
         <td>@getdoid(d)</td>
@@ -42,13 +42,14 @@
     </tr>
 }
 
-@tabrow(t: Target) = {
+    @tabrow(t: Target) = {
     <tr id="row-@IDGApp.getId(t)">
         <td><input type="checkbox" class="cb-table-row" id="cb-@IDGApp.getId(t)" /></td>
-        <td><a id='load' onclick="showLoadModal()" 
-	   href="@ix.idg.controllers.routes.IDGApp.target(IDGApp.getId(t))">@t.name</a></td>
+        <td><a id='load' onclick="showLoadModal ( )"
+        href="@ix.idg.controllers.routes.IDGApp.target(IDGApp.getId(t))">@t.name</a>
+        </td>
 
-        <td><span class="label label-@t.idgTDL.label" data-toggle="tooltip" data-html="true" title="<p align='left'>@t.idgTDL.desc</p>">@t.idgTDL.name</span></td>
+        <td><span class="label label-@t.idgTDL.label" data-toggle="tooltip" data-html="true" title="<p align='left'> @t.idgTDL.desc </p> "> @t.idgTDL.name </span></td>
         <td>@t.idgFamily</td>
         <td>@IDGApp.format(t.novelty)</td>
         <td>@t.pubmedCount</td>
@@ -69,17 +70,29 @@
     <div class="container-fluid" style="padding-top : 60px ;">
         <div class="row">
             <div class="btn-group pull-right" role="group">
-                <a class="btn btn-default" href="@HtmlFormat.raw(request.uri)?folder=@currentFolder&action=download" role="button" style="margin-right: 5px">
+                <a class="btn btn-default" href="@HtmlFormat.raw(request.uri)?folder=@currentFolder&action=download" role="button" style="margin-right : 5px">
                     <i class="fa fa-download fa-lg "></i></a>
-                <a id="compare-selected" class="btn btn-default" href="#" role="button" style="margin-right:1px; margin-left:1px;">
+                <a id="compare-selected" class="btn btn-default" href="#" role="button" style="margin-right : 1px ; margin-left : 1px ;">
                     <i class="fa fa-exchange fa-lg "></i></a>
 
                 <div class="dropdown pull-right">
-                    <button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                        <i class="fa fa-eye"></i>
-                    </button>
+                    <a type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                        <i class="glyphicon glyphicon-tasks"></i>
+                    </a>
                     <ul class="dropdown-menu pull-left">
-                        <li><a  href="#hgramModal" data-toggle="modal" ><i class="fa fa-cubes"></i>&nbsp;Harmonogram</a></li>
+                        <li><a href="#cartDeleteModal" data-toggle="modal" ><i class="fa fa-trash"></i>&nbsp;Delete </a></li>
+                        <li><a href="#cartCloneModal" data-toggle="modal" ><i class="fa fa-files-o"></i>&nbsp;Copy </a></li>
+                        <li><a href="#cartMergeModal" data-toggle="modal"><i class="fa fa-compress"></i>&nbsp;Merge</a></li>
+                        <li><a href="#cartIntersectModal" data-toggle="modal"><i class="fa fa-random"></i>&nbsp;Intersect</a></li>
+                    </ul>
+                </div>
+
+                <div class="dropdown pull-right">
+                    <a type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                        <i class="fa fa-eye"></i>
+                    </a>
+                    <ul class="dropdown-menu pull-left">
+                        <li><a href="#hgramModal" data-toggle="modal" ><i class="fa fa-cubes"></i>&nbsp;Harmonogram</a></li>
                         <li><a href="#" data-toggle="modal"><i class="fa fa-sitemap"></i>&nbsp;Kinase networks</a></li>
                     </ul>
                 </div>
@@ -94,131 +107,251 @@
                     <div class="panel-heading">Folder List</div>
                     <div class="panel-body">
                         <ul class='fa-ul' id="ul-folder-list">
-                    @for(f <- folderNames) {
-                        @folderItem(f)
-                    }
+                        @for(f <- folderNames) {
+                            @folderItem(f)
+                        }
                         </ul>
                     </div>
                 </div>
             </div>
             <div class="col-md-9">
 
-    @if(targets.size() == 0 && diseases.size() == 0 && ligands.size() == 0) {
-        <h3>No entries in this dossier</h3>
-    }
-
-    @if(targets.size() > 0){
-    <form>
-        <h3>Targets</h3>
-    <table id="target-table" class="table table-striped">
-        <tr>
-            <th><button id="cb-addall" class="btn btn-default" type="button"><i class="fa fa-check fa-fw"></i></button></button></th>
-            <th>Name</th>
-            <th>Development Level</th>
-            <th>Target Family</th>
-	    @HtmlFormat.raw(IDGApp.getTargetTableHeader("Novelty", "novelty"))
-	    @HtmlFormat.raw(IDGApp.getTargetTableHeader("PubMed Count", "pubmedCount"))
-	    @HtmlFormat.raw(IDGApp.getTargetTableHeader("Grant Count", "grantCount"))
-	    @HtmlFormat.raw(IDGApp.getTargetTableHeader("Patent Count", "patentCount"))
-	    @HtmlFormat.raw(IDGApp.getTargetTableHeader("Antibody Count", "antibodyCount"))
-	    @*HtmlFormat.raw(IDGApp.getTargetTableHeader("Monoclonal Antibody Count", "monoclonalCount"))*@
-            <th>Data Types</th>
-        </tr>
-        @for(t <- targets) {
-            @tabrow(t)
-        }
-    </table>
-    </form>
-    }
-
-    @if(diseases.size() > 0) {
-        <form>
-            <h3>Diseases</h3>
-            <table id="disease-table" class="table table-striped">
-                <tr>
-                    <th><button id="cb-addall" class="btn btn-default" type="button"><i class="fa fa-check fa-fw"></i></button></th>
-                    <th>ID <i class="fa fa-external-link"></i></th>
-                    <th>Name</th>
-                    <th>Description</th>
-                </tr>
-                @for(d <- diseases) {
-                    @diseaserow(d)
+                @if(targets.size() == 0 && diseases.size() == 0 && ligands.size() == 0) {
+                    <h3>No entries in this dossier</h3>
                 }
-            </table>
-        </form>
-    }
 
-    </div>
-    </div>
-    </div>
+                @if(targets.size() > 0) {
+                    <form>
+                        <h3>Targets</h3>
+                        <table id="target-table" class="table table-striped">
+                            <tr>
+                                <th><button id="cb-addall" class="btn btn-default" type="button"><i class="fa fa-check fa-fw"></i></button></button></th>
+                                <th>Name</th>
+                                <th>Development Level</th>
+                                <th>Target Family</th>
+                                @HtmlFormat.raw(IDGApp.getTargetTableHeader("Novelty", "novelty"))
+                                @HtmlFormat.raw(IDGApp.getTargetTableHeader("PubMed Count", "pubmedCount"))
+                                @HtmlFormat.raw(IDGApp.getTargetTableHeader("Grant Count", "grantCount"))
+                                @HtmlFormat.raw(IDGApp.getTargetTableHeader("Patent Count", "patentCount"))
+                                @HtmlFormat.raw(IDGApp.getTargetTableHeader("Antibody Count", "antibodyCount"))
+                                @*HtmlFormat.raw(IDGApp.getTargetTableHeader("Monoclonal Antibody Count", "monoclonalCount"))*@
+                                <th>Data Types</th>
+                            </tr>
+                            @for(t <- targets) {
+                                @tabrow(t)
+                            }
+                        </table>
+                    </form>
+                }
 
+                @if(diseases.size() > 0) {
+                    <form>
+                        <h3>Diseases</h3>
+                        <table id="disease-table" class="table table-striped">
+                            <tr>
+                                <th><button id="cb-addall" class="btn btn-default" type="button"><i class="fa fa-check fa-fw"></i></button></th>
+                                <th>ID <i class="fa fa-external-link"></i></th>
+                                <th>Name</th>
+                                <th>Description</th>
+                            </tr>
+                            @for(d <- diseases) {
+                                @diseaserow(d)
+                            }
+                        </table>
+                    </form>
+                }
+
+            </div>
+        </div>
+    </div>
 
 
 }
 
 
 <div class="modal fade" tabindex="-1" role="dialog" id="loadmodal"
-     aria-labelledby="mySmallModalLabel" aria-hidden="true">
-  <div class="modal-dialog modal-sm">
-    <div class="modal-content">
-      <center><img src='@routes.Assets.versioned("ncats/images/spinners/294.GIF")'></center>
+aria-labelledby="mySmallModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-sm">
+        <div class="modal-content">
+            <center><img src='@routes.Assets.versioned("ncats/images/spinners/294.GIF")'></center>
+        </div>
     </div>
-  </div>
 </div>
 
 @modalradar(null, null)
 
-<div class="modal fade" id="hgramModal" tabindex="-1"
-     role="dialog" aria-labelledby="hgramModalLabel" aria-hidden="true" >
-  <div class="modal-dialog modal-lg">
-    <div class="modal-content">
-      <div class="modal-header">
-        <button type="button" class="close"
-		data-dismiss="modal" aria-label="Close">
-	  <span aria-hidden="true">&times;</span></button>
-        <h4 class="modal-title" id="hgramModalLabel">Harmonogram</h4>
-      </div>
-      <div class="modal-body">
-        <div class="embed-responsive embed-responsive-4by3">
-	  <div id='clust_instruct_container'>
-            <div id='viz_gmt_labels'></div>
-
-            <!-- toggle clustergram order -->
-            <div id='toggle_order' class="btn-group" data-toggle="buttons" >
-              <label class="btn btn-primary active order_name">
-                <input type="radio" name="options" id="clust_button" autocomplete="off" checked > Cluster
-              </label>
-              <label class="btn btn-primary order_name">
-                <input type="radio" name="options" id="rank_button" autocomplete="off" > Rank
-              </label>
-              <label class="btn btn-primary order_name">
-                <input type="radio" name="options" id="class_button" autocomplete="off" > Class
-              </label>
+<div class="modal fade" id="cartDeleteModal" tabindex="-1" role="dialog" aria-labelledby="cartDeleteModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-sm">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="cartDeleteModalLabel">Delete current dossier</h4>
             </div>
-	    
-            <!-- input box for gene search -->
-            <div id='gene_search_container' class='row'>
-              <input id='gene_search_box' type="text" class="form-control" placeholder="Input Gene" aria-describedby="sizing-addon2">
-              <div id='gene_search_button' class="btn-group" data-toggle="buttons" >
-                <label id='submit_gene_button' class="btn btn-primary active">
-                  <input type="radio" name="options" id="" autocomplete="off" checked > Search
-                </label>
-              </div>
-            </div>
-            <p>set column group size</p>
-            <div id="slider_col"></div>
-            <p>set row group size</p>
-            <div id="slider_row"></div>
-	    
-	  </div>
-	  <!-- end clust instruct container -->
-	  
-	  <!-- svg_div - visualization will be put here -->
-	  <div id='svg_div' class='svg_div' ></div>
-	</div>
-      </div>
+            <form id="form-cart-delete">
+                <div class="modal-body">
+                    <div class="embed-responsive embed-responsive-4by3">
+                        <p>This will remove the dossier named <b>@currentFolder</b> and everything contained in it.</p>
+                        <p>Are you sure?</p>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                    <button type="submit" class="btn btn-primary">Delete</button>
+                </div>
+            </form>
+        </div>
     </div>
-  </div>
+</div>
+
+<div class="modal fade" id="cartCloneModal" tabindex="-1" role="dialog" aria-labelledby="cartCloneModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-sm">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="cartCloneModalLabel">Copy current dossier</h4>
+            </div>
+            <form id="form-cart-clone">
+                <div class="modal-body">
+                    <div class="embed-responsive embed-responsive-4by3">
+                        <div class="form-group">
+                            <label for="clone-newfoldername">New dossier name</label>
+                            <input type="text" class="form-control" id="clone-newfoldername" placeholder="dossier name">
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                    <button type="submit" class="btn btn-primary">Copy</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="cartMergeModal" tabindex="-1" role="dialog" aria-labelledby="cartMergeModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-sm">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="cartMergeModalLabel">Merge dossiers</h4>
+            </div>
+            <form id="form-cart-merge">
+                <div class="modal-body">
+                    <div class="embed-responsive embed-responsive-4by3">
+                        <div class="form-group">
+                            <label for="merge-foldernames">Select dossiers to merge</label>
+                            <select multiple id="merge-foldernames" class="form-control">
+                                @for(fn <- folderNames){
+                                    <option value="@fn">@fn</option>
+                                }
+                            </select>
+                            <label for="merge-newfoldername">New dossier name</label>
+                            <input type="text" class="form-control" id="merge-newfoldername" placeholder="dossier name">
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                    <button type="submit" class="btn btn-primary">Merge</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="cartIntersectModal" tabindex="-1" role="dialog" aria-labelledby="cartIntersectModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-sm">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="cartIntersectModalLabel">Intersect dossiers</h4>
+            </div>
+            <form id="form-cart-intersect">
+                <div class="modal-body">
+                    <div class="embed-responsive embed-responsive-4by3">
+                        <div class="form-group">
+                            <label for="intersect-folder1">First dossier</label>
+                            <select id="intersect-folder1" class="form-control">
+                                @for(fn <- folderNames){
+                                    <option value="@fn">@fn</option>
+                                }
+                            </select>
+                            <label for="intersect-folder2">Second dossier</label>
+                            <select id="intersect-folder2" class="form-control">
+                                @for(fn <- folderNames){
+                                    <option value="@fn">@fn</option>
+                                }
+                            </select>
+                            <label for="intersect-newfoldername">New dossier name</label>
+                            <input type="text" class="form-control" id="intersect-newfoldername" placeholder="dossier name">
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                    <button type="submit" class="btn btn-primary">Intersect</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="hgramModal" tabindex="-1"
+role="dialog" aria-labelledby="hgramModalLabel" aria-hidden="true" >
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close"
+                data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="hgramModalLabel">Harmonogram</h4>
+            </div>
+            <div class="modal-body">
+                <div class="embed-responsive embed-responsive-4by3">
+                    <div id='clust_instruct_container'>
+                        <div id='viz_gmt_labels'></div>
+
+                            <!-- toggle clustergram order -->
+                        <div id='toggle_order' class="btn-group" data-toggle="buttons" >
+                            <label class="btn btn-primary active order_name">
+                                <input type="radio" name="options" id="clust_button" autocomplete="off" checked >
+                                Cluster
+                            </label>
+                            <label class="btn btn-primary order_name">
+                                <input type="radio" name="options" id="rank_button" autocomplete="off" > Rank
+                            </label>
+                            <label class="btn btn-primary order_name">
+                                <input type="radio" name="options" id="class_button" autocomplete="off" > Class
+                            </label>
+                        </div>
+
+                            <!-- input box for gene search -->
+                        <div id='gene_search_container' class='row'>
+                            <input id='gene_search_box' type="text" class="form-control" placeholder="Input Gene" aria-describedby="sizing-addon2">
+                            <div id='gene_search_button' class="btn-group" data-toggle="buttons" >
+                                <label id='submit_gene_button' class="btn btn-primary active">
+                                    <input type="radio" name="options" id="" autocomplete="off" checked > Search
+                                </label>
+                            </div>
+                        </div>
+                        <p>set column group size</p>
+                        <div id="slider_col"></div>
+                        <p>set row group size</p>
+                        <div id="slider_row"></div>
+
+                    </div>
+                        <!-- end clust instruct container -->
+
+                        <!-- svg_div - visualization will be put here -->
+                    <div id='svg_div' class='svg_div' ></div>
+                </div>
+            </div>
+        </div>
+    </div>
 </div>
 
 <head>
@@ -233,157 +366,213 @@
     <script type="text/javascript" src='@routes.Assets.versioned("javascripts/d3.layout.cloud.js")'></script>
     <script type="text/javascript" src='@routes.Assets.versioned("javascripts/kinome.js")'></script>
     <script type="text/javascript" src='@routes.Assets.versioned("javascripts/radar-chart.js")'></script>
-    <script type="text/javascript" src='@routes.WebJarAssets.at(WebJarAssets.locate("raphael-min.js"))'></script>    
+    <script type="text/javascript" src='@routes.WebJarAssets.at(WebJarAssets.locate("raphael-min.js"))'></script>
     <script type="text/javascript" src='@routes.WebJarAssets.at(WebJarAssets.locate("morris.min.js"))'></script>
-    <script type="text/javascript" src='@routes.WebJarAssets.at(WebJarAssets.locate("fabric.min.js"))'></script>        
+    <script type="text/javascript" src='@routes.WebJarAssets.at(WebJarAssets.locate("fabric.min.js"))'></script>
     <link type="text/css" rel="stylesheet" href='@routes.Assets.versioned("stylesheets/clustergram.css")' />
     <link type="text/css" rel="stylesheet" href='@routes.Assets.versioned("stylesheets/radar-chart.css")' />
     <link type="text/css" rel="stylesheet" href='@routes.WebJarAssets.at(WebJarAssets.locate("morris.css"))' />
 
 
-       <link type="text/css" rel="stylesheet" href='@routes.Assets.versioned("stylesheets/main.css")'/>
+    <link type="text/css" rel="stylesheet" href='@routes.Assets.versioned("stylesheets/main.css")'/>
 
 </head>
 
 <script>
-$(function() {
-   $('[data-toggle="popover"]').popover();
-   $('[data-toggle="tooltip"]').tooltip ();
+$(function () {
+    $('[data-toggle="popover"]').popover();
+    $('[data-toggle="tooltip"]').tooltip();
 });
 
 $(document).ready(function () {
-   $('#loadmodal').on('shown.bs.modal', function (e) {
-      console.log('loadmodal is shown...');
-   });
-   $('#hgramModal').on('shown.bs.modal', function (e) {
-      console.log('hgram modal is shown...');
-      load_clustergram ('@ix.idg.controllers.routes.HarmonogramApp.hgForTarget(null, ctx, null)');
-   });
+    $('#loadmodal').on('shown.bs.modal', function (e) {
+        console.log('loadmodal is shown...');
+    });
+    $('#hgramModal').on('shown.bs.modal', function (e) {
+        console.log('hgram modal is shown...');
+        load_clustergram(' @ix.idg.controllers.routes.HarmonogramApp.hgForTarget(null, ctx, null) ');
+    });
 
-   $('#modal-radar').on('hidden.bs.modal', function (e) {
-       d3.select("#modal-radardiv").select('svg').remove();
-   });
+    $('#modal-radar').on('hidden.bs.modal', function (e) {
+        d3.select("#modal-radardiv").select('svg').remove();
+    });
 
-    @*$.ajax({*@
-        @*url:'@ix.idg.controllers.routes.DossierApp.count',*@
-        @*dataType:'text',*@
-        @*success:function(d) {*@
-            @*$("#sc-count" ).html(d);*@
-        @*}*@
-    @*});*@
-    // select all checkboxes in the table
-    $("#cb-addall" ).click(function(e) {
-        var txt = $ ( "#cb-addall" ).html ( ).toLowerCase() ;
-        var table = $("#target-table");
-        if ( txt.indexOf("all") != -1 ) {
-            $ ( 'td input:checkbox',table ).prop ( 'checked', true ) ;
-            $("#cb-addall" ).html("Select None");
-        } else {
-            $ ( 'td input:checkbox',table ).prop ( 'checked', false ) ;
-            $("#cb-addall" ).html("Select All");
+// select all checkboxes in the table
+$("#cb-addall").click(function (e) {
+    var txt = $("#cb-addall").html().toLowerCase();
+    var table = $("#target-table");
+    if (txt.indexOf("all") != -1) {
+        $('td input:checkbox', table).prop('checked', true);
+        $("#cb-addall").html("Select None");
+    } else {
+        $('td input:checkbox', table).prop('checked', false);
+        $("#cb-addall").html("Select All");
+    }
+});
+function selectEntities(sel) {
+    return $(sel).map(function () {
+        var id = $(this).attr("id");
+        if (id.indexOf("-") != -1) id = id.split("-")[1];
+        return id;
+    });
+}
+
+// iterate over all .radar-XXX elements and draw the radar chart
+// currently we pull chart data dynamically, but really should be
+// generated at compile time
+$("div[id^='radar-']").each(function () {
+    var klass = $(this).attr("id");
+    var acc = klass.split("-")[1];
+    $.ajax({
+        url: ' @ix.idg.controllers.routes.HarmonogramApp.hgForTarget(null, null, null, "radar-attr_type") ' + ' & q = ' + acc,
+        dataType: "json",
+        success: function (data) {
+            var chart = RadarChart.chart();
+            chart.config({
+                w: 75, h: 75,
+                axisText: false, levels: 0, circles: false
+            });
+            var svg = d3.select("#" + klass).append('svg')
+                    .attr("width", 75)
+                    .attr("height", 75)
+                    .append('g').classed('focus', 1).datum(data).call(chart);
         }
     });
-    function selectEntities(sel) {
-       return $(sel).map(function() {
-            var id = $(this ).attr("id");
-            if (id.indexOf("-") != -1) id = id.split("-")[1];
-            return id;
-       });
-    }
-
-    // iterate over all .radar-XXX elements and draw the radar chart
-    // currently we pull chart data dynamically, but really should be
-    // generated at compile time
-    $("div[id^='radar-']" ).each(function() {
-        var klass = $(this ).attr("id");
-        var acc = klass.split("-")[1];
-        $.ajax({
-            url: '@ix.idg.controllers.routes.HarmonogramApp.hgForTarget(null,null,null,"radar-attr_type")'+'&q='+acc,
-            dataType:"json",
-            success:function(data) {
-                var chart = RadarChart.chart();
-                chart.config({
-                    w:75, h:75,
-                    axisText:false, levels:0, circles:false
-                });
-                var svg = d3.select("#"+klass).append('svg' )
-                .attr("width", 75 )
-                .attr("height", 75)
-                .append('g').classed('focus', 1).datum(data).call(chart);
-            }
-        });
-    });
-
-
-    $("#target-table" ).on("click", ".radar-div", function() {
-        var target = $(this ).attr("id" ).split("-")[1];
-        var gene = $(this ).attr("genesym" );
-        $.ajax({
-            url: '@ix.idg.controllers.routes.HarmonogramApp.hgForTarget(null,null,null,"radar-attr_type")'+'&q='+target,
-            dataType:"json",
-            success:function(data) {
-                var chartConfig = getModalChartConfig('@ix.idg.controllers.routes.HarmonogramApp.dataSources(null,null)'+'?field=radar-attr_type');
-                $("#modal-radardiv" ).attr("target", target);
-                $("#modalLabelRadar" ).text("Data type summary for "+target);
-                $("#radardownloadlink" ).attr("href", "http://amp.pharm.mssm.edu/Harmonizome/api/1.0/download/associations?gene="+gene);
-                renderChart(data, chartConfig);
-            }
-        });
-    });
-
-    $("#select-agg" ).on('change', function() {
-        var aggType = $(this ).val();
-        var target = $("#modal-radardiv" ).attr("target");
-        var overlay = $("#select-overlay" ).val();
-        var chartConfig = getModalChartConfig('@ix.idg.controllers.routes.HarmonogramApp.dataSources(null,null)' + '?field=' + aggType);
-        var ptd = $.get('@ix.idg.controllers.routes.HarmonogramApp.hgForTarget(null,null,null,null)'+'?q='+target+'&type='+aggType);
-        var pud;
-        if (overlay == 'none')
-            pud = $.Deferred().resolve().promise();
-        else
-            pud = $.get('@ix.idg.controllers.routes.HarmonogramApp.hgForTarget(null,null,null,null)'+'?q='+overlay+'&type='+aggType);
-        $.when(ptd, pud).then(function(atd, aud) {
-            var chartData = atd[0];
-            if (overlay != 'none')
-                chartData.push(aud[0][0]);
-            $("#modalLabelRadar" ).text("Data type summary for "+target);
-            renderChart(chartData, chartConfig);
-        });
-    });
-    $("#select-overlay" ).on('change', function() {
-        var aggType = $("#select-agg"   ).val();
-        var target = $("#modal-radardiv" ).attr("target");
-        var chartConfig = getModalChartConfig('@ix.idg.controllers.routes.HarmonogramApp.dataSources(null,null)' + '?field=' + aggType);
-        var overlay = $(this).val();
-        var ptd = $.get('@ix.idg.controllers.routes.HarmonogramApp.hgForTarget(null,null,null,null)'+'?q='+target+'&type='+aggType);
-        var pud;
-        if (overlay == 'none')
-            pud = $.Deferred().resolve().promise();
-        else
-            pud = $.get('@ix.idg.controllers.routes.HarmonogramApp.hgForTarget(null,null,null,null)'+'?q='+overlay+'&type='+aggType);
-        $.when(ptd, pud).then(function(atd, aud) {
-            var chartData = atd[0];
-            if (overlay != 'none')
-                chartData.push(aud[0][0]);
-            $("#modalLabelRadar" ).text("Data type summary for "+target);
-            renderChart(chartData, chartConfig);
-        });
-    });
-
-    $("#compare-selected" ).click(function(e) {
-        var ents = _.map(selectEntities("#target-table  input:checked"), function(x) {return(x);});
-        window.location.href = "@ix.idg.controllers.routes.IDGApp.compareTargets2()?q="+ents.join();
-    });
-
-
 });
 
-function showLoadModal () {
-  console.log('showing modal...');
-  $('#loadmodal').modal({
-      keyboard: false,
-      show: true,
-      backdrop: 'static'
+
+$("#target-table").on("click", ".radar-div", function () {
+    var target = $(this).attr("id").split("-")[1];
+    var gene = $(this).attr("genesym");
+    $.ajax({
+        url: ' @ix.idg.controllers.routes.HarmonogramApp.hgForTarget(null, null, null, "radar-attr_type") ' + ' & q = ' + target,
+        dataType: "json",
+        success: function (data) {
+            var chartConfig = getModalChartConfig(' @ix.idg.controllers.routes.HarmonogramApp.dataSources(null, null) ' + ' ? field = radar - attr_type ');
+            $("#modal-radardiv").attr("target", target);
+            $("#modalLabelRadar").text("Data type summary for " + target);
+            $("#radardownloadlink").attr("href", "http://amp.pharm.mssm.edu/Harmonizome/api/1.0/download/associations?gene=" + gene);
+            renderChart(data, chartConfig);
+        }
+    });
+});
+
+$("#select-agg").on('change', function () {
+    var aggType = $(this).val();
+    var target = $("#modal-radardiv").attr("target");
+    var overlay = $("#select-overlay").val();
+    var chartConfig = getModalChartConfig(' @ix.idg.controllers.routes.HarmonogramApp.dataSources(null, null) ' + ' ? field = ' + aggType);
+    var ptd = $.get(' @ix.idg.controllers.routes.HarmonogramApp.hgForTarget(null, null, null, null) ' + ' ? q = ' + target + ' & type = ' + aggType);
+    var pud;
+    if (overlay == 'none')
+        pud = $.Deferred().resolve().promise();
+    else
+        pud = $.get(' @ix.idg.controllers.routes.HarmonogramApp.hgForTarget(null, null, null, null) ' + ' ? q = ' + overlay + ' & type = ' + aggType);
+    $.when(ptd, pud).then(function (atd, aud) {
+        var chartData = atd[0];
+        if (overlay != 'none')
+            chartData.push(aud[0][0]);
+        $("#modalLabelRadar").text("Data type summary for " + target);
+        renderChart(chartData, chartConfig);
+    });
+});
+$("#select-overlay").on('change', function () {
+    var aggType = $("#select-agg").val();
+    var target = $("#modal-radardiv").attr("target");
+    var chartConfig = getModalChartConfig(' @ix.idg.controllers.routes.HarmonogramApp.dataSources(null, null) ' + ' ? field = ' + aggType);
+    var overlay = $(this).val();
+    var ptd = $.get(' @ix.idg.controllers.routes.HarmonogramApp.hgForTarget(null, null, null, null) ' + ' ? q = ' + target + ' & type = ' + aggType);
+    var pud;
+    if (overlay == 'none')
+        pud = $.Deferred().resolve().promise();
+    else
+        pud = $.get(' @ix.idg.controllers.routes.HarmonogramApp.hgForTarget(null, null, null, null) ' + ' ? q = ' + overlay + ' & type = ' + aggType);
+    $.when(ptd, pud).then(function (atd, aud) {
+        var chartData = atd[0];
+        if (overlay != 'none')
+            chartData.push(aud[0][0]);
+        $("#modalLabelRadar").text("Data type summary for " + target);
+        renderChart(chartData, chartConfig);
+    });
+});
+
+$("#compare-selected").click(function (e) {
+    var ents = _.map(selectEntities("#target-table  input:checked"), function (x) {
+        return ( x );
+    });
+    window.location.href = " @ix.idg.controllers.routes.IDGApp.compareTargets2() ? q = " + ents.join();
+})
+
+/////////////////////////////////////////////
+//
+// Handle dossier set operations
+//
+/////////////////////////////////////////////
+$('#form-cart-delete').on('submit', function(e){
+    e.preventDefault();
+    var f = '@currentFolder';
+    if (f == 'Default') {
+        $("#cartDeleteModal" ).modal("hide");
+        alert("Can't delete the default folder");
+        return;
+    }
+    $.get('@ix.idg.controllers.routes.DossierApp.deleteFolder(currentFolder)',
+        function(data, status, xhr){
+            $("#cartDeleteModal" ).modal("hide");
+            window.location.href = '@ix.idg.controllers.routes.DossierApp.view("")'+"Default";
+        });
+   });
+
+$('#form-cart-clone').on('submit', function(e){
+    e.preventDefault();
+    var newFolderName = $("#clone-newfoldername" ).val();
+    if (newFolderName.trim() == "") return;
+    $.get('@ix.idg.controllers.routes.DossierApp.copyFolder(currentFolder)&newFolderName='+newFolderName,
+        function(data, status, xhr){
+            $("#cartCloneModal" ).modal("hide");
+            window.location.href = '@ix.idg.controllers.routes.DossierApp.view("")'+newFolderName;
+        });
+   });
+
+$('#form-cart-merge').on('submit', function(e){
+    e.preventDefault();
+    var newFolderName = $("#merge-newfoldername" ).val();
+if (newFolderName.trim() == "") return;
+    var folderNames = $("#merge-foldernames" ).val();
+    var tmp = folderNames.join(",");
+    var url =  '@ix.idg.controllers.routes.DossierApp.mergeFolders("","")';
+    url = url.replace("folderNames=&amp;newFolderName=","") + 'folderNames='+tmp+'&newFolderName='+newFolderName;
+    $.get(url,
+        function(data, status, xhr){
+            $("#cartMergeModal" ).modal("hide");
+            window.location.href = '@ix.idg.controllers.routes.DossierApp.view("")'+newFolderName;
+        });
+   });
+
+$('#form-cart-intersect').on('submit', function(e){
+    e.preventDefault();
+    var newFolderName = $("#intersect-newfoldername" ).val();
+    if (newFolderName.trim() == "") return;
+    var folder1 = $("#intersect-folder1" ).val();
+    var folder2 = $("#intersect-folder2" ).val();
+    var url =  '@ix.idg.controllers.routes.DossierApp.intersectFolders("","","")';
+    url = url.split("?")[0] + '?folder1='+folder1+'&folder2='+folder2+'&newFolderName='+newFolderName;
+    $.get(url,
+        function(data, status, xhr){
+            $("#cartMergeModal" ).modal("hide");
+            window.location.href = '@ix.idg.controllers.routes.DossierApp.view("")'+newFolderName;
+        });
+   });
+
+
+})
+
+function showLoadModal() {
+    console.log('showing modal...');
+    $('#loadmodal').modal({
+        keyboard: false,
+        show: true,
+        backdrop: 'static'
     });
 }
 
