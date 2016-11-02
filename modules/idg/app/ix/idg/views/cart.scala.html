@@ -65,7 +65,8 @@
 } {
     @HtmlFormat.empty
 } {
-    <div class="container-fluid">
+
+    <div class="container-fluid" style="padding-top : 60px ;">
         <div class="row">
             <div class="btn-group pull-right" role="group">
                 <a class="btn btn-default" href="@HtmlFormat.raw(request.uri)?folder=@currentFolder&action=download" role="button" style="margin-right: 5px">
@@ -150,6 +151,9 @@
     </div>
     </div>
     </div>
+
+
+
 }
 
 
@@ -234,7 +238,11 @@
     <script type="text/javascript" src='@routes.WebJarAssets.at(WebJarAssets.locate("fabric.min.js"))'></script>        
     <link type="text/css" rel="stylesheet" href='@routes.Assets.versioned("stylesheets/clustergram.css")' />
     <link type="text/css" rel="stylesheet" href='@routes.Assets.versioned("stylesheets/radar-chart.css")' />
-    <link type="text/css" rel="stylesheet" href='@routes.WebJarAssets.at(WebJarAssets.locate("morris.css"))' /> 
+    <link type="text/css" rel="stylesheet" href='@routes.WebJarAssets.at(WebJarAssets.locate("morris.css"))' />
+
+
+       <link type="text/css" rel="stylesheet" href='@routes.Assets.versioned("stylesheets/main.css")'/>
+
 </head>
 
 <script>
