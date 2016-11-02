@@ -70,12 +70,16 @@
     <div class="container-fluid" style="padding-top : 60px ;">
         <div class="row">
             <div class="btn-group pull-right" role="group">
-                <a class="btn btn-default" href="@HtmlFormat.raw(request.uri)?folder=@currentFolder&action=download" role="button" style="margin-right : 5px">
+                <a class="btn btn-default" href="@HtmlFormat.raw(request.uri)?folder=@currentFolder&action=download"
+                role="button" style="margin-right : 5px"
+                    data-toggle="tooltip" title="Download data"
+                >
                     <i class="fa fa-download fa-lg "></i></a>
-                <a id="compare-selected" class="btn btn-default" href="#" role="button" style="margin-right : 1px ; margin-left : 1px ;">
+                <a id="compare-selected" class="btn btn-default" href="#" role="button" style="margin-right : 1px ; margin-left : 1px ;"
+                data-toggle="tooltip" title="Target comparison">
                     <i class="fa fa-exchange fa-lg "></i></a>
 
-                <div class="dropdown pull-right">
+                <div class="dropdown pull-right" data-toggle="tooltip" title="Dossier operations">
                     <a type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                         <i class="glyphicon glyphicon-tasks"></i>
                     </a>
@@ -87,7 +91,7 @@
                     </ul>
                 </div>
 
-                <div class="dropdown pull-right">
+                <div class="dropdown pull-right" data-toggle="tooltip" title="Visualization tools">
                     <a type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                         <i class="fa fa-eye"></i>
                     </a>
