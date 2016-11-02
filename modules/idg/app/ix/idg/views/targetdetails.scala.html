@@ -227,10 +227,10 @@
        	  	 data-placement="top"
        	  	 title="@dr.disease.name"
        	  	 data-content="<p align='left'>@dr.disease.name</p>"
-                 href="@{ix.idg.controllers.routes.IDGApp.targets()+"?facet="+URLEncoder.encode(IDG_DISEASE,"utf8")+"/"+URLEncoder.encode(dr.disease.name, "utf8")}">@{dr.disease.name.substring(0,40)}... <span class="badge">@count</span>&nbsp;</a>
+                 href="@{ix.idg.controllers.routes.IDGApp.targets()+"?facet="+URLEncoder.encode(IDG_DISEASE,"utf8")+"/"+URLEncoder.encode(dr.disease.name, "utf8")}">@{dr.disease.name.substring(0,40)}... <span class="badge">@Util.format(count)</span>&nbsp;</a>
 	 } else {
             <a class="label label-primary loader"
-	        href="@{ix.idg.controllers.routes.IDGApp.targets()+"?facet="+URLEncoder.encode(IDG_DISEASE,"utf8")+"/"+URLEncoder.encode(dr.disease.name, "utf8")}">@dr.disease.name <span class="badge">@count</span></a>
+	        href="@{ix.idg.controllers.routes.IDGApp.targets()+"?facet="+URLEncoder.encode(IDG_DISEASE,"utf8")+"/"+URLEncoder.encode(dr.disease.name, "utf8")}">@dr.disease.name <span class="badge">@Util.format(count)</span></a>
 	 }
        </td>
        <td>@diseasedblink(dr.disease,dr.zscore)</td>

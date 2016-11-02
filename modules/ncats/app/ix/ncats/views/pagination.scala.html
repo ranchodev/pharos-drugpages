@@ -5,7 +5,7 @@
 
 @item(page: Int) = {
 <li><a href="@HtmlFormat.raw(App.page(rows,page))">
-    <span aria-hidden="true">@page</span>
+    <span aria-hidden="true">@Util.format(page)</span>
 </a></li>
 }
 

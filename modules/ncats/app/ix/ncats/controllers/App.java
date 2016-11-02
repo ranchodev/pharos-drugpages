@@ -198,9 +198,9 @@ public class App extends Authentication {
             Integer total = this.total[i];
             Integer count = facet.getCount(i);
             if (total != null) {
-                return count+" | "+total;
+                return Util.format(count)+" | "+Util.format(total);
             }
-            return count.toString();
+            return Util.format(count);
         }
         public Integer percent (int i) {
             Integer total = this.total[i];

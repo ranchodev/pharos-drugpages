@@ -800,7 +800,7 @@ public class TextIndexer {
                         Logger.debug(Thread.currentThread()
                                      +": fetching payload "
                                      +payload.hits.totalHits
-                                     +" for "+payload.result);
+                                     +" for "+payload.options);
                         payload.fetch();
                         Logger.debug(Thread.currentThread()+": ## fetched "
                                      +payload.result.size()
