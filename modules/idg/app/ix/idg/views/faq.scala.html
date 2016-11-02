@@ -104,10 +104,49 @@
                     </div>
                 </div>
 
+                    <!-- Question -->
+                <div class="panel panel-default">
+                    <div class="panel-heading">
+                        <h4 class="panel-title">
+                            <a class="accordion-toggle" data-toggle="collapse" data-parent="#accordion" data-target="#collapse13" href="#collapse13">
+                                Can I perform chemical structure searches?</a>
+                        </h4>
+                    </div>
+                    <div id="collapse13" class="panel-collapse collapse">
+                        <div class="panel-body">
+                            <p>Yes, this is possible in the <a href="@ix.idg.controllers.routes.IDGApp.ligands(null,16,1)">Ligand view</a>,
+                            by clicking on the chemical structure icon in the top right corner of the page. This will bring
+                            up a sketcher window in which you can draw a structure or else paste in a SMILES string. You
+                            can then perform a substructure or similarity search using the specified query structure.
+                        </div>
+                    </div>
+                </div>
+
 
 
                     <!-- Section -->
                 <div class="faqHeader">Data</div>
+
+                    <!-- Question -->
+                <div class="panel panel-default">
+                    <div class="panel-heading">
+                        <h4 class="panel-title">
+                            <a class="accordion-toggle" data-toggle="collapse" data-parent="#accordion" data-target="#collapse12" href="#collapse12">
+                                Why are there no diseases shown for a target?</a>
+                        </h4>
+                    </div>
+                    <div id="collapse12" class="panel-collapse collapse">
+                        <div class="panel-body">
+                            <p>Disease target associations are sourced from the <a href="http://diseases.jensenlab.org/Search"
+                            target="_blank">DISEASES</a> database, which computes an association score between a disease
+                            and a target. Pharos applies a threshold on this score, such that disease-target associations with
+                            a score greater than this threshold are displayed
+                            <p>If you're not seeing a disease associated with a target, it is either not associated with the
+                            target, or else its association score does not cross the threshold employed by Pharos (implying
+                            that the mined association is not strong enough)
+                        </div>
+                    </div>
+                </div>
 
                     <!-- Question -->
                 <div class="panel panel-default">
