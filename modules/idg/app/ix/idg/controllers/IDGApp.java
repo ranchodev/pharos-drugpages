@@ -443,6 +443,9 @@ public class IDGApp extends App implements Commons {
                 if (label.equalsIgnoreCase("nuclear receptor")) {
                     return "<a href=\"http://en.wikipedia.org/wiki/Nuclear_receptor\">"+label+"</a> <i class='fa fa-external-link'></i>";
                 }
+
+                if ("unknown".equalsIgnoreCase(label)) 
+                    return "Non-IDG";
             }
             else if (name.equals(TECHDEV_PI)) {
                 // TODO: sigh.. these should be in a config file somewhere!
@@ -3327,8 +3330,12 @@ public class IDGApp extends App implements Commons {
                     }
                 });
             
-            if (t != null)
-                ps.println(token+sep+t.idgFamily+sep+t.idgTDL);
+            if (t != null) {
+                String fam = t.idgFamily;
+                if ("unknown".equalsIgnoreCase(fam))
+                    fam = "Non-IDG";
+                ps.println(token+sep+fam+sep+t.idgTDL);
+            }
         }
     }
     
@@ -3996,7 +4003,10 @@ public class IDGApp extends App implements Commons {
             Object obj = matches.get(i);
             if (obj instanceof Target) {
                 Target t = (Target)obj;
-                ps.println(t.idgFamily+","+t.idgTDL+","+format (t.novelty)+","
+                String fam = t.idgFamily;
+                if ("unknown".equalsIgnoreCase(fam))
+                    fam = "Non-IDG";
+                ps.println(fam+","+t.idgTDL+","+format (t.novelty)+","
                            +format (t.antibodyCount)+","
                            +format (t.monoclonalCount)+","
                            +format (t.pubmedCount)+","

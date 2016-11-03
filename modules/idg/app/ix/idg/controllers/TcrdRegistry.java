@@ -119,7 +119,7 @@ public class TcrdRegistry extends Controller implements Commons {
                     Long id, Long protein, Double novelty,
                     Keyword source) {
             if (family == null || family.equals("")) 
-                family = "Unknown";
+                family = "Non-IDG";
             if (tdl == null || tdl.equals(""))
                 tdl = "Other";
 
