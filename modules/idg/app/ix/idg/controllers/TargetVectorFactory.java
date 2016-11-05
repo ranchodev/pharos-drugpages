@@ -140,17 +140,23 @@ public class TargetVectorFactory extends Controller implements Commons {
     }
 
     public static Result descriptorVectors () {
-        ObjectMapper mapper = new ObjectMapper ();
-        Map<String, Histogram> histograms =
-            EntityDescriptor.getDescriptorHistograms(Target.class, DIM);
-        ArrayNode json = mapper.createArrayNode();
-        for (Map.Entry<String, Histogram> me : histograms.entrySet()) {
-            ObjectNode n = mapper.createObjectNode();
-            n.put("name", me.getKey());
-            n.put("histogram", mapper.valueToTree(me.getValue()));
-            json.add(n);
+        try {
+            ObjectMapper mapper = new ObjectMapper ();
+            Map<String, Histogram> histograms =
+                EntityDescriptor.getDescriptorHistograms(Target.class, DIM);
+            ArrayNode json = mapper.createArrayNode();
+            for (Map.Entry<String, Histogram> me : histograms.entrySet()) {
+                ObjectNode n = mapper.createObjectNode();
+                n.put("name", me.getKey());
+                n.put("histogram", mapper.valueToTree(me.getValue()));
+                json.add(n);
+            }
+            return ok (json);
         }
-        return ok (json);
+        catch (Exception ex) {
+            ex.printStackTrace();
+            return internalServerError (ex.getMessage());
+        }
     }
 
 

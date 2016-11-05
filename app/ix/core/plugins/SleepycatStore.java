@@ -4,15 +4,23 @@ import java.io.*;
 import java.util.*;
 import java.util.concurrent.*;
 import com.sleepycat.je.*;
+import com.sleepycat.bind.serial.SerialBinding;
+import com.sleepycat.bind.serial.StoredClassCatalog;
 
 import play.Logger;
 import play.Plugin;
 import play.Application;
 
 public class SleepycatStore extends Plugin {
+    static final String CATALOG_DB = "CATALOG";
+    
     private final Application app;
     protected Environment env;
-    protected Map<String, Database> databases = new HashMap<String, Database>();
+    protected StoredClassCatalog catalog;
+    
+    Map<String, Database> databases = new HashMap<String, Database>();
+    ConcurrentMap<Class, SerialBinding> bindings =
+        new ConcurrentHashMap<Class, SerialBinding>();
     
     public SleepycatStore (Application app) {
         this.app = app;
@@ -31,10 +39,19 @@ public class SleepycatStore extends Plugin {
             envconf.setTxnTimeout(5, TimeUnit.SECONDS);
             envconf.setLockTimeout(5, TimeUnit.SECONDS);
             env = new Environment (dir, envconf);
+            catalog = new StoredClassCatalog (createDbIfAbsent (CATALOG_DB));
         }
         catch (Exception ex) {
             throw new RuntimeException (ex);
         }
+    }
+
+    public SerialBinding getSerialBinding (Class cls) {
+        SerialBinding sb = new SerialBinding (catalog, cls);
+        SerialBinding binder = bindings.putIfAbsent(cls, sb);
+        if (binder == null)
+            binder = sb;
+        return binder;
     }
     
     public void onStop () {
