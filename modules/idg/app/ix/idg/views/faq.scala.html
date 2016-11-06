@@ -131,6 +131,29 @@
                 <div class="panel panel-default">
                     <div class="panel-heading">
                         <h4 class="panel-title">
+                            <a class="accordion-toggle" data-toggle="collapse" data-parent="#accordion" data-target="#collapse14" href="#collapse14">
+                                What is the Tissue Specificity Index?</a>
+                        </h4>
+                    </div>
+                    <div id="collapse14" class="panel-collapse collapse">
+                        <div class="panel-body">
+                            <p>Tissue specificity index, &tau;, is a measure of tissue specificity, and was
+                                originally defined in <a href="http://dx.doi.org/10.1093/bioinformatics/bti042">Yanai
+                                et al (2005)</a>. It is defined as
+                                $$\tau = \frac{\sum_{i=1}^{N} (1-x_)}{N-1}$$
+                            where \(N\) is is the number of tissues and \(x_i\) is the expression profile component
+                                normalized by the maximal component value.
+                                <p><a href="http://dx.doi.org/10.1093/bib/bbw008">Kryuchkova-Mostacci &amp;
+                                Robinson-Rechavi (2016)</a> benchmarked this metric against several others, and concluded
+                                that &tau; is the best overall method to measure expression specificity.
+                        </div>
+                    </div>
+                </div>
+                
+                    <!-- Question -->
+                <div class="panel panel-default">
+                    <div class="panel-heading">
+                        <h4 class="panel-title">
                             <a class="accordion-toggle" data-toggle="collapse" data-parent="#accordion" data-target="#collapse12" href="#collapse12">
                                 Why are there no diseases shown for a target?</a>
                         </h4>
@@ -287,7 +310,8 @@
 
     <head>
         <link type="text/css" rel="stylesheet" href='@routes.Assets.versioned("stylesheets/main.css")'/>
-
+        <link type="text/css" rel="stylesheet" href='@routes.Assets.versioned("stylesheets/main.css")'/>
+        <script type="text/javascript" src='https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML'></script>
         <style>
             p { margin-bottom: 0.5em;}
         .faqHeader {
@@ -306,5 +330,22 @@
         content : "\e080" ;
         }
         </style>
+
+
+<script>
+$(function () {
+    $('[data-toggle="popover"]').popover();
+    $('[data-toggle="tooltip"]').tooltip();
+});
+
+$(document).ready(function () {
+    var url = window.location.href;
+    if (url.indexOf("expand") != -1) {
+        var divid = url.split("#")[1 ].split("?")[0];
+        console.log(divid);
+        $("#"+divid ).show();
+    }
+})
+    </script>
     </head>
 }
