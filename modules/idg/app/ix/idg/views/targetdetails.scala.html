@@ -417,7 +417,8 @@
                <div class="panel panel-default">
                   <a name="ligands" tocname="Ligands"></a>
                   <div class="panel-heading">
-                       <h3 class="panel-title"><a class="loader" href='@{ix.idg.controllers.routes.IDGApp.ligands() + "?facet=" + IDG_TARGET+"/"+target.getSynonym(UNIPROT_GENE).term}'>@title (@Util.format(ligands.size))</a> <a class="pull-right" href='@{ix.core.controllers.v1.routes.RouteFactory.get("targets",target.id,null)+"/links(kind="+classOf[Ligand].getName+")"}'><i class="fa fa-code"></i></a></h3>
+                       <h3 class="panel-title"><a class="loader" href='@{ix.idg.controllers.routes.IDGApp.ligands() + "?facet=" + IDG_TARGET+"/"+target.getSynonym(UNIPROT_GENE).term}'>
+                           <span data-toggle="tooltip" title="Carousel allowing for horizontal scrolling of ligand lists and drug lists.  The order is based on reported pKd or pKi.">@title</span> (@Util.format(ligands.size))</a> <a class="pull-right" href='@{ix.core.controllers.v1.routes.RouteFactory.get("targets",target.id,null)+"/links(kind="+classOf[Ligand].getName+")"}'><i class="fa fa-code"></i></a></h3>
                   </div>
 		  <div class="panel-body" style="height:250px;">
 		    <div class="ligand-carousel">
@@ -450,7 +451,10 @@
               style="max-height: 300px; overflow-y: auto;">
            <a name="techdev" tocname="TechDev Info"></a>
            <div class="panel-heading">
-              <h3 class="panel-title"><a class="loader" href='@ix.idg.controllers.routes.IDGApp.targetdescriptor(TECHDEV_PI)'><i class="fa fa-bar-chart"></i></a>&nbsp;TechDev Info (@techdev.size) <a class="pull-right" href='@{ix.core.controllers.v1.routes.RouteFactory.get("targets",target.id,null)+"/links(kind="+classOf[Techdev].getName+")"}'><i class="fa fa-code"></i></a></h3>
+              <h3 class="panel-title"><a class="loader" href='@ix.idg.controllers.routes.IDGApp.targetdescriptor(TECHDEV_PI)'><i class="fa fa-bar-chart"></i></a>
+                      &nbsp;
+                      <span data-toggle="tooltip" title="Listing of PI from IDG funded Technology Development Centers that have reported working on particular target. ">
+                          TechDev Info</span> (@techdev.size) <a class="pull-right" href='@{ix.core.controllers.v1.routes.RouteFactory.get("targets",target.id,null)+"/links(kind="+classOf[Techdev].getName+")"}'><i class="fa fa-code"></i></a></h3>
            </div>
            <div class="panel-body">
 	     <table class="table table-striped">
@@ -515,7 +519,9 @@
                <div class="panel panel-default" >
                    <a name="properties" tocname="Properties"></a>
                    <div class="panel-heading">
-                       <h3 class="panel-title">Property Summary</h3>
+                       <h3 class="panel-title">
+                           <span data-toggle="tooltip" title="Table summarizing target characteristics tallied by Pharos. Antibody counts from Antibodypedia, EBI Total Patent Count, Monoclonal Antibody count from Antibodypedia, NCBI Gene PubMed Count, Grant Count, R01 Count, Funding ($) from NIH, JensenLab PubMed Score and temporal graph">
+                               Property Summary</span></h3>
                    </div>
                  <div class="panel-body">
                    <table class="table table-striped">
@@ -610,7 +616,9 @@
         @if(target.patentCount != null && target.patentCount > 0) {
           <div class="panel panel-default">
             <div class="panel-heading">
-              <h3 class="panel-title">Patent (@Util.format(target.patentCount))</h3>
+              <h3 class="panel-title">
+                  <span data-toggle="tooltip" title="Graph of timeline of patents based on EBI patent counts, with specific yearly values shown when hovering over year's dot.">
+                      Patent</span> (@Util.format(target.patentCount))</h3>
             </div>
             <div class="panel-body">
                    <div id="patent-line-plot" style="height:180px;"></div>
@@ -619,7 +627,9 @@
         } else {
 	  <div class="panel panel-default">
 	    <div class="panel-heading">
-	      <h3 class="panel-title">Patent</h3>
+	      <h3 class="panel-title">
+              <span data-toggle="tooltip" title="Graph of timeline of patents based on EBI patent counts, with specific yearly values shown when hovering over year's dot.">
+	                            Patent</span></h3>
 	    </div>
 	    <div class="panel-body">
 	       <h5><em>No data available</em></h5>
@@ -718,7 +728,9 @@ This is TCRD target <a href='@ix.core.controllers.v1.routes.RouteFactory.get("ta
             <div class="panel panel-default">
                 <div class="panel-heading">
                     <a name="datatypes" tocname="Data Types"></a>
-                    <h3 class="panel-title">Knowledge Summary
+                    <h3 class="panel-title">
+                        <span data-toggle="tooltip" title="Radar plot depicting the variety of knowledge obtained by Pharos for a particular target. The more spikes in the plot, the more variety. The longer the length, the higher the quantity of that particular knowledge. Click expansion icon to explore the plot fuller by seeing plot with annotations of the different radii, allowing for aggregation of knowledge radii based on attribution type, group, or data type, as well as overlay plot with other information, and provide download file.">
+                            Knowledge Summary</span>
                         <a href="#" id="modal-radar-btn" data-toggle="modal" data-target="#modal-radar">
                             <span class="fa fa-external-link pull-right" aria-hidden="true"></span>
                         </a>
@@ -806,8 +818,10 @@ This is TCRD target <a href='@ix.core.controllers.v1.routes.RouteFactory.get("ta
          <div class="panel panel-default">
              <a name="expression" tocname="Gene/Protein Expression"></a>
             <div class="panel-heading">
-               <h3 class="panel-title" data-toggle="tooltip" data-html="true" title="Gene expression data from various sources. See
-               <a href='@ix.idg.controllers.routes.IDGApp.faq()#collapse7?expand=true'>FAQ</a> for more details">Expression
+               <h3 class="panel-title">
+                   <span data-toggle="tooltip" data-html="true" title="Gene expression data from various sources. See
+                                  <a href='@ix.idg.controllers.routes.IDGApp.faq()#collapse7?expand=true'>FAQ</a> for more details">
+                       Expression</span>
 		       <a class="pull-right" href='@{ix.core.controllers.v1.routes.RouteFactory.get("targets",target.id,null)+"/properties(label=*Tissue)"}'><i class="fa fa-code"></i></a>
                </h3>
             </div>
@@ -943,7 +957,9 @@ This is TCRD target <a href='@ix.core.controllers.v1.routes.RouteFactory.get("ta
         <a name="synonym"  tocname="Synonyms"></a>
         <div class="panel panel-default">
           <div class="panel-heading">
-            <h3 class="panel-title">Synonym
+            <h3 class="panel-title">
+                <span data-toggle="tooltip" title="Table listing different Uniprot linked Accession values, as well as Symbols or commonly used abbreviations associated with this particular target.">
+                    Synonym</span>
                 <a href='@{ix.core.controllers.v1.routes.RouteFactory.get("targets",target.id,null)+"/synonyms"}'>
                     <span class="fa fa-code pull-right"></span></a>
             </h3>
@@ -991,7 +1007,9 @@ This is TCRD target <a href='@ix.core.controllers.v1.routes.RouteFactory.get("ta
         <div class="panel panel-default">
             <a name="genes" tocname="Genes"></a>
           <div class="panel-heading">
-            <h3 class="panel-title">Gene <a class="pull-right" href='@{ix.core.controllers.v1.routes.RouteFactory.get("targets",target.id,null)+"/synonyms(label="+UNIPROT_GENE+")"}'><i class="fa fa-code"></i></a></h3>
+            <h3 class="panel-title">
+                <span data-toggle="tooltip" title="Approved gene symbol with link to HUGO Gene Nomenclature Committee.">
+                    Gene</a> <a class="pull-right" href='@{ix.core.controllers.v1.routes.RouteFactory.get("targets",target.id,null)+"/synonyms(label="+UNIPROT_GENE+")"}'><i class="fa fa-code"></i></a></h3>
           </div>
           <div class="panel-body">
             @for(kw <- target.synonyms) {
@@ -1095,7 +1113,9 @@ This is TCRD target <a href='@ix.core.controllers.v1.routes.RouteFactory.get("ta
           @if(!ppi.isEmpty) {
              <div class="panel panel-default">
                 <div class="panel-heading">
-                   <h3 class="panel-title">Protein-protein Interaction <a class="pull-right" href='@{ix.core.controllers.v1.routes.RouteFactory.page("predicates",10,0,"predicate='"+TARGET_PPI+"' AND subject.refid="+target.id)}'><i class="fa fa-code"></i></a></h3>
+                   <h3 class="panel-title">
+                       <span data-toggle="tooltip" title="List of proteins potentially interacting with target.  Coloration of proteins correspond with TDL (Tclin: dark blue, Tchem: light blue,  Tbio: orange, Tdark: red).">
+                           Protein-protein Interaction</span> <a class="pull-right" href='@{ix.core.controllers.v1.routes.RouteFactory.page("predicates",10,0,"predicate='"+TARGET_PPI+"' AND subject.refid="+target.id)}'><i class="fa fa-code"></i></a></h3>
                 </div>
                 <div class="panel-body">
                    @for(p <- ppi) {
@@ -1271,7 +1291,7 @@ This is TCRD target <a href='@ix.core.controllers.v1.routes.RouteFactory.get("ta
           <div class="panel-heading">
             <h3 class="panel-title"><span data-toggle="tooltip"
                         data-html="true"
-                        title="<p align='left'>MLP Assays</p>">MLP Assay (@assays.size)</span> <a class="pull-right" href='@{ix.core.controllers.v1.routes.RouteFactory.get("targets",target.id,null)+"/links(kind="+classOf[Assay].getName+")"}'><i class="fa fa-code"></i></a></h3>
+                        title="<p align='left'>Listing of assays reported in PubChem from the Molecular Libraries Program, with total of reported assays with target the reported assay target listed in parenthesis. Summary table table links out to PubChem, list Assay ID, Type of reported assay (summary, confirmatory, other), classification of compounds in assay as Active/Inclusive/Inactive, Description of assay. Note ability to scroll horizontally to view entire table.</p>">MLP Assay (@assays.size)</span> <a class="pull-right" href='@{ix.core.controllers.v1.routes.RouteFactory.get("targets",target.id,null)+"/links(kind="+classOf[Assay].getName+")"}'><i class="fa fa-code"></i></a></h3>
           </div>
           <div class="panel-body">
             <div class="panel-body">
@@ -1328,7 +1348,7 @@ This is TCRD target <a href='@ix.core.controllers.v1.routes.RouteFactory.get("ta
           <div class="panel-heading">
             <h3 class="panel-title"><span data-toggle="tooltip"
                         data-html="true"
-                        title="<p align='left'>Number of GeneRIF annotations from NCBI Gene</p>">Gene RIF (@generifs.size)</span> <a class="pull-right" href='@{ix.core.controllers.v1.routes.RouteFactory.get("targets",target.id,null)+"/links(kind="+classOf[Text].getName+")"}'><i class="fa fa-code"></i></a></h3>
+                        title="<p align='left'>Total count of NCBI Gene Reference Into Function hits for target listed in parenthesis, and summary table with links to publications per PMID with the specific text in article that includes the reported target. </p>">Gene RIF (@generifs.size)</span> <a class="pull-right" href='@{ix.core.controllers.v1.routes.RouteFactory.get("targets",target.id,null)+"/links(kind="+classOf[Text].getName+")"}'><i class="fa fa-code"></i></a></h3>
           </div>
           <div class="panel-body">
             <div class="panel-body table-responsive">
@@ -1384,7 +1404,8 @@ This is TCRD target <a href='@ix.core.controllers.v1.routes.RouteFactory.get("ta
              <div class="panel panel-default">
                <a name="seq" tocname="Sequence"></a>
                <div class="panel-heading">
-                 <h3 class="panel-title">AA Sequence <a title="Sequence search"
+                 <h3 class="panel-title"><span data-toggle="tooltip" title="Amino acid sequence of target protein, bar graph summarizing quantity of each amino acid. Click on looking glass icon for ability to conduct sequence search.">
+                     AA Sequence</span> <a title="Sequence search"
 		     href="#sequence-modal" data-toggle="modal">
 		     <i class="fa fa-search"></i></a>
 		   <a class="pull-right" href='@{ix.core.controllers.v1.routes.RouteFactory.get("targets",target.id,null)+"/properties(label="+UNIPROT_SEQUENCE+")"}'><i class="fa fa-code"></i></a>
