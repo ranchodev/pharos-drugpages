@@ -75,30 +75,9 @@ public class TargetVectorFactory extends Controller implements Commons {
             this.target1 = target1;
             this.target2 = target2;
 
-            double a = 0., b = 0., c = 0.;
-            final Map<String, Double> contrib = new HashMap<String, Double>();
-            for (Map.Entry<String, Number> me : target1.vector.entrySet()) {
-                String name = me.getKey();
-                double x = me.getValue().doubleValue();
-                Number z = target2.vector.get(name);
-                if (z != null && name.indexOf("Protein Class") < 0) {
-                    double y = z.doubleValue();
-                    c += x*y;
-                    contrib.put(name, x*y);
-                }
-                a += x*x;       
-            }
-            
-            for (Map.Entry<String, Number> me : target2.vector.entrySet()) {
-                double y = me.getValue().doubleValue();
-                b += y*y;
-            }
-
-            double z = a+b-c;
-            for (Map.Entry<String, Double> me : contrib.entrySet()) {
-                me.setValue(me.getValue()/z);
-            }
-            similarity = c / z;
+            final Map<String, Double> contrib = new HashMap<>();
+            similarity = EntityDescriptor.tanimoto
+                (target1.vector, target2.vector, contrib);
 
             contribution = new TreeMap<String, Double>
                 (new Comparator<String>() {

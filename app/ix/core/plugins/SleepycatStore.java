@@ -46,7 +46,7 @@ public class SleepycatStore extends Plugin {
         }
     }
 
-    public SerialBinding getSerialBinding (Class cls) {
+    public <T> SerialBinding<T> getSerialBinding (Class<T> cls) {
         SerialBinding sb = new SerialBinding (catalog, cls);
         SerialBinding binder = bindings.putIfAbsent(cls, sb);
         if (binder == null)
@@ -66,6 +66,21 @@ public class SleepycatStore extends Plugin {
             }
         }
         Logger.info("Plugin "+getClass().getName()+" stopped!");        
+    }
+
+    public void delete (Database db) throws IOException {
+        delete (db.getDatabaseName());
+    }
+    
+    public void delete (String name) throws IOException {
+        databases.remove(name);
+        Transaction tx = env.beginTransaction(null, null);
+        try {
+            env.removeDatabase(tx, name);
+        }
+        finally {
+            tx.commit();
+        }
     }
 
     public synchronized Database createDbIfAbsent (String name)
