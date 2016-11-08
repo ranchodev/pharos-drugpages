@@ -69,11 +69,15 @@
 
     <div class="container-fluid" style="padding-top : 60px ;">
         <div class="row">
-            <div class="btn-group pull-right" role="group">
-                <a class="btn btn-default" href="@HtmlFormat.raw(request.uri)?folder=@currentFolder&action=download"
-                role="button" style="margin-right : 1px"
-                    data-toggle="tooltip" title="Download data"
-                >
+          <div class="btn-group pull-right" role="group">
+            <a class="btn btn-default"
+	       @if(request.uri.indexOf("?") > 0) {
+	       href="@HtmlFormat.raw(request.uri)&action=download"
+	       } else {
+	       href="@HtmlFormat.raw(request.uri)?folder=@currentFolder&action=download"
+	      }
+               role="button" style="margin-right : 1px"
+               data-toggle="tooltip" title="Download data">
                     <i class="fa fa-download fa-lg "></i></a>
                 <a id="compare-selected" class="btn btn-default" href="#" role="button" style="margin-right : 1px ; margin-left : 1px ;"
                 data-toggle="tooltip" title="Target comparison">
@@ -91,7 +95,7 @@
                         <li><a href="#cartIntersectModal" data-toggle="modal"><i class="fa fa-random"></i>&nbsp;Intersect</a></li>
                     </ul>
                 </div>
-
+@** 
                 <div class="dropdown pull-right" data-toggle="tooltip" title="Visualization tools">
                     <a type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown"
                     aria-haspopup="true" aria-expanded="false" style="margin-right : 1px ; margin-left : 1px ;">
@@ -102,6 +106,7 @@
                         <li><a href="#" data-toggle="modal"><i class="fa fa-sitemap"></i>&nbsp;Kinase networks</a></li>
                     </ul>
                 </div>
+**@		
             </div>
         </div>
     </div>
@@ -396,7 +401,11 @@ $(document).ready(function () {
     });
     $('#hgramModal').on('shown.bs.modal', function (e) {
         console.log('hgram modal is shown...');
-        load_clustergram(' @ix.idg.controllers.routes.HarmonogramApp.hgForTarget(null, ctx, null) ');
+	var ents = _.map(selectEntities("#target-table input"), function (x) {
+           return x;
+        });
+
+        load_clustergram('@ix.idg.controllers.routes.HarmonogramApp.hgForTarget(null, null, null)'+'?q='+ents.join(','));
     });
 
     $('#modal-radar').on('hidden.bs.modal', function (e) {
@@ -430,7 +439,7 @@ $("div[id^='radar-']").each(function () {
     var klass = $(this).attr("id");
     var acc = klass.split("-")[1];
     $.ajax({
-        url: ' @ix.idg.controllers.routes.HarmonogramApp.hgForTarget(null, null, null, "radar-attr_type") ' + ' & q = ' + acc,
+        url: '@ix.idg.controllers.routes.HarmonogramApp.hgForTarget(null, null, null, "radar-attr_type")'+'&q=' + acc,
         dataType: "json",
         success: function (data) {
             var chart = RadarChart.chart();
@@ -451,7 +460,7 @@ $("#target-table").on("click", ".radar-div", function () {
     var target = $(this).attr("id").split("-")[1];
     var gene = $(this).attr("genesym");
     $.ajax({
-        url: ' @ix.idg.controllers.routes.HarmonogramApp.hgForTarget(null, null, null, "radar-attr_type") ' + ' & q = ' + target,
+        url: '@ix.idg.controllers.routes.HarmonogramApp.hgForTarget(null, null, null, "radar-attr_type")' + '&q=' + target,
         dataType: "json",
         success: function (data) {
             var chartConfig = getModalChartConfig(' @ix.idg.controllers.routes.HarmonogramApp.dataSources(null, null) ' + ' ? field = radar - attr_type ');
@@ -467,13 +476,13 @@ $("#select-agg").on('change', function () {
     var aggType = $(this).val();
     var target = $("#modal-radardiv").attr("target");
     var overlay = $("#select-overlay").val();
-    var chartConfig = getModalChartConfig(' @ix.idg.controllers.routes.HarmonogramApp.dataSources(null, null) ' + ' ? field = ' + aggType);
-    var ptd = $.get(' @ix.idg.controllers.routes.HarmonogramApp.hgForTarget(null, null, null, null) ' + ' ? q = ' + target + ' & type = ' + aggType);
+    var chartConfig = getModalChartConfig('@ix.idg.controllers.routes.HarmonogramApp.dataSources(null, null)' + '?field=' + aggType);
+    var ptd = $.get(' @ix.idg.controllers.routes.HarmonogramApp.hgForTarget(null, null, null, null)' + '?q=' + target + '&type=' + aggType);
     var pud;
     if (overlay == 'none')
         pud = $.Deferred().resolve().promise();
     else
-        pud = $.get(' @ix.idg.controllers.routes.HarmonogramApp.hgForTarget(null, null, null, null) ' + ' ? q = ' + overlay + ' & type = ' + aggType);
+        pud = $.get('@ix.idg.controllers.routes.HarmonogramApp.hgForTarget(null, null, null, null)' + '?q=' + overlay + '&type=' + aggType);
     $.when(ptd, pud).then(function (atd, aud) {
         var chartData = atd[0];
         if (overlay != 'none')
@@ -485,14 +494,14 @@ $("#select-agg").on('change', function () {
 $("#select-overlay").on('change', function () {
     var aggType = $("#select-agg").val();
     var target = $("#modal-radardiv").attr("target");
-    var chartConfig = getModalChartConfig(' @ix.idg.controllers.routes.HarmonogramApp.dataSources(null, null) ' + ' ? field = ' + aggType);
+    var chartConfig = getModalChartConfig('@ix.idg.controllers.routes.HarmonogramApp.dataSources(null, null)' + '?field=' + aggType);
     var overlay = $(this).val();
-    var ptd = $.get(' @ix.idg.controllers.routes.HarmonogramApp.hgForTarget(null, null, null, null) ' + ' ? q = ' + target + ' & type = ' + aggType);
+    var ptd = $.get('@ix.idg.controllers.routes.HarmonogramApp.hgForTarget(null, null, null, null)' + '?q=' + target + '&type=' + aggType);
     var pud;
     if (overlay == 'none')
         pud = $.Deferred().resolve().promise();
     else
-        pud = $.get(' @ix.idg.controllers.routes.HarmonogramApp.hgForTarget(null, null, null, null) ' + ' ? q = ' + overlay + ' & type = ' + aggType);
+        pud = $.get('@ix.idg.controllers.routes.HarmonogramApp.hgForTarget(null, null, null, null)' + '?q=' + overlay + '&type=' + aggType);
     $.when(ptd, pud).then(function (atd, aud) {
         var chartData = atd[0];
         if (overlay != 'none')
@@ -503,10 +512,19 @@ $("#select-overlay").on('change', function () {
 });
 
 $("#compare-selected").click(function (e) {
-    var ents = _.map(selectEntities("#target-table  input:checked"), function (x) {
+  var ents = _.map(selectEntities("#target-table  input:checked"), function (x) {
         return ( x );
-    });
-    window.location.href = " @ix.idg.controllers.routes.IDGApp.compareTargets2() ? q = " + ents.join();
+  });
+
+  if (ents.length > 0) {
+    window.location.href = "@ix.idg.controllers.routes.IDGApp.compareTargets2()?q=" + ents.join();
+  } else {
+    // use all entries
+    ents = _.map(selectEntities("#target-table input"), function (x) {
+       return x;
+       });
+    window.location.href = "@ix.idg.controllers.routes.IDGApp.compareTargets2()?q=" + ents.join();
+  }			
 })
 
 /////////////////////////////////////////////
