@@ -142,14 +142,11 @@
        <div class="panel panel-default">
           <div class="panel-heading">
             @if(href != null) {
-              <h3 class="panel-title">
-                  <span data-toggle="tooltip" title="@tooltip">
-                  @if(dir==0){<a class="loader" href="@ix.idg.controllers.routes.IDGApp.targetdescriptor(name)"></span><i class="fa fa-bar-chart"></i></a>&nbsp;}<a href="@href">@name <i class="fa fa-external-link"></i></a> (@props.length) <a class="pull-right" href='@{ix.core.controllers.v1.routes.RouteFactory.get("targets",target.id,null)+"/properties(label="+name+"*)"}'><i class="fa fa-code"></i></a></h3>
-
+              <h3 class="panel-title" data-toggle="tooltip" title="@tooltip">
+                  @if(dir==0){<a class="loader" href="@ix.idg.controllers.routes.IDGApp.targetdescriptor(name)"><i class="fa fa-bar-chart"></i></a>&nbsp;}<a href="@href">@name <i class="fa fa-external-link"></i></a> (@props.length) <a class="pull-right" href='@{ix.core.controllers.v1.routes.RouteFactory.get("targets",target.id,null)+"/properties(label="+name+"*)"}'><i class="fa fa-code"></i></a></h3>
             } else {
-              <h3 class="panel-title">
-                  <span data-toggle="tooltip" title="@tooltip">
-                  @if(dir==0){<a class="loader" href="@ix.idg.controllers.routes.IDGApp.targetdescriptor(name)"></span><i class="fa fa-bar-chart"></i></a>&nbsp;}@name (@props.length) <a class="pull-right" href='@{ix.core.controllers.v1.routes.RouteFactory.get("targets",target.id,null)+"/properties(label="+name+"*)"}'><i class="fa fa-code"></i></a></h3>
+              <h3 class="panel-title" data-toggle="tooltip" title="@tooltip">
+                  @if(dir==0){<a class="loader" href="@ix.idg.controllers.routes.IDGApp.targetdescriptor(name)"><i class="fa fa-bar-chart"></i></a>&nbsp;}@name (@props.length) <a class="pull-right" href='@{ix.core.controllers.v1.routes.RouteFactory.get("targets",target.id,null)+"/properties(label="+name+"*)"}'><i class="fa fa-code"></i></a></h3>
             }
           </div>
           <div class="panel-body">
@@ -172,9 +169,9 @@
        <div class="panel panel-default">
           <div class="panel-heading">
             @if(href != null) {
-              <h3 class="panel-title">@if(dir==0){<a class="loader" href="@ix.idg.controllers.routes.IDGApp.targetdescriptor(name)"><i class="fa fa-bar-chart"></i></a>&nbsp;}<a href="@href">@name <i class="fa fa-external-link"></i></a> (@props.length) <a class="pull-right" href='@{ix.core.controllers.v1.routes.RouteFactory.get("targets",target.id,null)+"/properties(label="+name+"*)"}'><i class="fa fa-code"></i></a></h3>
+              <h3 class="panel-title" data-toggle="tooltip" title="@tooltip">@if(dir==0){<a class="loader" href="@ix.idg.controllers.routes.IDGApp.targetdescriptor(name)"><i class="fa fa-bar-chart"></i></a>&nbsp;}<a href="@href">@name <i class="fa fa-external-link"></i></a> (@props.length) <a class="pull-right" href='@{ix.core.controllers.v1.routes.RouteFactory.get("targets",target.id,null)+"/properties(label="+name+"*)"}'><i class="fa fa-code"></i></a></h3>
             } else {
-              <h3 class="panel-title">@if(dir==0){<a class="loader" href="@ix.idg.controllers.routes.IDGApp.targetdescriptor(name)"><i class="fa fa-bar-chart"></i></a>&nbsp;}@name (@props.length) <a class="pull-right" href='@{ix.core.controllers.v1.routes.RouteFactory.get("targets",target.id,null)+"/properties(label="+name+"*)"}'><i class="fa fa-code"></i></a></h3>
+              <h3 class="panel-title" data-toggle="tooltip" title="@tooltip">@if(dir==0){<a class="loader" href="@ix.idg.controllers.routes.IDGApp.targetdescriptor(name)"><i class="fa fa-bar-chart"></i></a>&nbsp;}@name (@props.length) <a class="pull-right" href='@{ix.core.controllers.v1.routes.RouteFactory.get("targets",target.id,null)+"/properties(label="+name+"*)"}'><i class="fa fa-code"></i></a></h3>
             }
           </div>
           <div class="panel-body">
@@ -1027,7 +1024,7 @@ This is TCRD target <a href='@ix.core.controllers.v1.routes.RouteFactory.get("ta
 
         @property(PANTHER_PROTEIN_CLASS, null, -1, "Count of target mentioned in different PANTHER Protein classes reported in parenthesis.")
         @property(ChEMBL_PROTEIN_CLASS, null, -1)
-        @property(GRANT_APPLICATION, null, 1, "Count of NIH grant applications including target reported in parenthesis. Listing individual grants with links to NIH RePORT site and tally of occurance of target for particular grant in circle. Click on the bargraph icon to explore further the Summary of Grant Application information.")
+        @property(GRANT_APPLICATION, null, 0, "Count of NIH grant applications including target reported in parenthesis. Listing individual grants with links to NIH RePORT site and tally of occurance of target for particular grant in circle. Click on the bargraph icon to explore further the Summary of Grant Application information.")
         @defining(target.getSynonyms(PDB_ID)) { pdbids =>
               @if(pdbids.size() > 0) {
                   <div class="panel panel-default" 
@@ -1053,9 +1050,9 @@ This is TCRD target <a href='@ix.core.controllers.v1.routes.RouteFactory.get("ta
       </div>
       <div class="col-md-4">	
         <a name="goterms" tocname="GO Terms"></a>
-        @property(GO_FUNCTION, null, 1, "Function listed by GO database for target, with total count listed in parenthesis. Listing individual functions with links to GO. Click on bargraph icon to explore further the Summary of GO Function.")
-        @property(GO_COMPONENT, null, 1, "Cellular component listed by GO database for target, with total count listed in parenthesis. Listing individual functions with links to GO. Click on bargraph icon to explore further the Summary of GO Function.")
-        @property(GO_PROCESS, null, 1, "Biological process listed by GO database for target, with total count listed in parenthesis. Listing individual functions with links to GO. Click on bargraph icon to explore further the Summary of GO Function.")
+        @property(GO_FUNCTION, null, 0, "Function listed by GO database for target, with total count listed in parenthesis. Listing individual functions with links to GO. Click on bargraph icon to explore further the Summary of GO Function.")
+        @property(GO_COMPONENT, null, 0, "Cellular component listed by GO database for target, with total count listed in parenthesis. Listing individual functions with links to GO. Click on bargraph icon to explore further the Summary of GO Function.")
+        @property(GO_PROCESS, null, 0, "Biological process listed by GO database for target, with total count listed in parenthesis. Listing individual functions with links to GO. Click on bargraph icon to explore further the Summary of GO Function.")
 
 	@defining(IDGApp.getCompartmentGOTerms(target)) { terms =>
 	   @if(terms.size > 15) {
@@ -1112,7 +1109,7 @@ This is TCRD target <a href='@ix.core.controllers.v1.routes.RouteFactory.get("ta
         @techdev(target)
         @property(IMPC_TERM)
         @property("Pathway", null, 1, "Biological pathways associated with target based on KEGG PATHWAY database, with links back to KEGG.")
-        @property(UNIPROT_KEYWORD, null, 1, "Occurance of target in the 10 categories of UniProt keywords.")
+        @property(UNIPROT_KEYWORD, null, 0, "Occurance of target in the 10 categories of UniProt keywords.")
 
         @defining(IDGApp.getPPI(target)) { ppi =>
           @if(!ppi.isEmpty) {
