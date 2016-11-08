@@ -1375,10 +1375,10 @@ public class IDGApp extends App implements Commons {
         }
     }
 
-    static List<Keyword> getBreadcrumb (Target t) {
-        List<Keyword> breadcrumb = new ArrayList<Keyword>();
+    static void getBreadcrumb (List<Keyword> breadcrumb,
+                               Target t, String prefix) {
         for (Value v : t.properties) {
-            if (v.label != null && v.label.startsWith(DTO_PROTEIN_CLASS)) {
+            if (v.label != null && v.label.startsWith(prefix)) {
                 try {
                     Keyword kw = (Keyword)v;
                     String url = ix.idg.controllers
@@ -1395,6 +1395,16 @@ public class IDGApp extends App implements Commons {
                 }
             }
         }
+    }
+
+    static List<Keyword> getBreadcrumb (Target t) {
+        List<Keyword> breadcrumb = new ArrayList<Keyword>();
+
+        getBreadcrumb (breadcrumb, t, DTO_PROTEIN_CLASS);
+        if (breadcrumb.isEmpty()) { // now try panther
+            getBreadcrumb (breadcrumb, t, PANTHER_PROTEIN_CLASS);
+        }
+        
         // just make sure the order is correct
         Collections.sort(breadcrumb, new Comparator<Keyword>() {
                 public int compare (Keyword kw1, Keyword kw2) {
