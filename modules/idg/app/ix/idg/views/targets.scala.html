@@ -127,6 +127,7 @@ facets: Array[FacetDecorator], targets: List[Target], ctx: String )
     </div>
   </form>
 } {  @* viz *@
+@**    
    <button class="btn btn-default" type="button"
 	      id="carousel-toggle"
 	      data-toggle="collapse"
@@ -137,6 +138,15 @@ facets: Array[FacetDecorator], targets: List[Target], ctx: String )
      <i class="fa fa-dashboard"
 	data-toggle="tooltip"
 	title="Toggle visualization carousel"></i></button>
+**@
+	
+   <select id="set-rows" name="rows" class="pull-left"
+   	   data-toggle="tooltip" title="Rows per page"
+	   style="margin-right:1px">
+     @for(i <- 10 to 100 by 10) {
+       <option @if(i==rows){selected='selected'} value="@i">@i</option>
+     }
+   </select>
 
     <a id="compare-selected" class="btn btn-default" href="#"
        data-toggle="tooltip" title="Target comparison"
@@ -323,6 +333,8 @@ role="dialog" aria-labelledby="modalLabelFolder" aria-hidden="true">
     <script type="text/javascript" src='@routes.Assets.versioned("javascripts/radar-chart.js")'></script>
     <script type="text/javascript" src='@routes.Assets.versioned("javascripts/cart.js")'></script>
     <script type="text/javascript" src='@routes.Assets.versioned("javascripts/jquery.sparkline.js")'></script>
+    <script type="text/javascript" src='@routes.Assets.versioned("javascripts/URI.min.js")'></script>
+    <script type="text/javascript" src='@routes.Assets.versioned("javascripts/jquery.URI.min.js")'></script>            
     <script type="text/javascript" src='@routes.WebJarAssets.at(WebJarAssets.locate("raphael-min.js"))'></script>
     <script type="text/javascript" src='@routes.WebJarAssets.at(WebJarAssets.locate("morris.min.js"))'></script>
     <script type="text/javascript" src='@routes.WebJarAssets.at(WebJarAssets.locate("fabric.min.js"))'></script>
@@ -404,6 +416,12 @@ $(document).ready(function () {
       return false;	
    });
 
+   $('#set-rows').on('change',function(){
+      var uri = URI('@request.uri').search({rows: $(this).val()});
+      console.log('rows per page: '+uri);
+      location.href = uri;
+   });
+   
   /*
    $(":checkbox").on('click',function () {
       //console.log('row '+$(this).attr('id')+' checked? '+$(this).prop('checked'));
