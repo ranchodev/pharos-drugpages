@@ -67,9 +67,36 @@ public class CRUD implements Commons {
                     .where().eq("synonyms.term", n.asText())
                     .findList();
                 if (!targets.isEmpty()) {
-                    Target t = targets.get(0);
-                    Logger.debug(n.asText()+" => "+t.id+" "+t.name);
-                    addCollection (name, desc, t);
+                    Target tar = null;
+                    if (targets.size() > 1) {
+                        for (Target t : targets) {
+			    int matches = 0;
+			    for (Keyword kw : t.getSynonyms()) {
+				if ((UNIPROT_GENE.equals(kw.label) 
+				     || UNIPROT_ACCESSION.equals(kw.label))
+				    && kw.term.equalsIgnoreCase(n.asText())) {
+				    ++matches;
+				}
+			    }
+
+			    if (matches > 0) {
+				tar = t;
+				break;
+			    }
+			}
+                    }
+		    else {
+			tar = targets.get(0);
+		    }
+
+		    if (tar != null) {
+			Logger.debug(n.asText()+" => "+tar.id+" "+tar.name);
+			addCollection (name, desc, tar);
+		    }
+		    else {
+			Logger.warn("String '"+n.asText()+"' resolved to "+targets.size()
+				    +" targets but none of them matched gene nor accession!");
+		    }
                 }
                 else {
                     Logger.warn("Unknown target '"+n.asText()+"'");

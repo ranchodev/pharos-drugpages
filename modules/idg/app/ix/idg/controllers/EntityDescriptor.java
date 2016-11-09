@@ -84,66 +84,60 @@ public class EntityDescriptor<T extends EntityModel> implements Commons {
                          +kind.getName());
         
             Model.Finder finder = ObjectFactory.finder(kind);
-            QueryIterator qiter = finder.findIterate();
-            try {
-                int count = 0;
-                DatabaseEntry key = new DatabaseEntry ();
-                DatabaseEntry val = new DatabaseEntry ();
-                SerialBinding sb = STORE.getSerialBinding(Map.class);
+	    int count = 0;
+	    DatabaseEntry key = new DatabaseEntry ();
+	    DatabaseEntry val = new DatabaseEntry ();
+	    SerialBinding sb = STORE.getSerialBinding(Map.class);
+            
+	    for (Object obj : finder.all()) {
+		EntityModel model = (EntityModel) obj;
                 
-                while (qiter.hasNext()) {
-                    EntityModel model = (EntityModel) qiter.next();
-                    
-                    Map<String, Number> desc = instrument (model);
-                    LongBinding.longToEntry(model.id, key);
-                    sb.objectToEntry(desc, val);
-                    
-                    Transaction tx = STORE.createTx();
-                    try {
-                        OperationStatus status = descDb.put(tx, key, val);
-                        if (status != OperationStatus.SUCCESS) {
-                            Logger.warn("** PUT KEY "+model.getClass()+"/"
-                                        +model.id+" return non-success "
-                                        +"status "+status);
-                        }
-                        else {
-                            for (Map.Entry<String, Number> me :
-                                     desc.entrySet()) {
-                                String name = me.getKey();
-                                if (name.charAt(0) != '@') {
-                                    Vector vec = vectors.get(name);
-                                    if (vec == null) {
-                                        vectors.put
-                                            (name,
-                                             vec = new Vector (kind, name));
-                                    }
-                                    
-                                    Number nv = me.getValue();
-                                    if (vec.min == null
-                                        || (vec.min.doubleValue()
-                                            > nv.doubleValue()))
-                                        vec.min = nv;
-                                    if (vec.max == null
-                                        || (vec.max.doubleValue()
-                                            < nv.doubleValue()))
-                                        vec.max = nv;
-                                    vec.values.add(nv);
-                                }
-                            }
-                            ++count;
-                            Logger.debug(String.format("%1$10d: ", count)
-                                         +kind.getName()+"/"+model.getName());
-                        }
-                    }
-                    finally {
-                        tx.commit();
-                    }
-                }
+		Map<String, Number> desc = instrument (model);
+		LongBinding.longToEntry(model.id, key);
+		sb.objectToEntry(desc, val);
+                
+		Transaction tx = STORE.createTx();
+		try {
+		    OperationStatus status = descDb.put(tx, key, val);
+		    if (status != OperationStatus.SUCCESS) {
+			Logger.warn("** PUT KEY "+model.getClass()+"/"
+				    +model.id+" return non-success "
+				    +"status "+status);
+		    }
+		    else {
+			for (Map.Entry<String, Number> me :
+				 desc.entrySet()) {
+			    String name = me.getKey();
+			    if (name.charAt(0) != '@') {
+				Vector vec = vectors.get(name);
+				if (vec == null) {
+				    vectors.put
+					(name,
+					 vec = new Vector (kind, name));
+				}
+				
+				Number nv = me.getValue();
+				if (vec.min == null
+				    || (vec.min.doubleValue()
+					> nv.doubleValue()))
+				    vec.min = nv;
+				if (vec.max == null
+				    || (vec.max.doubleValue()
+					< nv.doubleValue()))
+				    vec.max = nv;
+				vec.values.add(nv);
+			    }
+			}
+			++count;
+			Logger.debug(String.format("%1$10d: ", count)
+				     +kind.getName()+"/"+model.getName());
+		    }
+		}
+		finally {
+		    tx.commit();
+		}
             }
-            finally {
-                qiter.close();
-            }
-        }           
+        }       
     } // InitDbs
     
 
