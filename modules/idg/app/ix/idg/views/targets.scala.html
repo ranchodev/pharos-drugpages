@@ -417,7 +417,7 @@ $(document).ready(function () {
    });
 
    $('#set-rows').on('change',function(){
-      var uri = URI('@request.uri').search({rows: $(this).val()});
+      var uri = URI('@HtmlFormat.raw(request.uri)').setSearch('rows', $(this).val());
       console.log('rows per page: '+uri);
       location.href = uri;
    });
