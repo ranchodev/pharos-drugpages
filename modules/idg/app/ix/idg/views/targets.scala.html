@@ -140,7 +140,8 @@ facets: Array[FacetDecorator], targets: List[Target], ctx: String )
 	title="Toggle visualization carousel"></i></button>
 **@
 	
-   <select id="set-rows" name="rows" class="pull-left"
+   <select id="set-rows" name="rows" class="selectpicker pull-left"
+   	   data-width="fit"
    	   data-toggle="tooltip" title="Rows per page"
 	   style="margin-right:1px">
      @for(i <- 10 to 100 by 10) {
@@ -334,14 +335,16 @@ role="dialog" aria-labelledby="modalLabelFolder" aria-hidden="true">
     <script type="text/javascript" src='@routes.Assets.versioned("javascripts/cart.js")'></script>
     <script type="text/javascript" src='@routes.Assets.versioned("javascripts/jquery.sparkline.js")'></script>
     <script type="text/javascript" src='@routes.Assets.versioned("javascripts/URI.min.js")'></script>
-    <script type="text/javascript" src='@routes.Assets.versioned("javascripts/jquery.URI.min.js")'></script>            
+    <script type="text/javascript" src='@routes.Assets.versioned("javascripts/jquery.URI.min.js")'></script>
+    <script type="text/javascript" src='@routes.Assets.versioned("javascripts/bootstrap-select.min.js")'></script>
     <script type="text/javascript" src='@routes.WebJarAssets.at(WebJarAssets.locate("raphael-min.js"))'></script>
     <script type="text/javascript" src='@routes.WebJarAssets.at(WebJarAssets.locate("morris.min.js"))'></script>
     <script type="text/javascript" src='@routes.WebJarAssets.at(WebJarAssets.locate("fabric.min.js"))'></script>
     <link type="text/css" rel="stylesheet" href='@routes.Assets.versioned("stylesheets/clustergram.css")' />
     <link type="text/css" rel="stylesheet" href='@routes.Assets.versioned("stylesheets/radar-chart.css")' />
     <link type="text/css" rel="stylesheet" href='@routes.WebJarAssets.at(WebJarAssets.locate("morris.css"))' />
-    <link type="text/css" rel="stylesheet" href='@routes.Assets.versioned("ncats/css/loader.css")'/>        
+    <link type="text/css" rel="stylesheet" href='@routes.Assets.versioned("ncats/css/loader.css")'/>
+    <link type="text/css" rel="stylesheet" href='@routes.Assets.versioned("css/bootstrap-select.min.css")'/>        
     <link type="text/css" rel="stylesheet" href='@routes.Assets.versioned("stylesheets/main.css")'/>    
 </head>
 <script>
