@@ -653,7 +653,7 @@ public class TextIndexer {
     }
 
     final SearchResultPayload POISON_PAYLOAD = new SearchResultPayload ();    
-    class SearchResultPayload {
+    class SearchResultPayload implements Comparable<SearchResultPayload> {
         SearchResult result;
         TopDocs hits;
         IndexSearcher searcher;
@@ -704,7 +704,15 @@ public class TextIndexer {
                 if (DEBUG (1)) {
                     Logger.debug(thread
                                  +": **** fetchQueue size = "
-                                 +fetchQueue.size()+" ****");
+                                 +fetchQueue.size()+" ("+result.getKey()
+                                 +") ****");
+                    if (!fetchQueue.isEmpty()) {
+                        SearchResultPayload res = fetchQueue.peek();
+                        Logger.debug(thread+": **** next in queue: "
+                                     +res.result.getKey()+" ("
+                                     +res.result.size()+"/"
+                                     +res.result.count+") ****");
+                    }
                 }
             }
             finally {
@@ -782,6 +790,12 @@ public class TextIndexer {
             
             return i;
         }
+
+        public int compareTo (SearchResultPayload res) {
+            int d0 = result.count - result.size();
+            int d1 = res.result.count - res.result.size();
+            return d0 - d1;
+        }
     }
         
     class FetchWorker implements Runnable {
@@ -840,7 +854,8 @@ public class TextIndexer {
     private Future[] fetchWorkers;
     //FIXME: make this a parameter!
     private BlockingQueue<SearchResultPayload> fetchQueue =
-        new ArrayBlockingQueue<SearchResultPayload>(100);
+        new PriorityBlockingQueue<>(100);
+        //new ArrayBlockingQueue<SearchResultPayload>(100);
     private SearcherManager searcherManager;
         
     static ConcurrentMap<File, TextIndexer> indexers = 

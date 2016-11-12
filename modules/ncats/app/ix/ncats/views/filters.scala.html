@@ -15,6 +15,7 @@
   <div class="panel-heading"  id='@fname'>
     <h3 class="panel-title" id="facetheader-@f.facet.getName" data-toggle="tooltip"
 
+	@** this shouldn't be here.. it should be in the FacetDecorator **@
         @f.name() match {
             case "Development Level" => {
                 title='Target development level (TDL) categorizing target based on known information and potential druggability with highest ranking of Tclin for targets with known mechanism of drug action to lowest ranking of Tdark for targest with least knowledge.'
@@ -29,7 +30,7 @@
                 title="Target grouping based on protein family.  Currently the groupings are restricted to the original four classes in Phase I of IDG (see RFA-RM-13-011)."
             }
             case "Collection" => {
-                title="Collection of targetsin different protein families highlighted by NIH based on RFA"
+                title="Collection of targets in different protein families highlighted by NIH based on RFA"
             }
             case "Disease" => {
                 title="Disease cataloging terms base on DOID and OMIM classifications."
