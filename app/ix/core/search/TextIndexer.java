@@ -85,7 +85,7 @@ public class TextIndexer {
     /**
      * these default parameters should be configurable!
      */
-    public static final int CACHE_TIMEOUT = 60*60*24; // 24 hours
+    public static final int FETCH_TIMEOUT = 60*60*2; // 2hours
     public static final int FETCH_WORKERS = 4; // number of fetch workers
 
     /**
@@ -659,6 +659,7 @@ public class TextIndexer {
         IndexSearcher searcher;
         SearchOptions options;
         int total, offset, requeued = 0;
+        final long epoch = System.currentTimeMillis();
         
         SearchResultPayload () {}
         SearchResultPayload (SearchResult result, TopDocs hits,
@@ -836,6 +837,43 @@ public class TextIndexer {
             }
         }
     }
+
+    class FetchCleaner implements Runnable {
+        FetchCleaner () {}
+
+        public void run () {
+            String thread = Thread.currentThread().getName();
+            try {
+                int n = sweep ();
+                Logger.debug(thread+": "+new Date()+": FetchCleaner swept "
+                             +n+" expired payload");
+            }
+            catch (Exception ex) {
+                Logger.error(thread+": stopped", ex);
+            }
+        }
+
+        int sweep () throws Exception {
+            List<SearchResultPayload> expired = new ArrayList<>();
+            long current = System.currentTimeMillis();
+            for (SearchResultPayload res : fetchQueue) {
+                double elapsed = (current - res.epoch)/1000.;
+                if (elapsed > FETCH_TIMEOUT && res != POISON_PAYLOAD)
+                    expired.add(res);
+            }
+
+            for (SearchResultPayload res : expired) {
+                Logger.debug("Fetch payload "+res.result.getKey()
+                             +" is expired ("
+                             +String.format("%1$.1s",(current-res.epoch)/1000.)
+                             +"); removing from fetchQueue!");
+                fetchQueue.remove(res);
+                res.result.done();
+                releaseSearcher (res.searcher);
+            }
+            return expired.size();
+        }
+    }
     
     private File baseDir;
     private File suggestDir;
@@ -851,11 +889,12 @@ public class TextIndexer {
     private AtomicLong lastModified = new AtomicLong ();
     
     private ExecutorService threadPool = Executors.newCachedThreadPool();
-    private Future[] fetchWorkers;
-    //FIXME: make this a parameter!
+    private ScheduledExecutorService scheduleThreadPool =
+        Executors.newSingleThreadScheduledExecutor();
+    
+    private Future[] fetchWorkers = new Future[0];
     private BlockingQueue<SearchResultPayload> fetchQueue =
-        new PriorityBlockingQueue<>(100);
-        //new ArrayBlockingQueue<SearchResultPayload>(100);
+        new LinkedBlockingQueue<>();
     private SearcherManager searcherManager;
         
     static ConcurrentMap<File, TextIndexer> indexers = 
@@ -945,18 +984,35 @@ public class TextIndexer {
 
         this.baseDir = dir;
         setFetchWorkers (FETCH_WORKERS);
+
+        scheduleThreadPool.scheduleAtFixedRate
+            (new FetchCleaner (), FETCH_TIMEOUT,
+             FETCH_TIMEOUT/2, TimeUnit.SECONDS);
     }
 
     public void setFetchWorkers (int n) {
-        if (fetchWorkers != null) {
+        if (n < 1)
+            throw new IllegalArgumentException
+                ("Number of workers can't be < 1!");
+        
+        if (n != fetchWorkers.length) {
+            for (int i = 0; i < fetchWorkers.length; ++i) {
+                try {
+                    fetchQueue.put(POISON_PAYLOAD);
+                }
+                catch (Exception ex) {
+                    Logger.error("Can't stop thread", ex);
+                }
+            }
+            
             for (Future f : fetchWorkers)
                 if (f != null)
                     f.cancel(true);
-        }
         
-        fetchWorkers = new Future[n];
-        for (int i = 0; i < fetchWorkers.length; ++i)
-            fetchWorkers[i] = threadPool.submit(new FetchWorker ());
+            fetchWorkers = new Future[n];
+            for (int i = 0; i < fetchWorkers.length; ++i)
+                fetchWorkers[i] = threadPool.submit(new FetchWorker ());
+        }
     }
     
     protected synchronized DirectoryReader getReader () throws IOException {
@@ -2217,7 +2273,8 @@ public class TextIndexer {
 
     public void shutdown () {
         try {
-            fetchQueue.put(POISON_PAYLOAD);
+            for (int i = 0; i < fetchWorkers.length; ++i)
+                fetchQueue.put(POISON_PAYLOAD);
             
             for (SuggestLookup look : lookups.values()) {
                 look.close();
@@ -2244,6 +2301,7 @@ public class TextIndexer {
         finally {
             indexers.remove(baseDir);
             threadPool.shutdown();
+            scheduleThreadPool.shutdown();
         }
     }
 }
