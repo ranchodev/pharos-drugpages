@@ -149,8 +149,32 @@
                         </div>
                     </div>
                 </div>
-                
+
                     <!-- Question -->
+                <div class="panel panel-default">
+                    <div class="panel-heading">
+                        <h4 class="panel-title">
+                            <a class="accordion-toggle" data-toggle="collapse" data-parent="#accordion" data-target="#collapse15" href="#collapse15">
+                                What is the log Novelty Score?</a>
+                        </h4>
+                    </div>
+                    <div id="collapse15" class="panel-collapse collapse">
+                        <div class="panel-body">
+                            <p>The novelty (\(N_i\)) and Importance (\(I_{ij}\)) scores are computed using the following
+                            formulae
+                            $$N_i = \frac{1}{\sum \frac{1}{T_k}}$$
+                            and
+                            $$I_{ij} = \sum \frac{1}{T_k D_k}$$
+                            where \(T_k\) and \(D_k\) are the numbers of targets and diseases in abstract \(k\),
+                                respectively, and summation over all publications including target (\(i\)), and for
+                                importance, also including disease (\(j\)).
+                            <p>Due to the skewed nature of the distribution of Novelty scores, we take the logarithm. This
+                            leads to a less skewed distribution, allowing for more reasonable faceting.
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Question -->
                 <div class="panel panel-default">
                     <div class="panel-heading">
                         <h4 class="panel-title">
