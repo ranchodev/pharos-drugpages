@@ -865,7 +865,7 @@ public class TextIndexer {
             for (SearchResultPayload res : expired) {
                 Logger.debug("Fetch payload "+res.result.getKey()
                              +" is expired ("
-                             +String.format("%1$.1s",(current-res.epoch)/1000.)
+                             +String.format("%1$.1fs",(current-res.epoch)/1000.)
                              +"); removing from fetchQueue!");
                 fetchQueue.remove(res);
                 res.result.done();

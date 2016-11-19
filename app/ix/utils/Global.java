@@ -11,6 +11,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeMap;
+import java.util.UUID;
 
 import javax.persistence.Entity;
 import javax.persistence.Id;
@@ -30,6 +31,7 @@ import play.mvc.Result;
 import scala.collection.JavaConverters;
 import scala.collection.Seq;
 import play.api.mvc.WithFilters;
+import play.mvc.Action;
 import julienrf.play.jsonp.Jsonp;
 
 public class Global extends GlobalSettings {
@@ -165,24 +167,22 @@ public class Global extends GlobalSettings {
 
     @Override
     public <T extends EssentialFilter> Class<T>[] filters() {
-        return new Class[]{GzipFilter.class,julienrf.play.jsonp.JsonpJava.class};
+        return new Class[]{GzipFilter.class,
+                           julienrf.play.jsonp.JsonpJava.class};
     }  
-    
+
+    /*
     @Override
     public play.api.mvc.Handler onRouteRequest (Http.RequestHeader req) {
-        /*
-        String p = req.path().substring("/idg".length()); 
-        if (p.startsWith("/idg")) {
-        //return ix.idg.Routes.routes().apply(req);
-        }
-        */
         String real = req.getHeader("X-Real-IP");
         play.api.mvc.Handler h = super.onRouteRequest(req);
         AccessLogger.info("{} {} {} \"{}\"", req.remoteAddress(),
-                          real != null ? real : "", req.method(), req.uri());
+                          real != null ? real : "-",
+                          req.method(), req.uri());
         return h;
     }
-
+    */
+    
     public boolean debug (int level) { 
         return ctx.debug(level); 
     }
@@ -307,35 +307,42 @@ public class Global extends GlobalSettings {
             throw new IllegalArgumentException (ex);
         }
     }
-//
-//      // For CORS
-//      private class ActionWrapper extends Action.Simple {
-//              public ActionWrapper(Action<?> action, String cback) {
-//                      this.delegate = action;
-//              }
-//
-//              @Override
-//              public Promise<Result> call(Http.Context ctx)
-//                              throws java.lang.Throwable {
-//                      Promise<Result> result = this.delegate.call(ctx);
-//                      Http.Response response = ctx.response();
-//                      response.setHeader("Access-Control-Allow-Origin", "*");
-//                      
-//                      return result;
-//              }
-//      }
-//
-//      @Override
-//      public Action<?> onRequest(Http.Request request,
-//                      java.lang.reflect.Method actionMethod) {
-//              return new ActionWrapper(super.onRequest(request, actionMethod));
-//      }
+
+    private class ActionWrapper extends Action.Simple {
+        public ActionWrapper(Action<?> action) {
+            this.delegate = action;
+        }
+        
+        @Override
+        public Promise<Result> call (Http.Context ctx)
+            throws java.lang.Throwable {
+            Http.Request req = ctx.request();
+            String real = req.getHeader("X-Real-IP");
+            String sess = (String)ctx.session().get("ix.session");
+            if (sess == null) {
+                sess = UUID.randomUUID().toString();
+                ctx.session().put("ix.session", sess);
+            }
+            AccessLogger.info("{} {} {} {} \"{}\"", req.remoteAddress(),
+                              real != null ? real : "-",
+                              sess, req.method(), req.uri());
+            
+            return this.delegate.call(ctx);
+        }
+    }
+
+    @Override
+    public Action onRequest(Http.Request req,
+                            java.lang.reflect.Method actionMethod) {
+        return new ActionWrapper (super.onRequest(req, actionMethod));
+    }
     
     @Override
     public Promise<Result> onHandlerNotFound(RequestHeader request) {
-        if(!request.path().endsWith("/"))return super.onHandlerNotFound(request);
-        //return Promise.<Result>((request.path().substring(0, request.path().length()-1));
-        return Promise.<Result>pure(Controller.movedPermanently(request.path().substring(0, request.path().length()-1)));
+        if(!request.path().endsWith("/"))
+            return super.onHandlerNotFound(request);
+        return Promise.<Result>pure
+            (Controller.movedPermanently
+             (request.path().substring(0, request.path().length()-1)));
     }
-    
 }

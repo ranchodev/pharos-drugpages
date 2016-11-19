@@ -12,8 +12,8 @@ public class Histogram implements Serializable {
     private static final double LN2 = Math.log(2.);
 
     // bin[i] corresponds to range[i] <= x < range[i+1]
-    protected double[] range;
-    protected double[] bin;
+    protected double[] range = {};
+    protected double[] bin = {};
     protected double negInfBin = 0.; // the left bin: (-inf, range[0])
     protected double posInfBin = 0.; // the right bin: [range[nbins], inf)
     protected double weight = 0.; // total weight
@@ -27,6 +27,10 @@ public class Histogram implements Serializable {
         this.range = new double[nbins+1];
         this.bin = new double[nbins];
         setRangeUniform (min, max);
+    }
+
+    public Histogram (double[] range) {
+        setRanges (range);
     }
 
     public void setRangeUniform (double min, double max) {
@@ -50,10 +54,13 @@ public class Histogram implements Serializable {
         for (int i = 0; i < range.length-1; ++i) {
             // ensure that the range is monotonically increasing...
             if (range[i+1] < range[i]) {
-                throw new IllegalArgumentException ("Bad range specified");
+                throw new IllegalArgumentException
+                    ("Bad range specified: ["+range[i]+","+range[i+1]+")");
             }
         }
 
+        this.range = new double[range.length];
+        System.arraycopy(range, 0, this.range, 0, range.length);
         if (range.length != bin.length+1) {
             bin = new double[range.length-1];
         }
