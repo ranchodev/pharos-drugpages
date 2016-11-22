@@ -368,6 +368,9 @@ $(document).ready(function () {
         var divid = url.split("#")[1 ].split("?")[0];
         console.log(divid);
         $("#"+divid ).show();
+        $('html, body').animate({
+            scrollTop: $("#"+divid).offset().top - 100
+        }, 500);
     }
 })
     </script>
