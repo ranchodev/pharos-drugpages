@@ -134,6 +134,8 @@ public class BuildInfo {
       libraryDependencies += "org.webjars" % "datatables" % "1.10.12",
       libraryDependencies += "org.webjars" % "datatables-plugins" % "1.10.12",
       libraryDependencies += "org.webjars" % "highcharts" % "4.2.5",
+      libraryDependencies += "org.webjars" % "store.js" % "1.3.17-1",
+
       javacOptions ++= javaBuildOptions,
       unmanagedSourceDirectories in Compile += baseDirectory.value / "src"
       //javaOptions in Runtime += "-Dconfig.resource=pharos.conf"
