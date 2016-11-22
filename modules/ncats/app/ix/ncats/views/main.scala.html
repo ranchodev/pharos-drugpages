@@ -54,6 +54,24 @@
            // $('#visit-alert').append('<div style="overflow:auto;" class="alert alert-success alert-dismissible" class="alert alert-danger alert-dismissible" role="alert"> <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>Since this is your first visit to the site, you are seeing this message. It will not be displayed on subsequent visits.</div>');
             $.cookie('pharos_first_visit', 'true');
            }
+
+             // preload harmonogram data source list
+            if (store.enabled && store.get("harmonogram_datasource_loaded") == undefined) {
+                store.set("harmonogram_datasource_loaded", 1);
+                $.ajax({
+                    url: '/idg/hg/ds',
+                    dataType: "json",
+                    success: function (data) {
+                        if (store.enabled) {
+                            _.each(data, function(elem, idx, l) {
+                               var key = elem.fieldName+"#" + elem.value;
+                               store.set(key, elem);
+                            });
+                        }
+                    }
+                });
+            }
+
         });
 	
 	function loadUrl (_url) {

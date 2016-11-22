@@ -27,7 +27,7 @@ function _queryDataSources(selector, dsUrl, d) {
         dataType: "json",
         success: function (data) {
             if (store.enabled) {
-                store.set(dsUrl + "#" + d.name, data);
+                store.set(dsUrl.split("field=radar-")[1] + "#" + d.name, data);
             }
             _makeDataSourceDisplay(selector, data);
         }
@@ -37,7 +37,7 @@ function _queryDataSources(selector, dsUrl, d) {
 function showDataSources(selector, dsUrl) {
     var func = function (d) {
         if (store.enabled) {
-            var rcds = store.get(dsUrl + "#" + d.name);
+            var rcds = store.get(dsUrl.split("field=radar-")[1] + "#" + d.name);
             if (rcds == undefined) {
                 _queryDataSources(selector, dsUrl, d);
             } else {
