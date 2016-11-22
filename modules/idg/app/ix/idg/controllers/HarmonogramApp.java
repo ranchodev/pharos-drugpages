@@ -159,7 +159,98 @@ public class HarmonogramApp extends App {
         return node;
     }
 
+    private static Result dataSourceDump() throws Exception {
+
+
+        final String key = "hg/ds/";
+        Set<String> ds = getOrElse(key, new Callable<Set<String>>() {
+            public Set<String> call() throws Exception {
+                List<HarmonogramCDF> cdfs = HarmonogramFactory.finder.select("dataSource").findList();
+                Set<String> ds = new HashSet<>();
+                for (HarmonogramCDF cdf : cdfs)
+                    ds.add(cdf.getDataSource() + "\t" + cdf.getDataSourceUrl() + "\t" + cdf.getAttrType() + "\t" + cdf.getAttrGroup() + "\t" + cdf.getDataType());
+                return ds;
+            }
+        });
+
+        Map<String, List<String[]>> attrType = new HashMap<String, List<String[]>>();
+        Map<String, List<String[]>> attrGroup = new HashMap<String, List<String[]>>();
+        Map<String, List<String[]>> dataType = new HashMap<String, List<String[]>>();
+
+        for (String s : ds) {
+            String[] toks = s.split("\t");
+            String dataSource = toks[0];
+            String dataUrl = toks[1];
+            String atype = toks[2];
+            String agroup = toks[3];
+            String dtype = toks[4];
+
+            // attr_type
+            if (attrType.containsKey(atype)) {
+                List<String[]> value = attrType.get(atype);
+                value.add(new String[]{dataSource, dataUrl});
+                attrType.put(atype, value);
+            } else {
+                List<String[]> value = new ArrayList<>();
+                value.add(new String[]{dataSource, dataUrl});
+                attrType.put(atype, value);
+            }
+
+            // attr_group
+            if (attrGroup.containsKey(agroup)) {
+                List<String[]> value = attrGroup.get(agroup);
+                value.add(new String[]{dataSource, dataUrl});
+                attrGroup.put(agroup, value);
+            } else {
+                List<String[]> value = new ArrayList<>();
+                value.add(new String[]{dataSource, dataUrl});
+                attrGroup.put(agroup, value);
+            }
+            
+            // data_type
+            if (dataType.containsKey(dtype)) {
+                List<String[]> value = dataType.get(dtype);
+                value.add(new String[]{dataSource, dataUrl});
+                dataType.put(dtype, value);
+            } else {
+                List<String[]> value = new ArrayList<>();
+                value.add(new String[]{dataSource, dataUrl});
+                dataType.put(dtype, value);
+            }
+
+        }
+
+        ArrayNode root = mapper.createArrayNode();
+        root.addAll(_getDsArray(attrGroup, "attr_group"));
+        root.addAll(_getDsArray(attrType, "attr_type"));
+        root.addAll(_getDsArray(dataType, "data_type"));
+        return (ok(root));
+    }
+
+    private static ArrayNode _getDsArray(Map<String, List<String[]>> map, String field) {
+        ArrayNode root = mapper.createArrayNode();
+        for (String k : map.keySet()) {
+            ObjectNode obj = mapper.createObjectNode();
+            obj.put("fieldName", field);
+            obj.put("value", k);
+            ArrayNode arr = mapper.createArrayNode();
+            for (String[] s : map.get(k)) {
+                ObjectNode o = mapper.createObjectNode();
+                o.put("ds_name", s[0]);
+                    o.put("ds_url", s[1]);
+                arr.add(o);
+            }
+            obj.put("ds", arr);
+            root.add(obj);
+        }
+        return root;
+    }
+
+
+
     public static Result dataSources(String field, final String value) throws Exception {
+        if (field == null && value == null) return dataSourceDump();
+
         if (field == null || field.trim().equals("") || value == null || value.trim().equals(""))
             return _badRequest("Must specify a field name and value");
 
