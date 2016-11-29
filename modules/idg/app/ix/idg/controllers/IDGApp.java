@@ -11,53 +11,107 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.ning.http.client.AsyncHttpClientConfig;
 import controllers.AssetsBuilder;
-import ix.core.controllers.*;
+import ix.core.controllers.EntityFactory;
+import ix.core.controllers.KeywordFactory;
+import ix.core.controllers.PayloadFactory;
+import ix.core.controllers.PredicateFactory;
+import ix.core.controllers.PublicationFactory;
 import ix.core.controllers.search.SearchFactory;
-import ix.core.models.*;
+import ix.core.models.EntityModel;
+import ix.core.models.Event;
+import ix.core.models.Keyword;
+import ix.core.models.Mesh;
+import ix.core.models.Payload;
+import ix.core.models.Predicate;
+import ix.core.models.Publication;
+import ix.core.models.Structure;
+import ix.core.models.Text;
+import ix.core.models.Timeline;
+import ix.core.models.VInt;
+import ix.core.models.VNum;
+import ix.core.models.Value;
+import ix.core.models.XRef;
 import ix.core.plugins.IxCache;
 import ix.core.plugins.ThreadPoolPlugin;
 import ix.core.search.SearchOptions;
 import ix.core.search.TextIndexer;
 import ix.idg.models.Assay;
+import ix.idg.models.Compartment;
 import ix.idg.models.Disease;
 import ix.idg.models.Ligand;
 import ix.idg.models.Target;
-import ix.idg.models.Compartment;
 import ix.ncats.controllers.App;
 import ix.seqaln.SequenceIndexer;
-import ix.utils.Util;
 import ix.utils.Global;
+import ix.utils.Util;
 import org.apache.commons.lang3.StringUtils;
-
 import play.Logger;
 import play.Play;
-import play.mvc.Security;
+import play.api.libs.ws.DefaultWSClientConfig;
+import play.api.libs.ws.WSClientConfig;
+import play.api.libs.ws.ning.NingAsyncHttpClientConfigBuilder;
+import play.api.libs.ws.ssl.SSLConfig;
 import play.api.mvc.Action;
 import play.api.mvc.AnyContent;
 import play.cache.Cached;
 import play.db.ebean.Model;
 import play.libs.Akka;
+import play.libs.F;
+import play.libs.XML;
+import play.libs.ws.WS;
+import play.libs.ws.WSClient;
+import play.libs.ws.WSRequestHolder;
+import play.libs.ws.WSResponse;
 import play.mvc.BodyParser;
 import play.mvc.Call;
 import play.mvc.Result;
-import play.mvc.Http;
-import static play.mvc.Http.MultipartFormData;
-import play.data.*;
+import play.mvc.Security;
 import play.twirl.api.Content;
-
+import scala.Option;
 import tripod.chem.indexer.StructureIndexer;
 
-import java.io.*;
+import java.io.ByteArrayOutputStream;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.PipedInputStream;
+import java.io.PipedOutputStream;
+import java.io.PrintStream;
+import java.io.Serializable;
 import java.net.URLEncoder;
-import java.util.*;
-import java.util.concurrent.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.EnumSet;
+import java.util.Enumeration;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.TreeMap;
+import java.util.TreeSet;
+import java.util.UUID;
+import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.Callable;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
+import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.atomic.AtomicLong;
 
 import static ix.core.search.TextIndexer.Facet;
 import static ix.core.search.TextIndexer.SearchResult;
+import static play.mvc.Http.MultipartFormData;
 
 public class IDGApp extends App implements Commons {
+
     static final int MAX_SEARCH_RESULTS = 1000;
     public static final String IDG_RESOLVER = "IDG Resolver";
 
@@ -922,10 +976,57 @@ public class IDGApp extends App implements Commons {
         return ok (ix.idg.views.html.discussion.render());
     }
 
-    @Cached(key="_faq", duration= Integer.MAX_VALUE)
-    public static Result faq () {
-            return ok (ix.idg.views.html.faq.render());
+    public static Result faq() throws IOException {
+        scala.Option<Object> none = (Option<Object>) scala.None$.empty();
+        scala.Option<String> noneString = scala.Option.apply(null);
+        scala.Option<SSLConfig> noneSSLConfig = scala.Option.apply(null);
+        WSClientConfig clientConfig = new DefaultWSClientConfig(
+                none, // connectionTimeout
+                none, // idleTimeout
+                none, // requestTimeout
+                none, // followRedirects
+                none, // useProxyProperties
+                noneString, // userAgent
+                none, // compressionEnabled
+                none, // acceptAnyCertificate
+                noneSSLConfig);
+
+        // Build a secure config out of the client config and the ning builder:
+        AsyncHttpClientConfig.Builder asyncHttpClientBuilder = new AsyncHttpClientConfig.Builder();
+        NingAsyncHttpClientConfigBuilder secureBuilder = new NingAsyncHttpClientConfigBuilder(clientConfig,
+                asyncHttpClientBuilder);
+        AsyncHttpClientConfig secureDefaults = secureBuilder.build();
+
+        // You can directly use the builder for specific options once you have secure TLS defaults...
+        AsyncHttpClientConfig customConfig = new AsyncHttpClientConfig.Builder(secureDefaults)
+                .build();
+        WSClient client = new play.libs.ws.ning.NingWSClient(customConfig);
+//        WSClient client = WS.client();
+
+//        F.Promise<Result> resultPromise = client.url("https://pharos.nih.gov/faq.json").get().map(
+//                new F.Function<WSResponse, Result>() {
+//                    @Override
+//                    public Result apply(WSResponse wsResponse) throws Throwable {
+//                        ObjectNode root = (ObjectNode) wsResponse.asJson();
+//
+//                        return ok(ix.idg.views.html.faq.render(root));
+//                    }
+//                }
+//        );
+//        return resultPromise;
+
+        JsonNode root;
+        ObjectMapper mapper = new ObjectMapper();
+        if (Play.isProd()) {
+            root = mapper.readTree(Play.application().resourceAsStream("public/faq.json"));
+        } else {
+            File file = Play.application().getFile("app/assets/faq.json");
+            FileInputStream fis = new FileInputStream(file);
+            root = mapper.readTree(fis);
         }
+
+        return ok(ix.idg.views.html.faq.render((ObjectNode)root));
+    }
     
     @Cached(key="_help", duration= Integer.MAX_VALUE)
     public static Result help() {

@@ -1,6 +1,10 @@
+@import com.fasterxml.jackson.databind.node.ObjectNode
+
 @import ix.idg.controllers.IDGApp
 @import ix.idg.controllers.Commons
+@import scala.collection.JavaConversions._
 
+@(faqs: ObjectNode)
 
 @ix.ncats.views.html.main("Pharos: Frequently Asked Questions") {
     @helpmenu()
@@ -27,304 +31,30 @@
             <div class="panel-group" id="accordion">
 
 
-                    <!-- Section -->
-                <div class="faqHeader">Using Pharos</div>
+                @for(nodeEntry <- faqs.fields()) {
+                    <div class="faqHeader">@nodeEntry.getKey()</div>
+                    @for(item <- nodeEntry.getValue().iterator) {
 
-                    <!-- Question -->
-                <div class="panel panel-default">
-                    <div class="panel-heading">
-                        <h4 class="panel-title">
-                            <a class="accordion-toggle" data-toggle="collapse" data-parent="#accordion" data-target="#collapse9" href="#collapse9">
-                                When I search for <emph>"abl kinase"</emph>, why do I get non kinase targets?</a>
-                        </h4>
-                    </div>
-                    <div id="collapse9" class="panel-collapse collapse">
-                        <div class="panel-body">
-                            <p>
-                            The results for this <a href="https://pharos.nih.gov/idg/targets?q=%22abl+kinase%22">query</a>
-                            will include non-kinase targets because Pharos indexes many pieces of information associated
-                            with a target including publications, drug labels, Gene RIFs and so on. Thus if a
-                            publication refers to <a href="https://pharos.nih.gov/idg/targets/P00519">ABL1</a> but also
-                            discusses a nuclear hormone receptor (NHR) then the phrase <emph>"abl kinase</emph> is also associated
-                            with the NHR target.
-                            <p>
-                            In this scenario consider using the facets (in particular the <emph>Target Family</emph> facet)
-                            to drill down to the appropriate class.
+                        <div class="panel panel-default">
+                            <div class="panel-heading">
+                                <h4 class="panel-title">
+                                    <a class="accordion-toggle" data-toggle="collapse" data-parent="#accordion" data-target='#@item.get("href").asText()' href='#@item.get("href").asText()'>
+                                        @Html(item.get("question").asText())
+                                        </a>
+                                </h4>
+                            </div>
+                            <div id="@item.get("href").asText()" class="panel-collapse collapse">
+                                <div class="panel-body">
+                                   @Html(item.get("answer").asText())
+                                </div>
+                            </div>
                         </div>
-                    </div>
-                </div>
 
-                    <!-- Question -->
-                 <div class="panel panel-default">
-                     <div class="panel-heading">
-                         <h4 class="panel-title">
-                             <a class="accordion-toggle" data-toggle="collapse" data-parent="#accordion" data-target="#collapse10" href="#collapse10">
-                                 Are there any other filters than are shown on the browse page?</a>
-                         </h4>
-                     </div>
-                     <div id="collapse10" class="panel-collapse collapse">
-                         <div class="panel-body">
-                             <p>
-                             Yes, there are more than 50 filters available. To see the full list go to the
-                             <a href="https://pharos.nih.gov/idg/targets/facets">Target Filters</a> page
-                         </div>
-                     </div>
-                 </div>
-
-                    <!-- Question -->
-                <div class="panel panel-default">
-                    <div class="panel-heading">
-                        <h4 class="panel-title">
-                            <a class="accordion-toggle" data-toggle="collapse" data-parent="#accordion" data-target="#collapse1" href="#collapse1">
-                                Are logins required?</a>
-                        </h4>
-                    </div>
-                    <div id="collapse1" class="panel-collapse collapse">
-                        <div class="panel-body">
-                            Logins will not be required to access and download data. In the future we may enable logins
-                            to enable features such as personal dossiers.
-                        </div>
-                    </div>
-                </div>
-
-                    <!-- Question -->
-                <div class="panel panel-default">
-                    <div class="panel-heading">
-                        <h4 class="panel-title">
-                            <a class="accordion-toggle" data-toggle="collapse" data-parent="#accordion" data-target="#collapse8" href="#collapse8">
-                                Where can I get the source code for Pharos?</a>
-                        </h4>
-                    </div>
-                    <div id="collapse8" class="panel-collapse collapse">
-                        <div class="panel-body">
-                            The sources for the Pharos web interface are available from <a href="https://spotlite.nih.gov/ncats/pharos">
-                                https://spotlite.nih.gov/ncats/pharos</a>. The repository provides
-                                <a href="https://spotlite.nih.gov/ncats/pharos">instructions</a> on building and installation.
-                        </div>
-                    </div>
-                </div>
-
-                    <!-- Question -->
-                <div class="panel panel-default">
-                    <div class="panel-heading">
-                        <h4 class="panel-title">
-                            <a class="accordion-toggle" data-toggle="collapse" data-parent="#accordion" data-target="#collapse13" href="#collapse13">
-                                Can I perform chemical structure searches?</a>
-                        </h4>
-                    </div>
-                    <div id="collapse13" class="panel-collapse collapse">
-                        <div class="panel-body">
-                            <p>Yes, this is possible in the <a href="@ix.idg.controllers.routes.IDGApp.ligands(null,16,1)">Ligand view</a>,
-                            by clicking on the <i class="fa fa-flask"></i> icon in the top right corner of the page. This will bring
-                            up a sketcher window in which you can draw a structure or else paste in a SMILES string. You
-                            can then perform a substructure or similarity search using the specified query structure.
-                        </div>
-                    </div>
-                </div>
+                    }
+                }
 
 
 
-                    <!-- Section -->
-                <div class="faqHeader">Data</div>
-
-                    <!-- Question -->
-                <div class="panel panel-default">
-                    <div class="panel-heading">
-                        <h4 class="panel-title">
-                            <a class="accordion-toggle" data-toggle="collapse" data-parent="#accordion" data-target="#collapse14" href="#collapse14">
-                                What is the Tissue Specificity Index?</a>
-                        </h4>
-                    </div>
-                    <div id="collapse14" class="panel-collapse collapse">
-                        <div class="panel-body">
-                            <p>Tissue specificity index, &tau;, is a measure of tissue specificity, and was
-                                originally defined in <a href="http://dx.doi.org/10.1093/bioinformatics/bti042">Yanai
-                                et al (2005)</a>. It is defined as
-                                $$\tau = \frac{\sum_{i=1}^{N} (1-x_)}{N-1}$$
-                            where \(N\) is is the number of tissues and \(x_i\) is the expression profile component
-                                normalized by the maximal component value.
-                                <p><a href="http://dx.doi.org/10.1093/bib/bbw008">Kryuchkova-Mostacci &amp;
-                                Robinson-Rechavi (2016)</a> benchmarked this metric against several others, and concluded
-                                that &tau; is the best overall method to measure expression specificity.
-                        </div>
-                    </div>
-                </div>
-
-                    <!-- Question -->
-                <div class="panel panel-default">
-                    <div class="panel-heading">
-                        <h4 class="panel-title">
-                            <a class="accordion-toggle" data-toggle="collapse" data-parent="#accordion" data-target="#collapse15" href="#collapse15">
-                                What is the log Novelty Score?</a>
-                        </h4>
-                    </div>
-                    <div id="collapse15" class="panel-collapse collapse">
-                        <div class="panel-body">
-                            <p>The novelty (\(N_i\)) and Importance (\(I_{ij}\)) scores are computed using the following
-                            formulae
-                            $$N_i = \frac{1}{\sum \frac{1}{T_k}}$$
-                            and
-                            $$I_{ij} = \sum \frac{1}{T_k D_k}$$
-                            where \(T_k\) and \(D_k\) are the numbers of targets and diseases in abstract \(k\),
-                                respectively, and summation over all publications including target (\(i\)), and for
-                                importance, also including disease (\(j\)).
-                            <p>Due to the skewed nature of the distribution of Novelty scores, we take the logarithm. This
-                            leads to a less skewed distribution, allowing for more reasonable faceting.
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Question -->
-                <div class="panel panel-default">
-                    <div class="panel-heading">
-                        <h4 class="panel-title">
-                            <a class="accordion-toggle" data-toggle="collapse" data-parent="#accordion" data-target="#collapse12" href="#collapse12">
-                                Why are there no diseases shown for a target?</a>
-                        </h4>
-                    </div>
-                    <div id="collapse12" class="panel-collapse collapse">
-                        <div class="panel-body">
-                            <p>Disease target associations are sourced from the <a href="http://diseases.jensenlab.org/Search"
-                            target="_blank">DISEASES</a> database, which computes an association score between a disease
-                            and a target. Pharos applies a threshold on this score, such that disease-target associations with
-                            a score greater than this threshold are displayed
-                            <p>If you're not seeing a disease associated with a target, it is either not associated with the
-                            target, or else its association score does not cross the threshold employed by Pharos (implying
-                            that the mined association is not strong enough)
-                        </div>
-                    </div>
-                </div>
-
-                    <!-- Question -->
-                <div class="panel panel-default">
-                    <div class="panel-heading">
-                        <h4 class="panel-title">
-                            <a class="accordion-toggle" data-toggle="collapse" data-parent="#accordion" data-target="#collapse11" href="#collapse11">
-                                How is the Pubmed Score calculated?</a>
-                        </h4>
-                    </div>
-                    <div id="collapse11" class="panel-collapse collapse">
-                        <div class="panel-body">
-                            <p>
-                            The Pubmed Score (also sometimes referred to as the Jensen Score) is derived from text mining
-                            a set of Pubmed abstracts. See <a href="@ix.idg.controllers.routes.IDGApp.pmscore">here</a> for a
-                            a detailed description of how it's computed.
-                        </div>
-                    </div>
-                </div>
-
-                    <!-- Question -->
-                <div class="panel panel-default">
-                    <div class="panel-heading">
-                        <h4 class="panel-title">
-                            <a class="accordion-toggle" data-toggle="collapse" data-parent="#accordion" href="#collapse2">
-                                How can I download all the data?</a>
-                        </h4>
-                    </div>
-                    <div id="collapse2" class="panel-collapse collapse">
-                        <div class="panel-body">
-                            <p>
-                            The Pharos user interface does not support downloads of the complete dataset.
-                            <p>
-                                You can obtain a MySQL dump of the complete TCRD dataset (v3.0.7)
-                                <a href="https://pharos.nih.gov/download/tcrd_v3.0.7.sql.gz">here</a>. A subset of the dataset
-                                    that can be used for testing and development is available
-                                    <a href="https://pharos.nih.gov/download/tcrd307_small.tgz">here</a>.
-                                    A reduced version of the
-                                dataset that is comprised of summary counts is available
-                                <<a href="https://pharos.nih.gov/downloads/XXX">here</a>. For more details on
-                                the contents of the datasets visit the <a href="http://juniper.health.unm.edu/tcrd/">
-                                TCRD</a>
-                                website.
-                        </div>
-                    </div>
-                </div>
-
-
-                    <!-- Question -->
-                <div class="panel panel-default">
-                    <div class="panel-heading">
-                        <h4 class="panel-title">
-                            <a class="accordion-toggle" data-toggle="collapse" data-parent="#accordion" href="#collapse7">
-                                How are the IDG expression results computed?</a>
-                        </h4>
-                    </div>
-                    <div id="collapse7" class="panel-collapse collapse">
-                        <div class="panel-body">
-                            The function which computes consensus expression level aggregates expression values from
-                            GTEx, HPM and HPA into 11 tissue types (e.g., Digestive Tract, Endocrine System, etc.).
-                            A consensus expression value for a given target is simply the mode (most frequent) of
-                            the qualitative expression values in the aggregated set. The confidence value associated
-                            with a consensus expression value is derived taking into consideration both the number and
-                            consistency of supporting data. Confidence for Low and Medium levels should be interpreted
-                            to mean confidence for that level of expression or higher.
-                        </div>
-                    </div>
-                </div>
-
-                    <!-- Section -->
-                <div class="faqHeader">Visualizations</div>
-
-                    <!-- Question -->
-                <div class="panel panel-default">
-                    <div class="panel-heading">
-                        <h4 class="panel-title">
-                            <a class="accordion-toggle" data-toggle="collapse" data-parent="#accordion" href="#collapse4">
-                                How do I read a sunburst visualization?</a>
-                        </h4>
-                    </div>
-                    <div id="collapse4" class="panel-collapse collapse">
-                        <div class="panel-body">
-                            From the Wikipedia <a href="https://en.wikipedia.org/wiki/Pie_chart#Ring_chart_.2F_Sunburst_chart_.2F_Multilevel_pie_chart">
-                            entry</a>,
-                            A ring chart, also known as a sunburst chart or a multilevel pie chart, is used to visualize
-                            hierarchical data, depicted by concentric circles. The circle in the centre
-                            represents the root node, with the hierarchy moving outward from the center. A segment of the
-                            inner circle bears a hierarchical relationship to those segments of the outer circle which
-                            lie within the angular sweep of the parent segment.Also see this <a href="http://www.neoformix.com/2006/MultiLevelPieChart.html">
-                            discussion.
-                        </a>
-                        </div>
-                    </div>
-                </div>
-
-                    <!-- Question -->
-                <div class="panel panel-default">
-                    <div class="panel-heading">
-                        <h4 class="panel-title">
-                            <a class="accordion-toggle" data-toggle="collapse" data-parent="#accordion" href="#collapse5">
-                                What do the numbers on the radar chart mean?</a>
-                        </h4>
-                    </div>
-                    <div id="collapse5" class="panel-collapse collapse">
-                        <div class="panel-body">
-                            <p>The radar chart is a visualization of gene-attribute associations as recorded by the
-                                <a href="http://amp.pharm.mssm.edu/Harmonizome/">Harmonizome</a>.</p>
-                            <p>
-                                These radial plots summarize the level of accumulated knowledge about each target.
-                                The further the point is away from the center of the radial plot, the more knowledge exists
-                                about the target. By mouse hovering the labels, the list of associated resources with links
-                                are presented on the left. To compare the relative knowledge for the target to knowledge for
-                                the target family, select to "overlay another dataset". The normalized knowledge for the target
-                                family will show in orange.
-                            </p>To construct these plots we
-                            <ol>
-                                <li>Begin with a set of gene-attribute associations. The attributes may be pathways,
-                                    GO terms, phenotypes, diseases, drugs, tissues, proteins, etc., depending on the
-                                    dataset. Some datasets require a few preprocessing steps to get here.</li>
-                                <li>Count the number of associations for each gene.</li>
-                                <li>Normalize the counts by Calculate the empirical cumulative probability of
-                                    the count for each gene, which is equal to the fraction of genes with count less
-                                    than or equal to the count for each gene.ount for each gene.</li>
-                            </ol>
-                            <p>The normalized counts/CDF values/empirical cumulative probabilities indicate the relative
-                                amount of knowledge about a gene compared to other genes in a given dataset.  Genes with
-                                relatively high numbers of associations get assigned values near 1 and genes with relatively
-                                low numbers of associations get assigned values near 0.</p>
-
-                        </div>
-                    </div>
-                </div>
 
             </div>
         </div>
