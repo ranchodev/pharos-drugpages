@@ -72,6 +72,7 @@ import play.twirl.api.Content;
 import scala.Option;
 import tripod.chem.indexer.StructureIndexer;
 
+import java.net.*;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
@@ -976,56 +977,9 @@ public class IDGApp extends App implements Commons {
         return ok (ix.idg.views.html.discussion.render());
     }
 
-    public static Result faq() throws IOException {
-        scala.Option<Object> none = (Option<Object>) scala.None$.empty();
-        scala.Option<String> noneString = scala.Option.apply(null);
-        scala.Option<SSLConfig> noneSSLConfig = scala.Option.apply(null);
-        WSClientConfig clientConfig = new DefaultWSClientConfig(
-                none, // connectionTimeout
-                none, // idleTimeout
-                none, // requestTimeout
-                none, // followRedirects
-                none, // useProxyProperties
-                noneString, // userAgent
-                none, // compressionEnabled
-                none, // acceptAnyCertificate
-                noneSSLConfig);
-
-        // Build a secure config out of the client config and the ning builder:
-        AsyncHttpClientConfig.Builder asyncHttpClientBuilder = new AsyncHttpClientConfig.Builder();
-        NingAsyncHttpClientConfigBuilder secureBuilder = new NingAsyncHttpClientConfigBuilder(clientConfig,
-                asyncHttpClientBuilder);
-        AsyncHttpClientConfig secureDefaults = secureBuilder.build();
-
-        // You can directly use the builder for specific options once you have secure TLS defaults...
-        AsyncHttpClientConfig customConfig = new AsyncHttpClientConfig.Builder(secureDefaults)
-                .build();
-        WSClient client = new play.libs.ws.ning.NingWSClient(customConfig);
-//        WSClient client = WS.client();
-
-//        F.Promise<Result> resultPromise = client.url("https://pharos.nih.gov/faq.json").get().map(
-//                new F.Function<WSResponse, Result>() {
-//                    @Override
-//                    public Result apply(WSResponse wsResponse) throws Throwable {
-//                        ObjectNode root = (ObjectNode) wsResponse.asJson();
-//
-//                        return ok(ix.idg.views.html.faq.render(root));
-//                    }
-//                }
-//        );
-//        return resultPromise;
-
-        JsonNode root;
-        ObjectMapper mapper = new ObjectMapper();
-        if (Play.isProd()) {
-            root = mapper.readTree(Play.application().resourceAsStream("public/faq.json"));
-        } else {
-            File file = Play.application().getFile("app/assets/faq.json");
-            FileInputStream fis = new FileInputStream(file);
-            root = mapper.readTree(fis);
-        }
-
-        return ok(ix.idg.views.html.faq.render((ObjectNode)root));
+    @Cached(key="_faq", duration = Integer.MAX_VALUE)
+    public static Result faq () throws IOException {
+        return ok(ix.idg.views.html.faq.render());
     }
     
     @Cached(key="_help", duration= Integer.MAX_VALUE)

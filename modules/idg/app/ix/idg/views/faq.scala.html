@@ -4,7 +4,6 @@
 @import ix.idg.controllers.Commons
 @import scala.collection.JavaConversions._
 
-@(faqs: ObjectNode)
 
 @ix.ncats.views.html.main("Pharos: Frequently Asked Questions") {
     @helpmenu()
@@ -28,35 +27,7 @@
             </div>
 
 
-            <div class="panel-group" id="accordion">
-
-
-                @for(nodeEntry <- faqs.fields()) {
-                    <div class="faqHeader">@nodeEntry.getKey()</div>
-                    @for(item <- nodeEntry.getValue().iterator) {
-
-                        <div class="panel panel-default">
-                            <div class="panel-heading">
-                                <h4 class="panel-title">
-                                    <a class="accordion-toggle" data-toggle="collapse" data-parent="#accordion" data-target='#@item.get("href").asText()' href='#@item.get("href").asText()'>
-                                        @Html(item.get("question").asText())
-                                        </a>
-                                </h4>
-                            </div>
-                            <div id="@item.get("href").asText()" class="panel-collapse collapse">
-                                <div class="panel-body">
-                                   @Html(item.get("answer").asText())
-                                </div>
-                            </div>
-                        </div>
-
-                    }
-                }
-
-
-
-
-            </div>
+            <div class="panel-group" id="accordion"></div>
         </div>
     </div>
         </div>
@@ -102,6 +73,30 @@ $(document).ready(function () {
             scrollTop: $("#"+divid).offset().top - 100
         }, 500);
     }
+
+  $.ajax({
+     url: 'https://pharos.nih.gov/faq.json',
+     dataType: 'json',
+     success: function (d) {
+       var html = '';
+       for (var p in d) {
+         html += '<div class="faqHeader">'+p+'</div>';
+	 for (var i in d[p]) {
+	    html += '<div class="panel panel-default">';
+	    html += ' <div class="panel-heading">';
+	    html += '  <h4 class="panel-title">';
+	    html += '    <a class="accordion-toggle" data-toggle="collapse" data-parent="#accordion" href="#'+d[p][i].href+'">'+d[p][i].question+'</a>';
+	    html += '   </h4></div>';
+	    html += ' <div id="'+d[p][i].href+'" class="panel-collapse collapse">';
+	    html += '  <div class="panel-body">'+d[p][i].answer+'</div>';
+	    html += ' </div></div>';
+	 }
+	 html += '</div>';
+       }
+       console.log('html ==> '+html);
+       $('#accordion').append(html);
+     }
+  });
 })
     </script>
     </head>
