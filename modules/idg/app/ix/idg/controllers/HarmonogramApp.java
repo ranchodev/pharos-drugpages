@@ -480,8 +480,13 @@ public class HarmonogramApp extends App {
     
     public static Content _hgForTargetsContent
         (String[] accs, String format) throws Exception {
-        List<HarmonogramCDF> hg = HarmonogramFactory.finder
-                .where().in("uniprotId", Arrays.asList(accs)).findList();
+        List<HarmonogramCDF> hg = new ArrayList<>();
+        for (String a : accs) {
+            List<HarmonogramCDF> cdf = HarmonogramFactory.finder
+                .where().eq("uniprotId", a).findList();
+            hg.addAll(cdf);
+        }
+        
         if (hg.isEmpty()) {
             return null;
         }
@@ -519,9 +524,16 @@ public class HarmonogramApp extends App {
                 }
                 matrix[r++] = row;
             }
+            
+            Logger.debug("Clustering harmanogram matrix "
+                         +r+"x"+header.length+"...");
+            long start = System.currentTimeMillis();
             HClust hc = new HClust();
             hc.setData(matrix, header, allValues.keySet().toArray(new String[]{}));
             hc.run();
+            Logger.debug("Clustering completes in "
+                         +String.format
+                         ("%1$.3fs",1e-3*(System.currentTimeMillis()-start)));
 
             // construct the membership matrix, each column is cluster membership
             // for a given height. Each row is a target. So [i,j] indicates cluster

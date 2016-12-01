@@ -70,7 +70,7 @@ function load_clustergram(json_url) {
       // 'order':'rank'
     };
 
-    d3.select('#wait_message').style('display','none');
+    //d3.select('#wait_message').style('display','none');
 
     // make clustergram: pass network_data and the div name where the svg should be made
     var d3c = d3_clustergram(arguments_obj);
