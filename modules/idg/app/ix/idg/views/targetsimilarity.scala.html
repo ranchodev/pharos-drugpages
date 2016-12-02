@@ -1,0 +1,116 @@
+@import ix.idg.models.Target
+@import ix.idg.controllers.IDGApp
+
+@(target1: Target, target2: Target)
+
+@frame(t: Target) = {
+<div class="panel panel-@t.idgTDL.label">
+  <div class="panel-heading">
+     <h3 class="panel-title"><a href='@ix.idg.controllers.routes.IDGApp.target(IDGApp.getId(t))'>@IDGApp.getId(t)</a></h3>
+  </div>
+  <div class="panel-body">
+     <iframe sandbox="allow-scripts allow-forms allow-same-origin allow-popups allow-top-navigation allow-popups-to-escape-sandbox allow-modals"
+         src='@{ix.idg.controllers.routes.IDGApp.target(IDGApp.getId(t))}?v=embedded'
+         marginwidth="0" marginheight="0"
+         frameBorder="0"
+         style="height:500px; width:100%">
+           <p>Your browser does not support iframes.</p>	 
+     </iframe>
+   </div>
+</div>
+}
+
+@ix.ncats.views.html.main("Target Similarity"){
+@targetmenu(null)
+}(HtmlFormat.empty){
+<div class="container-fluid" style="padding-top:50px;">
+  <div class="page-header">
+    <h1>Target Similarity</h1>
+    <p>
+      <form class="form-horizontal" role="form" method="POST"
+            action="@ix.idg.controllers.routes.IDGApp.targetSimilarity">
+	<table class="table">
+	  <tr>
+	    <td>
+	      <div class="input-group">
+		<span class="input-group-addon">Target 1</span>
+		<input type="text" class="form-control" placeholder="Specify target by gene or UniProt accession" name="target1">
+	      </div>
+	    </td>
+	    <td>
+	      <div class="input-group">
+		<span class="input-group-addon">Target 2</span>
+		<input type="text" class="form-control" placeholder="Specify target by gene or UniProt accession" name="target2">
+	      </div>
+	    </td>
+	    <td>
+	      <button type="submit" class="btn btn-default">Submit</button>
+	    </td>
+	  </tr>
+	</table>
+      </form>
+  </div>
+
+@if(target1 != null && target2 != null) {  
+  <div class="row">
+    <div class="col-md-12">
+      <div class="panel panel-default">
+	<div class="panel-heading">
+	  <h1 class="panel-title">Tanimoto Similarity: <span id="similarity"></span></h1>
+	</div>
+	<div class="panel-body">
+	  <table id="tab-contribution"></table>
+	</div>
+      </div>
+    </div>
+  </div>
+  <div class="row">
+    <div class="col-md-6">
+      @frame(target1)
+    </div>
+    <div class="col-md-6">
+      @frame(target2)
+    </div>
+  </div>
+  }
+</div>
+<head>
+  <link type="text/css" rel="stylesheet" href='@routes.Assets.versioned("stylesheets/main.css")'/>
+  <link rel="stylesheet" href='@routes.WebJarAssets.at(WebJarAssets.locate("jquery.dataTables.min.css"))'>  
+  <script src='@routes.WebJarAssets.at(WebJarAssets.locate("jquery.dataTables.min.js"))'></script>
+  <link rel="stylesheet" href='@routes.WebJarAssets.at(WebJarAssets.locate("bootstrap/2/dataTables.bootstrap.css"))'>
+  <script src='@routes.WebJarAssets.at(WebJarAssets.locate("bootstrap/2/dataTables.bootstrap.min.js"))'></script>
+</head>
+}
+
+@if(target1 != null && target2 != null) {
+@defining(target1.id + ","+target2.id) { query =>
+<script>
+$(document).ready(function () {
+   $.ajax({
+      url: '@ix.idg.controllers.routes.TargetVectorFactory.targetSimilarity(query)',
+      dataType: 'json',
+      success: function (d) {
+         console.log('similarity = '+d[0].similarity);
+	 $('#similarity').html('<strong>'+d[0].similarity+'</strong>');
+
+	 var data = [];
+	 for(var p in d[0].contribution) {
+	   data.push([p, d[0].contribution[p]]);
+	 }
+	 //console.log('data = '+data);
+	 
+	 $('#tab-contribution').DataTable({
+	    'dom': 'pit',
+	    'data': data,
+	    'columns': [
+	      { title: 'Property'},
+	      { title: 'Contribution'}
+	    ]
+	 });
+      }
+   });
+});
+</script>
+}
+}

@@ -4246,4 +4246,34 @@ public class IDGApp extends App implements Commons {
         
         return desc.toArray(new String[0]);
     }
+
+    public static Result targetSimilarityForm () {
+        return ok (ix.idg.views.html.targetsimilarity.render(null, null));
+    }
+
+    @BodyParser.Of(value = BodyParser.FormUrlEncoded.class,
+                   maxLength = 20000)
+    public static Result targetSimilarity () {
+        Map<String, String[]> params = request().body().asFormUrlEncoded();
+        String target1 = params.get("target1")[0].trim();
+        String target2 = params.get("target2")[0].trim();
+        if (target1.length() == 0 || target2.length() == 0)
+            return _badRequest ("One or both specified target is invalid!");
+
+        try {
+            List<Target> res1 = TargetResult.find(target1);
+            if (res1.isEmpty())
+                return _badRequest ("Unable to resolve target '"+target1+"'");
+            
+            List<Target> res2 = TargetResult.find(target2);
+            if (res2.isEmpty())
+                return _badRequest ("Unable to resolve target '"+target2+"'");
+            
+            return ok (ix.idg.views.html.targetsimilarity.render
+                       (res1.get(0), res2.get(0)));
+        }
+        catch (Exception ex) {
+            return _internalServerError (ex);
+        }
+    }
 }
