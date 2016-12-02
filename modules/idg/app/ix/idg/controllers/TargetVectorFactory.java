@@ -26,7 +26,7 @@ import play.mvc.*;
 import play.*;
 
 public class TargetVectorFactory extends Controller implements Commons {
-    static final int DIM = 5;
+    static final int DIM = 50;
     
     static public class TargetVector {
         @JsonIgnore

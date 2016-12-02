@@ -9,18 +9,27 @@ import ix.core.stats.Histogram;
 
 public class Vector implements Serializable, Comparable<Vector>, Commons {
     private static final long serialVersionUID = 1L; //
-    static final double EPSILON = 0.0001;
+    static final double EPSILON = 0.01;
 
     class AdaptiveHistogram {
         List<Double> range = new ArrayList<>();
         int index;
         final int nbins;
-        
+        final int max; // max number of bins
+
         AdaptiveHistogram (int nbins) {
+            this (nbins, 50);
+        }
+        
+        AdaptiveHistogram (int nbins, int max) {
             this.nbins = nbins;
+            this.max = max;
         }
 
         public void iterate (double min, double max) {
+            if (range.size() + nbins >= max)
+                return; // stop
+            
             Histogram hist = new Histogram (nbins, min, max);
             for (Number v : values)
                 hist.increment(v.doubleValue());
@@ -33,8 +42,8 @@ public class Vector implements Serializable, Comparable<Vector>, Commons {
                 double delta = r[i+1] - r[i];
                 if (x > threshold && delta > EPSILON) {
                     // expand this range: ranges[i] and ranges[i+1]
-                    System.err.println("** expanding range: ["+r[i]+","
-                                       +r[i+1]+")");
+                    //System.err.println("** expanding range: ["+r[i]+","
+                    //+r[i+1]+")");
                     iterate (r[i], r[i+1]);
                 }
                 else {
@@ -53,14 +62,19 @@ public class Vector implements Serializable, Comparable<Vector>, Commons {
             }
             sb.append(">");
             System.err.println(sb.toString());
-            
-            double[] r = new double[range.size()];
-            for (int i = 0; i < r.length; ++i)
-                r[i] = range.get(i);
-            
-            Histogram h = new Histogram (r);
-            for (Number v : values)
-                h.increment(v.doubleValue());
+
+            Histogram h;
+            if (!range.isEmpty()) {
+                double[] r = new double[range.size()];
+                for (int i = 0; i < r.length; ++i)
+                    r[i] = range.get(i);
+                
+                h = new Histogram (r);
+                for (Number v : values)
+                    h.increment(v.doubleValue());
+            }
+            else
+                h = new Histogram (0);
             
             return h;
         }
@@ -107,8 +121,16 @@ public class Vector implements Serializable, Comparable<Vector>, Commons {
     public Histogram createHistogram (int nbins) {    
         if (min == null || max == null || values.isEmpty())
             throw new IllegalStateException ("Vector '"+field+"' is empty!");
-        System.err.println("[****** "+field+" *******]");
-        Histogram h;
+        
+        //System.err.println("[****** "+field+" *******]");
+        Histogram h = new Histogram
+            (nbins, min.doubleValue(), max.doubleValue());
+        for (Number v : values)
+            h.increment(v.doubleValue());
+
+        // FIXME: can't use adaptive histogram without padding so that
+        // we have the same number of bins!
+        /*
         if (Math.abs(max.doubleValue() - min.doubleValue()) <= EPSILON) {
             h = new Histogram (nbins, min.doubleValue(), max.doubleValue());
         }
@@ -117,6 +139,7 @@ public class Vector implements Serializable, Comparable<Vector>, Commons {
             ah.iterate(min.doubleValue(), max.doubleValue());
             h = ah.getHistogram();
         }
+        */
         return h;
     }
 }
