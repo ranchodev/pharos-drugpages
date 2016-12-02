@@ -36,6 +36,11 @@ public class Util {
         return UserAgents[rand.nextInt(UserAgents.length)];
     }
 
+    public static int rand (int from, int to) {
+        if (to < from) return from;
+        return from + rand.nextInt(to-from);
+    }
+    
     public static String randvar (int size, Http.Request req) {
         Random r = rand;
         if (req != null) {

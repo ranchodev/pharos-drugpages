@@ -4251,26 +4251,44 @@ public class IDGApp extends App implements Commons {
         return ok (ix.idg.views.html.targetsimilarity.render(null, null));
     }
 
+    static final int TARGET_COUNT = TargetFactory.finder.findRowCount();
     @BodyParser.Of(value = BodyParser.FormUrlEncoded.class,
                    maxLength = 20000)
     public static Result targetSimilarity () {
         Map<String, String[]> params = request().body().asFormUrlEncoded();
-        String target1 = params.get("target1")[0].trim();
-        String target2 = params.get("target2")[0].trim();
-        if (target1.length() == 0 || target2.length() == 0)
-            return _badRequest ("One or both specified target is invalid!");
-
+        String action = params.get("action")[0];
+        Logger.debug("action="+action);
+        
         try {
-            List<Target> res1 = TargetResult.find(target1);
-            if (res1.isEmpty())
-                return _badRequest ("Unable to resolve target '"+target1+"'");
-            
-            List<Target> res2 = TargetResult.find(target2);
-            if (res2.isEmpty())
-                return _badRequest ("Unable to resolve target '"+target2+"'");
-            
-            return ok (ix.idg.views.html.targetsimilarity.render
-                       (res1.get(0), res2.get(0)));
+            if ("random".equalsIgnoreCase(action)) {
+                long t1 = Util.rand(1, TARGET_COUNT);
+                long t2 = Util.rand(1, TARGET_COUNT);
+                Target target1 = TargetFactory.finder.byId(t1);
+                Target target2 = TargetFactory.finder.byId(t2);
+                return ok (ix.idg.views.html.targetsimilarity.render
+                           (target1, target2));
+            }
+            else {
+                String target1 = params.get("target1")[0].trim();
+                String target2 = params.get("target2")[0].trim();
+                if (target1.length() == 0 || target2.length() == 0)
+                    return _badRequest
+                        ("One or both specified target is invalid!");
+                
+                
+                List<Target> res1 = TargetResult.find(target1);
+                if (res1.isEmpty())
+                    return _badRequest
+                        ("Unable to resolve target '"+target1+"'");
+                
+                List<Target> res2 = TargetResult.find(target2);
+                if (res2.isEmpty())
+                    return _badRequest
+                        ("Unable to resolve target '"+target2+"'");
+                
+                return ok (ix.idg.views.html.targetsimilarity.render
+                           (res1.get(0), res2.get(0)));
+            }
         }
         catch (Exception ex) {
             return _internalServerError (ex);

@@ -34,24 +34,39 @@
 	    <td>
 	      <div class="input-group">
 		<span class="input-group-addon">Target 1</span>
-		<input type="text" class="form-control" placeholder="Specify target by gene or UniProt accession" name="target1">
+		<input type="text" class="form-control"
+		       placeholder="Specify target by gene or UniProt accession" name="target1">
 	      </div>
 	    </td>
 	    <td>
 	      <div class="input-group">
 		<span class="input-group-addon">Target 2</span>
-		<input type="text" class="form-control" placeholder="Specify target by gene or UniProt accession" name="target2">
+		<input type="text" class="form-control"
+		       placeholder="Specify target by gene or UniProt accession" name="target2">
 	      </div>
 	    </td>
 	    <td>
-	      <button type="submit" class="btn btn-default">Submit</button>
+	      <button type="submit"
+		      class="btn btn-primary" name="action"
+		      value="submit">Submit</button>
+	      <button type="submit"
+		      class="btn btn-info"
+		      name="action" value="random">Suprise me!</button>
 	    </td>
 	  </tr>
 	</table>
       </form>
   </div>
 
-@if(target1 != null && target2 != null) {  
+@if(target1 != null && target2 != null) {
+  <div class="row">
+    <div class="col-md-6">
+      @frame(target1)
+    </div>
+    <div class="col-md-6">
+      @frame(target2)
+    </div>
+  </div>
   <div class="row">
     <div class="col-md-12">
       <div class="panel panel-default">
@@ -62,14 +77,6 @@
 	  <table id="tab-contribution"></table>
 	</div>
       </div>
-    </div>
-  </div>
-  <div class="row">
-    <div class="col-md-6">
-      @frame(target1)
-    </div>
-    <div class="col-md-6">
-      @frame(target2)
     </div>
   </div>
   }
@@ -102,7 +109,8 @@ $(document).ready(function () {
 	 
 	 $('#tab-contribution').DataTable({
 	    'dom': 'pit',
-	    'data': data,
+            'data': data,
+	    'order': [[1,'desc']],
 	    'columns': [
 	      { title: 'Property'},
 	      { title: 'Contribution'}
