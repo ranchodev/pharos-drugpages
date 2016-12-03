@@ -84,58 +84,58 @@ public class EntityDescriptor<T extends EntityModel> implements Commons {
                          +kind.getName());
         
             Model.Finder finder = ObjectFactory.finder(kind);
-	    int count = 0;
-	    DatabaseEntry key = new DatabaseEntry ();
-	    DatabaseEntry val = new DatabaseEntry ();
-	    SerialBinding sb = STORE.getSerialBinding(Map.class);
+            int count = 0;
+            DatabaseEntry key = new DatabaseEntry ();
+            DatabaseEntry val = new DatabaseEntry ();
+            SerialBinding sb = STORE.getSerialBinding(Map.class);
             
-	    for (Object obj : finder.all()) {
-		EntityModel model = (EntityModel) obj;
+            for (Object obj : finder.all()) {
+                EntityModel model = (EntityModel) obj;
                 
-		Map<String, Number> desc = instrument (model);
-		LongBinding.longToEntry(model.id, key);
-		sb.objectToEntry(desc, val);
+                Map<String, Number> desc = instrument (model);
+                LongBinding.longToEntry(model.id, key);
+                sb.objectToEntry(desc, val);
                 
-		Transaction tx = STORE.createTx();
-		try {
-		    OperationStatus status = descDb.put(tx, key, val);
-		    if (status != OperationStatus.SUCCESS) {
-			Logger.warn("** PUT KEY "+model.getClass()+"/"
-				    +model.id+" return non-success "
-				    +"status "+status);
-		    }
-		    else {
-			for (Map.Entry<String, Number> me :
-				 desc.entrySet()) {
-			    String name = me.getKey();
-			    if (name.charAt(0) != '@') {
-				Vector vec = vectors.get(name);
-				if (vec == null) {
-				    vectors.put
-					(name,
-					 vec = new Vector (kind, name));
-				}
-				
-				Number nv = me.getValue();
-				if (vec.min == null
-				    || (vec.min.doubleValue()
-					> nv.doubleValue()))
-				    vec.min = nv;
-				if (vec.max == null
-				    || (vec.max.doubleValue()
-					< nv.doubleValue()))
-				    vec.max = nv;
-				vec.values.add(nv);
-			    }
-			}
-			++count;
-			Logger.debug(String.format("%1$10d: ", count)
-				     +kind.getName()+"/"+model.getName());
-		    }
-		}
-		finally {
-		    tx.commit();
-		}
+                Transaction tx = STORE.createTx();
+                try {
+                    OperationStatus status = descDb.put(tx, key, val);
+                    if (status != OperationStatus.SUCCESS) {
+                        Logger.warn("** PUT KEY "+model.getClass()+"/"
+                                    +model.id+" return non-success "
+                                    +"status "+status);
+                    }
+                    else {
+                        for (Map.Entry<String, Number> me :
+                                 desc.entrySet()) {
+                            String name = me.getKey();
+                            if (name.charAt(0) != '@') {
+                                Vector vec = vectors.get(name);
+                                if (vec == null) {
+                                    vectors.put
+                                        (name,
+                                         vec = new Vector (kind, name));
+                                }
+                                
+                                Number nv = me.getValue();
+                                if (vec.min == null
+                                    || (vec.min.doubleValue()
+                                        > nv.doubleValue()))
+                                    vec.min = nv;
+                                if (vec.max == null
+                                    || (vec.max.doubleValue()
+                                        < nv.doubleValue()))
+                                    vec.max = nv;
+                                vec.values.add(nv);
+                            }
+                        }
+                        ++count;
+                        Logger.debug(String.format("%1$10d: ", count)
+                                     +kind.getName()+"/"+model.getName());
+                    }
+                }
+                finally {
+                    tx.commit();
+                }
             }
         }       
     } // InitDbs
@@ -317,7 +317,8 @@ public class EntityDescriptor<T extends EntityModel> implements Commons {
         }
 
         List<Keyword> syns = model.getSynonyms(PDB_ID);
-        props.put(PDB_ID, syns.size());
+        if (!syns.isEmpty())
+            props.put(PDB_ID, syns.size());
 
         for (Class cls : new Class[]{
                 Target.class, Ligand.class, Disease.class}) {
@@ -374,6 +375,20 @@ public class EntityDescriptor<T extends EntityModel> implements Commons {
                                    Map<String, Number> vec2) {
         return tanimoto (vec1, vec2, null);
     }
+
+    static final String[] IGNORE = new String[]{
+        "IDG Tissue Ref",
+        "Reactome Pathway Ref",
+        "Protein Class"
+    };
+
+    static boolean blacklist (String name) {
+        for (String s : IGNORE) {
+            if (name.indexOf(s) >= 0)
+                return true;
+        }
+        return false;
+    }
     
     public static double tanimoto (Map<String, Number> vec1,
                                    Map<String, Number> vec2,
@@ -385,7 +400,7 @@ public class EntityDescriptor<T extends EntityModel> implements Commons {
             String name = me.getKey();
             double x = me.getValue().doubleValue();
             Number z = vec2.get(name);
-            if (z != null && name.indexOf("Protein Class") < 0) {
+            if (z != null && !blacklist (name)) {
                 double y = z.doubleValue();
                 c += x*y;
                 contrib.put(name, x*y);

@@ -51,7 +51,7 @@
 		      value="submit">Submit</button>
 	      <button type="submit"
 		      class="btn btn-info"
-		      name="action" value="random">Suprise me!</button>
+		      name="action" value="random">Surprise me!</button>
 	    </td>
 	  </tr>
 	</table>
@@ -79,6 +79,28 @@
       </div>
     </div>
   </div>
+  <div class="row">
+    <div class="col-md-6">
+      <div class="panel panel-default">
+	<div class="panel-heading">
+	  <h1 class="panel-title">Descriptors for @IDGApp.getId(target1)</h1>
+	</div>
+	<div class="panel-body">
+	  <table id="tab-descriptor-@target1.id"></table>
+	</div>
+      </div>      
+    </div>
+    <div class="col-md-6">
+      <div class="panel panel-default">
+	<div class="panel-heading">
+	  <h1 class="panel-title">Descriptors for @IDGApp.getId(target2)</h1>
+	</div>
+	<div class="panel-body">
+	  <table id="tab-descriptor-@target2.id"></table>
+	</div>
+      </div>            
+    </div>
+  </div>  
   }
 </div>
 <head>
@@ -93,6 +115,32 @@
 @if(target1 != null && target2 != null) {
 @defining(target1.id + ","+target2.id) { query =>
 <script>
+function loadDescriptors (id) {
+  var fake = '@ix.idg.controllers.routes.TargetVectorFactory.targetVector(0)';
+  var url = fake.substring(0, fake.lastIndexOf('/')) + id+'/descriptor';
+  console.log('loading descriptor '+url);
+  $.ajax({
+     'url': url,
+     dataType: 'json',
+     success: function (d) {
+        var data = [];
+	for (var p in d.descriptor) {
+	   data.push([p, Number(d.descriptor[p]).toPrecision(5), Number(d.vector[p]).toPrecision(5)]);
+	}
+	$('#tab-descriptor-'+id).DataTable({
+	    'dom': 'pit',
+            'data': data,
+	    'order': [[0,'desc']],
+	    'columns': [
+	      { title: 'Property'},
+	      { title: 'Raw'},
+	      { title: 'Normalized'}
+	    ]	
+	});
+     }
+  });
+}
+
 $(document).ready(function () {
    $.ajax({
       url: '@ix.idg.controllers.routes.TargetVectorFactory.targetSimilarity(query)',
@@ -118,6 +166,9 @@ $(document).ready(function () {
 	 });
       }
    });
+
+   loadDescriptors (@target1.id);
+   loadDescriptors (@target2.id);
 });
 </script>
 }
