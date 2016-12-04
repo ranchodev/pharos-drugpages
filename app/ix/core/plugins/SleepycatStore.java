@@ -57,8 +57,11 @@ public class SleepycatStore extends Plugin {
     public void onStop () {
         if (env != null) {
             try {
-                for (Database db : databases.values())
+                for (Database db : databases.values()) {
+                    for (SecondaryDatabase sdb : db.getSecondaryDatabases())
+                        sdb.close();
                     db.close();
+                }
                 env.close();
             }
             catch (Exception ex) {

@@ -138,6 +138,17 @@ public class TargetVectorFactory extends Controller implements Commons {
         }
     }
 
+    public static Result allPairwiseSimilarity () {
+        try {
+            EntityDescriptor<Target> edt =
+                EntityDescriptor.getInstance(Target.class);
+            return ok ("size = "+edt.allPairwiseSimilarity());
+        }
+        catch (Exception ex) {
+            Logger.error("Can't calculate all pairwise similarity", ex);
+            return internalServerError (ex.getMessage());
+        }
+    }
 
     public static Result targetSimilarity (String ids) {
         try {

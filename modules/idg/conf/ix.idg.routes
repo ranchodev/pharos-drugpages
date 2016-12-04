@@ -13,6 +13,7 @@ POST    /tcrd   ix.idg.controllers.TcrdRegistry.load
 GET	/api/v1/targets/descriptors	ix.idg.controllers.TargetVectorFactory.descriptorVectors
 GET	/api/v1/targets/:id/descriptor	ix.idg.controllers.TargetVectorFactory.targetVector(id: Long)
 GET	/api/v1/targets/:ids/similarity	ix.idg.controllers.TargetVectorFactory.targetSimilarity(ids: String)
+GET	/api/v1/targets/_simmat		ix.idg.controllers.TargetVectorFactory.allPairwiseSimilarity
 
 GET	/targets/similarity		ix.idg.controllers.IDGApp.targetSimilarityForm
 POST	/targets/similarity		ix.idg.controllers.IDGApp.targetSimilarity

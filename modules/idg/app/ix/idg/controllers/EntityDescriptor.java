@@ -3,6 +3,7 @@ package ix.idg.controllers;
 import java.util.*;
 import java.io.*;
 import java.lang.reflect.Field;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.*;
 import java.util.concurrent.locks.ReentrantLock;
 
@@ -19,6 +20,7 @@ import static ix.core.search.TextIndexer.Facet;
 import ix.core.plugins.SleepycatStore;
 
 import com.sleepycat.je.*;
+import com.sleepycat.bind.ByteArrayBinding;
 import com.sleepycat.bind.serial.StoredClassCatalog;
 import com.sleepycat.bind.serial.ClassCatalog;
 import com.sleepycat.bind.serial.SerialBinding;
@@ -46,9 +48,94 @@ public class EntityDescriptor<T extends EntityModel> implements Commons {
     static ConcurrentMap<Class, EntityDescriptor> _instances =
         new ConcurrentHashMap<Class, EntityDescriptor>();
 
+    public static class Similarity implements Serializable {
+        private static final long serialVersionUID = 0x1l;
+
+        final public double similarity;
+        final public Map<String, Double> contrib = new TreeMap<>();
+
+        Similarity (Map d1, Map d2) {
+            similarity = tanimoto (d1, d2, contrib);
+        }
+    }
+
+    public static class SimKey implements SecondaryMultiKeyCreator {
+        byte[] key = new byte[16];
+
+        public SimKey () {}
+        public SimKey (byte[] key) {
+            this.key = key;
+        }
+        public SimKey (long k1, long k2) {
+            encode (k1, k2);
+        }
+
+        public void encode (long k1, long k2) {
+            if (k1 > k2) {
+                long t = k1;
+                k1 = k2;
+                k2 = t;
+            }
+
+            encode (0, key, k1);
+            encode (8, key, k2);
+        }
+
+        public long key1 () { return decode (0, key); }
+        public long key2 () { return decode (8, key); }
+
+        public void encode (DatabaseEntry entry) {
+            new ByteArrayBinding().objectToEntry(key, entry);
+        }
+        
+        public static SimKey decode (DatabaseEntry entry) {
+            return new SimKey (new ByteArrayBinding().entryToObject(entry));
+        }
+        
+        static void encode (int i, byte[] b, long x) {
+            b[i++] = (byte)((x >> 56) & 0xff);
+            b[i++] = (byte)((x >> 48) & 0xff);
+            b[i++] = (byte)((x >> 40) & 0xff);
+            b[i++] = (byte)((x >> 32) & 0xff);
+            b[i++] = (byte)((x >> 24) & 0xff);
+            b[i++] = (byte)((x >> 16) & 0xff);
+            b[i++] = (byte)((x >> 8) & 0xff);
+            b[i++] = (byte)(x & 0xff);        
+        }
+        
+        static long decode (int i, byte[] b) {
+            return ((b[i++] & 0xff) << 56l)
+                | ((b[i++] & 0xff) << 48l)
+                | ((b[i++] & 0xff) << 40l)
+                | ((b[i++] & 0xff) << 32l)
+                | ((b[i++] & 0xff) << 24l)
+                | ((b[i++] & 0xff) << 16l)
+                | ((b[i++] & 0xff) << 8l)
+                | (b[i++] & 0xff);
+        }
+
+        public void createSecondaryKeys (SecondaryDatabase secondary,
+                                         DatabaseEntry key,
+                                         DatabaseEntry data,
+                                         Set<DatabaseEntry> results) {
+            SimKey sk = SimKey.decode(key);
+            DatabaseEntry key1 = new DatabaseEntry ();
+            DatabaseEntry key2 = new DatabaseEntry ();
+            LongBinding.longToEntry(sk.key1(), key1);
+            LongBinding.longToEntry(sk.key2(), key2);
+            results.add(key1);
+            results.add(key2);
+        }
+
+        public String toString () {
+            return "("+key1()+","+key2()+")";
+        }
+    }
+
     class InitDbs implements Runnable {
         public void run () {
             String name = Thread.currentThread().getName();
+            lock.lock();
             try {
                 generateDescriptors ();
                 Logger.debug(name+": ## "+vectors.size()
@@ -75,6 +162,9 @@ public class EntityDescriptor<T extends EntityModel> implements Commons {
             catch (Exception ex) {
                 Logger.error(Thread.currentThread().getName()
                              +": Can't generate descriptor vectors!", ex);
+            }
+            finally {
+                lock.unlock();
             }
         }
 
@@ -139,11 +229,124 @@ public class EntityDescriptor<T extends EntityModel> implements Commons {
             }
         }       
     } // InitDbs
-    
+
+    class CalculatePairwiseSimilarity implements Runnable {
+        public void run () {
+            lock.lock();
+            try {
+                long start = System.currentTimeMillis();
+                calcPairwise ();
+                Logger.debug("## calc "+simDb.count()
+                             +" pairwise similarity took "
+                             +String.format("%1$.1fs",
+                                            1e-3*(System.currentTimeMillis()
+                                                  -start)));
+            }
+            catch (Exception ex) {
+                Logger.error("Can't generate pairwise similarity matrix!", ex);
+            }
+            finally {
+                lock.unlock();
+            }
+        }
+
+        void calcPairwise () throws Exception {
+            String name = Thread.currentThread().getName();
+            Logger.debug(name+": ## calculating all pairwise "
+                         +"similarity matrix for "+descDb.count()
+                         +" descriptors!");
+            
+            DatabaseEntry key = new DatabaseEntry ();
+            
+            List<Long> keys = new ArrayList<>(); // load all keys in memory
+            Transaction tx = STORE.createTx();
+            try {
+                DatabaseEntry partial = new DatabaseEntry ();
+                partial.setPartial(0, 0, true);
+                Cursor cursor = descDb.openCursor(tx, null);
+                for (OperationStatus status =
+                         cursor.getFirst(key, partial, null);
+                     status == OperationStatus.SUCCESS; ) {
+                    long id = LongBinding.entryToLong(key);
+                    keys.add(id);
+                    status = cursor.getNext(key, partial, null);
+                }
+                cursor.close();
+            }
+            finally {
+                tx.commit();
+            }
+
+            tx = STORE.createTx();
+            try {
+                Logger.debug(keys.size()+" keys loaded; preparing "
+                             +"to calculate "+(keys.size()*(keys.size()-1)/2)
+                             +" pairwise similarity!");
+                
+                DatabaseEntry val = new DatabaseEntry ();
+                SerialBinding<Map> serial = STORE.getSerialBinding(Map.class);
+                SerialBinding<Similarity> simserial =
+                    STORE.getSerialBinding(Similarity.class);
+                
+                OperationStatus status;
+                for (int i = 0; i < keys.size(); ++i) {
+                    LongBinding.longToEntry(keys.get(i), key);
+                    status = descDb.get(tx, key, val, null);
+                    if (status == OperationStatus.SUCCESS) {
+                        Map di = serial.entryToObject(val);
+                        for (int j = i+1; j < keys.size(); ++j) {
+                            LongBinding.longToEntry(keys.get(j), key);
+                            status = descDb.get(tx, key, val, null);
+                            if (status == OperationStatus.SUCCESS) {
+                                Map dj = serial.entryToObject(val);
+                                
+                                Similarity sim = new Similarity (di, dj);
+                                SimKey sk = new SimKey
+                                    (keys.get(i), keys.get(j));
+                                
+                                sk.encode(key);
+                                simserial.objectToEntry(sim, val);
+                                status = simDb.put(tx, key, val);
+                                if (status != OperationStatus.SUCCESS)
+                                    Logger.warn("Putting similarity value "
+                                                +"for keypair "+sk
+                                                +" yields status="+status);
+                                else
+                                    Logger.debug(String.format("%1$10d",
+                                                               simDb.count())
+                                                 + ": similarity "+sk+" = "
+                                                 +sim.similarity);
+                            }
+                            else {
+                                Logger.warn
+                                    ("Retrieving descriptors for "+keys.get(j)
+                                     +" returns status="+status);
+                            }
+                        }
+                        tx.commit();
+                        tx = STORE.createTx(); // new transaction..
+                    }
+                    else {
+                        Logger.warn("Retrieving descriptors for "+keys.get(i)
+                                    +" returns status="+status);
+                    }
+                }
+            }
+            catch (IOException ex) {
+                Logger.error("Error calculating pairwise similarity", ex);
+            }
+            finally {
+                tx.commit();
+            }
+        }
+    }
 
     final Class<T> kind;
     final Map<String, Vector> vectors = new TreeMap<String, Vector>();
-    Database vecDb, descDb;
+    Database vecDb, descDb, simDb;
+    SecondaryDatabase simIndexDb;
+
+    final ReentrantLock lock = new ReentrantLock ();
     
     protected EntityDescriptor (Class<T> kind) throws IOException {
         vecDb = STORE.createDbIfAbsent(BASE+"$"+kind.getName()+"$Vectors");
@@ -153,13 +356,34 @@ public class EntityDescriptor<T extends EntityModel> implements Commons {
         descDb = STORE.createDbIfAbsent(BASE+"$"+kind.getName()+"$Descriptors");
         Logger.debug("Database "+descDb.getDatabaseName()+" initialized; "
                      +descDb.count()+" entries...");
+
+        simDb = STORE.createDbIfAbsent(BASE+"$"+kind.getName()+"$Similarity");
+        Transaction tx = STORE.createTx();
+        try {
+            SecondaryConfig config = new SecondaryConfig();
+            config.setAllowCreate(true);
+            config.setTransactional(true);
+            config.setSortedDuplicates(true);
+            config.setMultiKeyCreator(new SimKey ());
+            simIndexDb = simDb.getEnvironment()
+                .openSecondaryDatabase(tx, "Index", simDb, config);
+        }
+        catch (Exception ex) {
+            Logger.error("Can't create secondary database for "
+                         +simDb.getDatabaseName(), ex);
+        }
+        finally {
+            tx.commit();
+        }
+        Logger.debug("Database "+simDb.getDatabaseName()+" initialized; "
+                     +simDb.count()+" entries...");
         
         if (vecDb.count() == 0l || descDb.count() == 0l) {
             // initialize this in the background..
             THREAD.submit(new InitDbs ());
         }
         else {
-            Transaction tx = STORE.createTx();
+            tx = STORE.createTx();
             try {
                 Cursor cursor = vecDb.openCursor(tx, null);
                 DatabaseEntry key = new DatabaseEntry ();
@@ -294,7 +518,9 @@ public class EntityDescriptor<T extends EntityModel> implements Commons {
                 }
             }
         }
-        props.put(IDG_PUBLICATIONS, model.getPublications().size());
+        
+        if (!model.getPublications().isEmpty())
+            props.put(IDG_PUBLICATIONS, model.getPublications().size());
 
         Value val = model.getProperty(UNIPROT_SEQUENCE);
         if (val != null) {
@@ -365,6 +591,19 @@ public class EntityDescriptor<T extends EntityModel> implements Commons {
     }
 
     public Map<String, Vector> getVectors () { return vectors; }
+    public long allPairwiseSimilarity () {
+        try {
+            if (!lock.isLocked() && simDb.count() == 0) {
+                THREAD.submit(new CalculatePairwiseSimilarity ());
+            }
+            return simDb.count();
+        }
+        catch (Exception ex) {
+            Logger.error("Can't retrieve count for "
+                         +simDb.getDatabaseName(), ex);
+            return -1;
+        }
+    }
     
     public static <T extends EntityModel> Map<String, Vector>
         getDescriptorVectors (final Class<T> kind) throws Exception {
