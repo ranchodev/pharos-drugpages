@@ -36,6 +36,9 @@ import com.avaje.ebean.QueryIterator;
 import play.db.ebean.Model;
 
 public class EntityDescriptor<T extends EntityModel> implements Commons {
+    static final int NUM_SIM_WORKERS = 4;
+    static final public int DIM = 50;
+    
     static final SleepycatStore STORE =
         Play.application().plugin(SleepycatStore.class);
     static final ThreadPoolPlugin THREAD =
@@ -43,12 +46,12 @@ public class EntityDescriptor<T extends EntityModel> implements Commons {
     
     static final String BASE = EntityDescriptor.class.getName();
     static final String MODIFIED = "LastModified";
-    static final ReentrantLock LOCK = new ReentrantLock ();
     
     static ConcurrentMap<Class, EntityDescriptor> _instances =
         new ConcurrentHashMap<Class, EntityDescriptor>();
 
-    public static class Similarity implements Serializable {
+    public static class Similarity implements Serializable,
+                                              Comparable<Similarity> {
         private static final long serialVersionUID = 0x1l;
 
         final public double similarity;
@@ -57,9 +60,13 @@ public class EntityDescriptor<T extends EntityModel> implements Commons {
         Similarity (Map d1, Map d2) {
             similarity = tanimoto (d1, d2, contrib);
         }
+
+        public int compareTo (Similarity s) {
+            return Double.compare(s.similarity, similarity);
+        }
     }
 
-    public static class SimKey implements SecondaryMultiKeyCreator {
+    public static class SimKey {
         byte[] key = new byte[16];
 
         public SimKey () {}
@@ -131,6 +138,23 @@ public class EntityDescriptor<T extends EntityModel> implements Commons {
             return "("+key1()+","+key2()+")";
         }
     }
+
+    static class SimPayload {
+        public final long ki, kj;
+        public final Map di, dj;
+
+        SimPayload () {
+            this (0, null, 0, null);
+        }
+        SimPayload (long ki, Map di, long kj, Map dj) {
+            this.ki = ki;
+            this.kj = kj;
+            this.di = di;
+            this.dj = dj;
+        }
+    }
+    
+    static final SimPayload POISON = new SimPayload ();
 
     class InitDbs implements Runnable {
         public void run () {
@@ -272,13 +296,7 @@ public class EntityDescriptor<T extends EntityModel> implements Commons {
                     status = cursor.getNext(key, partial, null);
                 }
                 cursor.close();
-            }
-            finally {
-                tx.commit();
-            }
-
-            tx = STORE.createTx();
-            try {
+                
                 Logger.debug(keys.size()+" keys loaded; preparing "
                              +"to calculate "+(keys.size()*(keys.size()-1)/2)
                              +" pairwise similarity!");
@@ -299,23 +317,8 @@ public class EntityDescriptor<T extends EntityModel> implements Commons {
                             status = descDb.get(tx, key, val, null);
                             if (status == OperationStatus.SUCCESS) {
                                 Map dj = serial.entryToObject(val);
-                                
-                                Similarity sim = new Similarity (di, dj);
-                                SimKey sk = new SimKey
-                                    (keys.get(i), keys.get(j));
-                                
-                                sk.encode(key);
-                                simserial.objectToEntry(sim, val);
-                                status = simDb.put(tx, key, val);
-                                if (status != OperationStatus.SUCCESS)
-                                    Logger.warn("Putting similarity value "
-                                                +"for keypair "+sk
-                                                +" yields status="+status);
-                                else
-                                    Logger.debug(String.format("%1$10d",
-                                                               simDb.count())
-                                                 + ": similarity "+sk+" = "
-                                                 +sim.similarity);
+                                queue.put(new SimPayload (keys.get(i), di,
+                                                          keys.get(j), dj));
                             }
                             else {
                                 Logger.warn
@@ -323,32 +326,118 @@ public class EntityDescriptor<T extends EntityModel> implements Commons {
                                      +" returns status="+status);
                             }
                         }
-                        tx.commit();
-                        tx = STORE.createTx(); // new transaction..
                     }
                     else {
                         Logger.warn("Retrieving descriptors for "+keys.get(i)
                                     +" returns status="+status);
                     }
                 }
+
+                // stop the sim worker
+                for (int i = 0; i < NUM_SIM_WORKERS; ++i)
+                    queue.put(POISON);
             }
-            catch (IOException ex) {
-                Logger.error("Error calculating pairwise similarity", ex);
+            catch (Exception ex) {
+                Logger.error("Calculating pairwise similarity", ex);
             }
             finally {
                 tx.commit();
             }
+        } // calcPairwise
+    } // CalculatePairwiseSimilarity
+
+    class SimWorker implements Runnable {
+        SerialBinding<Similarity> simserial =
+            STORE.getSerialBinding(Similarity.class);
+        DatabaseEntry key = new DatabaseEntry ();
+        DatabaseEntry val = new DatabaseEntry ();
+        Transaction tx;
+        Map<String, Histogram> histogram;
+        
+        public void run () {
+            String name = Thread.currentThread().getName();
+            try {
+                long count = 0;
+                for (SimPayload p; (p = queue.take()) != POISON; ) {
+                    if (tx == null)
+                        tx = STORE.createTx();
+
+                    process (p);
+                    if (++count % 1000 == 0) {
+                        Logger.debug(name+": "+count);
+                        tx.commit();
+                        tx = STORE.createTx();
+                    }
+                }
+                
+                if (tx != null)
+                    tx.commit();
+                Logger.debug(name+": processed "+count);
+            }
+            catch (Exception ex) {
+                Logger.error(name+" interrupted", ex);
+            }
+        }
+
+        Map<String, Number> toVector (Map<String, Number> descriptor) {
+            if (histogram == null) {
+                if (vectors.isEmpty()) {
+                    throw new RuntimeException
+                        ("Descriptors haven't been extracted!");
+                }
+                
+                histogram = new TreeMap<String, Histogram>();           
+                for (Map.Entry<String, Vector> me : vectors.entrySet()) {
+                    Histogram h = me.getValue().createHistogram(DIM);
+                    histogram.put(me.getKey(), h);
+                }
+            }
+            
+            Map<String, Number> vector = new TreeMap<String, Number>();
+            for (Map.Entry<String, Number> me : descriptor.entrySet()) {
+                Histogram hist = histogram.get(me.getKey());
+                if (hist != null) {
+                    double mass = hist.eval(me.getValue().doubleValue());
+                    vector.put(me.getKey(), mass/hist.getWeight());
+                }
+                else {
+                    // pass through
+                    vector.put(me.getKey(), me.getValue());
+                }
+            }
+            return vector;
+        }
+
+        void process (SimPayload p) throws Exception {      
+            Similarity sim = new Similarity (toVector (p.di), toVector (p.dj));
+            SimKey simkey = new SimKey (p.ki, p.kj);
+            simkey.encode(key);
+            simserial.objectToEntry(sim, val);
+            
+            OperationStatus status = simDb.put(tx, key, val);
+            if (status != OperationStatus.SUCCESS)
+                Logger.warn("Putting similarity value "
+                            +"for keypair "+simkey
+                            +" yields status="+status);
+            else
+                Logger.debug(String.format("%1$10d", simDb.count())
+                             + ": similarity "+simkey+" = "
+                             +sim.similarity);
         }
     }
 
     final Class<T> kind;
     final Map<String, Vector> vectors = new TreeMap<String, Vector>();
     Database vecDb, descDb, simDb;
-    SecondaryDatabase simIndexDb;
+    // upper and lower (respectively) triangle of the sim matrix
+    SecondaryDatabase simIndex1Db, simIndex2Db;
 
+    final BlockingQueue<SimPayload> queue = new ArrayBlockingQueue<>(10000);
     final ReentrantLock lock = new ReentrantLock ();
     
     protected EntityDescriptor (Class<T> kind) throws IOException {
+        this.kind = kind;
+        
         vecDb = STORE.createDbIfAbsent(BASE+"$"+kind.getName()+"$Vectors");
         Logger.debug("Database "+vecDb.getDatabaseName()+" initialized; "
                      +vecDb.count()+" entries...");
@@ -358,23 +447,30 @@ public class EntityDescriptor<T extends EntityModel> implements Commons {
                      +descDb.count()+" entries...");
 
         simDb = STORE.createDbIfAbsent(BASE+"$"+kind.getName()+"$Similarity");
-        Transaction tx = STORE.createTx();
-        try {
-            SecondaryConfig config = new SecondaryConfig();
-            config.setAllowCreate(true);
-            config.setTransactional(true);
-            config.setSortedDuplicates(true);
-            config.setMultiKeyCreator(new SimKey ());
-            simIndexDb = simDb.getEnvironment()
-                .openSecondaryDatabase(tx, "Index", simDb, config);
-        }
-        catch (Exception ex) {
-            Logger.error("Can't create secondary database for "
-                         +simDb.getDatabaseName(), ex);
-        }
-        finally {
-            tx.commit();
-        }
+        simIndex1Db = createSecondaryIndex
+            (simDb, "Index1", new SecondaryKeyCreator () {
+                    public boolean createSecondaryKey
+                        (SecondaryDatabase db, DatabaseEntry key,
+                         DatabaseEntry data, DatabaseEntry result) {
+                        SimKey skey = SimKey.decode(key);
+                        LongBinding.longToEntry(skey.key1(), result);
+                        return true;
+                    }
+                });
+        simIndex2Db = createSecondaryIndex
+            (simDb, "Index2", new SecondaryKeyCreator () {
+                    public boolean createSecondaryKey
+                        (SecondaryDatabase db, DatabaseEntry key,
+                         DatabaseEntry data, DatabaseEntry result) {
+                        SimKey skey = SimKey.decode(key);
+                        LongBinding.longToEntry(skey.key2(), result);
+                        return true;
+                    }
+                });
+        
+        for (int i = 0; i < NUM_SIM_WORKERS; ++i)
+            THREAD.submit(new SimWorker ());
+        
         Logger.debug("Database "+simDb.getDatabaseName()+" initialized; "
                      +simDb.count()+" entries...");
         
@@ -383,7 +479,7 @@ public class EntityDescriptor<T extends EntityModel> implements Commons {
             THREAD.submit(new InitDbs ());
         }
         else {
-            tx = STORE.createTx();
+            Transaction tx = STORE.createTx();
             try {
                 Cursor cursor = vecDb.openCursor(tx, null);
                 DatabaseEntry key = new DatabaseEntry ();
@@ -405,10 +501,32 @@ public class EntityDescriptor<T extends EntityModel> implements Commons {
                 tx.commit();
             }
         }
-        this.kind = kind;       
     }
 
-    public static <T extends EntityModel> EntityDescriptor<T>
+    static SecondaryDatabase createSecondaryIndex
+        (Database db, String name, SecondaryKeyCreator keyCreator)
+        throws IOException {
+        Transaction tx = STORE.createTx();
+        try {
+            SecondaryConfig config = new SecondaryConfig();
+            config.setAllowCreate(true);
+            config.setTransactional(true);
+            config.setSortedDuplicates(true);
+            config.setKeyCreator(keyCreator);
+            return db.getEnvironment()
+                .openSecondaryDatabase(tx, name, db, config);
+        }
+        catch (Exception ex) {
+            Logger.error("Can't create secondary database for "
+                         +db.getDatabaseName(), ex);
+            return null;
+        }
+        finally {
+            tx.commit();
+        }
+    }
+
+    public synchronized static <T extends EntityModel> EntityDescriptor<T>
         getInstance (Class<T> kind) {
         EntityDescriptor<T> inst = _instances.get(kind);
         if (inst == null) {
@@ -579,6 +697,11 @@ public class EntityDescriptor<T extends EntityModel> implements Commons {
     }
 
     public static <T extends EntityModel> Map<String, Histogram>
+        getDescriptorHistograms (final Class<T> kind) throws Exception {
+        return getDescriptorHistograms (kind, DIM);
+    }
+    
+    public static <T extends EntityModel> Map<String, Histogram>
         getDescriptorHistograms (final Class<T> kind, final int dim)
         throws Exception {
         Map<String, Vector> vectors =  getDescriptorVectors (kind);
@@ -602,6 +725,62 @@ public class EntityDescriptor<T extends EntityModel> implements Commons {
             Logger.error("Can't retrieve count for "
                          +simDb.getDatabaseName(), ex);
             return -1;
+        }
+    }
+
+    public Map<Long, Similarity> similarity (Long id, int topK)
+        throws IOException {
+        Transaction tx = STORE.createTx();
+        try {
+            DatabaseEntry key = new DatabaseEntry ();
+            DatabaseEntry pkey = new DatabaseEntry ();
+            DatabaseEntry data = new DatabaseEntry ();
+
+            SerialBinding<Similarity> serial =
+                STORE.getSerialBinding(Similarity.class);
+
+            Map<Long, Similarity> results = new TreeMap<>();
+            LongBinding.longToEntry(id, key);
+
+            // upper triangle
+            SecondaryCursor cursor = simIndex2Db.openCursor(tx, null);      
+            OperationStatus status =
+                cursor.getSearchKey(key, pkey, data, null);
+            Logger.debug("similarity for "+id+"...");
+            while (status == OperationStatus.SUCCESS) {
+                Similarity sim = serial.entryToObject(data);
+                SimKey skey = SimKey.decode(pkey);
+                if (skey.key2() == id) {
+                    Logger.debug(".."+skey+" "+sim.similarity);
+                    results.put(skey.key1(), sim);
+                }
+                else 
+                    break;
+                status = cursor.getNext(key, pkey, data, null);
+            }
+            cursor.close();
+
+            // lower triangle
+            LongBinding.longToEntry(id, key);
+            cursor = simIndex1Db.openCursor(tx, null);
+            status = cursor.getSearchKey(key, pkey, data, null);
+            while (status == OperationStatus.SUCCESS) {
+                Similarity sim = serial.entryToObject(data);
+                SimKey skey = SimKey.decode(pkey);
+                if (skey.key1() == id) {
+                    Logger.debug(".."+skey+" "+sim.similarity);
+                    results.put(skey.key2(), sim);
+                }
+                else 
+                    break;
+                status = cursor.getNext(key, pkey, data, null);         
+            }
+            cursor.close();
+            
+            return results;
+        }
+        finally {
+            tx.commit();
         }
     }
     

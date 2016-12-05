@@ -3,6 +3,7 @@ package ix.core.plugins;
 import java.io.*;
 import java.util.*;
 import java.util.concurrent.*;
+import java.util.concurrent.locks.ReentrantLock;
 import com.sleepycat.je.*;
 import com.sleepycat.bind.serial.SerialBinding;
 import com.sleepycat.bind.serial.StoredClassCatalog;
@@ -109,7 +110,12 @@ public class SleepycatStore extends Plugin {
     }
 
     public Transaction createTx () throws IOException {
-        return env.beginTransaction(null, null);
+        Transaction tx = env.beginTransaction(null, null);
+        /*Logger.debug("Transaction created "+tx.getId());
+        for (StackTraceElement st : Thread.currentThread().getStackTrace()) {
+            Logger.debug(st.toString());
+            }*/
+        return tx;
     }
 
     public Environment getEnv () { return env; }

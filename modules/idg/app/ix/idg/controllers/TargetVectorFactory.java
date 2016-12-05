@@ -26,8 +26,6 @@ import play.mvc.*;
 import play.*;
 
 public class TargetVectorFactory extends Controller implements Commons {
-    static final int DIM = 50;
-    
     static public class TargetVector {
         @JsonIgnore
         final public Target target;
@@ -40,7 +38,7 @@ public class TargetVectorFactory extends Controller implements Commons {
             if (descriptor == null)
                 throw new IllegalArgumentException ("Unknown target "+id);
             Map<String, Histogram> histogram =
-                EntityDescriptor.getDescriptorHistograms(Target.class, DIM);
+                EntityDescriptor.getDescriptorHistograms(Target.class);
             
             vector = new TreeMap<String, Number>();
             for (Map.Entry<String, Number> me : descriptor.entrySet()) {
@@ -122,7 +120,7 @@ public class TargetVectorFactory extends Controller implements Commons {
         try {
             ObjectMapper mapper = new ObjectMapper ();
             Map<String, Histogram> histograms =
-                EntityDescriptor.getDescriptorHistograms(Target.class, DIM);
+                EntityDescriptor.getDescriptorHistograms(Target.class);
             ArrayNode json = mapper.createArrayNode();
             for (Map.Entry<String, Histogram> me : histograms.entrySet()) {
                 ObjectNode n = mapper.createObjectNode();
@@ -139,18 +137,22 @@ public class TargetVectorFactory extends Controller implements Commons {
     }
 
     public static Result allPairwiseSimilarity () {
-        try {
-            EntityDescriptor<Target> edt =
-                EntityDescriptor.getInstance(Target.class);
-            return ok ("size = "+edt.allPairwiseSimilarity());
+        if (Play.isDev()) {
+            try {
+                EntityDescriptor<Target> edt =
+                    EntityDescriptor.getInstance(Target.class);
+                return ok ("size = "+edt.allPairwiseSimilarity());
+            }
+            catch (Exception ex) {
+                Logger.error("Can't calculate all pairwise similarity", ex);
+                return internalServerError (ex.getMessage());
+            }
         }
-        catch (Exception ex) {
-            Logger.error("Can't calculate all pairwise similarity", ex);
-            return internalServerError (ex.getMessage());
-        }
+        
+        return IDGApp._notFound("Unknown resource: "+request().uri());
     }
 
-    public static Result targetSimilarity (String ids) {
+    public static Result targetPairwiseSimilarity (String ids) {
         try {
             List<Long> targets = new ArrayList<Long>();
             for (String s : ids.split(",")) {
@@ -180,6 +182,19 @@ public class TargetVectorFactory extends Controller implements Commons {
         }
         catch (Exception ex) {
             Logger.error("Can't calculate similarity", ex);
+            return internalServerError (ex.getMessage());
+        }
+    }
+
+    public static Result targetSimilarity (Long id) {
+        try {
+            ObjectMapper mapper = new ObjectMapper ();
+            EntityDescriptor<Target> edt =
+                EntityDescriptor.getInstance(Target.class);
+            return ok (mapper.valueToTree(edt.similarity(id, 10)));
+        }
+        catch (Exception ex) {
+            Logger.error("Can't retrieve similarity for "+id, ex);
             return internalServerError (ex.getMessage());
         }
     }

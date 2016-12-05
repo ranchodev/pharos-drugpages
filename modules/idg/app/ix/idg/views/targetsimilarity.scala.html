@@ -143,7 +143,7 @@ function loadDescriptors (id) {
 
 $(document).ready(function () {
    $.ajax({
-      url: '@ix.idg.controllers.routes.TargetVectorFactory.targetSimilarity(query)',
+      url: '@ix.idg.controllers.routes.TargetVectorFactory.targetPairwiseSimilarity(query)',
       dataType: 'json',
       success: function (d) {
          console.log('similarity = '+d[0].similarity);
