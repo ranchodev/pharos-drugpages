@@ -198,4 +198,30 @@ public class TargetVectorFactory extends Controller implements Commons {
             return internalServerError (ex.getMessage());
         }
     }
+
+    public static Result dumpDescriptorSparse (Integer dim) {
+        if (Play.isDev()) {
+            try {            
+                if (!EntityDescriptor.getDescriptorVectors
+                    (Target.class).isEmpty()) {
+                    EntityDescriptor<Target> edt =
+                        EntityDescriptor.getInstance(Target.class);
+                    edt.dumpDescriptorSparse(dim);
+                    return ok ("Descriptors have been dumpped!");
+                
+                }
+                else {
+                    return badRequest
+                        ("Descriptor vectors are being generated; retry "
+                         +"when descriptors have been generated!");
+                }
+            }
+            catch (Exception ex) {
+                Logger.error("Can't dump descriptors in sparse format!", ex);
+                return internalServerError (ex.getMessage());
+            }
+        }
+        
+        return notFound ("Bad resource: "+request().uri());
+    }
 }

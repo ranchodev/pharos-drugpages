@@ -728,6 +728,86 @@ public class EntityDescriptor<T extends EntityModel> implements Commons {
         }
     }
 
+    public void dumpDescriptorSparse (int dim) throws IOException {
+        if (lock.isLocked())
+            throw new RuntimeException
+                ("Descriptor generation still not complete!");
+        
+        Transaction tx = STORE.createTx();
+        try {
+            // mapping of descriptor name to index
+            final Map<String, Integer> dict = new TreeMap<>();
+            Map<String, Histogram> histogram = new TreeMap<>();
+            int map = 0;
+            for (Map.Entry<String, Vector> me : vectors.entrySet()) {
+                dict.put(me.getKey(), map++);
+                histogram.put(me.getKey(), me.getValue().createHistogram(dim));
+            }
+
+            PrintWriter pw = new PrintWriter
+                (new FileWriter ("descriptors_"+dim+".txt"));
+            DatabaseEntry key = new DatabaseEntry ();
+            DatabaseEntry data = new DatabaseEntry ();
+
+            SerialBinding<Map> serial = STORE.getSerialBinding(Map.class);
+            Cursor cursor = descDb.openCursor(tx, null);
+            for (OperationStatus status = cursor.getFirst(key, data, null);
+                 status == OperationStatus.SUCCESS;) {
+                long id = LongBinding.entryToLong(key);
+                
+                Map<String, Number> dv = serial.entryToObject(data);
+                Map<Integer, Number> nv = new TreeMap<>();
+                int max = 0;
+                for (Map.Entry<String, Number> me : dv.entrySet()) {
+                    Histogram hist = histogram.get(me.getKey());
+
+                    int pos;
+                    Number x;
+                    if (hist != null) {
+                        double mass = hist.eval(me.getValue().doubleValue());
+                        x = mass / hist.getWeight();
+                        pos = dict.get(me.getKey());
+                    }
+                    else { // pass through
+                        if (dict.containsKey(me.getKey()))
+                            pos = dict.get(me.getKey());
+                        else {
+                            pos = map;
+                            dict.put(me.getKey(), map++);
+                        }
+                        x =  me.getValue();
+                    }
+                    nv.put(pos, x);
+                    if (pos > max)
+                        max = pos;
+                }
+                
+                pw.print(id+" "+nv.size()+" "+max);
+                for (Map.Entry<Integer, Number> me : nv.entrySet())
+                    pw.print(" "+me.getKey()+":"+me.getValue());
+                pw.println();
+                status = cursor.getNext(key, data, null);
+            }
+            pw.close();
+            cursor.close();
+            
+            pw = new PrintWriter (new FileWriter ("dict.txt"));
+            Map<String, Integer> ordered = new TreeMap<>
+                (new Comparator<String>() {
+                        public int compare (String s1, String s2) {
+                            return dict.get(s1).compareTo(dict.get(s2));
+                        }
+                    });
+            ordered.putAll(dict);
+            for (Map.Entry<String, Integer> me : ordered.entrySet())
+                pw.println(me.getValue()+":"+me.getKey());
+            pw.close();
+        }
+        finally {
+            tx.commit();
+        }
+    }
+
     public Map<Long, Similarity> similarity (Long id, int topK)
         throws IOException {
         Transaction tx = STORE.createTx();

@@ -15,6 +15,7 @@ GET	/api/v1/targets/:id/descriptor	ix.idg.controllers.TargetVectorFactory.target
 GET	/api/v1/targets/:ids/pairwise	ix.idg.controllers.TargetVectorFactory.targetPairwiseSimilarity(ids: String)
 GET	/api/v1/targets/:id/similarity	ix.idg.controllers.TargetVectorFactory.targetSimilarity(id: Long)
 GET	/api/v1/targets/_simmat		ix.idg.controllers.TargetVectorFactory.allPairwiseSimilarity
+GET	/api/v1/targets/_dump		ix.idg.controllers.TargetVectorFactory.dumpDescriptorSparse(dim: Int ?= 50)
 
 GET	/targets/similarity		ix.idg.controllers.IDGApp.targetSimilarityForm
 POST	/targets/similarity		ix.idg.controllers.IDGApp.targetSimilarity
