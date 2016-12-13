@@ -214,7 +214,7 @@ public class TcrdRegistry extends Controller implements Commons {
                      "e.uniprot, f.score as targetNovelty " +
                      "from target2disease a, tinx_disease d, tinx_importance c, protein e, tinx_novelty f " +
                      "where a.target_id = ? " +
-                     "and a.doid = d.doid " +
+                     "and a.did = d.doid " +
                      "and c.protein_id = a.target_id " +
                      "and c.disease_id = d.id " +
                      "and e.id = a.target_id " +
@@ -263,8 +263,7 @@ public class TcrdRegistry extends Controller implements Commons {
                 ("select * from target2grant where target_id = ?");
 
             pstm20 = con.prepareStatement
-                ("select * from target2disease where target_id = ? "
-                 +"order by doid desc");
+                ("select * from target2disease where target_id = ? ");
 
             pstm21 = con.prepareStatement
                 ("select * from mlp_assay_info where protein_id = ? order by aid");
@@ -476,6 +475,7 @@ public class TcrdRegistry extends Controller implements Commons {
                         xrefs.put(xtype, names = new ArrayList<String>());
                     }
                     names.add(value);
+                    target.addIfAbsent(new Keyword (xtype, value));
                 }
             }
             rset.close();
@@ -1183,7 +1183,11 @@ public class TcrdRegistry extends Controller implements Commons {
                                 val = new VNum (type, num);
                         }
                         else if (field.equals("boolean_value")) {
-                            
+                            int b = rset.getInt(field);
+                            if (!rset.wasNull() && b != 0) {
+                                val = KeywordFactory.registerIfAbsent
+                                    (type, "YES", null);
+                            }
                         }
                         else {
                             long num = rset.getLong(field);
@@ -1838,11 +1842,11 @@ public class TcrdRegistry extends Controller implements Commons {
                 d = new Disease();
                 d.name = name;
                 d.description = rset.getString("description");
-                d.properties.add(datasources.get(type));                
+                //d.properties.add(datasources.get(type));                
                 d.properties.add(tcrd);
-                String doid = rset.getString("doid");
-                if (doid != null)
-                    doid = doid.trim();
+                String did = rset.getString("did");
+                if (did != null)
+                    did = did.trim();
                 
                 String drugName = rset.getString("drug_name");
                 if (drugName != null) {
@@ -1853,22 +1857,38 @@ public class TcrdRegistry extends Controller implements Commons {
                          (IDG_DRUG, drugName, null));
                 }
                 
-                if (doid != null && doid.length() > 0) {
-                    d.synonyms.add
-                        (KeywordFactory.registerIfAbsent
-                         ("DOID", doid,
-                          "http://www.disease-ontology.org/term/" + doid));
+                if (did != null && did.length() > 0) {
+                    if (did.startsWith("DOI")) {
+                        d.synonyms.add
+                            (KeywordFactory.registerIfAbsent
+                             ("DOID", did,
+                              "http://www.disease-ontology.org/term/" + did));
+                    }
+                    else if (did.startsWith("MIM")) {
+                        d.synonyms.add
+                            (KeywordFactory.registerIfAbsent
+                             (UNIPROT_DISEASE, did,
+                              "http://omim.org/entry/"
+                              + did.substring(did.indexOf(':') + 1)));
+                    }
+                    else if (did.startsWith("umls")) {
+                        d.synonyms.add
+                            (KeywordFactory.registerIfAbsent
+                             (DISGENET_DISEASE, did,
+                              "http://linkedlifedata.com/resource/umls/id/"
+                              + did.substring(did.indexOf(':') + 1)));
+                    }
                 }
-                else {
+                else { // this is obsoleted as of tcrd v3.1.4
                     String ref = rset.getString("reference");
                     if (ref != null) {
                         // UniProt Disease
-                        doid = ref.replaceAll("[\\s]+", "");
+                        did = ref.replaceAll("[\\s]+", "");
                         d.synonyms.add
                             (KeywordFactory.registerIfAbsent
-                             (UNIPROT_DISEASE, doid,
+                             (UNIPROT_DISEASE, did,
                               "http://omim.org/entry/"
-                              + doid.substring(doid.indexOf(':') + 1)));
+                              + did.substring(did.indexOf(':') + 1)));
                         Keyword kw = datasources.get("OMIM");
                         if (kw != null)
                             d.addIfAbsent((Value) kw);
@@ -1877,7 +1897,7 @@ public class TcrdRegistry extends Controller implements Commons {
                             d.addIfAbsent((Value) kw);
                     }
                     else { // DrugCentral
-                        doid = null;
+                        did = null;
                         Keyword kw =
                             datasources.get("DrugCentral");
                         if (kw == null) {
@@ -1889,10 +1909,10 @@ public class TcrdRegistry extends Controller implements Commons {
                     }
                 }
                 d.save();
-                if (doid == null) {
-                    doid = "IDG:D"+d.id;
+                if (did == null) {
+                    did = "IDG:D"+d.id;
                 }
-                DISEASES.put(doid, d);
+                DISEASES.put(did, d);
             }
             else {
                 d = diseases.iterator().next();
@@ -1917,34 +1937,61 @@ public class TcrdRegistry extends Controller implements Commons {
                 int cnt = 0;
                 while (rset.next()) {
                     final String name = rset.getString("name");
-                    Disease d = registerDiseaseIfAbsent
-                        (name, type, tcrd, rset);
-                    
-                    XRef xref = target.addIfAbsent(new XRef (d));
+
                     String dtype = rset.getString("datype");
                     Keyword source = datasources.get(dtype);
                     if (source == null) {
                         String url = null;
-                        if (dtype.equalsIgnoreCase("JensenLab Experiment DistiLD")) {
+                        if (dtype.equalsIgnoreCase
+                            ("JensenLab Experiment DistiLD")) {
                             url = "http://distild.jensenlab.org";
                         }
                         else if ("JensenLab Knowledge UniProtKB-KW"
                                  .equalsIgnoreCase(dtype)) {
                             url = "http://diseases.jensenlab.org";
                         }
-                        else if ("JensenLab Text Mining".equalsIgnoreCase(dtype)) {
+                        else if ("JensenLab Text Mining"
+                                 .equalsIgnoreCase(dtype)) {
                             url = "http://diseases.jensenlab.org";
                         }
+                        else if ("DisGeNET".equalsIgnoreCase(dtype))
+                            url = "http://www.disgenet.org";
+                        else if ("Expression Atlas".equalsIgnoreCase(dtype))
+                            url = "https://www.ebi.ac.uk/gxa/";
 
-                        source = KeywordFactory.registerIfAbsent(SOURCE, dtype, url);
+                        source = KeywordFactory.registerIfAbsent
+                            (SOURCE, dtype, url);
                         datasources.put(dtype, source);
                     }
+                    Disease d = registerDiseaseIfAbsent
+                        (name, type, tcrd, rset);
                     d.addIfAbsent((Value)source);
                     
+                    XRef xref = target.addIfAbsent(new XRef (d));
                     if ("JensenLab Knowledge UniProtKB-KW"
                         .equalsIgnoreCase(dtype)) {
                         xref.addIfAbsent(KeywordFactory.registerIfAbsent
-                                             (IDG_DISEASE, d.name, null));
+                                         (IDG_DISEASE, d.name, null));
+                    }
+                    else if ("Expression Atlas".equalsIgnoreCase(dtype)) {
+                        double val = rset.getDouble("log2foldchange");
+                        if (!rset.wasNull())
+                            xref.properties.add
+                                (new VNum ("log2foldchange", val));
+
+                        val = rset.getDouble("pvalue");
+                        if (!rset.wasNull())
+                            xref.properties.add(new VNum ("pvalue", val));
+                    }
+                    else if ("DisGeNET".equalsIgnoreCase(dtype)) {
+                        String sources = rset.getString("source");
+                        if (sources != null) {
+                            for (String s : sources.split(",")) {
+                                Keyword kw = KeywordFactory.registerIfAbsent
+                                    (DISGENET_SOURCE, s, null);
+                                d.addIfAbsent((Value)kw);
+                            }
+                        }
                     }
                     
                     xref.addIfAbsent(source);
@@ -3064,26 +3111,40 @@ public class TcrdRegistry extends Controller implements Commons {
                 if (file.exists()) {
                     // load the dto from this file
                     Logger.debug("Loading enhanced DTO file..."+file);
-                    dto = DTOParser.readJson(file);
+                    try {
+                        dto = DTOParser.readJson(file);
+                    }
+                    catch (Exception ex) {
+                        Logger.warn("File '"+file
+                                    +"' exists but its content is crap!", ex);
+                    }
                 }
             }
                             
             if (dto == null) {
-                String dtofile = Play.application()
-                    .configuration().getString("ix.idg.dto.basic");
-                File file = new File (dtofile);
-                if (file.exists()) {
-                    Logger.debug("Loading basic DTO file..."+dtofile);
-                    try {
-                        dto = new DTOParser ();
-                        dto.parse(file);
-                    }
-                    catch (IOException ex) {
-                        ex.printStackTrace();
-                    }
+                try {
+                    dto = new DTOParser ();
+                    dto.load(con);
                 }
-                else {
-                    Logger.warn("!!!! NO DTO AVAILABLE !!!!");
+                catch (SQLException ex) {
+                    Logger.error("Can't load DTO from TCRD; "
+                                 +"revert to json file!", ex);
+                    String dtofile = Play.application()
+                        .configuration().getString("ix.idg.dto.basic");
+                    File file = new File (dtofile);
+                    if (file.exists()) {
+                        Logger.debug("Loading basic DTO file..."+dtofile);
+                        try {
+                            dto = new DTOParser ();
+                            dto.parse(file);
+                        }
+                        catch (IOException exx) {
+                            exx.printStackTrace();
+                        }
+                    }
+                    else {
+                        Logger.warn("!!!! NO DTO AVAILABLE !!!!");
+                    }
                 }
             }
                  
@@ -3099,6 +3160,7 @@ public class TcrdRegistry extends Controller implements Commons {
                 String fam = rset.getString("idgfam");
                 String tdl = rset.getString("tdl");
                 String acc = rset.getString("uniprot");
+                String dtoid = rset.getString("dtoid");
                 String sym = rset.getString("c.sym");
                 Double novelty = rset.getDouble("d.score");
                 if (rset.wasNull())
@@ -3112,7 +3174,8 @@ public class TcrdRegistry extends Controller implements Commons {
                         new TcrdTarget (acc, fam, tdl, id, protId,
                                         novelty, source);
                     t.dto = dto;
-                    t.dtoNode = dto.get(sym);
+                    t.dtoNode = dto.get(dtoid);
+                    Logger.debug("queuing "+acc+" DTO "+dtoid);
                     targets.add(t);
                 }
                 else {

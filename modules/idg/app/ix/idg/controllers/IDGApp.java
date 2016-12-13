@@ -850,7 +850,8 @@ public class IDGApp extends App implements Commons {
         IDG_FAMILY,
         IDG_DRUG,
         IDG_TARGET,
-        SOURCE
+        SOURCE,
+        DISGENET_SOURCE
     };
 
     public static final String[] LIGAND_FACETS = {
@@ -2739,7 +2740,7 @@ public class IDGApp extends App implements Commons {
     
     public static String getId (Disease d) {
         Keyword kw = d.getSynonym(DiseaseOntologyRegistry.DOID,
-                                  UNIPROT_DISEASE);
+                                  DISGENET_DISEASE, UNIPROT_DISEASE);
         return kw != null ? kw.term : "IDG:D"+d.id;
     }
     

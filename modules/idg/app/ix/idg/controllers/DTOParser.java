@@ -9,6 +9,8 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 
 import java.io.*;
 import java.util.*;
+import java.sql.*;
+import play.Logger;
 
 public class DTOParser implements Serializable {
     
@@ -65,6 +67,50 @@ public class DTOParser implements Serializable {
     static public void writeJson (File file, Node node) throws IOException {
         ObjectMapper mapper = new ObjectMapper ();
         mapper.writerWithDefaultPrettyPrinter().writeValue(file, node);
+    }
+
+    public void load (Connection con) throws SQLException {
+        nodes.clear();
+        ids.clear();
+        
+        PreparedStatement pstm = con.prepareStatement
+            ("select * from dto order by parent");
+        root = new Node ("DTO_00200000", "Gene");
+        try {
+            ResultSet rset = pstm.executeQuery();
+            Map<String, String> parents = new HashMap<>();
+            while (rset.next()) {
+                String id = rset.getString("id");
+                String name = rset.getString("name");
+                String parent = rset.getString("parent");
+                
+                Node n = new Node (id, name);
+                nodes.put(name, n);
+                ids.put(id, n);
+                
+                if (parent != null) {
+                    parents.put(id, parent);
+                }
+                else {
+                    n.parent = root;
+                    root.children.add(n);
+                }
+            }
+            rset.close();
+
+            for (Node n : ids.values()) {
+                String parent = parents.get(n.id);
+                n.parent = ids.get(parent);
+                if (n.parent != null)
+                    n.parent.children.add(n);
+                else
+                    Logger.error("DTO node "+n.id+" ("+n.name+") referrence an "
+                                 +"unknown parent \""+parent+"\"!");
+            }
+        }
+        finally {
+            pstm.close();
+        }
     }
 
     Node root;

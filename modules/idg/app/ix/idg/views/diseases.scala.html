@@ -10,7 +10,7 @@
 
 @getdoid(t: Disease) = {
     @* We only consider the first DOID, even if there are alternates *@
-    @defining(t.getSynonym("DOID", UNIPROT_DISEASE)) { id =>
+    @defining(t.getSynonym("DOID", UNIPROT_DISEASE, DISGENET_DISEASE)) { id =>
         @if(id != null) {
             <a href="@id.href">@id.term</a>
         }

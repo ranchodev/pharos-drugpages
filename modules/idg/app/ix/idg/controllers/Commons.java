@@ -109,6 +109,9 @@ public interface Commons {
     public static final String ChEMBL_ACTIVITY_ID = "CHEMBL Activity ID";
     public static final String ChEMBL_MOLREGNO = "CHEMBL Molregno";
 
+    public static final String DISGENET_DISEASE = "DisGeNET Disease";
+    public static final String DISGENET_SOURCE = "DisGeNET Source";
+    
     public static final String UNIPROT_ACCESSION = "UniProt Accession";
     public static final String UNIPROT_GENE = "UniProt Gene";
     public static final String UNIPROT_DISEASE = "UniProt Disease";

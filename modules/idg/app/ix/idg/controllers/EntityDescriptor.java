@@ -583,6 +583,12 @@ public class EntityDescriptor<T extends EntityModel> implements Commons {
         return descriptor;
     }
 
+    static double weight (int count, int total) {
+        double x = (double)count/total;
+        //return Math.exp(-2.0*x);
+        return Math.exp(-2.0*x*x);
+    }
+    
     public static void instrument
         (Map<String, Number> props, EntityModel model) throws Exception {
         
@@ -627,10 +633,13 @@ public class EntityDescriptor<T extends EntityModel> implements Commons {
                     for (Object term : set) {
                         if (term != null) {
                             Integer count = dv.getTermCount(term.toString());
-                            if (count != null)
+                            if (count != null && count > 0) {
                                 // special annotated term
                                 props.put("@"+name+"/"+term,
-                                          1.-(double)count/dv.getNumDocs());
+                                          //1.-(double)count/dv.getNumDocs()
+                                          weight (count, dv.getNumDocs())
+                                          );
+                            }
                         }
                     }
                 }
@@ -881,10 +890,12 @@ public class EntityDescriptor<T extends EntityModel> implements Commons {
     };
 
     static boolean blacklist (String name) {
+        /*
         for (String s : IGNORE) {
             if (name.indexOf(s) >= 0)
                 return true;
         }
+        */
         return false;
     }
     
@@ -898,17 +909,21 @@ public class EntityDescriptor<T extends EntityModel> implements Commons {
             String name = me.getKey();
             double x = me.getValue().doubleValue();
             Number z = vec2.get(name);
-            if (z != null && !blacklist (name)) {
-                double y = z.doubleValue();
-                c += x*y;
-                contrib.put(name, x*y);
+            if (!blacklist (name)) {
+                if (z != null) {
+                    double y = z.doubleValue();
+                    c += x*y;
+                    contrib.put(name, x*y);
+                }
+                a += x*x;
             }
-            a += x*x;       
         }
         
         for (Map.Entry<String, Number> me : vec2.entrySet()) {
-            double y = me.getValue().doubleValue();
-            b += y*y;
+            if (!blacklist (me.getKey())) {
+                double y = me.getValue().doubleValue();
+                b += y*y;
+            }
         }
         
         double z = a+b-c;
@@ -918,7 +933,7 @@ public class EntityDescriptor<T extends EntityModel> implements Commons {
         
         if (contribution != null)
             contribution.putAll(contrib);
-        
+
         return c / z;
     }
 }

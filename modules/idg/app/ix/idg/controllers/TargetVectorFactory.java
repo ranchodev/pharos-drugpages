@@ -90,6 +90,12 @@ public class TargetVectorFactory extends Controller implements Commons {
             contribution.putAll(contrib);
         }
 
+        @JsonProperty("size_1")
+        public int getSize1 () { return target1.vector.size(); }
+        @JsonProperty("size_2")
+        public int getSize2 () { return target2.vector.size(); } 
+        public int getSize () { return contribution.size(); }
+
         @JsonProperty("target_1")
         public String getTarget1 () {
             return Global.getRef(target1.target);
