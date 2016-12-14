@@ -114,8 +114,12 @@ public class Target extends EntityModel {
     public Integer r01Count;
 
     @Indexable(sortable=true,name="Knowledge Availability",
-            ranges={0, 1, 10, 20, 30, 40, 50, 60, 100})
+               ranges={0, 1, 10, 20, 30, 40, 50, 60, 100})
     public Double knowledgeAvailability;
+
+    @Indexable(sortable=true,name="Log PubTator",
+               dranges={-2, -1, 0, 1, 2, 3, 4, 5})
+    public Double pubTatorScore;
 
     @JsonView(BeanViews.Full.class)
     @ManyToMany(cascade=CascadeType.ALL)

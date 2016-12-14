@@ -825,6 +825,7 @@ public class IDGApp extends App implements Commons {
         "PathwayCommons: transfac Pathway",
 
         "Log Novelty",
+        "Log PubTator",
         "R01 Grant Count",
         "PubMed Count",
         "Antibody Count",

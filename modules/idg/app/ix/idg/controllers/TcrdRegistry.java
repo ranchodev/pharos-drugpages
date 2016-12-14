@@ -113,6 +113,7 @@ public class TcrdRegistry extends Controller implements Commons {
         Keyword source;
         DTOParser.Node dtoNode;
         DTOParser dto;
+        boolean idg2;
 
         TcrdTarget () {}
         TcrdTarget (String acc, String family, String tdl,
@@ -163,7 +164,7 @@ public class TcrdRegistry extends Controller implements Commons {
             pstm11, pstm12, pstm13, pstm14, pstm15,
             pstm16, pstm17, pstm18, pstm19, pstm20,
             pstm21, pstm22, pstm23, pstm24, pstm25,
-            pstm26, pstm27, pstm28;
+            pstm26, pstm27, pstm28, pstm29;
         Map<String, Keyword> datasources = new HashMap<String, Keyword>();
 
         // xrefs for the current target
@@ -293,6 +294,9 @@ public class TcrdRegistry extends Controller implements Commons {
                 ("select * from techdev_contact a, techdev_info b where "
                  +"a.id = b.contact_id and b.protein_id = ?");
 
+            pstm29 = con.prepareStatement
+                ("select * from ptscore where protein_id = ?");
+
             this.chembl = chembl;
         }
 
@@ -326,7 +330,8 @@ public class TcrdRegistry extends Controller implements Commons {
             
             Keyword kw = keys.get(value);
             if (kw == null) {
-                keys.put(value, kw = KeywordFactory.registerIfAbsent(label, value, href));
+                keys.put(value, kw = KeywordFactory.registerIfAbsent
+                         (label, value, href));
             }
             return kw;
         }
@@ -417,6 +422,7 @@ public class TcrdRegistry extends Controller implements Commons {
             pstm26.close();
             pstm27.close();
             pstm28.close();
+            pstm29.close();
             chembl.shutdown();
         }
 
@@ -439,6 +445,11 @@ public class TcrdRegistry extends Controller implements Commons {
             while (rset.next()) {
                 String xtype = rset.getString("xtype");
                 value = rset.getString("value");
+                if (value == null || value.trim().equals("")) {
+                    continue;
+                }
+                value = value.trim();
+                
                 //Logger.info("  + "+xtype+": "+value);
                 Integer c = counts.get(xtype);
                 counts.put(xtype, c==null?1:(c+1));
@@ -446,7 +457,7 @@ public class TcrdRegistry extends Controller implements Commons {
                     String term = rset.getString("xtra");
                     if (term != null) {
                         Keyword kw = KeywordFactory.registerIfAbsent
-                            (UNIPROT_KEYWORD, term.replaceAll("/","-"),
+                            (UNIPROT_KEYWORD, term/*.replaceAll("/","-")*/,
                              "http://www.uniprot.org/keywords/"+value);
 
                         target.addIfAbsent((Value)kw);
@@ -483,6 +494,30 @@ public class TcrdRegistry extends Controller implements Commons {
             Keyword source =  KeywordFactory.registerIfAbsent
                 (SOURCE, "UniProt", "http://www.uniprot.org");
             datasources.put("UniProt", source);
+
+            if (t.idg2) {
+                Keyword collection = null;
+                if ("gpcr".equalsIgnoreCase(t.family)) {
+                    collection = KeywordFactory.registerIfAbsent
+                        (COLLECTION, "Eligible non-olfactory GPCR Proteins",
+                         // abuse url with the description.. 
+                         "The non-olfactory GPCRs that constitute the initial list of candidate protein targets eligible to be studied in the Implementation Phase of the Common Fund IDG program as per RFA-RM-16-026");
+                }
+                else if ("kinase".equalsIgnoreCase(t.family)) {
+                    collection = KeywordFactory.registerIfAbsent
+                        (COLLECTION, "Eligible Kinase Proteins",
+                         "The Kinases that constitute the initial list of candidate protein targets eligible to be studied in the Implementation Phase of the Common Fund IDG program as per RFA-RM-16-026");
+                }
+                else if ("ic".equalsIgnoreCase(t.family)) {
+                    collection = KeywordFactory.registerIfAbsent
+                        (COLLECTION, "Eligible Ion Channel Proteins",
+                         "The ion channel proteins that constitute the initial list of candidate protein targets eligible to be studied in the Implementation Phase of the Common Fund IDG program as per RFA-RM-16-026");
+                }
+                
+                if (collection != null) {
+                    target.addIfAbsent((Value)collection);
+                }
+            }
 
             pstm14.setLong(1, t.protein);
             rset = pstm14.executeQuery();
@@ -591,6 +626,37 @@ public class TcrdRegistry extends Controller implements Commons {
             Logger.debug("Target "+target.id+" has "+np+" patent(s)!");
         }
 
+        void addPubTator (Target target, long protein) throws Exception {
+            pstm29.setLong(1, protein);
+            ResultSet rset = pstm29.executeQuery();
+            try {
+                Timeline timeline = null;
+                int count = 0;
+                while (rset.next()) {
+                    long year = rset.getInt("year");
+                    double score = rset.getDouble("score");
+                    if (timeline == null)
+                        timeline = new Timeline ("PubTator");
+                    Event ev = new Event ();
+                    ev.start = ev.end = year;
+                    ev.unit = Event.Resolution.YEARS;
+                    ev.properties.add(new VNum ("Score", score));
+                    timeline.events.add(ev);
+                    ++count;
+                }
+                
+                if (timeline != null) {
+                    timeline.save();
+                    target.links.add(new XRef (timeline));
+                }
+                Logger.debug("Target "+target.id+" has "
+                             +count+" pubtator entries!");
+            }
+            finally {
+                rset.close();
+            }
+        }
+
         void addPMScore (Target target, long protein) throws Exception {
             pstm25.setLong(1, protein);
             ResultSet rset = pstm25.executeQuery();
@@ -625,9 +691,11 @@ public class TcrdRegistry extends Controller implements Commons {
                 assay.properties.add
                     (new VInt (MLP_ASSAY_ACTIVE, rset.getLong("active_sids")));
                 assay.properties.add
-                    (new VInt (MLP_ASSAY_INACTIVE, rset.getLong("inactive_sids")));
+                    (new VInt (MLP_ASSAY_INACTIVE,
+                               rset.getLong("inactive_sids")));
                 assay.properties.add
-                    (new VInt (MLP_ASSAY_INCONCLUSIVE, rset.getLong("iconclusive_sids")));
+                    (new VInt (MLP_ASSAY_INCONCLUSIVE,
+                               rset.getLong("iconclusive_sids")));
                 assay.properties.add
                     (new VInt (MLP_ASSAY_AID, rset.getLong("aid")));
                 assay.save();
@@ -791,7 +859,7 @@ public class TcrdRegistry extends Controller implements Commons {
                 Keyword go = null;
                 char kind = term.charAt(0);
                 term = term.substring(term.indexOf(':')+1)
-                        .replaceAll("/","-");
+                    /*.replaceAll("/","-")*/;
                 String href = "http://amigo.geneontology.org/amigo/search/annotation?q=*:*&fq=bioentity:\"UniProtKB:"+uniprot+"\"&sfq=document_category:\"annotation\"&fq=regulates_closure:\""+id+"\"";
                 
                 switch (kind) {
@@ -995,7 +1063,7 @@ public class TcrdRegistry extends Controller implements Commons {
                             Logger.debug
                                 ("OMIM: "+disorder+" ["+id+"] ("+key+")");
                             if (key.charAt(0) == '3') {
-                                disorder = disorder.replaceAll("/", "-");
+                                //disorder = disorder.replaceAll("/", "-");
                                 Keyword kw = KeywordFactory.registerIfAbsent
                                     (OMIM_TERM, disorder,
                                      "http://omim.org/entry/"+id);
@@ -1028,8 +1096,8 @@ public class TcrdRegistry extends Controller implements Commons {
                     String termId = rset.getString("term_id");
                     if (term != null) {
                         Keyword kw = KeywordFactory.registerIfAbsent
-                                (IMPC_TERM, term.replaceAll("/","-"),
-                                        "http://www.informatics.jax.org/searches/Phat.cgi?id=" + termId);
+                            (IMPC_TERM, term/*.replaceAll("/","-")*/,
+                             "http://www.informatics.jax.org/searches/Phat.cgi?id=" + termId);
                         terms.add(kw);
                     }
                 }
@@ -1044,7 +1112,7 @@ public class TcrdRegistry extends Controller implements Commons {
                     String trait = rset.getString("trait");
                     if (trait != null) {
                         sources.put(type, source);                      
-                        trait = trait.replaceAll("/", "-");
+                        //trait = trait.replaceAll("/", "-");
                         Keyword gwas = KeywordFactory.registerIfAbsent
                                 (GWAS_TRAIT, trait, null);
                         XRef ref = target.addIfAbsent(new XRef (gwas));
@@ -1103,7 +1171,7 @@ public class TcrdRegistry extends Controller implements Commons {
                     String pheno = rset.getString("term_name");
                     String termId = rset.getString("term_id");
                     if (pheno != null) {
-                        pheno = pheno.replaceAll("/", "-");
+                        //pheno = pheno.replaceAll("/", "-");
                         sources.put(type, source);
                         Keyword kw = KeywordFactory.registerIfAbsent
                             (MGI_TERM, pheno,
@@ -1204,33 +1272,39 @@ public class TcrdRegistry extends Controller implements Commons {
                     if (type.equalsIgnoreCase("UniProt Function")) {
                         target.description = (String)val.getValue();
                     }
+                    else if (type.equalsIgnoreCase("PubTator Score")) {
+                        target.pubTatorScore = Math.log10
+                            (((Number)val.getValue()).doubleValue());
+                    }
+                    else if (type.equalsIgnoreCase("Ab Count")) {
+                        target.antibodyCount =
+                            ((Number)val.getValue()).intValue();
+                    }
+                    else if (type.equalsIgnoreCase("MAb Count")) {
+                        target.monoclonalCount =
+                            ((Number)val.getValue()).intValue();
+                    }
+                    else if (type.equalsIgnoreCase("PubMed Count")) {
+                        target.pubmedCount =
+                            ((Number)val.getValue()).intValue();
+                    }
+                    else if (type.equalsIgnoreCase
+                             ("JensenLab PubMed Score")) {
+                        target.jensenScore =
+                            ((Number)val.getValue()).doubleValue();
+                    }
+                    else if (type.equalsIgnoreCase
+                             ("EBI Total Patent Count")) {
+                        target.patentCount =
+                            ((Number)val.getValue()).intValue();
+                    }
                     else {
-                        if (type.equalsIgnoreCase("Ab Count")) {
-                            target.antibodyCount =
-                                ((Number)val.getValue()).intValue();
-                        }
-                        else if (type.equalsIgnoreCase("MAb Count")) {
-                            target.monoclonalCount =
-                                ((Number)val.getValue()).intValue();
-                        }
-                        else if (type.equalsIgnoreCase("PubMed Count")) {
-                            target.pubmedCount =
-                                ((Number)val.getValue()).intValue();
-                        }
-                        else if (type.equalsIgnoreCase("JensenLab PubMed Score")) {
-                            target.jensenScore = ((Number)val.getValue()).doubleValue();
-                        }
-                        else if (type.equalsIgnoreCase
-                                 ("EBI Total Patent Count")) {
-                            target.patentCount =
-                                ((Number)val.getValue()).intValue();
-                        }
-                        else if (type.equalsIgnoreCase
-                                 ("ChEMBL Selective Compound")) {
+                        if (type.equalsIgnoreCase
+                            ("ChEMBL Selective Compound")) {
                             
                             ++selective;
                         }
-
+                        
                         target.properties.add(val);
                     }
                 }
@@ -1248,7 +1322,8 @@ public class TcrdRegistry extends Controller implements Commons {
             }
             
             if ((target.antibodyCount != null && target.antibodyCount > 0)
-                || (target.monoclonalCount != null && target.monoclonalCount > 0)) {
+                || (target.monoclonalCount != null
+                    && target.monoclonalCount > 0)) {
                 Keyword kw = KeywordFactory.registerIfAbsent
                     (IDG_TOOLS, IDG_TOOLS_ANTIBODIES, null);
                 target.properties.add(kw);
@@ -1363,7 +1438,7 @@ public class TcrdRegistry extends Controller implements Commons {
                 for (DTOParser.Node n : nodes) {
                     Keyword kw = KeywordFactory.registerIfAbsent
                         (DTO_PROTEIN_CLASS+" ("+path.size()+")",
-                         n.name.replaceAll("/", "-"),
+                         n.name/*.replaceAll("/", "-")*/,
                          // not a real url.. 
                          "http://drugtargetontology.org/"+n.id);
 
@@ -1408,7 +1483,7 @@ public class TcrdRegistry extends Controller implements Commons {
                     String value = rset.getString("value");
                     if (value.equals(""))
                         break; // we're done
-                    value = value.replaceAll("/", "-");
+                    //value = value.replaceAll("/", "-");
                     Logger.debug("  name=\""+label+"\" value="+value);
                     
                     kw = KeywordFactory.registerIfAbsent
@@ -2319,6 +2394,7 @@ public class TcrdRegistry extends Controller implements Commons {
                 addPathway (target, t.protein);
                 addPanther (target, t.protein);
                 addPatent (target, t.protein);
+                addPubTator (target, t.protein);
                 addPMScore (target, t.protein);
                 addGrant (target, t.id);
                 addDrugs (target, t.id, t.source);
@@ -3096,6 +3172,7 @@ public class TcrdRegistry extends Controller implements Commons {
                  //+"where b.tdl in ('Tclin','Tchem')\n"
                  //+"where b.idgfam = 'kinase'\n"
                  //+" where c.uniprot = 'P15291'\n"
+                 +"where b.idg2=1\n"
                  +"order by d.score desc, c.id\n"
                  +(rows > 0 ? ("limit "+rows) : "")
                  );
@@ -3175,6 +3252,7 @@ public class TcrdRegistry extends Controller implements Commons {
                                         novelty, source);
                     t.dto = dto;
                     t.dtoNode = dto.get(dtoid);
+                    t.idg2 = 1 == rset.getInt("idg2");
                     Logger.debug("queuing "+acc+" DTO "+dtoid);
                     targets.add(t);
                 }
