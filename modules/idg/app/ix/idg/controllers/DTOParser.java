@@ -76,6 +76,8 @@ public class DTOParser implements Serializable {
         PreparedStatement pstm = con.prepareStatement
             ("select * from dto order by parent");
         root = new Node ("DTO_00200000", "Gene");
+        ids.put(root.id, root);
+        nodes.put(root.name, root);
         try {
             ResultSet rset = pstm.executeQuery();
             Map<String, String> parents = new HashMap<>();
@@ -92,6 +94,7 @@ public class DTOParser implements Serializable {
                     parents.put(id, parent);
                 }
                 else {
+                    parents.put(id, root.id);
                     n.parent = root;
                     root.children.add(n);
                 }

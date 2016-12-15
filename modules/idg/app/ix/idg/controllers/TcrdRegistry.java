@@ -1415,6 +1415,7 @@ public class TcrdRegistry extends Controller implements Commons {
                     //  "novel" targets are bigger
                     dtoNode.size += (int)(10*target.novelty + 0.5);
                 }
+                dtoNode.name = IDGApp.getGeneSymbol(target);
                 dtoNode.fullname = target.name;
                 
                 List<DTOParser.Node> nodes = new ArrayList<DTOParser.Node>();
