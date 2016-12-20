@@ -79,7 +79,7 @@ public class Publications extends Controller {
                 ObjectMapper mapper = new ObjectMapper ();
                 List<Publication> pubs = new ArrayList<Publication>();          
                 process (pubs, arg);
-                return ok (mapper.valueToTree(pubs));
+                return ok ((JsonNode)mapper.valueToTree(pubs));
             }
         }
         catch (Exception ex) {

@@ -11,7 +11,7 @@ at [pharos@mail.nih.gov](mailto:pharos@mail.nih.gov).
 Requirements
 ============
 
-+ Java JDK 1.7
++ Java JDK 1.8
 + ```git```
 + (Optional) Database server (e.g., MySQL, Postgresql, Oracle,
 etc.). The embedded database ```H2``` can be used if no external

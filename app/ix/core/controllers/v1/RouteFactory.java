@@ -27,6 +27,7 @@ import play.mvc.Result;
 
 import com.avaje.ebean.Expr;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
@@ -116,7 +117,7 @@ public class RouteFactory extends Controller {
         }
                   
         ObjectMapper mapper = new ObjectMapper ();
-        return ok(mapper.valueToTree(res));
+        return ok((JsonNode)mapper.valueToTree(res));
     }
 
     static Method getMethod (String context, 

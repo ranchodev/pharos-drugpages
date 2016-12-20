@@ -53,6 +53,6 @@ public class UniprotFactory extends Controller {
         }
         Logger.debug(targets.size()+" targets(s) fetched!");
 
-        return ok (mapper.valueToTree(targets));
+        return ok ((JsonNode)mapper.valueToTree(targets));
     }
 }

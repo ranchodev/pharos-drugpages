@@ -115,7 +115,7 @@ public class TargetVectorFactory extends Controller implements Commons {
         try {
             TargetVector tv = new TargetVector (id);
             ObjectMapper mapper = new ObjectMapper ();
-            return ok (mapper.valueToTree(tv));
+            return ok ((JsonNode)mapper.valueToTree(tv));
         }
         catch (Exception ex) {
             return internalServerError (ex.getMessage());
@@ -197,7 +197,7 @@ public class TargetVectorFactory extends Controller implements Commons {
             ObjectMapper mapper = new ObjectMapper ();
             EntityDescriptor<Target> edt =
                 EntityDescriptor.getInstance(Target.class);
-            return ok (mapper.valueToTree(edt.similarity(id, 10)));
+            return ok ((JsonNode)mapper.valueToTree(edt.similarity(id, 10)));
         }
         catch (Exception ex) {
             Logger.error("Can't retrieve similarity for "+id, ex);

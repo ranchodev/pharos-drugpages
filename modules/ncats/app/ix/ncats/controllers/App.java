@@ -1672,7 +1672,7 @@ public class App extends Authentication {
                 (" ++ status:"+ctx.getStatus()+" count="+ctx.getCount());
             
             ObjectMapper mapper = new ObjectMapper ();
-            return ok (mapper.valueToTree(value));
+            return ok ((JsonNode)mapper.valueToTree(value));
         }
 
         return notFound ("No key found: "+key+"!");

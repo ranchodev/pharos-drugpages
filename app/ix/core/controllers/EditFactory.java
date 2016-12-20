@@ -10,6 +10,7 @@ import play.mvc.*;
 
 import ix.core.models.Edit;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.JsonNode;
 
 public class EditFactory extends EntityFactory {
     public static final Model.Finder<UUID, Edit> finder = 
@@ -21,7 +22,7 @@ public class EditFactory extends EntityFactory {
             Edit edit = finder.byId(id);
             if (edit != null) {
                 ObjectMapper mapper = getEntityMapper ();
-                return ok (mapper.valueToTree(edit));
+                return ok ((JsonNode)mapper.valueToTree(edit));
             }
 
             return notFound ("Bad request: "+request().uri());

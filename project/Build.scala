@@ -14,10 +14,10 @@ object ApplicationBuild extends Build {
 
   val commonSettings = Seq(
     version := appVersion,    
-//    scalaVersion := "2.11.7",
-//    crossScalaVersions := Seq("2.10.2", "2.10.3", "2.10.4", "2.10.5",
-//      "2.11.0", "2.11.1", "2.11.2", "2.11.3", "2.11.4",
-//      "2.11.5", "2.11.6", "2.11.7"),
+    scalaVersion := "2.11.7",
+    crossScalaVersions := Seq("2.10.2", "2.10.3", "2.10.4", "2.10.5",
+      "2.11.0", "2.11.1", "2.11.2", "2.11.3", "2.11.4",
+      "2.11.5", "2.11.6", "2.11.7"),
     resolvers += Resolver.typesafeRepo("releases"),
     resolvers += Resolver.sonatypeRepo("snapshots"),
     resolvers += Resolver.sonatypeRepo("releases"),
@@ -31,7 +31,7 @@ object ApplicationBuild extends Build {
     javaEbean,
     cache,
     filters,
-    "com.zaxxer" % "HikariCP" % "2.4.3"
+    "com.zaxxer" % "HikariCP" % "2.4.6"
       ,"com.edulify" %% "play-hikaricp" % "2.1.0"
       ,"mysql" % "mysql-connector-java" % "5.1.31"
       ,"org.postgresql" % "postgresql" % "9.4-1201-jdbc41"     
@@ -51,7 +51,7 @@ object ApplicationBuild extends Build {
       ,"org.webjars" % "handlebars" % "2.0.0-1"
       ,"org.webjars" % "jquery-ui" % "1.11.2"
       ,"org.webjars" % "jquery-ui-themes" % "1.11.2"
-      ,"org.webjars" % "font-awesome" % "4.2.0"
+      ,"org.webjars" % "font-awesome" % "4.5.0"
       ,"org.webjars" % "html5shiv" % "3.7.2"
       ,"org.webjars" % "requirejs" % "2.1.15"
       ,"org.webjars" % "respond" % "1.4.2"
@@ -83,10 +83,17 @@ object ApplicationBuild extends Build {
   )
 
   val javaBuildOptions = Seq(
-    "-encoding", "UTF-8"
+    "-encoding", "UTF-8",
+    "-source","1.8",
+    "-target","1.8"
       //,"-Xlint:-options"
       //,"-Xlint:deprecation"
   )
+
+  val javaDocOptions = Seq(
+     "-encoding", "UTF-8",
+     "-source", "1.8"
+  ) 
 
   val build = Project("build", file("modules/build"))
     .settings(commonSettings:_*).settings(

@@ -39,7 +39,7 @@ public class Predicates extends Controller {
             .setMaxRows(top)
             .findList();
         ObjectMapper mapper = EntityFactory.getEntityMapper();
-        return ok (mapper.valueToTree(xrefs));
+        return ok ((JsonNode)mapper.valueToTree(xrefs));
     }
 
     public static Result index (int size) {

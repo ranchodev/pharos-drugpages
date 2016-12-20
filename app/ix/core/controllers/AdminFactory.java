@@ -47,7 +47,7 @@ public class AdminFactory extends Controller {
             pal = mapper.treeToValue(node, Principal.class);
             pal.save();
 
-            return ok (mapper.valueToTree(pal));
+            return ok ((JsonNode)mapper.valueToTree(pal));
         }
         catch (Exception ex) {
             Logger.error("Can't create new user", ex);
@@ -64,7 +64,7 @@ public class AdminFactory extends Controller {
         Principal pal = palFinder.byId(id);
         if (pal != null) {
             ObjectMapper mapper = new ObjectMapper ();
-            return ok (mapper.valueToTree(pal));
+            return ok ((JsonNode)mapper.valueToTree(pal));
         }
         return notFound ("Unknown principal: "+id);
     }
@@ -75,7 +75,7 @@ public class AdminFactory extends Controller {
             try {
                 pal.delete();
                 ObjectMapper mapper = new ObjectMapper ();
-                return ok (mapper.valueToTree(pal));
+                return ok ((JsonNode)mapper.valueToTree(pal));
             }
             catch (Exception ex) {
                 return badRequest (ex.getMessage());
@@ -88,7 +88,7 @@ public class AdminFactory extends Controller {
         Role role = roleFinder.byId(id);
         if (role != null) {
             ObjectMapper mapper = new ObjectMapper ();
-            return ok (mapper.valueToTree(role));
+            return ok ((JsonNode)mapper.valueToTree(role));
         }
         return notFound ("Unknown role: "+id);
     }
@@ -99,7 +99,7 @@ public class AdminFactory extends Controller {
             try {
                 role.delete();
                 ObjectMapper mapper = new ObjectMapper ();
-                return ok (mapper.valueToTree(role));
+                return ok ((JsonNode)mapper.valueToTree(role));
             }
             catch (Exception ex) {
                 return badRequest (ex.getMessage());
@@ -112,7 +112,7 @@ public class AdminFactory extends Controller {
         Namespace res = resFinder.byId(id);
         if (res != null) {
             ObjectMapper mapper = new ObjectMapper ();
-            return ok (mapper.valueToTree(res));
+            return ok ((JsonNode)mapper.valueToTree(res));
         }
         return notFound ("Unknown resource: "+id);
     }
@@ -125,7 +125,7 @@ public class AdminFactory extends Controller {
 
                 res.delete();
                 ObjectMapper mapper = new ObjectMapper ();
-                return ok (mapper.valueToTree(res));
+                return ok ((JsonNode)mapper.valueToTree(res));
             }
             catch (Exception ex) {
                 Logger.error("Can't delete Resource "+id, ex);
@@ -229,7 +229,7 @@ public class AdminFactory extends Controller {
             .findUnique();
         if (resource != null) {
             ObjectMapper mapper = new ObjectMapper ();
-            return ok (mapper.valueToTree(resource));
+            return ok ((JsonNode)mapper.valueToTree(resource));
         }
         return badRequest ("Unknown resource: "+name);
     }

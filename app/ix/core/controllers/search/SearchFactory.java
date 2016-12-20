@@ -352,7 +352,7 @@ public class SearchFactory extends EntityFactory {
             result = getTermVectors (kind, field);
         }
         
-        return result != null ? ok (mapper.valueToTree(result))
+        return result != null ? ok ((JsonNode)mapper.valueToTree(result))
             : notFound ("Can't find termVectors for "+kind+"/"+field);
     }
     
@@ -366,7 +366,7 @@ public class SearchFactory extends EntityFactory {
             if (field != null) {
                 List<TextIndexer.SuggestResult> results = 
                     _indexer.suggest(field, q, max);
-                return ok (mapper.valueToTree(results));
+                return ok ((JsonNode)mapper.valueToTree(results));
             }
 
             ObjectNode node = mapper.createObjectNode();
@@ -386,7 +386,7 @@ public class SearchFactory extends EntityFactory {
 
     public static Result suggestFields () {
         ObjectMapper mapper = new ObjectMapper ();
-        return ok (mapper.valueToTree(_indexer.getSuggestFields()));
+        return ok ((JsonNode)mapper.valueToTree(_indexer.getSuggestFields()));
     }
 
     public static List<Facet> getFacets (final Class kind) {

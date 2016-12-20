@@ -739,7 +739,7 @@ public class DownloadEntities extends Controller {
                         }
                     });
             ObjectMapper mapper = new ObjectMapper ();
-            return ok (mapper.valueToTree(worker.status));
+            return ok ((JsonNode)mapper.valueToTree(worker.status));
         }
         catch (Exception ex) {
             ex.printStackTrace();

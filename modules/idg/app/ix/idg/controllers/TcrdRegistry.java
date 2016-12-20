@@ -58,9 +58,6 @@ public class TcrdRegistry extends Controller implements Commons {
         new ConcurrentHashMap<Long, Target>();
     static final ConcurrentMap<String, Ligand> LIGS =
         new ConcurrentHashMap<String, Ligand>();
-    
-    static final ConcurrentMap<Long, Ligand> LIGANDS =
-        new ConcurrentHashMap<Long, Ligand>();
 
     static final DrugTargetOntology dto = new DrugTargetOntology();
 
@@ -157,7 +154,6 @@ public class TcrdRegistry extends Controller implements Commons {
         extends PersistenceQueue.AbstractPersistenceContext {
         final Connection con;
         final Http.Context ctx;
-        final ChemblRegistry chembl;
         final Collection<TcrdTarget> targets;
         PreparedStatement pstm, pstm2, pstm3, pstm4,
             pstm5, pstm6, pstm7, pstm8, pstm9, pstm10,
@@ -179,8 +175,7 @@ public class TcrdRegistry extends Controller implements Commons {
             new HashMap<String, Map<String, Keyword>>();
         
         PersistRegistration (Connection con, Http.Context ctx,
-                             Collection<TcrdTarget> targets,
-                             ChemblRegistry chembl)
+                             Collection<TcrdTarget> targets)
             throws SQLException {
             this.con = con;
             this.ctx = ctx;
@@ -296,8 +291,6 @@ public class TcrdRegistry extends Controller implements Commons {
 
             pstm29 = con.prepareStatement
                 ("select * from ptscore where protein_id = ?");
-
-            this.chembl = chembl;
         }
 
         Keyword getTdlKw (Target.TDL tdl) {
@@ -423,7 +416,6 @@ public class TcrdRegistry extends Controller implements Commons {
             pstm27.close();
             pstm28.close();
             pstm29.close();
-            chembl.shutdown();
         }
 
         void instrument (Target target, TcrdTarget t) throws Exception {
@@ -2424,599 +2416,12 @@ public class TcrdRegistry extends Controller implements Commons {
             }
 
             TARGETS.put(t.protein, target);
-
-            /*
-            Logger.debug("...disease linking");
-            pstm.setLong(1, t.id);
-            long start = System.currentTimeMillis();
-            new RegisterDiseaseRefs (target, t, pstm).persists();
-            long end = System.currentTimeMillis();
-            Logger.debug("..."+(end-start)+"ms to resolve diseases");
-            */
-
-            //Logger.debug("...gene RIF linking");
-            //pstm4.setLong(1, t.protein);
-            //new RegisterGeneRIFs (target, pstm4).persists();
-
-            /*
-            Logger.debug("...ligand linking");
-            pstm2.setLong(1, t.id);
-            pstm3.setLong(1, t.id);
-            RegisterLigands reglig = new RegisterLigands
-                (chembl, target, pstm2, pstm3, t.source);
-            reglig.persists();
-
-            for (Ligand lig : reglig.getLigands())
-                if (lig.id != null)
-                    LIGANDS.put(lig.id, lig);
-            */
-
             Logger.debug("####### Target "+t.acc+" processed in "
                          +String.format("%1$dms!", 
                                         System.currentTimeMillis()-start)
                          +" ########");
         }
     }
-
-    /**
-     * @deprecated
-     */
-    static class RegisterDiseaseRefs
-        extends PersistenceQueue.AbstractPersistenceContext {
-        final Target target;
-        final TcrdTarget tcrdTarget;
-        final Keyword source;
-        final PreparedStatement pstm;
-
-        RegisterDiseaseRefs (Target target, TcrdTarget tcrdTarget,
-                             PreparedStatement pstm) {
-            this.target = target;
-            this.source = tcrdTarget.source;
-            this.pstm = pstm;
-            this.tcrdTarget = tcrdTarget;
-        }
-
-        public void persists () throws Exception {
-            ResultSet rs = pstm.executeQuery();
-            try {               
-                Keyword family = KeywordFactory.registerIfAbsent
-                    (IDG_FAMILY, target.idgFamily, null);
-                Keyword clazz = KeywordFactory.registerIfAbsent
-                    (IDG_DEVELOPMENT, target.idgTDL.name, null);
-                Keyword name = KeywordFactory.registerIfAbsent
-                    (UNIPROT_TARGET, target.name, target.getSelf());
-
-                XRef self = new XRef (target);
-                self.properties.add(family);
-                self.properties.add(clazz);
-                self.properties.add(name);
-                self.save();
-
-                int count = 0;
-                Map<Long, Disease> neighbors = new HashMap<Long, Disease>();
-                List<Disease> updates = new ArrayList<Disease>();
-                while (rs.next()) {
-                    String doid = rs.getString("doid");
-                    Disease disease = DISEASES.get(doid);
-                    long start = System.currentTimeMillis();
-                    if (disease == null) {
-                        List<Disease> dl = DiseaseFactory.finder
-                            .where(Expr.and
-                                   (Expr.eq("synonyms.label",
-                                            DiseaseOntologyRegistry.DOID),
-                                    Expr.eq("synonyms.term", doid)))
-                            .findList();
-                    
-                        if (dl.isEmpty()) {
-                            Logger.warn("Target "+target.id+" references "
-                                        +"unknown disease "+doid);
-                            continue;
-                        }
-                        else if (dl.size() > 1) {
-                            Logger.warn("Disease "+doid+" maps to "+dl.size()
-                                        +" entries!");
-                            for (Disease d : dl)
-                                Logger.warn("..."+d.id+" "+d.name);
-                            
-                        }
-                        disease = dl.iterator().next();
-                        DISEASES.putIfAbsent(doid, disease);
-                    }
-
-                    { Value val = null;
-                        for (Value v : disease.properties) {
-                            if (v == source) {
-                                val = v;
-                                break;
-                            }
-                            else if (v instanceof Keyword) {
-                                Keyword kw = (Keyword)v;
-                                if (kw.label.equals(source.label)
-                                    && kw.term.equals(source.term)) {
-                                    val = kw;
-                                    break;
-                                }
-                            }
-                        }
-                        
-                        if (val == null) {
-                            disease.properties.add(source);
-                            disease.update();
-                        }
-                    }
-                    
-                    double zscore = rs.getDouble("zscore");
-                    double conf = rs.getDouble("conf");
-                    double tinx = rs.getDouble("score");
-                    double diseaseNovelty = rs.getDouble("diseaseNovelty");
-
-                    /**
-                     * TODO: tinx should reference disease and target directly instead of just the uniprot and doid!
-                     */
-                    TINX tinxe = new TINX
-                        (tcrdTarget.acc, doid, tcrdTarget.novelty, tinx, diseaseNovelty);
-                    tinxe.save();
-
-                    XRef xref = null;
-                    for (XRef ref : target.links) {
-                        if (ref.referenceOf(disease)) {
-                            xref = ref;
-                            break;
-                        }
-                    }
-                    
-                    if (xref != null) {
-                        Logger.warn("Disease "+disease.id+" ("
-                                    +disease.name+") is "
-                                    +"already linked with target "
-                                    +target.id+" ("+target.name+")");
-                    }
-                    else {
-                        xref = new XRef (disease);
-                        Keyword kw = KeywordFactory.registerIfAbsent
-                            (IDG_DISEASE, disease.name, xref.getHRef());
-                        xref.properties.add(kw);
-                        xref.properties.add(new VNum (IDG_ZSCORE, zscore));
-                        xref.properties.add(new VNum (IDG_CONF, conf));
-                        xref.properties.add(new VNum (TINX_IMPORTANCE, tinx));
-                        xref.properties.add(new VNum (TINX_DISEASE_NOVELTY, diseaseNovelty));
-                        xref.save();
-                        target.links.add(xref);
-
-                        // now add all the unique parents of this disease node
-                        getNeighbors(neighbors, disease.links);
-                    
-                        // link the other way
-                        try {
-                            disease.links.add(self);
-                            updates.add(disease);
-                            ++count;
-                        }
-                        catch (Exception ex) {
-                            Logger.warn("Disease "+disease.id+" ("
-                                        +disease.name+")"
-                                        +" is already link with target "
-                                        +target.id+" ("+target.name+"): "
-                                        +ex.getMessage());
-                        }
-                    }
-                    long end = System.currentTimeMillis();
-                    Logger.debug("......."+(end-start)+"ms linking target "
-                                 +target.id+" and disease "+disease.id
-                                 +" ("+doid+")");  
-                }
-                Logger.debug(".....updating "+updates.size()+" diseases");
-                for (Disease d : updates) {
-                    try {
-                        d.update();
-                        INDEXER.update(d);
-                    }
-                    catch (Exception ex) {
-                        Logger.error("Can't update disease "
-                                     +d.id+" "+d.name, ex);
-                        ex.printStackTrace();
-                    }
-                }
-                Logger.debug("....."+count+" disease xref(s) added!");
-            }
-            finally {
-                rs.close();
-            }
-        }
-
-        void getNeighbors (Map<Long, Disease> neighbors, List<XRef> links) {
-            for (XRef xr : links) {
-                if (Disease.class.getName().equals(xr.kind)) {
-                    final XRef ref = xr;
-                    try {
-                        Disease neighbor =
-                            Cache.getOrElse
-                            (Disease.class.getName()+"."+xr.refid,
-                             new Callable<Disease> () {
-                                 public Disease call () {
-                                     return (Disease)ref.deRef();
-                                 }
-                             }, Integer.MAX_VALUE);
-                        neighbors.put(neighbor.id, neighbor);
-                        // recurse
-                        getNeighbors (neighbors, neighbor.links);
-                    }
-                    catch (Exception ex) {
-                        Logger.error("Can't retrieve neighbor for XRef "
-                                     +ref.kind+" "+ref.refid, ex);
-                        ex.printStackTrace();
-                    }
-                }
-            }
-        }
-    } // RegisterDiseaseRefs ()
-
-    /**
-     * @deprecated
-     */
-    static class RegisterGeneRIFs 
-        extends PersistenceQueue.AbstractPersistenceContext {
-        final Target target;
-        final PreparedStatement pstm;
-        
-        RegisterGeneRIFs (Target target, PreparedStatement pstm) {
-            this.target = target;
-            this.pstm = pstm;
-        }
-
-        public void persists () throws Exception {
-            ResultSet rs = pstm.executeQuery();
-            try {
-                int count = 0;
-                Map<Long, String> generifs = new HashMap<Long, String>();
-                while (rs.next()) {
-                    long pmid = rs.getLong("pubmed_ids");
-                    String text = rs.getString("text");
-                    int updates = 0;
-                    for (XRef xref : target.links) {
-                        if (Publication.class.getName().equals(xref.kind)) {
-                            Publication pub = (Publication)xref.deRef();
-                            if (pub == null) {
-                                Logger.error("XRef "+xref.id+" reference a "
-                                             +"bogus publication!");
-                            }
-                            else if (pmid == pub.pmid) {
-                                xref.properties.add
-                                    (new Text (IDG_GENERIF, text));
-                                xref.update();
-                                ++updates;
-                            }
-                        }
-                    }
-                    
-                    if (updates > 0) {
-                        ++count;
-                    }
-                    else {
-                        generifs.put(pmid, text);
-                    }
-                }
-
-                for (Map.Entry<Long, String> me : generifs.entrySet()) {
-                    long pmid = me.getKey();
-                    Publication pub = PublicationFactory.registerIfAbsent(pmid);
-                    if (pub != null) {
-                        try {
-                            target.addIfAbsent(pub);
-                            XRef xref = target.addIfAbsent(new XRef (pub));
-                            xref.properties.add
-                                (new Text (IDG_GENERIF, me.getValue()));
-                            if (xref.id == null) {
-                                xref.save();
-                                //target.update();
-                            }
-                            else {
-                                xref.update();
-                            }
-                            
-                            ++count;
-                        }
-                        catch (Exception ex) {
-                            ex.printStackTrace();
-                            Logger.error("Can't save XRef for publication "
-                                         +pub.id, ex);
-                        }
-                    }
-                    else {
-                        Logger.warn("Bogus PMID: "+pmid+"!");
-                    }
-                }
-                
-                if (count > 0) {
-                    Logger.debug("Updated target "+target.id+": "+target.name
-                                 +" with "+count+" GeneRIF references!");
-                }
-            }
-            finally {
-                rs.close();
-            }
-        }
-    } // RegisterGeneRIFs
-
-    /**
-     * @deprecated
-     */
-    static class RegisterLigands
-        extends PersistenceQueue.AbstractPersistenceContext {
-        final ChemblRegistry registry;
-        final Target target;
-        final PreparedStatement chembl;
-        final PreparedStatement drug;
-        final List<Ligand> allligands = new ArrayList<Ligand>();
-        final Keyword source;
-
-        RegisterLigands (ChemblRegistry registry,
-                         Target target, PreparedStatement chembl,
-                         PreparedStatement drug, Keyword source)
-            throws SQLException {
-            this.registry = registry;
-            this.target = target;
-            this.chembl = chembl;
-            this.drug = drug;
-            this.source = source;
-        }
-
-        List<Ligand> loadChembl () throws SQLException {
-            final List<Ligand> ligands = new ArrayList<Ligand>();
-            ResultSet rs = chembl.executeQuery();
-            while (rs.next()) {
-                String chemblId = rs.getString("cmpd_chemblid");
-                List<Ligand> ligs = LigandFactory.finder
-                    .where(Expr.and
-                           (Expr.eq("synonyms.label", ChEMBL_ID),
-                            Expr.eq("synonyms.term", chemblId)))
-                    .findList();
-                if (ligs.isEmpty()) {
-                    Keyword kw = KeywordFactory.registerIfAbsent
-                        (ChEMBL_ID, chemblId,
-                         "https://www.ebi.ac.uk/chembl/compound/inspect/"
-                         +chemblId);
-                    Ligand ligand = new Ligand (chemblId);
-                    ligand.synonyms.add(kw);
-                    ligand.properties.add(source);
-                    ligands.add(ligand);
-                }
-                else {
-                    for (Ligand l : ligs) {
-                        Ligand lig = LIGANDS.get(l.id);
-                        if (lig == null) {
-                            Logger.warn("Ligand "+l.id+" ("+l.getName()
-                                        +") isn't cached!");
-                        }
-                        else {
-                            ligands.add(lig);
-                        }
-                    }
-                }
-            }
-            rs.close();
-            return ligands;
-        }
-
-        List<Ligand> loadDrugs () throws SQLException {
-            List<Ligand> ligands = new ArrayList<Ligand>();
-            ResultSet rs = drug.executeQuery();
-            while (rs.next()) {
-                String drug = rs.getString("drug");
-                String ref = rs.getString("reference");
-                List<Ligand> ligs;
-                if (ref != null && ref.indexOf("CHEMBL") > 0) {
-                    String chemblId = ref.substring(ref.indexOf("CHEMBL"));
-                    ligs = LigandFactory.finder
-                        .where(Expr.and
-                               (Expr.eq("synonyms.label", ChEMBL_ID),
-                                Expr.eq("synonyms.term", chemblId)))
-                        .findList();
-                }
-                else {
-                    ligs = LigandFactory.finder
-                        .where(Expr.and
-                               (Expr.eq("synonyms.label", ChEMBL_SYNONYM),
-                                Expr.eq("synonyms.term", drug)))
-                        .findList();
-                }
-                if (ligs.isEmpty()) {
-                    Keyword kw = KeywordFactory.registerIfAbsent
-                        (IDG_DRUG, drug, ref != null
-                         && ref.startsWith("http") ? ref : null);
-                    Ligand ligand = new Ligand (drug);
-                    String desc = rs.getString("nlm_drug_info");
-                    if (desc != null) {
-                        int pos = desc.lastIndexOf("Check for");
-                        if (pos > 0)
-                            desc = desc.substring(0, pos);
-                    }
-                    ligand.description = desc;
-                    ligand.synonyms.add(kw);
-                    String src = rs.getString("source");
-                    if (!src.equalsIgnoreCase("chembl")) {
-                        kw = KeywordFactory.registerIfAbsent
-                            (SOURCE, src, ref);
-                        ligand.properties.add(kw);
-                    }
-                    ligand.properties.add(source);
-                    ligands.add(ligand);
-                }
-                else {
-                    for (Ligand l : ligs) {
-                        Ligand lig = LIGANDS.get(l.id);
-                        if (lig == null) {
-                            Logger.warn("Ligand "+l.id+" ("+l.getName()
-                                        +") isn't cached!");
-                        }
-                        else {
-                            ligands.add(lig);
-                        }
-                    }
-                }
-            }
-            rs.close();
-            return ligands;
-        }
-        
-        /**
-         * This is to register the ligands direct instead of going through
-         * chembl. This is for those ligands/targets that can't be resolved
-         * through chembl.
-         */
-        List<Ligand> registerDrugLigands () throws SQLException {
-            List<Ligand> ligands = new ArrayList<Ligand>();
-            ResultSet rs = drug.executeQuery();
-            while (rs.next()) {
-                String drug = rs.getString("drug");
-                String ref = rs.getString("reference");
-                String src = rs.getString("source");
-                
-                List<Ligand> ligs = LigandFactory.finder
-                    .where(Expr.and
-                           (Expr.eq("synonyms.label", ChEMBL_SYNONYM),
-                            Expr.eq("synonyms.term", drug)))
-                    .findList();
-                
-                if (ligs.isEmpty()) {
-                    Keyword kw = KeywordFactory.registerIfAbsent
-                        (IDG_DRUG, drug, ref != null
-                         && ref.startsWith("http") ? ref : null);
-                    Ligand ligand = new Ligand (drug);
-                    String desc = rs.getString("nlm_drug_info");
-                    if (desc != null) {
-                        int pos = desc.lastIndexOf("Check for");
-                        if (pos > 0)
-                            desc = desc.substring(0, pos);
-                    }
-                    ligand.description = desc;
-                    ligand.synonyms.add(kw);
-                    
-                    if (!src.equalsIgnoreCase("chembl")) {
-                        kw = KeywordFactory.registerIfAbsent(SOURCE, src, ref);
-                        ligand.properties.add(kw);
-                    }
-                    else if (src.equalsIgnoreCase("iuphar")) {
-                        kw = KeywordFactory.registerIfAbsent
-                            (SOURCE, src, "http://www.guidetopharmacology.org/");
-                        ligand.properties.add(kw);
-                    }
-                    ligand.properties.add(source);
-
-                    if (ref != null && ref.indexOf("CHEMBL") > 0) {
-                        String chemblId = ref.substring(ref.indexOf("CHEMBL"));
-                        kw = KeywordFactory.registerIfAbsent
-                            (ChEMBL_ID, chemblId,
-                             "https://www.ebi.ac.uk/chembl/compound/inspect/"
-                             +chemblId);
-                        ligand.synonyms.add(kw);
-                    }
-                    
-                    if (!registry.instrument(ligand)) {
-                        // if can't resolve ligand via chembl, then use
-                        // whatever information available
-                        String smiles = rs.getString("smiles");
-                        if (smiles != null) {
-                            ligand.properties.add
-                                (new Text (IDG_SMILES, smiles));
-                            Logger.debug("submitting "+drug
-                                         +" for processing...");
-                            StructureReceiver receiver =
-                                new LigandStructureReceiver (source, ligand);
-                            PROCESSOR.submit(smiles, receiver);
-                        }
-                        ligand.save();
-                    }
-                    
-                    ligs.add(ligand);
-                }
-                else {
-                    List<Ligand> temp = new ArrayList<Ligand>();
-                    for (Ligand l : ligs) {
-                        Ligand lig = LIGANDS.get(l.id);
-                        if (lig == null) {
-                            Logger.warn("Ligand "+l.id+" ("+l.getName()
-                                        +") isn't cached!");
-                        }
-                        else {
-                            //ligands.add(lig);
-                            temp.add(lig);
-                        }
-                    }
-                    ligs = temp;
-                }
-                
-                if (ref != null && ref.indexOf("CHEMBL") > 0) {
-                    Logger.warn("Skipping ChEMBL reference "
-                                +ref+" for drug "+drug);
-                }
-                else {
-                    String type = rs.getString("act_type");
-                    Double value = rs.getDouble("act_value");
-                    if (rs.wasNull())
-                        value = null;
-                    
-                    VNum act = new VNum (type, value);
-                    act.save();
-                    for (Ligand l : ligs) {
-                        XRef tref = new XRef (target);
-                        tref.properties.add(source);
-                        tref.properties.add
-                            (KeywordFactory.registerIfAbsent
-                             (Target.IDG_FAMILY, target.idgFamily, null));
-                        tref.properties.add
-                            (KeywordFactory.registerIfAbsent
-                             (Target.IDG_DEVELOPMENT,
-                              target.idgTDL.name, null));
-                        tref.properties.add(act);
-                        
-                        XRef lref = new XRef (l);
-                        lref.properties.add(source);
-                        lref.properties.add
-                            (KeywordFactory.registerIfAbsent
-                             ("Ligand", l.getName(), null));
-                        lref.properties.add(act);
-                        
-                        tref.save();
-                        lref.save();
-                        l.links.add(tref);
-                        target.links.add(lref);
-                    }
-                }
-                ligands.addAll(ligs);
-            }
-            rs.close();
-            
-            return ligands;
-        }
-
-        public void persists () throws Exception {
-            Set<Long> tids = registry.instruments(target);
-            if (tids == null || tids.isEmpty()) {
-                // not in chembl, so we only have to look at drug
-                List<Ligand> ligands = registerDrugLigands ();
-                Logger.debug("Registering "+ligands.size()+" drug ligand(s) "
-                             +"for target "+target.id+": "+target.name);
-                allligands.addAll(ligands);
-            }
-            else {
-                List<Ligand> ligands = loadChembl();
-                Logger.debug("Registering "+ligands.size()+" Chembl ligand(s) "
-                             +"for target "+target.id+": "+target.name);
-                registry.instruments(tids, target, ligands);
-                allligands.addAll(ligands);
-                
-                //ligands = loadDrugs ();
-                ligands = registerDrugLigands ();
-                Logger.debug("Registering "+ligands.size()+" drug ligand(s) "
-                             +"for target "+target.id+": "+target.name);
-                registry.instruments(tids, target, ligands);
-                allligands.addAll(ligands);
-            }
-        }
-
-        public List<Ligand> getLigands () { return allligands; }
-    } // RegisterLigands
 
     static void loadChemblUniprotMapping
         (Map<String, Set<String>> uniprotMap, File file) {
@@ -3099,29 +2504,6 @@ public class TcrdRegistry extends Controller implements Commons {
             }
         }
 
-        Map<String, Set<String>> uniprotMap =
-            new HashMap<String, Set<String>>();
-        part = body.getFile("uniprot-map");
-        if (part != null) {
-            String name = part.getFilename();
-            String content = part.getContentType();
-            File file = part.getFile();
-            loadChemblUniprotMapping (uniprotMap, file);
-            Logger.debug("uniprot-map: file="+name+" content="
-                         +content+" count="+uniprotMap.size());
-        }
-        else {
-            // check the config
-            String file = Play.application()
-                .configuration().getString("ix.pharos.chembl_uniprot_mapping");
-            if (file != null) {
-                loadChemblUniprotMapping (uniprotMap, new File (file));
-            }
-            else {
-                Logger.warn("No Chembl to UniProt mapping file provided!");
-            }
-        }
-
         int count = 0;
         try {
             int rows = 0;
@@ -3133,7 +2515,7 @@ public class TcrdRegistry extends Controller implements Commons {
                     Logger.warn("Bogus maxRows \""+maxRows+"\"; default to 0!");
                 }
             }
-            count = load (ds, 1, rows, uniprotMap);
+            count = load (ds, 1, rows);
         }
         catch (Exception ex) {
             ex.printStackTrace();
@@ -3143,8 +2525,7 @@ public class TcrdRegistry extends Controller implements Commons {
         return redirect (routes.IDGApp.index());
     }
 
-    static int load (DataSource ds, int threads, int rows,
-                     Map<String, Set<String>> uniprotMap) throws Exception {
+    static int load (DataSource ds, int threads, int rows) throws Exception {
 
         Set<TcrdTarget> targets = new HashSet<TcrdTarget>();    
         Keyword source = null;
@@ -3265,19 +2646,44 @@ public class TcrdRegistry extends Controller implements Commons {
             rset.close();
             stm.close();
 
+            int cnt = 0;
             for (Disease d : DiseaseFactory.finder.all()) {
                 for (Keyword kw : d.getSynonyms())
                     DISEASES.put(kw.term, d);
                 if (d.name != null)
                     DISEASES.put(d.name, d);
+                ++cnt;
             }
+            Logger.debug(cnt+" diseases loaded!");
 
+            cnt = 0;
             for (Ligand l : LigandFactory.finder.all()) {
                 for (Keyword kw : l.getSynonyms())
                     LIGS.put(kw.term, l);
                 if (l.name != null)
                     LIGS.put(l.name, l);
+                ++cnt;
             }
+            Logger.debug(cnt+" ligands loaded!");
+
+            cnt = 0;
+            for (Target t : TargetFactory.finder.all()) {
+                Keyword kw = t.getSynonym(IDG_TARGET);
+                if (kw != null) {
+                    try {
+                        int pos = kw.term.indexOf(':');
+                        if (pos > 0) {
+                            Long id = Long.parseLong(kw.term.substring(pos+1));
+                            TARGETS.put(id, t);
+                            ++cnt;
+                        }
+                    }
+                    catch (NumberFormatException ex) {
+                        Logger.warn("Bogus target \""+t.name+"\"; no TCRD ID");
+                    }
+                }
+            }
+            Logger.debug(cnt+" targets loaded!");
         }
         catch (Exception ex) {
             ex.printStackTrace();
@@ -3287,10 +2693,8 @@ public class TcrdRegistry extends Controller implements Commons {
         }
 
         Logger.debug("Preparing to process "+targets.size()+" targets...");
-        ChemblRegistry chembl = new ChemblRegistry (uniprotMap);
         PersistRegistration regis = new PersistRegistration
-            (ds.getConnection(), Http.Context.current(),
-             targets, chembl);
+            (ds.getConnection(), Http.Context.current(), targets);
         PQ.submit(regis);
         //regis.persists();
         

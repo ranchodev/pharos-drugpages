@@ -484,13 +484,13 @@ public class EntityFactory extends Controller {
 
             T inst = query.setId(id).findUnique();
             if (inst != null) {
-                return ok (mapper.valueToTree(inst));
+                return ok ((JsonNode)mapper.valueToTree(inst));
             }
         }
         else {
             T inst = finder.byId(id);
             if (inst != null) {
-                return ok (mapper.valueToTree(inst));
+                return ok ((JsonNode)mapper.valueToTree(inst));
             }
         }
         return notFound ("Bad request: "+request().uri());
@@ -855,7 +855,7 @@ public class EntityFactory extends Controller {
             T inst = mapper.treeToValue(node, type);
             inst.save();
 
-            return created (mapper.valueToTree(inst));
+            return created ((JsonNode)mapper.valueToTree(inst));
         }
         catch (Exception ex) {
             return internalServerError (ex.getMessage());
@@ -883,7 +883,7 @@ public class EntityFactory extends Controller {
                 .findList();
             if (!edits.isEmpty()) {
                 ObjectMapper mapper = getEntityMapper ();
-                return ok (mapper.valueToTree(edits));
+                return ok ((JsonNode)mapper.valueToTree(edits));
             }
         }
 
@@ -944,7 +944,7 @@ public class EntityFactory extends Controller {
                     return internalServerError (ex.getMessage());
                 }
 
-                return created (mapper.valueToTree(inst));
+                return created ((JsonNode)mapper.valueToTree(inst));
             }
             else {
                 Object inst = obj;
@@ -1145,7 +1145,7 @@ public class EntityFactory extends Controller {
                     }   
                 }
 
-                return ok (mapper.valueToTree(obj));
+                return ok ((JsonNode)mapper.valueToTree(obj));
             }
         }
         catch (Exception ex) {

@@ -76,7 +76,7 @@ public class PublicationFactory extends EntityFactory {
                 Publication pub = q.where().eq("pmid", id).findUnique();
                 if (pub != null) {
                     ObjectMapper mapper = getEntityMapper ();
-                    return ok (mapper.valueToTree(pub));
+                    return ok ((JsonNode)mapper.valueToTree(pub));
                 }
 
                 return notFound ("Not found: "+request().uri());
@@ -97,7 +97,7 @@ public class PublicationFactory extends EntityFactory {
     
     public static Result relatedByPMID (long pmid) {
         ObjectMapper mapper = getEntityMapper ();
-        return ok (mapper.valueToTree(getRelated (pmid)));
+        return ok ((JsonNode)mapper.valueToTree(getRelated (pmid)));
     }
 
     public static Result field (Long id, String path) {

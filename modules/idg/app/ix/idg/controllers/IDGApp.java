@@ -1423,7 +1423,7 @@ public class IDGApp extends App implements Commons {
                         }
                     });
             ObjectMapper mapper = new ObjectMapper ();
-            return ok (mapper.valueToTree(cache));
+            return ok ((JsonNode)mapper.valueToTree(cache));
         }
         catch (Exception ex) {
             ex.printStackTrace();
@@ -3996,7 +3996,7 @@ public class IDGApp extends App implements Commons {
         }
         
         ObjectMapper mapper = EntityFactory.getEntityMapper();
-        return ok (mapper.valueToTree(pubs));
+        return ok ((JsonNode)mapper.valueToTree(pubs));
     }
 
     public static Result publicationsForTarget

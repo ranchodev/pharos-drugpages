@@ -9,7 +9,7 @@ import java.util.List;
 import java.util.concurrent.ExecutionException;
 
 import com.avaje.ebean.FutureRowCount;
-
+import com.fasterxml.jackson.databind.JsonNode;
 import play.db.ebean.Model;
 import play.mvc.Result;
 
@@ -32,7 +32,8 @@ public class ProcessingJobFactory extends EntityFactory {
     
 
     public static List<ProcessingJob> getJobsByPayload (String uuid) {
-        return finder.setDistinct(false).where().eq("payload.id", uuid).findList();
+        return finder.setDistinct(false)
+            .where().eq("payload.id", uuid).findList();
     }
     public static List<ProcessingJob> getProcessingJobs
     (int top, int skip, String filter) {
@@ -68,7 +69,8 @@ public class ProcessingJobFactory extends EntityFactory {
 
     public static Result field (Long id, String path) {
         if (path.equals("records")) {
-            return ok (getEntityMapper().valueToTree(getJobRecords (id)));
+            return ok ((JsonNode)getEntityMapper()
+                       .valueToTree(getJobRecords (id)));
         }
         return field (id, path, finder);
     }

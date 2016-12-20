@@ -9,6 +9,7 @@ import play.cache.Cached;
 import play.mvc.*;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.fasterxml.jackson.annotation.JsonIgnore;
@@ -154,7 +155,8 @@ public class DTOHier extends IDGApp {
                         // return the top-level gene
                         if (dto != null) {
                             ObjectMapper mapper = new ObjectMapper ();
-                            return ok (mapper.valueToTree(dto.get(DTOROOT)));
+                            return ok ((JsonNode)mapper
+                                       .valueToTree(dto.get(DTOROOT)));
                         }
                         
                         Logger.warn("No DTO in cache for "+label);
@@ -171,6 +173,6 @@ public class DTOHier extends IDGApp {
     @Cached(key="idg/DTO/GeneRoot", duration = Integer.MAX_VALUE)
     public static Result dtoGeneRoot () {
         ObjectMapper mapper = new ObjectMapper ();
-        return ok (mapper.valueToTree(getDTO().get(DTOROOT)));
+        return ok ((JsonNode)mapper.valueToTree(getDTO().get(DTOROOT)));
     }
 }
