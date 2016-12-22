@@ -3914,7 +3914,7 @@ public class IDGApp extends App implements Commons {
             return getOrElse (key, new Callable<List<Target>> () {
                     public List<Target> call () throws Exception {
                         List<Predicate> preds = PredicateFactory.finder.where
-                            (Expr.and(Expr.eq("subject.refid", target.id),
+                            (Expr.and(Expr.eq("subject.refid", target.id.toString()),
                                       Expr.eq("predicate", predicate)))
                             .findList();
                         List<Target> targets = new ArrayList<Target>();
