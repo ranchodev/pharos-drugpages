@@ -160,7 +160,7 @@ public class TcrdRegistry extends Controller implements Commons {
             pstm11, pstm12, pstm13, pstm14, pstm15,
             pstm16, pstm17, pstm18, pstm19, pstm20,
             pstm21, pstm22, pstm23, pstm24, pstm25,
-            pstm26, pstm27, pstm28, pstm29;
+            pstm26, pstm27, pstm28, pstm29, pstm30;
         Map<String, Keyword> datasources = new HashMap<String, Keyword>();
 
         // xrefs for the current target
@@ -291,6 +291,10 @@ public class TcrdRegistry extends Controller implements Commons {
 
             pstm29 = con.prepareStatement
                 ("select * from ptscore where protein_id = ?");
+
+            pstm30 = con.prepareStatement
+                ("select type,count(*) as count from feature where protein_id = ? "
+                 +"group by type order by count desc");
         }
 
         Keyword getTdlKw (Target.TDL tdl) {
@@ -416,6 +420,7 @@ public class TcrdRegistry extends Controller implements Commons {
             pstm27.close();
             pstm28.close();
             pstm29.close();
+            pstm30.close();
         }
 
         void instrument (Target target, TcrdTarget t) throws Exception {
@@ -2290,10 +2295,30 @@ public class TcrdRegistry extends Controller implements Commons {
                 
                 if (!pred.objects.isEmpty()) {
                     pred.save();
+                    target.ppiCount = pred.objects.size();
                     Logger.debug("Target "+target.id+" has "
-                                 +pred.objects.size()
+                                 +target.ppiCount
                                  +" protein-protein interactions!");
                 }
+            }
+            finally {
+                rset.close();
+            }
+        }
+
+        void addFeatures (Target target, long protein) throws Exception {
+            pstm30.setLong(1, protein);
+            ResultSet rset = pstm30.executeQuery();
+            try {
+                Map<String, Long> features = new TreeMap<>();
+                while (rset.next()) {
+                    String t = rset.getString("type");
+                    long count = rset.getInt("count");
+                    features.put(t, count);
+                    target.properties.add(new VInt ("Feature: "+t, count));
+                    target.addIfAbsent((Value)getKeyword (PROTEIN_FEATURE, t));
+                }
+                Logger.debug("Target "+target.id+" protein features "+features);
             }
             finally {
                 rset.close();
@@ -2400,6 +2425,7 @@ public class TcrdRegistry extends Controller implements Commons {
                 addPublication (target, t.protein);
                 addCompartment (target, t.protein);
                 addTechdev (target, t.protein);
+                addFeatures (target, t.protein);
             }
             catch (Exception ex) {
                 Logger.error("Can't parse target "+IDGApp.getId(target)+"!");

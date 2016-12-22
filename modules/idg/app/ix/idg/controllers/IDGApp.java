@@ -831,6 +831,7 @@ public class IDGApp extends App implements Commons {
         "Antibody Count",
         "Monoclonal Count",
         "Patent Count",
+        "PPI Count",
         "Jensen Score",
 
         PHARMALOGICAL_ACTION,
@@ -839,6 +840,7 @@ public class IDGApp extends App implements Commons {
         LIGAND_ACTIVITY,
         MLP_ASSAY_TYPE,
         UNIPROT_KEYWORD,
+        PROTEIN_FEATURE,
         IDG_TOOLS,
         GRANT_APPLICATION,
         GRANT_FUNDING_IC,

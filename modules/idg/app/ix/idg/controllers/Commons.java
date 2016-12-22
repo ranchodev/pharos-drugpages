@@ -70,6 +70,7 @@ public interface Commons {
 
     public static final String KEGG_PATHWAY = "KEGG Pathway";
     public static final String PATENT_COUNT = "Patent Count";
+    public static final String PPI_COUNT = "PPI Count";
 
     public static final String GO_ID = "GO ID";
     public static final String GO_TERM = "GO Term";
@@ -80,6 +81,8 @@ public interface Commons {
     public static final String PANTHER_PROTEIN_CLASS = "PANTHER Protein Class";
     public static final String PANTHER_PROTEIN_ANCESTRY =
         "PANTHER Protein Ancestry";
+
+    public static final String PROTEIN_FEATURE = "Protein Feature";
 
     public static final String DTO_ID = "DTO ID";
     public static final String DTO_PROTEIN_CLASS = "DTO Protein Class";
