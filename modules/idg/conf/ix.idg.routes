@@ -8,6 +8,7 @@ POST	/uniprot	ix.idg.controllers.UniprotFactory.fetch
 # TCRD 
 #
 GET     /tcrd   ix.idg.controllers.TcrdRegistry.index
+GET     /ppi   ix.idg.controllers.TcrdRegistry.ppi
 POST    /tcrd   ix.idg.controllers.TcrdRegistry.load
 
 GET	/api/v1/targets/descriptors	ix.idg.controllers.TargetVectorFactory.descriptorVectors

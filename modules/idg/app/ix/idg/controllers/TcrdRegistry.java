@@ -340,6 +340,7 @@ public class TcrdRegistry extends Controller implements Commons {
             }
             
             for (Map.Entry<Long, Target> me : TARGETS.entrySet()) {
+                /*
                 try {
                     long protein = me.getKey();
                     addPPI (me.getValue(), protein);
@@ -348,6 +349,7 @@ public class TcrdRegistry extends Controller implements Commons {
                 catch (Exception ex) {
                     ex.printStackTrace();
                 }
+                */
             }
             
             for (Ligand l : LIGS.values()) {
@@ -2244,62 +2246,7 @@ public class TcrdRegistry extends Controller implements Commons {
             pstm26.setLong(1, protein);
             ResultSet rset = pstm26.executeQuery();
             try {
-                Predicate pred = new Predicate (TARGET_PPI);
-                pred.subject = new XRef (target);
-                while (rset.next()) {
-                    long p2 = rset.getLong("protein2_id");
-                    if (p2 != protein) {
-                        // don't store self-link
-                        Target t = TARGETS.get(p2);
-                        if (t == null) {
-                            /*
-                            Logger.error
-                                ("Can't find target with protein id="+p2);
-                            */
-                            List<Target> targets = TargetFactory.finder
-                                .where().eq("synonyms.term", "TCRD:"+p2)
-                                .findList();
-                            if (targets.isEmpty()) {    
-                                Logger.error
-                                    ("Can't find target with protein id="+p2
-                                     +" from database!");
-                            }
-                            else {
-                                t = targets.get(0);
-                                TARGETS.put(p2, t);
-                            }
-                        }
-                        else {
-                            String type = rset.getString("ppitype");
-                            Keyword source = datasources.get(type);
-                            if (source == null) {
-                                source = KeywordFactory.registerIfAbsent
-                                    (SOURCE, type, null);
-                                datasources.put(type, source);
-                            }
-                            target.addIfAbsent((Value)source);
-
-                            XRef ref = new XRef (t);
-                            ref.properties.add
-                                (new VNum ("p_int", rset.getDouble("p_int")));
-                            ref.properties.add
-                                (new VNum ("p_ni", rset.getDouble("p_ni")));
-                            ref.properties.add
-                                (new VNum ("p_wrong",
-                                           rset.getDouble("p_wrong")));
-                            ref.save();
-                            pred.addIfAbsent(ref);
-                        }
-                    }
-                }
-                
-                if (!pred.objects.isEmpty()) {
-                    pred.save();
-                    target.ppiCount = pred.objects.size();
-                    Logger.debug("Target "+target.id+" has "
-                                 +target.ppiCount
-                                 +" protein-protein interactions!");
-                }
+                TcrdRegistry.addPPI(rset, target, protein);
             }
             finally {
                 rset.close();
@@ -2441,7 +2388,7 @@ public class TcrdRegistry extends Controller implements Commons {
                 ex.printStackTrace();
             }
 
-            TARGETS.put(t.protein, target);
+            //TARGETS.put(t.protein, target);
             Logger.debug("####### Target "+t.acc+" processed in "
                          +String.format("%1$dms!", 
                                         System.currentTimeMillis()-start)
@@ -2575,7 +2522,7 @@ public class TcrdRegistry extends Controller implements Commons {
                  +"left join tinx_novelty d\n"
                  +"    on d.protein_id = a.protein_id \n"
                  //+"where c.id in (18204,862,74,6571)\n"
-                 //+"where a.target_id in (12241)\n"
+                 //+"where a.target_id in (8008,8009,8010)\n"
                  //+"where c.uniprot = 'Q9H3Y6'\n"
                  //+"where b.tdl in ('Tclin','Tchem')\n"
                  //+"where b.idgfam = 'kinase'\n"
@@ -2666,7 +2613,7 @@ public class TcrdRegistry extends Controller implements Commons {
                 }
                 else {
                     Logger.debug("Skipping "+acc);
-                    TARGETS.put(protId, tlist.get(0));
+                    //TARGETS.put(protId, tlist.get(0));
                 }
             }
             rset.close();
@@ -2692,24 +2639,6 @@ public class TcrdRegistry extends Controller implements Commons {
             }
             Logger.debug(cnt+" ligands loaded!");
 
-            cnt = 0;
-            for (Target t : TargetFactory.finder.all()) {
-                Keyword kw = t.getSynonym(IDG_TARGET);
-                if (kw != null) {
-                    try {
-                        int pos = kw.term.indexOf(':');
-                        if (pos > 0) {
-                            Long id = Long.parseLong(kw.term.substring(pos+1));
-                            TARGETS.put(id, t);
-                            ++cnt;
-                        }
-                    }
-                    catch (NumberFormatException ex) {
-                        Logger.warn("Bogus target \""+t.name+"\"; no TCRD ID");
-                    }
-                }
-            }
-            Logger.debug(cnt+" targets loaded!");
         }
         catch (Exception ex) {
             ex.printStackTrace();
@@ -2725,6 +2654,126 @@ public class TcrdRegistry extends Controller implements Commons {
         //regis.persists();
         
         return count;
+    }
+
+    static int addPPI (ResultSet rset, Target target, long protein)
+        throws Exception {
+        Predicate pred = null;
+        while (rset.next()) {
+            if (pred == null) {
+                pred = new Predicate (TARGET_PPI);
+                pred.subject = new XRef (target);
+            }
+            
+            long p2 = rset.getLong("protein2_id");
+            if (p2 != protein) {
+                // don't store self-link
+                Target t = TARGETS.get(p2);
+                if (t == null) {
+                    /*
+                      Logger.error
+                      ("Can't find target with protein id="+p2);
+                    */
+                    List<Target> targets = TargetFactory.finder
+                        .where().eq("synonyms.term", "TCRD:"+p2)
+                        .findList();
+                    if (targets.isEmpty()) {    
+                        Logger.error
+                            ("Can't find target with protein id="+p2
+                             +" from database!");
+                    }
+                    else {
+                        t = targets.get(0);
+                        //TARGETS.put(p2, t);
+                    }
+                }
+
+                if (t != null) {
+                    String type = rset.getString("ppitype");
+                    Keyword source = KeywordFactory.registerIfAbsent
+                        (SOURCE, type, null);
+                    target.addIfAbsent((Value)source);
+                            
+                    XRef ref = new XRef (t);
+                    ref.properties.add
+                        (new VNum ("p_int", rset.getDouble("p_int")));
+                    ref.properties.add
+                        (new VNum ("p_ni", rset.getDouble("p_ni")));
+                    ref.properties.add
+                        (new VNum ("p_wrong",
+                                   rset.getDouble("p_wrong")));
+                    ref.save();
+                    pred.addIfAbsent(ref);
+                }
+            }
+        }
+                
+        if (pred != null && !pred.objects.isEmpty()) {
+            pred.save();
+            target.ppiCount = pred.objects.size();
+            Logger.debug("Target "+target.id+" has "
+                         +target.ppiCount
+                         +" protein-protein interactions!");
+            
+            return pred.objects.size();
+        }
+        
+        return -1;
+    }
+    
+    static int updatePPI (DataSource ds) throws Exception {
+        Connection con = ds.getConnection();
+        int cnt = 0;    
+        try (PreparedStatement pstm = con.prepareStatement
+             ("select * from ppi where protein1_id = ?")) {
+            for (Target t : TargetFactory.finder.all()) {
+                Keyword kw = t.getSynonym(IDG_TARGET);
+                if (kw != null) {
+                    Long id = null;
+                    try {
+                        int pos = kw.term.indexOf(':');
+                        if (pos > 0) {
+                            id = Long.parseLong(kw.term.substring(pos+1));
+                        }
+                    }
+                    catch (NumberFormatException ex) {
+                        Logger.warn("Bogus target \""+t.name+"\"; no TCRD ID");
+                    }
+
+                    if (id != null) {
+                        try {
+                            pstm.setLong(1, id);
+                            ResultSet rset = pstm.executeQuery();
+                            if (addPPI (rset, t, id) > 0) {
+                                t.update();
+                                INDEXER.update(t);
+                                ++cnt;
+                            }
+                        }
+                        catch (Exception ex) {
+                            Logger.error("Can't update target "+t.id, ex);
+                        }
+                    }
+                }
+            }
+            Logger.debug(cnt+" targets with PPI updated!");
+            return cnt;
+        }
+        finally {
+            con.close();
+        }
+    }
+
+    public static Result ppi () {
+        if (Play.isProd())
+            return redirect (routes.IDGApp.index());
+        try {
+            int cnt = updatePPI (DB.getDataSource("tcrd"));
+            return ok (cnt+" targets with PPI updated!");
+        }
+        catch (Exception ex) {
+            return internalServerError (ex.getMessage());
+        }
     }
     
     public static Result index () {
