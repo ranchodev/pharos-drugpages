@@ -352,10 +352,9 @@ public class TcrdRegistry extends Controller implements Commons {
                 */
             }
             
-            for (Ligand l : LIGS.values()) {
+            for (Ligand l : LigandFactory.finder.all()) {
                 try {
-                    //l.update();
-                    INDEXER.update(l);              
+                    INDEXER.update(l);
                 }
                 catch (Exception ex) {
                     ex.printStackTrace();
@@ -1535,20 +1534,26 @@ public class TcrdRegistry extends Controller implements Commons {
                 String chemblId = rset.getString("cmpd_chemblid");
                 String drug = rset.getString("drug");
 
-                /*
                 List<Ligand> ligands = LigandFactory.finder.where()
-                    .eq("synonyms.term", drug).findList();
-                Ligand ligand = ligands.isEmpty() ? null
-                    : ligands.iterator().next();
-                */
-                Ligand ligand = LIGS.get(drug);
-                if (ligand == null && chemblId != null) {
-                    // try chembl
-                    ligand = LIGS.get(chemblId);
-                    if (ligand != null) {
-                        ligand.name = drug;
-                        ligand.description = rset.getString("nlm_drug_info");
+                    .in("synonyms.term", drug, chemblId).findList();
+
+                Ligand ligand = null;
+                if (ligands.isEmpty()) {
+                }
+                else {
+                    Set<Long> uniq = new HashSet<>();
+                    for (Ligand lig : ligands) {
+                        uniq.add(lig.id);
+                        if (drug.equalsIgnoreCase(lig.name))
+                            ligand = lig;
                     }
+                    
+                    if (uniq.size() > 1) {
+                        Logger.warn("Drug \""+drug+"\" and ligand \""+chemblId
+                                    +"\" are different instances: "+uniq);
+                    }
+                    if (ligand == null)
+                        ligand = ligands.get(0); // just get one
                 }
 
                 if (ligand == null) {
@@ -1632,7 +1637,7 @@ public class TcrdRegistry extends Controller implements Commons {
                                    (LIGAND_DRUG, "YES", null));
                 
                 if (chemblId != null) {
-                    LIGS.put(chemblId, ligand);
+                    //LIGS.put(chemblId, ligand);
 
                     Keyword kw = KeywordFactory.registerIfAbsent
                         (ChEMBL_ID, chemblId,
@@ -1658,7 +1663,8 @@ public class TcrdRegistry extends Controller implements Commons {
                                      (IDG_TARGET, acc.term, acc.href));
                 
                 XRef lref = target.addIfAbsent(new XRef (ligand));
-                lref.addIfAbsent((Value)getKeyword (IDG_LIGAND, ligand.getName()));
+                lref.addIfAbsent((Value)getKeyword
+                                 (IDG_LIGAND, ligand.getName()));
 
                 String actType = rset.getString("act_type");
                 if (actType != null) {
@@ -1736,20 +1742,11 @@ public class TcrdRegistry extends Controller implements Commons {
                 seen.add(chemblId);
                 String syn = rset.getString("cmpd_name_in_ref");
                 
-                /*
                 List<Ligand> ligands = LigandFactory.finder.where()
                     .eq("synonyms.term", chemblId).findList();
-                Ligand ligand = null;
-                if (!ligands.isEmpty()) {
-                    ligand = ligands.iterator().next();
-                }
-                else*/
-                Ligand ligand = LIGS.get(chemblId);
-                if (ligand == null && syn != null) {
-                    ligand = LIGS.get(syn.toLowerCase());
-                }
                 
-                if (ligand == null) {
+                Ligand ligand = null;
+                if (ligands.isEmpty()) {
                     ligand = new Ligand (chemblId);
                     ligand.properties.add(source);
                     ligand.properties.add(tcrd);
@@ -1764,18 +1761,6 @@ public class TcrdRegistry extends Controller implements Commons {
                     ligand.properties.add(kw);
                     
                     String smiles = rset.getString("smiles");
-                    /*
-                    if (smiles == null) {
-                        // grab from chembl schema.. sigh
-                        smiles = chembl.getMolfile(chemblId);
-                        if (smiles == null) {
-                            Logger.error
-                                ("Can't retrieve molfile from chembl: "
-                                 +chemblId);
-                        }
-                    }
-                    */
-                    
                     if (smiles != null && smiles.length() > 0) {
                         long t0 = System.currentTimeMillis();
                         ligand.properties.add
@@ -1788,8 +1773,10 @@ public class TcrdRegistry extends Controller implements Commons {
                         // now index the structure for searching
 
                         try {
-                            MOLIDX.add(null, struc.id.toString(), struc.molfile);
-                        } catch (IllegalArgumentException e) {
+                            MOLIDX.add(null,
+                                       struc.id.toString(), struc.molfile);
+                        }
+                        catch (IllegalArgumentException e) {
                             Logger.debug(e.toString());
                         }
                         /*
@@ -1806,16 +1793,25 @@ public class TcrdRegistry extends Controller implements Commons {
                         if (s != null && s.length() <= 255) {
                             ligand.addIfAbsent
                                 (KeywordFactory.registerIfAbsent
-                                 (ChEMBL_SYNONYM, s, "https://www.ebi.ac.uk/chembl/compound/inspect/"+chemblId));
-                            LIGS.put(s.toLowerCase(), ligand);
+                                 (ChEMBL_SYNONYM, s,
+                                  "https://www.ebi.ac.uk/chembl/compound/inspect/"+chemblId));
+                            //LIGS.put(s.toLowerCase(), ligand);
                         }
                     }
                     rs.close();
                     
                     ligand.save();
+                    /*
                     LIGS.put(chemblId, ligand);
                     if (syn != null)
                         LIGS.put(syn.toLowerCase(), ligand);
+                    */
+                }
+                else {
+                    if (ligands.size() > 1)
+                        Logger.warn("Ligand "+chemblId+" has "+ligands.size()
+                                    +"instances!");
+                    ligand = ligands.get(0);
                 }
 
                 if (syn != null && syn.length() <= 255) {
@@ -2526,7 +2522,7 @@ public class TcrdRegistry extends Controller implements Commons {
                  //+"where c.uniprot = 'Q9H3Y6'\n"
                  //+"where b.tdl in ('Tclin','Tchem')\n"
                  //+"where b.idgfam = 'kinase'\n"
-                 //+" where c.uniprot = 'Q8N972'\n"
+                 //+" where c.uniprot in ('Q12809','P00742','Q8N972')\n"
                  //+"where b.idg2=1\n"
                  +"order by d.score desc, c.id\n"
                  +(rows > 0 ? ("limit "+rows) : "")
@@ -2629,6 +2625,7 @@ public class TcrdRegistry extends Controller implements Commons {
             }
             Logger.debug(cnt+" diseases loaded!");
 
+            /*
             cnt = 0;
             for (Ligand l : LigandFactory.finder.all()) {
                 for (Keyword kw : l.getSynonyms())
@@ -2638,7 +2635,7 @@ public class TcrdRegistry extends Controller implements Commons {
                 ++cnt;
             }
             Logger.debug(cnt+" ligands loaded!");
-
+            */
         }
         catch (Exception ex) {
             ex.printStackTrace();
