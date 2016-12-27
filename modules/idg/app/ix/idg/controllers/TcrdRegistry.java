@@ -320,6 +320,7 @@ public class TcrdRegistry extends Controller implements Commons {
         }
         
         Keyword getKeyword (String label, String value, String href) {
+            /*
             Map<String, Keyword> keys = keywords.get(label);
             if (keys == null) {
                 keywords.put(label, keys = new HashMap<String, Keyword>());
@@ -330,7 +331,8 @@ public class TcrdRegistry extends Controller implements Commons {
                 keys.put(value, kw = KeywordFactory.registerIfAbsent
                          (label, value, href));
             }
-            return kw;
+            */
+            return KeywordFactory.registerIfAbsent(label, value, href);
         }
 
         public void persists () throws Exception {
