@@ -51,13 +51,6 @@ public class TcrdRegistry extends Controller implements Commons {
         .plugin(SequenceIndexerPlugin.class).getIndexer();
     static final StructureIndexer MOLIDX = Play.application()
         .plugin(StructureIndexerPlugin.class).getIndexer();
-    
-    static final ConcurrentMap<String, Disease> DISEASES =
-        new ConcurrentHashMap<String, Disease>();
-    static final ConcurrentMap<Long, Target> TARGETS =
-        new ConcurrentHashMap<Long, Target>();
-    static final ConcurrentMap<String, Ligand> LIGS =
-        new ConcurrentHashMap<String, Ligand>();
 
     static final DrugTargetOntology dto = new DrugTargetOntology();
 
@@ -341,19 +334,6 @@ public class TcrdRegistry extends Controller implements Commons {
                 persists (t);
             }
             
-            for (Map.Entry<Long, Target> me : TARGETS.entrySet()) {
-                /*
-                try {
-                    long protein = me.getKey();
-                    addPPI (me.getValue(), protein);
-                    INDEXER.update(me.getValue());
-                }
-                catch (Exception ex) {
-                    ex.printStackTrace();
-                }
-                */
-            }
-            
             for (Ligand l : LigandFactory.finder.all()) {
                 try {
                     INDEXER.update(l);
@@ -363,14 +343,15 @@ public class TcrdRegistry extends Controller implements Commons {
                 }
             }
 
-            for (Disease d : DISEASES.values()) {
+            for (Disease d : DiseaseFactory.finder.all()) {
                 try {
                     Value drug = d.getProperty(IDG_DRUG);
                     if (drug != null) {
                         Keyword kw = (Keyword)drug;
-                        Ligand lig = LIGS.get(kw.term);
-                        if (lig != null) {
-                            XRef ref = d.addIfAbsent(new XRef (lig));
+                        List<Ligand> ligands = LigandFactory.finder.where()
+                            .eq("synonyms.term", kw.term).findList();
+                        if (!ligands.isEmpty()) {
+                            XRef ref = d.addIfAbsent(new XRef (ligands.get(0)));
                             if (ref.id == null)
                                 ref.save();
                             d.update();
@@ -1616,13 +1597,11 @@ public class TcrdRegistry extends Controller implements Commons {
                                     (KeywordFactory.registerIfAbsent
                                      (ChEMBL_SYNONYM, syn, null));
                             }
-                            LIGS.put(syn, ligand);
                         }
                     }
                     rs.close();
                     
                     ligand.save();
-                    LIGS.put(drug, ligand);
                     
                     Logger.debug("New ligand "+ligand.id+" "
                                  +ligand.getName()+" added!");
@@ -1639,8 +1618,6 @@ public class TcrdRegistry extends Controller implements Commons {
                                    (LIGAND_DRUG, "YES", null));
                 
                 if (chemblId != null) {
-                    //LIGS.put(chemblId, ligand);
-
                     Keyword kw = KeywordFactory.registerIfAbsent
                         (ChEMBL_ID, chemblId,
                          "https://www.ebi.ac.uk/chembl/compound/inspect/"
@@ -1797,17 +1774,11 @@ public class TcrdRegistry extends Controller implements Commons {
                                 (KeywordFactory.registerIfAbsent
                                  (ChEMBL_SYNONYM, s,
                                   "https://www.ebi.ac.uk/chembl/compound/inspect/"+chemblId));
-                            //LIGS.put(s.toLowerCase(), ligand);
                         }
                     }
                     rs.close();
                     
                     ligand.save();
-                    /*
-                    LIGS.put(chemblId, ligand);
-                    if (syn != null)
-                        LIGS.put(syn.toLowerCase(), ligand);
-                    */
                 }
                 else {
                     if (ligands.size() > 1)
@@ -1985,7 +1956,6 @@ public class TcrdRegistry extends Controller implements Commons {
                 if (did == null) {
                     did = "IDG:D"+d.id;
                 }
-                DISEASES.put(did, d);
             }
             else {
                 d = diseases.iterator().next();
@@ -2386,7 +2356,6 @@ public class TcrdRegistry extends Controller implements Commons {
                 ex.printStackTrace();
             }
 
-            //TARGETS.put(t.protein, target);
             Logger.debug("####### Target "+t.acc+" processed in "
                          +String.format("%1$dms!", 
                                         System.currentTimeMillis()-start)
@@ -2458,22 +2427,6 @@ public class TcrdRegistry extends Controller implements Commons {
 
         String maxRows = requestData.get("max-rows");
         Logger.debug("Max Rows: "+maxRows);
-
-        Http.MultipartFormData body = request().body().asMultipartFormData();
-        Http.MultipartFormData.FilePart part = body.getFile("load-do-obo");
-        if (part != null) {
-            String name = part.getFilename();
-            String content = part.getContentType();
-            Logger.debug("file="+name+" content="+content);
-            File file = part.getFile();
-            DiseaseOntologyRegistry obo = new DiseaseOntologyRegistry ();
-            try {
-                DISEASES.putAll(obo.register(new FileInputStream (file)));
-            }
-            catch (IOException ex) {
-                Logger.trace("Can't load obo file: "+file, ex);
-            }
-        }
 
         int count = 0;
         try {
@@ -2611,33 +2564,10 @@ public class TcrdRegistry extends Controller implements Commons {
                 }
                 else {
                     Logger.debug("Skipping "+acc);
-                    //TARGETS.put(protId, tlist.get(0));
                 }
             }
             rset.close();
             stm.close();
-
-            int cnt = 0;
-            for (Disease d : DiseaseFactory.finder.all()) {
-                for (Keyword kw : d.getSynonyms())
-                    DISEASES.put(kw.term, d);
-                if (d.name != null)
-                    DISEASES.put(d.name, d);
-                ++cnt;
-            }
-            Logger.debug(cnt+" diseases loaded!");
-
-            /*
-            cnt = 0;
-            for (Ligand l : LigandFactory.finder.all()) {
-                for (Keyword kw : l.getSynonyms())
-                    LIGS.put(kw.term, l);
-                if (l.name != null)
-                    LIGS.put(l.name, l);
-                ++cnt;
-            }
-            Logger.debug(cnt+" ligands loaded!");
-            */
         }
         catch (Exception ex) {
             ex.printStackTrace();
@@ -2665,29 +2595,17 @@ public class TcrdRegistry extends Controller implements Commons {
             }
             
             long p2 = rset.getLong("protein2_id");
-            if (p2 != protein) {
-                // don't store self-link
-                Target t = TARGETS.get(p2);
-                if (t == null) {
-                    /*
-                      Logger.error
-                      ("Can't find target with protein id="+p2);
-                    */
-                    List<Target> targets = TargetFactory.finder
-                        .where().eq("synonyms.term", "TCRD:"+p2)
-                        .findList();
-                    if (targets.isEmpty()) {    
-                        Logger.error
-                            ("Can't find target with protein id="+p2
-                             +" from database!");
-                    }
-                    else {
-                        t = targets.get(0);
-                        //TARGETS.put(p2, t);
-                    }
+            if (p2 != protein) {  // don't store self-link
+                List<Target> targets = TargetFactory.finder
+                    .where().eq("synonyms.term", "TCRD:"+p2)
+                    .findList();
+                if (targets.isEmpty()) {    
+                    Logger.error
+                        ("Can't find target with protein id="+p2
+                         +" from database!");
                 }
-
-                if (t != null) {
+                else {
+                    Target t = targets.get(0);
                     String type = rset.getString("ppitype");
                     Keyword source = KeywordFactory.registerIfAbsent
                         (SOURCE, type, null);
