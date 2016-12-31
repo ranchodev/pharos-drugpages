@@ -116,20 +116,23 @@ public class BuildInfo {
   val seqaln = Project("seqaln", file("modules/seqaln"))
     .settings(commonSettings:_*).settings(
     libraryDependencies ++= commonDependencies,
-    javacOptions ++= javaBuildOptions,
+    javacOptions in (doc) ++= javaDocOptions,
+    javacOptions in (compile) ++= javaBuildOptions,
     mainClass in (Compile,run) := Some("ix.seqaln.SequenceIndexer")
   )
   
   val core = Project("core", file("."))
     .enablePlugins(PlayJava).settings(commonSettings:_*).settings(
       libraryDependencies ++= commonDependencies,
-      javacOptions ++= javaBuildOptions
+      javacOptions in (doc) ++= javaDocOptions,
+      javacOptions in (compile) ++= javaBuildOptions
   ).dependsOn(build,seqaln).aggregate(build,seqaln)
 
   val ncats = Project("ncats", file("modules/ncats"))
     .enablePlugins(PlayJava).settings(commonSettings:_*).settings(
       libraryDependencies ++= commonDependencies,
-      javacOptions ++= javaBuildOptions
+      javacOptions in (doc) ++= javaDocOptions,
+      javacOptions in (compile) ++= javaBuildOptions
         //javaOptions in Runtime += "-Dconfig.resource=ncats.conf"
   ).dependsOn(core).aggregate(core)
 
@@ -143,7 +146,8 @@ public class BuildInfo {
       libraryDependencies += "org.webjars" % "highcharts" % "4.2.5",
       libraryDependencies += "org.webjars" % "store.js" % "1.3.17-1",
 
-      javacOptions ++= javaBuildOptions,
+      javacOptions in (doc) ++= javaDocOptions,
+      javacOptions in (compile) ++= javaBuildOptions,
       unmanagedSourceDirectories in Compile += baseDirectory.value / "src"
       //javaOptions in Runtime += "-Dconfig.resource=pharos.conf"
   ).dependsOn(ncats).aggregate(ncats)
