@@ -3932,6 +3932,8 @@ public class IDGApp extends App implements Commons {
                                                  ref.kind+":"+ref.refid, ex);
                                 }
                             }
+
+                            Logger.debug(key+" => "+targets.size()+" targets!");
                         }
                         return targets;
                     }

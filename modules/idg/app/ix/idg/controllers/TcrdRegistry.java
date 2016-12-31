@@ -458,7 +458,7 @@ public class TcrdRegistry extends Controller implements Commons {
                     if (pub != null)
                         target.addIfAbsent(pub);
                     */
-                    target.properties.add
+                    target.addIfAbsent
                         (new VInt (PUBMED_ID, Long.parseLong(value)));
                 }
                 else {
@@ -489,7 +489,7 @@ public class TcrdRegistry extends Controller implements Commons {
                         (COLLECTION, "Eligible Kinase Proteins",
                          "The Kinases that constitute the initial list of candidate protein targets eligible to be studied in the Implementation Phase of the Common Fund IDG program as per RFA-RM-16-026");
                 }
-                else if ("ic".equalsIgnoreCase(t.family)) {
+                else if ("ion channel".equalsIgnoreCase(t.family)) {
                     collection = KeywordFactory.registerIfAbsent
                         (COLLECTION, "Eligible Ion Channel Proteins",
                          "The ion channel proteins that constitute the initial list of candidate protein targets eligible to be studied in the Implementation Phase of the Common Fund IDG program as per RFA-RM-16-026");
