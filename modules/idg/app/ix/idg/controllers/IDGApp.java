@@ -3811,6 +3811,39 @@ public class IDGApp extends App implements Commons {
         return nodes;
     }
 
+    public static JsonNode getPubTator (Target target) {
+        ObjectMapper mapper = new ObjectMapper ();
+        ArrayNode nodes = mapper.createArrayNode();
+        for (XRef ref : target.links) {
+            if (Timeline.class.getName().equals(ref.kind)) {
+                try {
+                    Timeline tl = (Timeline)ref.deRef();
+                    if ("PubTator".equals(tl.name)) {
+                        for (Event e : tl.events) {
+                            ObjectNode n = null;
+                            for (Value val : e.properties) {
+                                if ("Score".equals(val.label)) {
+                                    n = mapper.createObjectNode();
+                                    n.put("year", e.start.toString());
+                                    n.put("score", (Double)val.getValue());
+                                }
+                            }
+
+                            if (n != null)
+                                nodes.add(n);
+                        }
+                    }
+                }
+                catch (Exception ex) {
+                    ex.printStackTrace();
+                    Logger.error("Can't dereference link "
+                                 +ref.kind+":"+ref.refid);
+                }
+            }
+        }
+        return nodes;
+    }
+
     public static String getPatentSparkline (Target target) {
         ArrayList<Long> ent = new ArrayList<Long>();
         for (XRef ref : target.links) {
@@ -3834,6 +3867,34 @@ public class IDGApp extends App implements Commons {
         //strip the brackets '[', ']' for sparkline
         String res = StringUtils.join(ent, ",");
         return res;
+    }
+
+    public static JsonNode getPubMedScore (Target target) {
+        ObjectMapper mapper = new ObjectMapper ();
+        ArrayNode nodes = mapper.createArrayNode();
+        for (XRef ref : target.links) {
+            if (Timeline.class.getName().equals(ref.kind)) {
+                try {
+                    Timeline tl = (Timeline)ref.deRef();
+                    if ("PubMed Score".equals(tl.name)) {
+                        for (Event e : tl.events) {
+                            double val = e.end/1000.;
+                            ObjectNode n = mapper.createObjectNode();
+                            n.put("year", String.valueOf(e.start));
+                            n.put("score", val);
+                            nodes.add(n);
+                        }
+                    }
+                }
+                catch (Exception ex) {
+                    ex.printStackTrace();
+                    Logger.error("Can't dereference link "
+                            +ref.kind+":"+ref.refid);
+                }
+            }
+        }
+
+        return nodes;
     }
     
     public static String getPubMedScoreSparkline (Target target) {

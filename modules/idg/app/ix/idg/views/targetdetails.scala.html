@@ -589,9 +589,9 @@
                    <tr>
                      <td><span data-toggle="tooltip"
                          data-html="true"
-                               title="<p align='left'>NIH funding (2010-2014) based on text mining of grant application titles and abstracts, due to nature of text mining results might be inaccurate</p>">Funding ($)</span></td>
+                               title="<p align='left'>NIH funding (2010-2014) based on text mining of grant application titles and abstracts, due to nature of text mining results might be inaccurate</p>">Funding</span></td>
                      @if(target.grantTotalCost != null) {
-                     <td>@Util.format(target.grantTotalCost)</td>
+                     <td>$@Util.format(target.grantTotalCost)</td>
                      } else {
                      <td></td>
                      }
@@ -601,15 +601,24 @@
                    <tr>
                      <td><a href="@ix.idg.controllers.routes.IDGApp.pmscore()">PubMed Score</a></td>
                      <td>@{"%.2f".format(target.jensenScore)}
-                        <p><span id="pmscore-sparkline">@IDGApp.getPubMedScoreSparkline(target)</span></td>
                    </tr>
+		   <tr>
+		     <td colspan="2">
+			 <div id="pubmedscore-plot" style="height:100px;width:250px;"></div>
+		     </td>
+		   </tr>
 		   }
 		   @if(target.pubTatorScore != null) {
                    <tr>
                      <td><a href="https://www.ncbi.nlm.nih.gov/CBBresearch/Lu/Demo/PubTator/">PubTator Score</a></td>
                      <td>@{"%.2f".format(Math.pow(10,target.pubTatorScore))}</td>
                    </tr>
-		   }		   
+		   <tr>
+		     <td colspan="2">
+			 <div id="pubtator-plot" style="height:100px;width:250px;"></div>
+		     </td>
+		   </tr>
+		   }
                    </table>
                  </div>
                </div>
@@ -1877,6 +1886,26 @@ $('.tree').treegrid({
         xkey: 'year',
         ykeys: ['count'],
         labels: ['Count']
+      });
+   }
+
+   @if(target.pubTatorScore != null) {
+     new Morris.Line({
+        element: 'pubtator-plot',
+        data: @HtmlFormat.raw(IDGApp.getPubTator(target).toString),
+        xkey: 'year',
+        ykeys: ['score'],
+        labels: ['Score']
+      });
+   }
+
+   @if(target.jensenScore != null) {
+     new Morris.Line({
+        element: 'pubmedscore-plot',
+        data: @HtmlFormat.raw(IDGApp.getPubMedScore(target).toString),
+        xkey: 'year',
+        ykeys: ['score'],
+        labels: ['Score']
       });
    }
 
