@@ -604,7 +604,7 @@
                    </tr>
 		   <tr>
 		     <td colspan="2">
-			 <div id="pubmedscore-plot" style="height:100px;width:250px;"></div>
+			 <div id="pubmedscore-plot" style="height:100px;width:400px;"></div>
 		     </td>
 		   </tr>
 		   }
@@ -615,7 +615,7 @@
                    </tr>
 		   <tr>
 		     <td colspan="2">
-			 <div id="pubtator-plot" style="height:100px;width:250px;"></div>
+			 <div id="pubtator-plot" style="height:100px;width:400px;"></div>
 		     </td>
 		   </tr>
 		   }
@@ -640,7 +640,7 @@
                       Patent</span> (@Util.format(target.patentCount))</h3>
             </div>
             <div class="panel-body">
-                   <div id="patent-line-plot" style="height:180px;"></div>
+                   <div id="patent-line-plot" style="height:200px;"></div>
             </div>
           </div>
         } else {
@@ -737,37 +737,35 @@ This is TCRD target <a href='@ix.core.controllers.v1.routes.RouteFactory.get("ta
       <!--
         -- first row
         -->
-      <div class="col-md-4">
+      <div class="col-md-6">
         @targetsummary(target)
       </div>
-      <div class="col-md-4">
-        @targetpatent(target)
-      </div>
-        <div class="col-md-4">
+      <div class="col-md-6">
+        <div class="row">
+	  <div class="col-md-12">
             <div class="panel panel-default">
-                <div class="panel-heading">
-                    <a name="datatypes" tocname="Data Types"></a>
-                    <h3 class="panel-title">
-                        <span data-toggle="tooltip" title="Radar plot depicting the variety of knowledge obtained by Pharos for a particular target. The more spikes in the plot, the more variety. The longer the length, the higher the quantity of that particular knowledge. Click expansion icon to explore the plot fuller by seeing plot with annotations of the different radii, allowing for aggregation of knowledge radii based on attribution type, group, or data type, as well as overlay plot with other information, and provide download file.">
+              <div class="panel-heading">
+		<a name="datatypes" tocname="Data Types"></a>
+		<h3 class="panel-title">
+                  <span data-toggle="tooltip" title="Radar plot depicting the variety of knowledge obtained by Pharos for a particular target. The more spikes in the plot, the more variety. The longer the length, the higher the quantity of that particular knowledge. Click expansion icon to explore the plot fuller by seeing plot with annotations of the different radii, allowing for aggregation of knowledge radii based on attribution type, group, or data type, as well as overlay plot with other information, and provide download file.">
                             Knowledge Summary</span>
-                        <a href="#" id="modal-radar-btn" data-toggle="modal" data-target="#modal-radar">
-                            <span class="fa fa-external-link pull-right" aria-hidden="true"></span>
-                        </a>
-                    </h3>
-                </div>
-                <div class="panel-body">
-                    <div class="row">
-                        <div class="col-md-2"></div>
-                        <div class="col-md-8">
-                            <div id="attr-type-radar"></div>
-                        </div>
-                        <div class="col-md-2"></div>
-                    </div>
-
-
-                </div>
+                  <a href="#" id="modal-radar-btn" data-toggle="modal" data-target="#modal-radar">
+                    <span class="fa fa-external-link pull-right" aria-hidden="true"></span>
+                  </a>
+		</h3>
+              </div>
+              <div class="panel-body">
+		<div id="attr-type-radar"></div>
+              </div>
             </div>
-        </div>
+          </div>
+	</div>
+	<div class="row">
+	  <div class="col-md-12">
+          @targetpatent(target)
+	  </div>
+	</div>
+      </div>
     </div>
 
     <!--
@@ -776,26 +774,26 @@ This is TCRD target <a href='@ix.core.controllers.v1.routes.RouteFactory.get("ta
     @if(!diseases.isEmpty()) {
     <div class="row">
       <div class="col-md-6">
-         <div class="panel panel-default">
-             <a name="tinx" tocname="TINX"></a>
-            <div class="panel-heading">
-               <h3 class="panel-title">TINX Plot
+        <div class="panel panel-default">
+          <a name="tinx" tocname="TINX"></a>
+          <div class="panel-heading">
+            <h3 class="panel-title">TINX Plot
                   @defining(IDGApp.getDTOId(target)){ dto =>
                     @if(dto != null) {  
                        <a href="http://dev.newdrugtargets.org/?target=@dto.replace("_","")">
                        <span class="fa fa-external-link pull-right" aria-hidden="true"></span></a>
                     }
                   }
-                </h3>
-            </div>
-            <div class="panel-body" style="max-height:300px;">
-                <div id="tinx-plot"></div>
-            </div>
-         </div>
+            </h3>
+          </div>
+          <div class="panel-body" style="max-height:300px;">
+            <div id="tinx-plot"></div>
+          </div>
+        </div>
       </div>
       <div class="col-md-6">   
         <div class="panel panel-default">
-            <a name="diseases" tocname="Diseases"></a>
+          <a name="diseases" tocname="Diseases"></a>
           <div class="panel-heading">
             <h3 class="panel-title"><a class="loader" href="@ix.idg.controllers.routes.IDGApp.targetdescriptor(IDG_DISEASE)"><i class="fa fa-bar-chart"></i></a>&nbsp;
 	    	<span data-toggle="tooltip"
@@ -804,29 +802,29 @@ This is TCRD target <a href='@ix.core.controllers.v1.routes.RouteFactory.get("ta
           </div>
           <div class="panel-body table-responsive"
 	       style="max-height:300px;overflow-y:auto;">
-               <table class="tree table table-striped">
-                          <tr>
-                              <th>Disease</th>
-                              <th>Z-score <i class="fa fa-info-circle"
-                              data-toggle="tooltip" data-placement="top" data-html="true"
-                              title="<p align='left'>A normalized version of the co-occurence (of the disease and this target) score, described in <a href='http://www.sciencedirect.com/science/article/pii/S1046202314003831'>Franklid et al, Methods, 2015, 83-89</a></p>"></i></th>
-                              <th>Confidence <i class="fa fa-info-circle"
-                              data-toggle="tooltip" data-placement="top" data-html="true"
-                              title="<p align='left'>Half the Z-score, described in <a href='http://www.sciencedirect.com/science/article/pii/S1046202314003831'>Franklid et al, Methods, 2015, 83-89</a></p>"></i></th>
-			      @** this doesn't seem to be available anymore? 
-                              <th>Importance <i class="fa fa-info-circle"
-                              data-toggle="tooltip" data-placement="top" data-html="true"
-                              title="<p align='left'>A score characterizing the importance of the target, based on occurences in the published literature.</p>"></i></th>
-			      **@
-                          </tr>
-                          @for(dr <- diseases) {
-                               @diseaserow(dr)
-                          }
-               </table>
+            <table class="tree table table-striped">
+              <tr>
+                <th>Disease</th>
+                <th>Z-score <i class="fa fa-info-circle"
+				  data-toggle="tooltip" data-placement="top" data-html="true"
+				  title="<p align='left'>A normalized version of the co-occurence (of the disease and this target) score, described in <a href='http://www.sciencedirect.com/science/article/pii/S1046202314003831'>Franklid et al, Methods, 2015, 83-89</a></p>"></i></th>
+                <th>Confidence <i class="fa fa-info-circle"
+				     data-toggle="tooltip" data-placement="top" data-html="true"
+				     title="<p align='left'>Half the Z-score, described in <a href='http://www.sciencedirect.com/science/article/pii/S1046202314003831'>Franklid et al, Methods, 2015, 83-89</a></p>"></i></th>
+		   @** this doesn't seem to be available anymore? 
+                   <th>Importance <i class="fa fa-info-circle"
+				     data-toggle="tooltip" data-placement="top" data-html="true"
+				     title="<p align='left'>A score characterizing the importance of the target, based on occurences in the published literature.</p>"></i></th>
+		   **@
+                </tr>
+                     @for(dr <- diseases) {
+                            @diseaserow(dr)
+                     }
+		</table>
           </div>  @* panel-body *@
-         </div>
-       </div>
+        </div>
       </div>
+    </div>
      }
 
     <!--
@@ -1789,8 +1787,8 @@ $('.tree').treegrid({
                     axisText:false, levels:0, circles:false
         });
         var svg = d3.select("#attr-type-radar").append('svg' )
-           .attr("width", 150)
-           .attr("height", 150)
+           .attr("width", 180)
+           .attr("height", 180)
            .append('g').classed('focus', 1).datum(data).call(chart);
      },
      error:function () {
