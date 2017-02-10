@@ -64,39 +64,42 @@ $(function () {
 });
 
 $(document).ready(function () {
-    var url = window.location.href;
-    if (url.indexOf("expand") != -1) {
-        var divid = url.split("#")[1 ].split("?")[0];
-        console.log(divid);
-        $("#"+divid ).show();
-        $('html, body').animate({
-            scrollTop: $("#"+divid).offset().top - 100
-        }, 500);
-    }
 
-  $.ajax({
-     url: 'https://pharos.nih.gov/faq.json',
-     dataType: 'json',
-     success: function (d) {
-       var html = '';
-       for (var p in d) {
-         html += '<div class="faqHeader">'+p+'</div>';
-	 for (var i in d[p]) {
-	    html += '<div class="panel panel-default">';
-	    html += ' <div class="panel-heading">';
-	    html += '  <h4 class="panel-title">';
-	    html += '    <a class="accordion-toggle" data-toggle="collapse" data-parent="#accordion" href="#'+d[p][i].href+'">'+d[p][i].question+'</a>';
-	    html += '   </h4></div>';
-	    html += ' <div id="'+d[p][i].href+'" class="panel-collapse collapse">';
-	    html += '  <div class="panel-body">'+d[p][i].answer+'</div>';
-	    html += ' </div></div>';
-	 }
-	 html += '</div>';
-       }
-       console.log('html ==> '+html);
-       $('#accordion').append(html);
-     }
-  });
+    $.ajax({
+        url: 'https://pharos.nih.gov/faq.json',
+        dataType: 'json',
+        success: function (d) {
+            var html = '';
+            for (var p in d) {
+                html += '<div class="faqHeader">' + p + '</div>';
+                for (var i in d[p]) {
+                    html += '<div class="panel panel-default">';
+                    html += ' <div class="panel-heading">';
+                    html += '  <h4 class="panel-title">';
+                    html += '    <a class="accordion-toggle" data-toggle="collapse" data-parent="#accordion" href="#' + d[p][i].href + '">' + d[p][i].question + '</a>';
+                    html += '   </h4></div>';
+                    html += ' <div id="' + d[p][i].href + '" class="panel-collapse collapse">';
+                    html += '  <div class="panel-body">' + d[p][i].answer + '</div>';
+                    html += ' </div></div>';
+                }
+                html += '</div>';
+            }
+            $('#accordion').append(html);
+
+            var url = window.location.href;
+            if (url.indexOf("expand") != -1) {
+                var divid = url.split("#")[1].split("?")[0];
+                console.log(divid);
+                console.log($("#" + divid));
+                $("#" + divid).show();
+                $('html, body').animate({
+                    scrollTop: $("#" + divid).offset().top - 100
+                }, 500);
+            }
+        }
+    });
+
+
 })
     </script>
     </head>
