@@ -9,6 +9,8 @@
 @import ix.idg.models.{Assay, Compartment, Disease, Ligand, Target, Techdev}
 @import ix.utils.Util
 @import ix.utils.Global
+@import ix.core.models.XRef
+@import ix.core.models.VNum
 
 @(target: Target, diseases: List[DiseaseRelevance], breadcrumb: List[Keyword])
 
@@ -215,6 +217,30 @@
 
 @diseasedblink(d: Disease, x: Any) = {
 <a href="http://diseases.jensenlab.org/Entity?documents=10&type1=9606&id2=@IDGApp.getId(d)&id1=@target.getSynonym(STRING_ID).term">@x</a>
+}
+
+@diffexprow(xref: XRef) = {
+<tr>
+    <td>
+        @defining(xref.properties.filter(v => v.label == "IDG Disease").head.getValue().asInstanceOf[java.lang.String]) {dname =>
+            @if(dname.length > 40) {
+                <a id="keyword" class="label label-primary loader"
+                   data-toggle="tooltip"
+                   data-html="true"
+                   data-trigger="hover"
+                   data-placement="top"
+                   title="@dname"
+                   data-content="<p align='left'>@dname</p>"
+                   >@{dname.substring(0,40)}... </a>
+            } else {
+                <a class="label label-primary loader"
+                   href="@{ix.idg.controllers.routes.IDGApp.targets()+"?facet="+URLEncoder.encode(IDG_DISEASE,"utf8")+"/"+URLEncoder.encode(dname, "utf8")}">@dname</a>
+            }
+        }
+    </td>
+    <td>@{"%1$.3f".format(xref.properties.filter(v => v.label == "log2foldchange").head.getValue())}</td>
+    <td>@{"%1$.3f".format(xref.properties.filter(v => v.label == "pvalue").head.getValue())}</td>
+</tr>
 }
 
 @diseaserow(dr: DiseaseRelevance) = {
@@ -827,6 +853,8 @@ This is TCRD target <a href='@ix.core.controllers.v1.routes.RouteFactory.get("ta
     </div>
      }
 
+
+
     <!--
       -- Expression (third row)
       -->
@@ -845,24 +873,91 @@ This is TCRD target <a href='@ix.core.controllers.v1.routes.RouteFactory.get("ta
             <div class="panel-body">
                <div class="row">
                  <div class="col-md-4">
-                    <div class="panel panel-default">
-                         <div class="panel-body">
-                         <div class="row">
-                              <div class="col-md-2"></div>
-                              <div class="col-md-8">
-                                   <div id="tissue-specificity-radar"></div>
-                              </div>
-                              <div class="col-md-2"></div>
+
+                     <ul class="nav nav-tabs">
+                         <li role="presentation" class="active">
+                             <a id="exprtab-specificity" href="#specificity-tab" role="tab" aria-controls="specificity"
+                                data-toggle="tab">
+                                <span data-toggle="tooltip" data-html="true" title="Tissue Specificity">
+                                    Tissue Specificity
+                                </span>
+                             </a>
+                         </li>
+                         <li role="presentation">
+                             <a id="exprtab-diffexp" href="#diffexp-tab" role="tab" aria-controls="diffexp"
+                                data-toggle="tab">
+                                <span data-toggle="tooltip" data-html="true" title="Differential Expression">
+                                    Differential Expression
+                                </span>
+                             </a>
+                         </li>
+                     </ul>
+
+                     <div class="tab-content">
+                         <div role="tabpanel" class="tab-pane active" id="specificity-tab">
+                             <div class="panel panel-default">
+                                                      <div class="panel-body">
+                                                          <div class="row">
+                                                              <div class="col-md-2"></div>
+                                                              <div class="col-md-8">
+                                                                  <div id="tissue-specificity-radar"></div>
+                                                              </div>
+                                                              <div class="col-md-2"></div>
+                                                          </div>
+                                                          <div class="panel-footer"><span data-toggle="tooltip"
+                                                                                          data-html="true"
+                                                                                          title="<p align='left'>Target tissue specificity, ranges from 0 (non-specific) - 1 specific to one tissue, calculated according to Yanai et al, Bioinformatics 2005, 650-659</p>">
+                                                           Tissue Specificity Index</span>
+                                                          </div>
+                                                      </div>
+                                                  </div>
                          </div>
-                         <div class="panel-footer"><span data-toggle="tooltip"
-                                         data-html="true"
-                                         title="<p align='left'>Target tissue specificity, ranges from 0 (non-specific) - 1 specific to one tissue, calculated according to Yanai et al, Bioinformatics 2005, 650-659</p>">
-                              Tissue Specificity Index</span>
+                         <div role="tabpanel" class="tab-pane" id="diffexp-tab">
+                             @defining(IDGApp.getDiseasesWithDifferentialExpression(target)) {xrefs =>
+                                 @if(xrefs.size() > 0) {
+                                     <div class="panel panel-default">
+                                         <a name="diffexpression" tocname="Differential Expression"></a>
+                                         <div class="panel-heading">
+                                             <h3 class="panel-title">&nbsp;
+                                                 <span data-toggle="tooltip"
+                                                       data-html="true"
+                                                       title="<p align='left'>Diseases in which this target has shown to have differential expression as reported in
+                                                                           Expression Atlas</p>">Differential Expression</span> (@xrefs.size())
+                                                 <a class="pull-right"
+                                                    href='@{ix.core.controllers.v1.routes.RouteFactory.get("targets",target.id,null)+"/links(kind="+classOf[Disease].getName+")"}'><i
+                                                         class="fa fa-code"></i></a></h3>
+                                         </div>
+                                         <div class="panel-body table-responsive" style="max-height:300px;overflow-y:auto;">
+                                             <table id="diffexptable" class="tree table table-striped">
+                                                 <thead>
+                                                 <tr>
+                                                     <th data-sort="string">Disease</th>
+                                                     <th data-sort="float">log2 FC <i class="fa fa-info-circle"
+                                                                                      data-toggle="tooltip" data-placement="top" data-html="true"
+                                                                                      title="<p align='left'>log2 Fold Change is the ratio between the expression level in the normal state vs the disease state. Larger absolute values imply a bigger difference in expression between healthy and disease states</p>"></i>
+                                                     </th>
+                                                     <th data-sort="float">p <i class="fa fa-info-circle"
+                                                                                data-toggle="tooltip" data-placement="top" data-html="true"
+                                                                                title="<p align='left'>The p-value associated with the fold change.</p>"></i>
+                                                     </th>
+                                                 </tr>
+                                                 </thead>
+                                                 <tbody>
+                                                 @for(axref <- xrefs) {
+                                                 @diffexprow(axref)
+                                                 }
+                                                 </tbody>
+                                             </table>
+                                         </div>
+                                     </div>
+                                 }
+                             }
                          </div>
-                    </div>
+                     </div>
+
+
                  </div>
-                 
-                 </div>
+
                <div class="col-md-8">
                    <ul class="nav nav-tabs">
                        <li role="presentation" class="active">
@@ -1582,7 +1677,8 @@ role="dialog" aria-labelledby="modalLabelFolder" aria-hidden="true">
     <script type="text/javascript" src='@routes.Assets.versioned("javascripts/d3.layout.cloud.js")'></script>
     <script type="text/javascript" src='@routes.Assets.versioned("javascripts/wordcloud.js")'></script>
     <script type="text/javascript" src='@routes.Assets.versioned("javascripts/jquery.sparkline.js")'></script>
-    <script type="text/javascript" src='@routes.Assets.versioned("javascripts/flickity.pkgd.min.js")'></script>    
+    <script type="text/javascript" src='@routes.Assets.versioned("javascripts/flickity.pkgd.min.js")'></script>
+    <script type="text/javascript" src='@routes.Assets.versioned("javascripts/stupidtable.min.js")'></script>
     <link type="text/css" rel="stylesheet" href='@routes.Assets.versioned("stylesheets/d3-tip.css")' />
     <link type="text/css" rel="stylesheet" href='@routes.Assets.versioned("stylesheets/radar-chart.css")' />
     <link type="text/css" rel="stylesheet" href='@routes.WebJarAssets.at(WebJarAssets.locate("morris.css"))' />
@@ -1649,6 +1745,8 @@ $(function () {
 });
 
 $(document).ready(function () {
+    $("#diffexptable").stupidtable();
+
     /* populate TOC menu */
     var tocs = [];
     $("a[tocname]" ).each(function(){
