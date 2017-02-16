@@ -323,7 +323,11 @@ role="dialog" aria-labelledby="modalLabelFolder" aria-hidden="true">
     <style type="text/css">
     .jqstooltip { box-sizing: content-box;}
     </style>
-    <script src='@routes.WebJarAssets.at(WebJarAssets.locate("highcharts.js"))' type='text/javascript'></script>
+    <script src='@routes.WebJarAssets.at(WebJarAssets.locate("js/highcharts.js"))' type='text/javascript'></script>
+    <script src='@routes.WebJarAssets.at(WebJarAssets.locate("js/highcharts-more.js"))' type='text/javascript'></script>
+    <script src="https://code.highcharts.com/modules/exporting.js"></script>
+    <script src="https://code.highcharts.com/js/modules/offline-exporting.js"></script>
+    <link type="text/css" rel="stylesheet" href="https://code.highcharts.com/css/highcharts.css" />
     <script type="text/javascript" src='@routes.Assets.versioned("javascripts/d3.js")'></script>
     <script type="text/javascript" src='@routes.Assets.versioned("javascripts/d3-tip.js")'></script>
     <script type="text/javascript" src='@routes.Assets.versioned("javascripts/underscore.js")'></script>
@@ -563,29 +567,37 @@ $(document).ready(function () {
     $("div[id^='radar-']" ).each(function() {
         var klass = $(this ).attr("id");
         var acc = klass.split("-")[1];
-	if (acc.length == 6) {
-          $.ajax({
-             url: '@ix.idg.controllers.routes.HarmonogramApp.hgForTarget(null,null,null,"radar-attr_type")'+'&q='+acc,
-             dataType:"json",
-             success:function(data) {
-                var chart = RadarChart.chart();
-                chart.config({
-                    w:75, h:75,
-                    axisText:false, levels:0, circles:false
-                });
-                var svg = d3.select("#"+klass).append('svg' )
-                .attr("width", 75 )
-                .attr("height", 75)
-                .append('g').classed('focus', 1).datum(data).call(chart);
-             },
-	     error: function () {
-	        console.log('No harmonogram data for target '+acc);
-	     }
-          });
-	}
+        if (acc.length == 6) {
+            $.ajax({
+                url: '@ix.idg.controllers.routes.HarmonogramApp.hgForTarget(null,null,null,"radar-attr_type")' + '&q=' + acc,
+                dataType: "json",
+                success: function (data) {
+
+                    renderChart(data, "radar-attr_type", klass, {
+                        chart: {
+                            polar: true,
+                            type: "line",
+                            height: 75, width: 75,
+                            backgroundColor: 'rgba(0,0,0,0,0)'
+                        },
+                        exporting: {enabled: false},
+                        xAxis: {
+                            categories: _.map(data[0].axes, function (obj) {
+                                return "";
+                            })
+                        }
+                    });
+
+                },
+                error: function () {
+                    console.log('No harmonogram data for target ' + acc);
+                }
+            });
+        }
     });
 
     $("#target-table" ).on("click", ".radar-div", function() {
+        console.log("Foo");
         var target = $(this ).attr("id" ).split("-")[1];
         var tdlLabel = $(this ).attr("tdlLabel" );
         var tdl = $(this ).attr("tdl" );
@@ -599,7 +611,8 @@ $(document).ready(function () {
                 $("#modal-radardiv" ).attr("target", target);
                 $("#modalLabelRadar" ).html('<h4><span class="label label-'+tdlLabel+'">&nbsp;'+tdl+'</span>'+tname+'</h4>');
                 $("#radardownloadlink" ).attr("href", "http://amp.pharm.mssm.edu/Harmonizome/api/1.0/download/associations?gene="+gene);
-                renderChart(data, chartConfig);
+                renderChart(data, "radar-attr_type", 'modal-radardiv');
+                $("#modal-radar" ).modal("show");
             }
         });
     });
@@ -623,7 +636,7 @@ $(document).ready(function () {
                 chartData.push(JSON.parse(aud[0])[0]);
             }
             $("#modalLabelRadar" ).text("Data type summary for "+target);
-            renderChart(chartData, chartConfig);
+            renderChart(chartData, aggType, 'modal-radardiv');
         });
     });
     $("#select-overlay" ).on('change', function() {
@@ -644,7 +657,7 @@ $(document).ready(function () {
             if (overlay != 'none')
                 chartData.push(JSON.parse(aud[0])[0]);
             $("#modalLabelRadar" ).text("Data type summary for "+target);
-            renderChart(chartData, chartConfig);
+            renderChart(chartData, aggType, 'modal-radardiv');
         });
     });
 

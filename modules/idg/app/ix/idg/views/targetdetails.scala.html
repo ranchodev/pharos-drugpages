@@ -763,36 +763,39 @@ This is TCRD target <a href='@ix.core.controllers.v1.routes.RouteFactory.get("ta
       <!--
         -- first row
         -->
-      <div class="col-md-6">
+
+<div class="row">
+    <div class="col-md-6">
         @targetsummary(target)
-      </div>
-      <div class="col-md-6">
-        <div class="row">
-	  <div class="col-md-12">
-            <div class="panel panel-default">
-              <div class="panel-heading">
-		<a name="datatypes" tocname="Data Types"></a>
-		<h3 class="panel-title">
-                  <span data-toggle="tooltip" title="Radar plot depicting the variety of knowledge obtained by Pharos for a particular target. The more spikes in the plot, the more variety. The longer the length, the higher the quantity of that particular knowledge. Click expansion icon to explore the plot fuller by seeing plot with annotations of the different radii, allowing for aggregation of knowledge radii based on attribution type, group, or data type, as well as overlay plot with other information, and provide download file.">
-                            Knowledge Summary</span>
-                  <a href="#" id="modal-radar-btn" data-toggle="modal" data-target="#modal-radar">
-                    <span class="fa fa-external-link pull-right" aria-hidden="true"></span>
-                  </a>
-		</h3>
-              </div>
-              <div class="panel-body">
-		<div id="attr-type-radar"></div>
-              </div>
-            </div>
-          </div>
-	</div>
-	<div class="row">
-	  <div class="col-md-12">
-          @targetpatent(target)
-	  </div>
-	</div>
-      </div>
     </div>
+
+    <div class="col-md-6">
+        <div class="row">
+            <div class="panel panel-default">
+                <div class="panel-heading">
+                    <a name="datatypes" tocname="Data Types"></a>
+                    <h3 class="panel-title">
+                  <span data-toggle="tooltip"
+                        title="Radar plot depicting the variety of knowledge obtained by Pharos for a particular target. The more spikes in the plot, the more variety. The longer the length, the higher the quantity of that particular knowledge. Click expansion icon to explore the plot fuller by seeing plot with annotations of the different radii, allowing for aggregation of knowledge radii based on attribution type, group, or data type, as well as overlay plot with other information, and provide download file.">
+                            Knowledge Summary</span>
+                        <a href="#" id="modal-radar-btn" data-toggle="modal" data-target="#modal-radar">
+                            <span class="fa fa-external-link pull-right" aria-hidden="true"></span>
+                        </a>
+                    </h3>
+                </div>
+                <div class="panel-body">
+                    <div id="attr-type-radar" style="width: 100%;"></div>
+                </div>
+            </div>
+        </div>
+        <div class="row">
+            @targetpatent(target)
+        </div>
+    </div>
+
+
+</div>
+
 
     <!--
       -- Disease Relevance (second row)
@@ -1680,25 +1683,26 @@ role="dialog" aria-labelledby="modalLabelFolder" aria-hidden="true">
     <link type="text/css" rel="stylesheet" href="https://code.highcharts.com/css/highcharts.css"></script>
 
     <style type="text/css">
-    .axis path,
-    .axis line {
-    fill: none;
-    stroke: black;
-    shape-rendering: crispEdges;
-    }
 
-    .axis text {
-    font-family: sans-serif;
-    font-size: 11px;
-    }
-
-    .point:hover {
-    opacity: 0.5;
-    }
-
-    .tick text {
-    visibility:inherit;
-    }
+//    .axis path,
+//    .axis line {
+//    fill: none;
+//    stroke: black;
+//    shape-rendering: crispEdges;
+//    }
+//
+//    .axis text {
+//    font-family: sans-serif;
+//    font-size: 11px;
+//    }
+//
+//    .point:hover {
+//    opacity: 0.5;
+//    }
+//
+//    .tick text {
+//    visibility:inherit;
+//    }
     
     .carousel-image {
        min-width: 100px;
@@ -1895,76 +1899,119 @@ $('.tree').treegrid({
                     pointPlacement: 'on'
                 }]
             });
-
-
-//            var chart = RadarChart.chart();
-//            chart.config({
-//                w: 150, h: 250,
-//                axisText: true, levels: 0, circles: true
-//            });
-//            var svg = d3.select("#tissue-specificity-radar").append('svg')
-//                    .attr("width", 150)
-//                    .attr("height", 250)
-//                    .append('g') //.attr("transform","rotate(45)")
-//                    .classed('focus', 1).datum(data).call(chart);
         }
     });
 
-  $('#attr-type-radar').html('<i class="fa fa-spinner fa-spin fa-3x fa-fw"></i><span class="sr-only">Loading...</span>');
-  $.ajax({
-     url: '@ix.idg.controllers.routes.HarmonogramApp.hgForTarget(null,null,null,"radar-attr_type")&q=@IDGApp.getId(target)',
-     dataType:"json",
-     success:function(data) {
-        $('#attr-type-radar').html('');
-        var chart = RadarChart.chart();
-        chart.config({
-            w:150, h:150,
-                    axisText:false, levels:0, circles:false
-        });
-        var svg = d3.select("#attr-type-radar").append('svg' )
-           .attr("width", 180)
-           .attr("height", 180)
-           .append('g').classed('focus', 1).datum(data).call(chart);
-     },
-     error:function () {
-        $('#attr-type-radar').html('<h5><em>No data available</em></h5>');
-	$('#modal-radar-btn').attr('disabled','true');
-     }
-  });
+    $('#attr-type-radar').html('<i class="fa fa-spinner fa-spin fa-3x fa-fw"></i><span class="sr-only">Loading...</span>');
+    $.ajax({
+        url: '@ix.idg.controllers.routes.HarmonogramApp.hgForTarget(null,null,null,"radar-attr_type")&q=@IDGApp.getId(target)',
+        dataType: "json",
+        success: function (data) {
+            $('#attr-type-radar').html('');
+            renderChart(data, 'radar-attr_type', 'attr-type-radar',
+                    {
+                        chart: {
+                            polar: true,
+                            type: "line",
+                            height: 200
+                        },
+                        pane: {size: "50%"},
+                        xAxis: {
+                            categories: _.map(data[0].axes, function (obj) {
+                                return "";
+                            }),
+                            tickmarkPlacement: 'on',
+                            lineWidth: 0,
+                            autoRotation: false
+                        }
+                    });
+        },
+        error: function () {
+            $('#attr-type-radar').html('<h5><em>No data available</em></h5>');
+            $('#modal-radar-btn').attr('disabled', 'true');
+        }
+    });
 
   $.ajax({
       url: '@ix.idg.controllers.routes.HarmonogramApp.hgForTarget(null,null,null,"radar-attr_type")&q=@IDGApp.getId(target)',
       dataType:"json",
       success:function(data) {
-          var chart = RadarChart.chart();
-          chart.config({
-              w:600, h:600,
-              axisText:true, levels:0, circles:true,
-              axisTextMouseOverFunc: showDataSources('#radar-ds-container', '@ix.idg.controllers.routes.HarmonogramApp.dataSources(null,null)'+'?field=radar-attr_type')
+          $('#modal-radardiv').html('');
+          var chart = Highcharts.chart("modal-radardiv", {
+              chart: {
+                  polar: true,
+                  type: "line"
+              },
+              exporting: {
+                  chartOptions: { // specific options for the exported image
+                      plotOptions: {
+                         chart: {
+                             backgroundColor: '#FCFFC5'
+                         }
+                      },
+                      backgroundColor: '#FCFFC5'
+                  },
+                  fallbackToExportServer: true
+              },
+              credits: {
+                  enabled: false
+              },
+              title: {
+                  text: null
+              },
+              legend: {
+                  enabled: false
+              },
+              pane: {
+                  size: "90%"
+              },
+              yAxis: {
+                  gridLineInterpolation: 'polygon',
+                  lineWidth: 0,
+                  min: 0,
+                  labels: {
+                      enabled: false
+                  }
+              },
+              xAxis: {
+                  categories: _.map(data[0].axes, function (obj) {
+                      return(obj.axis);
+                  }),
+                  tickmarkPlacement: 'on',
+                  lineWidth: 0.5,
+                  autoRotation: true
+              },
+              series: [{
+                  name: "Attribute Type",
+                  marker: { enabled: false},
+                  point: {
+                      events: {
+                          mouseOver: function() {
+                              var category = this.category;
+                              showDataSources('#radar-ds-container',
+                                      '@ix.idg.controllers.routes.HarmonogramApp.dataSources(null,null)'+
+                                      '?field=radar-attr_type')({name:category});
+                          }
+                      }
+                  },
+                  data: _.map(data[0].axes, function (obj) {
+                      return (obj.value);
+                  })
+              }]
           });
-          var svg = d3.select("#modal-radardiv").append('svg' )
-                  .attr("width", 600 )
-                    .attr("height", 600)
-                    .append('g').classed('focus', 1).datum(data).call(chart);
           $("#modalLabelRadar" ).html
              ('<h4><span class="label label-@target.idgTDL.label">@target.idgTDL</span> @target.getName</h4>');
       }
    });
 
-    function renderChart(chartData, aggType, target) {
-        var chart = RadarChart.chart();
-        chart.config({
-            w:600, h:600,
-            axisText:true, levels:0, circles:true,
-            axisTextMouseOverFunc: showDataSources('#radar-ds-container',
-                '@ix.idg.controllers.routes.HarmonogramApp.dataSources(null,null)'+'?field='+aggType)
-        });
+
+
+    function _renderChart(chartData, aggType) {
         $("#modal-radardiv" ).empty();
         $("#radar-ds-container" ).empty();
-        var svg = d3.select("#modal-radardiv").append('svg' )
-            .attr("width", 600 )
-            .attr("height", 600)
-            .append('g').classed('focus', 1).datum(chartData).call(chart);
+        renderChart(chartData, aggType, 'modal-radardiv');
+        $("#modalLabelRadar" ).html
+           ('<h4><span class="label label-@target.idgTDL.label">@target.idgTDL</span> @target.getName</h4>');
         $("#modal-radar" ).modal("show");
     }
 
@@ -1985,7 +2032,7 @@ $('.tree').treegrid({
             if (overlay != 'none') {
                 chartData.push(JSON.parse(aud[0])[0]);
             }
-            renderChart(chartData, aggType, target);
+            _renderChart(chartData, aggType);
         });
     });
     $("#select-overlay" ).on('change', function() {
@@ -2005,8 +2052,7 @@ $('.tree').treegrid({
             if (overlay != 'none') {
                 chartData.push(JSON.parse(aud[0])[0]);
             }
-
-            renderChart(chartData, aggType, target);
+            _renderChart(chartData, aggType);
         });
     });
 
