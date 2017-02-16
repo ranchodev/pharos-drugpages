@@ -49,6 +49,7 @@ object ApplicationBuild extends Build {
       ,"org.webjars" % "bootstrap" % "3.3.5"
       ,"org.webjars" % "typeaheadjs" % "0.10.5-1"
       ,"org.webjars" % "handlebars" % "2.0.0-1"
+      ,"org.webjars" % "jquery" % "3.1.1-1"
       ,"org.webjars" % "jquery-ui" % "1.11.2"
       ,"org.webjars" % "jquery-ui-themes" % "1.11.2"
       ,"org.webjars" % "font-awesome" % "4.5.0"
@@ -143,7 +144,7 @@ public class BuildInfo {
       libraryDependencies += "org.webjars" % "fabric.js" % "1.4.12",
       libraryDependencies += "org.webjars" % "datatables" % "1.10.12",
       libraryDependencies += "org.webjars" % "datatables-plugins" % "1.10.12",
-      libraryDependencies += "org.webjars" % "highcharts" % "4.2.5",
+      libraryDependencies += "org.webjars" % "highcharts" % "5.0.7",
       libraryDependencies += "org.webjars" % "store.js" % "1.3.17-1",
 
       javacOptions in (doc) ++= javaDocOptions,

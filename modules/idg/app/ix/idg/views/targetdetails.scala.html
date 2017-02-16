@@ -878,7 +878,7 @@ This is TCRD target <a href='@ix.core.controllers.v1.routes.RouteFactory.get("ta
                          <li role="presentation" class="active">
                              <a id="exprtab-specificity" href="#specificity-tab" role="tab" aria-controls="specificity"
                                 data-toggle="tab">
-                                <span data-toggle="tooltip" data-html="true" title="Tissue Specificity">
+                                <span data-toggle="tooltip" data-html="true" title="<p align='left'>Target tissue specificity, ranges from 0 (non-specific) - 1 specific to one tissue, calculated according to Yanai et al, Bioinformatics 2005, 650-659</p>">
                                     Tissue Specificity
                                 </span>
                              </a>
@@ -896,21 +896,10 @@ This is TCRD target <a href='@ix.core.controllers.v1.routes.RouteFactory.get("ta
                      <div class="tab-content">
                          <div role="tabpanel" class="tab-pane active" id="specificity-tab">
                              <div class="panel panel-default">
-                                                      <div class="panel-body">
-                                                          <div class="row">
-                                                              <div class="col-md-2"></div>
-                                                              <div class="col-md-8">
-                                                                  <div id="tissue-specificity-radar"></div>
-                                                              </div>
-                                                              <div class="col-md-2"></div>
-                                                          </div>
-                                                          <div class="panel-footer"><span data-toggle="tooltip"
-                                                                                          data-html="true"
-                                                                                          title="<p align='left'>Target tissue specificity, ranges from 0 (non-specific) - 1 specific to one tissue, calculated according to Yanai et al, Bioinformatics 2005, 650-659</p>">
-                                                           Tissue Specificity Index</span>
-                                                          </div>
-                                                      </div>
-                                                  </div>
+                                 <div class="panel-body">
+                                     <div id="tissue-specificity-radar" style="margin: 0 auto; width: 100%;"></div>
+                                 </div>
+                             </div>
                          </div>
                          <div role="tabpanel" class="tab-pane" id="diffexp-tab">
                              @defining(IDGApp.getDiseasesWithDifferentialExpression(target)) {xrefs =>
@@ -1664,7 +1653,10 @@ role="dialog" aria-labelledby="modalLabelFolder" aria-hidden="true">
 
 
 <head>
-    <script src='@routes.WebJarAssets.at(WebJarAssets.locate("highcharts.js"))' type='text/javascript'></script>
+    <script src='@routes.WebJarAssets.at(WebJarAssets.locate("js/highcharts.js"))' type='text/javascript'></script>
+    <script src='@routes.WebJarAssets.at(WebJarAssets.locate("js/highcharts-more.js"))' type='text/javascript'></script>
+    <script src="https://code.highcharts.com/modules/exporting.js"></script>
+    <script src="https://code.highcharts.com/js/modules/offline-exporting.js"></script>
     <script type="text/javascript" src='@routes.Assets.versioned("javascripts/d3.js")'></script>
     <script type="text/javascript" src='@routes.Assets.versioned("javascripts/tinx.js")'></script>
     <script type="text/javascript" src='@routes.Assets.versioned("javascripts/d3-tip.js")'></script>
@@ -1685,6 +1677,7 @@ role="dialog" aria-labelledby="modalLabelFolder" aria-hidden="true">
     <link type="text/css" rel="stylesheet" href='@routes.Assets.versioned("ncats/css/loader.css")'/>
     <link type="text/css" rel="stylesheet" href='@routes.Assets.versioned("stylesheets/flickity.css")'/>
     <link type="text/css" rel="stylesheet" href='@routes.Assets.versioned("stylesheets/main.css")'/>
+    <link type="text/css" rel="stylesheet" href="https://code.highcharts.com/css/highcharts.css"></script>
 
     <style type="text/css">
     .axis path,
@@ -1856,22 +1849,66 @@ $('.tree').treegrid({
 //     showLoadModal();
 //  });
 
-  $.ajax({
-     url: '@ix.idg.controllers.routes.IDGApp.targetTissue(IDGApp.getId(target))',
-     dataType:"json",
-     success:function(data) {
-          var chart = RadarChart.chart();
-          chart.config({
-                    w:150, h:250,
-                    axisText:true, levels:0, circles:true
-          });
-          var svg = d3.select("#tissue-specificity-radar").append('svg' )
-                     .attr("width", 150)
-                     .attr("height", 250)
-                .append('g') //.attr("transform","rotate(45)")
-                .classed('focus', 1).datum(data).call(chart);
-      }
-  });
+    $.ajax({
+        url: '@ix.idg.controllers.routes.IDGApp.targetTissue(IDGApp.getId(target))',
+        dataType: "json",
+        success: function (data) {
+
+            Highcharts.chart("tissue-specificity-radar", {
+                chart: {
+                    polar: true,
+                    type: "line",
+                },
+                credits: {
+                    enabled: false
+                },
+                title: {
+                    text: null
+                },
+                legend: {
+                    enabled: false
+                },
+                pane: {
+                    size: "75%"
+                },
+                yAxis: {
+                    gridLineInterpolation: 'polygon',
+                    lineWidth: 0,
+                    min: 0,
+                    labels: {
+                        enabled: false
+                    }
+                },
+                xAxis: {
+                    categories: _.map(data[0].axes, function (obj) {
+                        return (obj.axis);
+                    }),
+                    tickmarkPlacement: 'on',
+                    lineWidth: 0,
+                    autoRotation: false
+                },
+                series: [{
+                    name: "",
+                    data: _.map(data[0].axes, function (obj) {
+                        return (obj.value);
+                    }),
+                    pointPlacement: 'on'
+                }]
+            });
+
+
+//            var chart = RadarChart.chart();
+//            chart.config({
+//                w: 150, h: 250,
+//                axisText: true, levels: 0, circles: true
+//            });
+//            var svg = d3.select("#tissue-specificity-radar").append('svg')
+//                    .attr("width", 150)
+//                    .attr("height", 250)
+//                    .append('g') //.attr("transform","rotate(45)")
+//                    .classed('focus', 1).datum(data).call(chart);
+        }
+    });
 
   $('#attr-type-radar').html('<i class="fa fa-spinner fa-spin fa-3x fa-fw"></i><span class="sr-only">Loading...</span>');
   $.ajax({
@@ -1973,7 +2010,7 @@ $('.tree').treegrid({
         });
     });
 
-   plotAAProfile('#aa-profile');
+   plotAAProfile('aa-profile');
 
    @if(target.patentCount != null && target.patentCount > 0) {	      
      new Morris.Line({
@@ -2009,39 +2046,40 @@ $('.tree').treegrid({
    tinx_target_plot("#tinx-plot", "@IDGApp.getId(target)");
 });
 
-function plotAAProfile (container) {
-   $(container).highcharts({
+function plotAAProfile(container) {
+    var chart = Highcharts.chart(container, {
         chart: {
             type: 'column',
-	    height: 150
+            height: 150
         },
         title: {
             text: null
         },
         credits: {enabled: false},
-	xAxis: {
-	/*
- 	   categories:['A','R','N','D','C','E','Q','G','H','I',
-		        'L','K','M','F','P','S','T','W','Y','V'],*/
-	    categories: ['@target.name'],
-	    title: {
-	       text: null
-	    },
-	    labels: {
-    	       enabled: false,
-	    }
-	},
+        xAxis: {
+            /*
+             categories:['A','R','N','D','C','E','Q','G','H','I',
+             'L','K','M','F','P','S','T','W','Y','V'],*/
+            categories: ['@target.name'],
+            title: {
+                text: null
+            },
+            labels: {
+                enabled: false,
+            }
+        },
         yAxis: {
             min: 0,
-	    title: {
-	       text: null
-	    }
+            title: {
+                text: null
+            }
         },
         legend: {
             enabled: false
         },
         series: @HtmlFormat.raw(IDGApp.getAminoAcidProfile(target).toString)
-    });
+})
+    ;
 }
 
 function showLoadModal () {
@@ -2055,7 +2093,7 @@ function showLoadModal () {
 */      
 }
 	      
-$(window).unload(function () {
+$(window).on("unload", function (e) {
     $('#loadmodal').modal('hide');    
 });
 </script>
