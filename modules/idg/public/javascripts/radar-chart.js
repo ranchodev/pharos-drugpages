@@ -107,7 +107,7 @@ function renderChart(chartData, aggType, container, cfg) {
         },
         yAxis: {
             gridLineInterpolation: 'polygon',
-            lineWidth: 1,
+            lineWidth: 0.2,
             min: 0,
             labels: {
                 enabled: false
@@ -118,7 +118,7 @@ function renderChart(chartData, aggType, container, cfg) {
                 return (obj.axis);
             }),
             tickmarkPlacement: 'on',
-            lineWidth: 0.5,
+            lineWidth: 0.2,
             autoRotation: [-45],
             labels: {
                 style: {
