@@ -71,7 +71,7 @@
                 }
                 </div>
              </div>
-          </div>          
+          </div>
        </div>
        <div class="panel panel-default">
           <div class="panel-heading">
@@ -139,7 +139,7 @@
                      }
                 </div>
              </div>
-          </div>          
+          </div>
        </div>
        <div class="panel panel-default">
           <div class="panel-heading">
@@ -273,7 +273,7 @@
      </tr>
 
      @for(i <- 0 until dr.lineage.size()) {
-       @defining(dr.lineage(i)) { x =>      
+       @defining(dr.lineage(i)) { x =>
          <tr class="treegrid-@x.disease.id treegrid-parent-@dr.disease.id">
             <td><a class="loader" href="@ix.idg.controllers.routes.IDGApp.disease(IDGApp.getId(x.disease))">@x.disease.name</a></td>
             <td>@diseasedblink(x.disease,x.zscore)</td>
@@ -293,7 +293,7 @@
    <div class="row">
       <div class="col-md-6">
          <img class="img-responsive" height="200" src='@ix.idg.controllers.routes.ExpressionApp.homunculus(IDGApp.getId(target), skull)' />
-	 
+
       </div>
       <div class="col-md-6" style="max-height:300px;overflow-y: auto;">
          @defining(ExpressionApp.getLinkedExpr(target, name)){ exprs =>
@@ -475,7 +475,7 @@
 @techdev(t: Target) = {
   @defining(IDGApp.getLinkedObjects(t, classOf[Techdev])){ techdev =>
      @if(techdev != null && !techdev.isEmpty) {
-        <div class="panel panel-default" 
+        <div class="panel panel-default"
               style="max-height: 300px; overflow-y: auto;">
            <a name="techdev" tocname="TechDev Info"></a>
            <div class="panel-heading">
@@ -489,7 +489,7 @@
                @for(td <- techdev){
 	          <tr>
 		    <td>
-		      <a id="keyword" class="label label-primary loader" 
+		      <a id="keyword" class="label label-primary loader"
           	      	 href='@{ix.idg.controllers.routes.IDGApp.targets()+"?facet="+URLEncoder.encode(TECHDEV_PI,"utf8")+"/"}@URLEncoder.encode(td.pi, "utf8")'>@td.pi <span class="badge">@IDGApp.getTermCount(classOf[Target], TECHDEV_PI, td.pi)</span></a>
 		    </td>
 		    <td>
@@ -527,7 +527,7 @@
                 @if(p != null) {
                    @p.getValue
                 }
-             }       
+             }
              /
              @defining(a.getProperty(MLP_ASSAY_INACTIVE)) { p =>
                 @if(p != null) {
@@ -581,7 +581,7 @@
                                      title="<p align='left'>Number of transmembrane helices according to Survey of the Human Transmembrane Proteome (https://modbase.compbio.ucsf.edu/projects/membrane/). At least 2 are required to be in their list.</p>">Transmembrane</span>
                                 }
                                 case _ => {
-                                  @iv.label  
+                                  @iv.label
                                 }
                              }
                               </td>
@@ -808,7 +808,7 @@ This is TCRD target <a href='@ix.core.controllers.v1.routes.RouteFactory.get("ta
           <div class="panel-heading">
             <h3 class="panel-title">TINX Plot
                   @defining(IDGApp.getDTOId(target)){ dto =>
-                    @if(dto != null) {  
+                    @if(dto != null) {
                        <a href="http://dev.newdrugtargets.org/?target=@dto.replace("_","")">
                        <span class="fa fa-external-link pull-right" aria-hidden="true"></span></a>
                     }
@@ -820,7 +820,7 @@ This is TCRD target <a href='@ix.core.controllers.v1.routes.RouteFactory.get("ta
           </div>
         </div>
       </div>
-      <div class="col-md-6">   
+      <div class="col-md-6">
         <div class="panel panel-default">
           <a name="diseases" tocname="Diseases"></a>
           <div class="panel-heading">
@@ -840,7 +840,7 @@ This is TCRD target <a href='@ix.core.controllers.v1.routes.RouteFactory.get("ta
                 <th>Confidence <i class="fa fa-info-circle"
 				     data-toggle="tooltip" data-placement="top" data-html="true"
 				     title="<p align='left'>Half the Z-score, described in <a href='http://www.sciencedirect.com/science/article/pii/S1046202314003831'>Franklid et al, Methods, 2015, 83-89</a></p>"></i></th>
-		   @** this doesn't seem to be available anymore? 
+		   @** this doesn't seem to be available anymore?
                    <th>Importance <i class="fa fa-info-circle"
 				     data-toggle="tooltip" data-placement="top" data-html="true"
 				     title="<p align='left'>A score characterizing the importance of the target, based on occurences in the published literature.</p>"></i></th>
@@ -960,7 +960,7 @@ This is TCRD target <a href='@ix.core.controllers.v1.routes.RouteFactory.get("ta
                            data-html="true"
                            title="<p align='left'>Tissue expression data from The Genotype-Tissue Expression (GTEx) project</p>">
                                GTEx</span></a></li>
-                               
+
                        <li role="presentation">
 		       	   <a id="exprtab-@HPM_TISSUE"
 			      href="#hpm-tab" role="tab" data-toggle="tab">
@@ -968,7 +968,7 @@ This is TCRD target <a href='@ix.core.controllers.v1.routes.RouteFactory.get("ta
                            data-html="true"
                            title="<p align='left'>Tissue expression data from The Human Proteome Map (HPM)</p>">
                                HPM</span></a></li>
-                               
+
                        <li role="presentation">
 		       	   <a id="exprtab-@HPA_RNA_TISSUE"
 			      href="#hpa-tab" role="tab" data-toggle="tab">
@@ -976,7 +976,7 @@ This is TCRD target <a href='@ix.core.controllers.v1.routes.RouteFactory.get("ta
                            data-html="true"
                            title="<p align='left'>Tissue expression data from The Human Protein Atlas</p>">
                                HPA</span></a></li>
-                               
+
                        <li role="presentation">
 		       	   <a id="exprtab-@IDG_TISSUE"
 			      href="#idg-tab" role="tab" aria-controls="idg"
@@ -1037,7 +1037,7 @@ This is TCRD target <a href='@ix.core.controllers.v1.routes.RouteFactory.get("ta
                        @defining(target.getProperty(IDG_TISSUE_REF)) { ref =>
                            <div role="tabpanel" class="tab-pane" id="jensen-kb-tab">
                                 @expression(JENSEN_KB_EXPR, "jensen-kb", ref.asInstanceOf[Keyword])
-                           </div>                                      
+                           </div>
                            <div role="tabpanel" class="tab-pane" id="jensen-tm-tab">
                                @expression(JENSEN_TM_EXPR, "jensen-tm", ref.asInstanceOf[Keyword])
                            </div>
@@ -1053,8 +1053,8 @@ This is TCRD target <a href='@ix.core.controllers.v1.routes.RouteFactory.get("ta
     <!--
       -- fourth row
       -->
-    <div class="row">    
-      <div class="col-md-4" >	 
+    <div class="row">
+      <div class="col-md-4" >
 	<!--
         -- Synonyms
         -->
@@ -1129,7 +1129,7 @@ This is TCRD target <a href='@ix.core.controllers.v1.routes.RouteFactory.get("ta
         @property(GRANT_APPLICATION, null, 0, "Count of NIH grant applications including target reported in parenthesis. Listing individual grants with links to NIH RePORT site and tally of occurance of target for particular grant in circle. Click on the bargraph icon to explore further the Summary of Grant Application information.")
         @defining(target.getSynonyms(PDB_ID)) { pdbids =>
               @if(pdbids.size() > 0) {
-                  <div class="panel panel-default" 
+                  <div class="panel panel-default"
                        style="max-height: 300px; overflow-y: auto;">
                       <a name="pdb" tocname="PDB"></a>
                       <div class="panel-heading">
@@ -1150,7 +1150,7 @@ This is TCRD target <a href='@ix.core.controllers.v1.routes.RouteFactory.get("ta
               }
           }
       </div>
-      <div class="col-md-4">	
+      <div class="col-md-4">
         <a name="goterms" tocname="GO Terms"></a>
         @property(GO_FUNCTION, null, 0, "Function listed by GO database for target, with total count listed in parenthesis. Listing individual functions with links to GO. Click on bargraph icon to explore further the Summary of GO Function.")
         @property(GO_COMPONENT, null, 0, "Cellular component listed by GO database for target, with total count listed in parenthesis. Listing individual functions with links to GO. Click on bargraph icon to explore further the Summary of GO Function.")
@@ -1176,7 +1176,7 @@ This is TCRD target <a href='@ix.core.controllers.v1.routes.RouteFactory.get("ta
                           }
                        </div>
                     </div>
-                 </div>          
+                 </div>
               </div>
               <div class="panel panel-default">
                 <div class="panel-heading">
@@ -1204,10 +1204,10 @@ This is TCRD target <a href='@ix.core.controllers.v1.routes.RouteFactory.get("ta
 		 </div>
       	       </div>
 	   }
-	}        
+	}
       </div>
       <div class="col-md-4">
-        @property(COLLECTION)	      
+        @property(COLLECTION)
         @techdev(target)
         @property(IMPC_TERM)
         @property("Pathway", null, 1, "Biological pathways associated with target based on KEGG PATHWAY database, with links back to KEGG.")
@@ -1242,8 +1242,8 @@ This is TCRD target <a href='@ix.core.controllers.v1.routes.RouteFactory.get("ta
         }
        </div>
     </div> <!-- row -->
-        
-      
+
+
     <!--
       -- MeSH
       -->
@@ -1320,7 +1320,7 @@ This is TCRD target <a href='@ix.core.controllers.v1.routes.RouteFactory.get("ta
          </div>
        }
     }
-    <!-- 
+    <!--
       -- Publications
       -->
    @if(false && !target.getPublications.isEmpty()) {
@@ -1387,7 +1387,7 @@ This is TCRD target <a href='@ix.core.controllers.v1.routes.RouteFactory.get("ta
     @defining(IDGApp.getDrugLigands(target)) { drugs =>
       @ligandcarousel("Drug", drugs)
     }
-    
+
     @defining(IDGApp.getChemblLigands(target)) { ligands =>
       @ligandcarousel("Ligand", ligands)
     }
@@ -1419,7 +1419,7 @@ This is TCRD target <a href='@ix.core.controllers.v1.routes.RouteFactory.get("ta
                 </tr>
 		@defining(request().getQueryString("view")) { view =>
 		   @view match {
-		      case "full" => {	
+		      case "full" => {
                          @for(a <- assays) {
                             @assayrow(a)
 			 }
@@ -1452,7 +1452,7 @@ This is TCRD target <a href='@ix.core.controllers.v1.routes.RouteFactory.get("ta
   @*************
   Gene RIF
   *************@
-                
+
   @defining(IDGApp.getGeneRIFs(target)) { generifs =>
     @if(!generifs.isEmpty) {
     <div class="row">
@@ -1616,7 +1616,7 @@ This is TCRD target <a href='@ix.core.controllers.v1.routes.RouteFactory.get("ta
          </div>
        }
     }
-    <div id="disqus_thread"></div>    
+    <div id="disqus_thread"></div>
     </div>
 </div>
 
@@ -1656,10 +1656,10 @@ role="dialog" aria-labelledby="modalLabelFolder" aria-hidden="true">
 
 
 <head>
-    <script src='@routes.WebJarAssets.at(WebJarAssets.locate("js/highcharts.js"))' type='text/javascript'></script>
-    <script src='@routes.WebJarAssets.at(WebJarAssets.locate("js/highcharts-more.js"))' type='text/javascript'></script>
-    <script src="https://code.highcharts.com/modules/exporting.js"></script>
-    <script src="https://code.highcharts.com/js/modules/offline-exporting.js"></script>
+    <!--<script src='@routes.WebJarAssets.at(WebJarAssets.locate("js/highcharts.js"))' type='text/javascript'></script>-->
+    <!--<script src='@routes.WebJarAssets.at(WebJarAssets.locate("js/highcharts-more.js"))' type='text/javascript'></script>-->
+    <!--<script src="https://code.highcharts.com/modules/exporting.js"></script>-->
+    <!--<script src="https://code.highcharts.com/js/modules/offline-exporting.js"></script>-->
     <script type="text/javascript" src='@routes.Assets.versioned("javascripts/d3.js")'></script>
     <script type="text/javascript" src='@routes.Assets.versioned("javascripts/tinx.js")'></script>
     <script type="text/javascript" src='@routes.Assets.versioned("javascripts/d3-tip.js")'></script>
@@ -1680,39 +1680,24 @@ role="dialog" aria-labelledby="modalLabelFolder" aria-hidden="true">
     <link type="text/css" rel="stylesheet" href='@routes.Assets.versioned("ncats/css/loader.css")'/>
     <link type="text/css" rel="stylesheet" href='@routes.Assets.versioned("stylesheets/flickity.css")'/>
     <link type="text/css" rel="stylesheet" href='@routes.Assets.versioned("stylesheets/main.css")'/>
-    <link type="text/css" rel="stylesheet" href="https://code.highcharts.com/css/highcharts.css"></script>
+
+    <script src="https://code.highcharts.com/highcharts.js"></script>
+    <script src="https://code.highcharts.com/highcharts-more.js"></script>
+    <script src="https://code.highcharts.com/modules/exporting.js"></script>
+    <!--<link type="text/css" rel="stylesheet" href="https://code.highcharts.com/css/highcharts.css"></script>-->
 
     <style type="text/css">
 
-//    .axis path,
-//    .axis line {
-//    fill: none;
-//    stroke: black;
-//    shape-rendering: crispEdges;
-//    }
-//
-//    .axis text {
-//    font-family: sans-serif;
-//    font-size: 11px;
-//    }
-//
-//    .point:hover {
-//    opacity: 0.5;
-//    }
-//
-//    .tick text {
-//    visibility:inherit;
-//    }
-    
+
     .carousel-image {
        min-width: 100px;
        min-height: 190px;
     }
-    
+
     .carousel-cell {
        width: 150px;
     }
-    
+
     .flickity-page-dots {
        bottom: -2px;
     }
@@ -1769,7 +1754,7 @@ $(document).ready(function () {
         ]);
 
         var tpubwc = $('#tpub-wc svg:first-child');
-	    tpubpanel = $('#tpub-wc'),	
+	    tpubpanel = $('#tpub-wc'),
 	    tpubasp = tpubpanel.width()/tpubpanel.height();
 
         $(window).on("resize", function() {
@@ -1797,7 +1782,7 @@ $(document).ready(function () {
           console.log('tissue \''+tissue+'\'');
        }
     });
-    
+
     /* Cart related methods and vars */
     $.ajax({
         url:'@ix.idg.controllers.routes.DossierApp.count',
@@ -1913,16 +1898,32 @@ $('.tree').treegrid({
                         chart: {
                             polar: true,
                             type: "line",
-                            height: 200
+                            height: 200,
+                            backgroundColor: 'rgba(255, 255, 255, 0.1)',
+                            margin: [0, 0, 0, 0],
+                            spacing: [5, 5, 5, 5]
                         },
-                        pane: {size: "50%"},
+                        plotOptions: {
+                            line: {
+                                animation: false
+                            },
+                            series: {
+                                enableMouseTracking: false,
+                                lineWidth: 1,
+                                states: {
+                                    hover: {
+                                        enabled: false
+                                    }
+                                }
+                            }
+                        },
+                        pane: {size: "75%"},
                         xAxis: {
                             categories: _.map(data[0].axes, function (obj) {
                                 return "";
                             }),
-                            tickmarkPlacement: 'on',
-                            lineWidth: 0,
-                            autoRotation: false
+                            maxPadding: 0.05,
+                            lineWidth: 1
                         }
                     });
         },
@@ -1941,17 +1942,6 @@ $('.tree').treegrid({
               chart: {
                   polar: true,
                   type: "line"
-              },
-              exporting: {
-                  chartOptions: { // specific options for the exported image
-                      plotOptions: {
-                         chart: {
-                             backgroundColor: '#FCFFC5'
-                         }
-                      },
-                      backgroundColor: '#FCFFC5'
-                  },
-                  fallbackToExportServer: true
               },
               credits: {
                   enabled: false
@@ -2058,7 +2048,7 @@ $('.tree').treegrid({
 
    plotAAProfile('aa-profile');
 
-   @if(target.patentCount != null && target.patentCount > 0) {	      
+   @if(target.patentCount != null && target.patentCount > 0) {
      new Morris.Line({
         element: 'patent-line-plot',
         data: @HtmlFormat.raw(IDGApp.getPatents(target).toString),
@@ -2129,18 +2119,18 @@ function plotAAProfile(container) {
 }
 
 function showLoadModal () {
-   $('#page-loader').addClass('loader-wait');    
-/*            
+   $('#page-loader').addClass('loader-wait');
+/*
   $('#loadmodal').modal({
       keyboard: false,
       show: true,
       backdrop: 'static'
         });
-*/      
+*/
 }
-	      
+
 $(window).on("unload", function (e) {
-    $('#loadmodal').modal('hide');    
+    $('#loadmodal').modal('hide');
 });
 </script>
 
