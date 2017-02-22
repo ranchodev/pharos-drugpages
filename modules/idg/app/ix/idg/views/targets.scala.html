@@ -585,22 +585,19 @@ $(document).ready(function () {
                             type: "line",
                             height: 75, width: 75,
                             backgroundColor: 'rgba(0,0,0,0,0)',
-                            margin: [0, 0, 0, 0],
-                            spacingTop: 0,
-                            spacingBottom: 0,
-                            spacingLeft: 0,
-                            spacingRight: 0
+                            margin: [0,0,0,0],
+                            spacing: [5,5,5,5]
                         },
                         pane: {
                             size: "100%"
                         },
                         plotOptions: {
                             line: {
-                                animation: false,
-                                linewidth: 0.5
+                                animation: false
                             },
                             series: {
                                 enableMouseTracking: false,
+                                lineWidth: 0.5,
                                 states: {
                                     hover: {
                                         enabled: false
@@ -610,8 +607,7 @@ $(document).ready(function () {
                         },
                         exporting: {enabled: false},
                         xAxis: {
-                            gridLineInterpolation: 'polygon',
-                            maxPadding: 0,
+                            maxPadding: 0.01,
                             categories: _.map(data[0].axes, function (obj) {
                                 return "";
                             })

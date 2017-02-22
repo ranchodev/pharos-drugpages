@@ -107,8 +107,8 @@ function renderChart(chartData, aggType, container, cfg) {
         },
         yAxis: {
             gridLineInterpolation: 'polygon',
-            lineWidth: 0.2,
-            min: 0,
+            lineWidth: 0.0,
+            min: 0, max: 1,
             labels: {
                 enabled: false
             }
