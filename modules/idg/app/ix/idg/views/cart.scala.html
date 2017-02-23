@@ -542,20 +542,18 @@ $("#target-table").on("click", ".radar-div", function () {
     });
 
     $("#cartRadar").click(function (e) {
-        var ids = [];
-        $(".radar-div").each(function () {
-            ids.push($(this).attr("id").split("-")[1]);
+        var ids = _.map(selectEntities("#target-table  input:checked"), function (x) {
+            return ( x );
         });
-        var promises = [];
-        for (var i = 0; i < ids.length; i++)
-            promises.push($.get('@ix.idg.controllers.routes.HarmonogramApp.hgForTarget(null, null, null, null)' + '?q=' + ids[i] + '&type=radar-attr_type'));
-        $.when.apply($, promises).then(function() {
-            var chartData = _.map(arguments, function(arr) {
-                return(JSON.parse(arr[0])[0]);
+        var promises = _.map(ids, function (x) {
+            return ($.get('@ix.idg.controllers.routes.HarmonogramApp.hgForTarget(null, null, null, null)' + '?q=' + x + '&type=radar-attr_type'));
+        });
+        $.when.apply($, promises).then(function () {
+            var chartData = _.map(arguments, function (arr) {
+                return (JSON.parse(arr[0])[0]);
             });
-            console.log(chartData);
             renderChart(chartData, "radar-attr_type", 'modal-radardiv');
-            $("#modal-radar" ).modal("show");
+            $("#modal-radar").modal("show");
         });
     });
 
