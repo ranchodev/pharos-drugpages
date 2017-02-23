@@ -623,7 +623,6 @@ $(document).ready(function () {
     });
 
     $("#target-table" ).on("click", ".radar-div", function() {
-        console.log("Foo");
         var target = $(this ).attr("id" ).split("-")[1];
         var tdlLabel = $(this ).attr("tdlLabel" );
         var tdl = $(this ).attr("tdl" );
@@ -633,7 +632,6 @@ $(document).ready(function () {
             url: '@ix.idg.controllers.routes.HarmonogramApp.hgForTarget(null,null,null,"radar-attr_type")'+'&q='+target,
             dataType:"json",
             success:function(data) {
-                var chartConfig = getModalChartConfig('@ix.idg.controllers.routes.HarmonogramApp.dataSources(null,null)'+'?field=radar-attr_type');
                 $("#modal-radardiv" ).attr("target", target);
                 $("#modalLabelRadar" ).html('<h4><span class="label label-'+tdlLabel+'">&nbsp;'+tdl+'</span>'+tname+'</h4>');
                 $("#radardownloadlink" ).attr("href", "http://amp.pharm.mssm.edu/Harmonizome/api/1.0/download/associations?gene="+gene);
@@ -647,7 +645,6 @@ $(document).ready(function () {
         var aggType = $(this ).val();
         var target = $("#modal-radardiv" ).attr("target");
         var overlay = $("#select-overlay" ).val();
-        var chartConfig = getModalChartConfig('@ix.idg.controllers.routes.HarmonogramApp.dataSources(null,null)' + '?field=' + aggType);
         var ptd = $.get('@ix.idg.controllers.routes.HarmonogramApp.hgForTarget(null,null,null,null)'+'?q='+target+'&type='+aggType);
         var pud;
         if (overlay == 'none')
@@ -668,7 +665,6 @@ $(document).ready(function () {
     $("#select-overlay" ).on('change', function() {
         var aggType = $("#select-agg"   ).val();
         var target = $("#modal-radardiv" ).attr("target");
-        var chartConfig = getModalChartConfig('@ix.idg.controllers.routes.HarmonogramApp.dataSources(null,null)' + '?field=' + aggType);
         var overlay = $(this).val();
         var ptd = $.get('@ix.idg.controllers.routes.HarmonogramApp.hgForTarget(null,null,null,null)'+'?q='+target+'&type='+aggType);
         var pud;
