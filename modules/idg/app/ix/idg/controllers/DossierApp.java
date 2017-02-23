@@ -28,52 +28,50 @@ import java.util.concurrent.Callable;
 
 public class DossierApp extends App implements Commons {
     public static final String IDG_BUCKET = "IDG BUCKET";
-    
+
     static final String SESSION_ID = "idgsession";
     static final Model.Finder<Long, Session> finder =
-        new Model.Finder(UUID.class, Session.class);
+            new Model.Finder(UUID.class, Session.class);
 
     @Transactional
-    static Session newSession () {
-        Session session = new Session ();
+    static Session newSession() {
+        Session session = new Session();
         String where = request().getHeader("X-Real-IP");
         if (where == null)
             where = request().remoteAddress();
         session.location = where;
         session.save();
-        session().put(SESSION_ID, session.id.toString());        
-        Logger.debug("New session "+session.id+" created!");
+        session().put(SESSION_ID, session.id.toString());
+        Logger.debug("New session " + session.id + " created!");
         return session;
     }
 
-    public static Session getSession () {
+    public static Session getSession() {
         final String id = session().get(SESSION_ID);
         try {
             Session session = null;
             if (id == null) {
-                session = newSession ();
-            }
-            else {
-                session = getOrElse (id, new Callable<Session>() {
-                        public Session call () throws Exception {
-                            List<Session> sessions =  finder.where()
+                session = newSession();
+            } else {
+                session = getOrElse(id, new Callable<Session>() {
+                    public Session call() throws Exception {
+                        List<Session> sessions = finder.where()
                                 .eq("id", id).findList();
-                            Session session = null;
-                            if (!sessions.isEmpty()) {
-                                session = sessions.iterator().next();
-                            }
-                            return session;
+                        Session session = null;
+                        if (!sessions.isEmpty()) {
+                            session = sessions.iterator().next();
                         }
-                    });
-                
+                        return session;
+                    }
+                });
+
                 if (session == null) {
-                    Logger.warn("Bogus session requested: "+id);
+                    Logger.warn("Bogus session requested: " + id);
                     IxCache.remove(id);
-                    session = newSession ();
+                    session = newSession();
                 }
             }
-        }
-        catch (Exception ex) {
+        } catch (Exception ex) {
             ex.printStackTrace();
             Logger.error("Can't create session", ex);
         }
@@ -81,42 +79,40 @@ public class DossierApp extends App implements Commons {
     }
 
     @Transactional
-    public static <T> boolean add (final Session session, T entity) {
+    public static <T> boolean add(final Session session, T entity) {
         try {
             Predicate pred = getOrElse
-                (session.id.toString(), new Callable<Predicate>() {
-                        public Predicate call () throws Exception {
+                    (session.id.toString(), new Callable<Predicate>() {
+                        public Predicate call() throws Exception {
                             List<Predicate> buckets =
-                            PredicateFactory.finder.where
-                            (Expr.and(Expr.eq("predicate", IDG_BUCKET),
-                                      Expr.eq("subject.refid",
-                                              session.id.toString())))
-                            .findList();
+                                    PredicateFactory.finder.where
+                                            (Expr.and(Expr.eq("predicate", IDG_BUCKET),
+                                                    Expr.eq("subject.refid",
+                                                            session.id.toString())))
+                                            .findList();
                             Predicate bucket = null;
                             if (buckets.isEmpty()) {
-                                bucket = new Predicate (IDG_BUCKET);
-                                bucket.subject = new XRef (session);
+                                bucket = new Predicate(IDG_BUCKET);
+                                bucket.subject = new XRef(session);
                                 bucket.save();
-                            }
-                            else {
+                            } else {
                                 bucket = buckets.iterator().next();
                             }
                             return bucket;
                         }
                     });
-            XRef ref = new XRef (entity);
+            XRef ref = new XRef(entity);
             if (ref != pred.addIfAbsent(ref)) {
-                Logger.debug(ref.kind+": "+ref.refid
-                             +" already exist in bucket "+pred.id);
+                Logger.debug(ref.kind + ": " + ref.refid
+                        + " already exist in bucket " + pred.id);
                 // already have it
                 return false;
             }
             pred.update();
-            Logger.debug(ref.kind+": "+ref.refid+" added to bucket "+pred.id);
-            
+            Logger.debug(ref.kind + ": " + ref.refid + " added to bucket " + pred.id);
+
             return true;
-        }
-        catch (Exception ex) {
+        } catch (Exception ex) {
             ex.printStackTrace();
             Logger.error("Can't update bucket", ex);
         }
@@ -223,6 +219,18 @@ public class DossierApp extends App implements Commons {
             if (!name.toLowerCase().equals("default")) names.add(name);
         }
         return names;
+    }
+
+    public static List<String> getTargetsForFolder(String folderName) throws IOException {
+        List<String> targets = new ArrayList<>();
+        ObjectNode folder = getFolderFromCart(getCartFromSession(), folderName);
+        ArrayNode ents = (ArrayNode) folder.get("entities");
+        for (int i = 0; i < ents.size(); i++) {
+            ObjectNode node = (ObjectNode) ents.get(i);
+            if (Target.class.getName().equals(node.get("type").textValue()))
+                targets.add(node.get("entity").textValue());
+        }
+        return targets;
     }
 
     // TODO should return a more informative json structure
@@ -365,7 +373,7 @@ public class DossierApp extends App implements Commons {
             folder.put("folder", folderName);
             folder.put("entities", mapper.createArrayNode());
             cart.add(folder);
-            Logger.debug("Added new dossier: "+folderName);
+            Logger.debug("Added new dossier: " + folderName);
         }
 
         ArrayNode entities = (ArrayNode) folder.get("entities");
@@ -438,16 +446,16 @@ public class DossierApp extends App implements Commons {
         if (action.toLowerCase().equals("download")) {
             // All entities get bundled into a single ZIP file
             byte[] bytes = DownloadEntities.downloadEntities(targets, diseases, ligands, null);
-            response().setHeader("Content-Disposition", "attachment;filename=dossier-"+folderName+".zip");
+            response().setHeader("Content-Disposition", "attachment;filename=dossier-" + folderName + ".zip");
             return ok(bytes).as("application/zip");
         } else
             return ok(ix.idg.views.html.cart.render(folderName, folderNames, targets, diseases, ligands, null));
     }
 
-    public static Result emptyCart () throws IOException {
+    public static Result emptyCart() throws IOException {
         session().remove("cart");
         ArrayNode cart = getCartFromSession();
         session().put("cart", mapper.writeValueAsString(cart));
-        return ok ("Cart emptied");
+        return ok("Cart emptied");
     }
 }
