@@ -474,9 +474,7 @@ $(document).ready(function () {
       console.log('hgram modal is shown...');
       load_clustergram ('@ix.idg.controllers.routes.HarmonogramApp.hgForTarget(null, ctx, null)');
    });
-   $('#modal-radar').on('hidden.bs.modal', function (e) {
-       d3.select("#modal-radardiv").select('svg').remove();
-   });
+
 
     function selectEntities(sel) {
         return $(sel).map(function() {
@@ -622,7 +620,7 @@ $(document).ready(function () {
         }
     });
 
-    $("#target-table" ).on("click", ".radar-div", function() {
+    $("#target-table .radar-div" ).on("click", function() {
         var target = $(this ).attr("id" ).split("-")[1];
         var tdlLabel = $(this ).attr("tdlLabel" );
         var tdl = $(this ).attr("tdl" );
@@ -635,53 +633,55 @@ $(document).ready(function () {
                 $("#modal-radardiv" ).attr("target", target);
                 $("#modalLabelRadar" ).html('<h4><span class="label label-'+tdlLabel+'">&nbsp;'+tdl+'</span>'+tname+'</h4>');
                 $("#radardownloadlink" ).attr("href", "http://amp.pharm.mssm.edu/Harmonizome/api/1.0/download/associations?gene="+gene);
-                renderChart(data, "radar-attr_type", 'modal-radardiv');
+                $(window).on("shown.bs.modal", function(e){
+                    var divid = $(e.target).attr("id");
+                    if (divid == "modal-radar")
+                        renderChart(data, "radar-attr_type", 'modal-radardiv');
+                });
                 $("#modal-radar" ).modal("show");
             }
         });
     });
+    function _handleModalSelectEvents(aggTypeElem, overlayElem, target) {
+        var aggType = $(aggTypeElem).val();
+        var overlay = $(overlayElem).val();
 
-    $("#select-agg" ).on('change', function() {
-        var aggType = $(this ).val();
-        var target = $("#modal-radardiv" ).attr("target");
-        var overlay = $("#select-overlay" ).val();
-        var ptd = $.get('@ix.idg.controllers.routes.HarmonogramApp.hgForTarget(null,null,null,null)'+'?q='+target+'&type='+aggType);
-        var pud;
-        if (overlay == 'none')
-            pud = $.Deferred().resolve().promise();
-        else
-            pud = $.get('@ix.idg.controllers.routes.HarmonogramApp.hgForTarget(null,null,null,null)'+'?q='+overlay+'&type='+aggType);
-        $.when(ptd, pud).then(function(atd, aud) {
-            var chartData = atd[0];
-            if (typeof chartData == 'string' || chartData instanceof String)
-                chartData = JSON.parse(chartData);
-            if (overlay != 'none') {
-                chartData.push(JSON.parse(aud[0])[0]);
-            }
-            $("#modalLabelRadar" ).text("Data type summary for "+target);
-            renderChart(chartData, aggType, 'modal-radardiv');
+        var promises = [$.get('@ix.idg.controllers.routes.HarmonogramApp.hgForTarget(null,null,null,null)' + '?q=' + target + '&type=' + aggType)];
+        if (overlay == 'none') {
+            // promises.push($.Deferred().resolve().promise());
+        } else if (overlay.includes("dossier-")) {
+            var opt = $(overlayElem).find(":selected");
+            var tids = $(opt).attr("tids").split(",");
+            if (tids.length == 0) return;
+            _.each(tids, function (x) {
+                promises.push($.get('@ix.idg.controllers.routes.HarmonogramApp.hgForTarget(null, null, null, null)' + '?q=' + x + '&type=' + aggType));
+            });
+        } else
+            promises.push($.get('@ix.idg.controllers.routes.HarmonogramApp.hgForTarget(null,null,null,null)' + '?q=' + overlay + '&type=' + aggType));
+        $.when.apply($, promises).then(function () {
+            // first should be the target in question, the rest will be overlays
+            var chartData = _.map(arguments, function (arr) {
+                if (arr == "success") return (undefined);
+                if (_.isString(arr)) return (JSON.parse(arr)[0]);
+                else if (_.isArray(arr)) return (JSON.parse(arr[0])[0]);
+                else return (undefined);
+            });
+            chartData = _.filter(chartData, function (x) {
+                return (x != undefined);
+            });
+            renderChart(chartData, "radar-attr_type", 'modal-radardiv', {legend: {enabled: true}});
+            $("#modal-radar").modal("show");
         });
+    }
+
+    $("#select-agg").on('change', function () {
+        _handleModalSelectEvents($(this), $("#select-overlay"), $("#modal-radardiv").attr("target"));
     });
-    $("#select-overlay" ).on('change', function() {
-        var aggType = $("#select-agg"   ).val();
-        var target = $("#modal-radardiv" ).attr("target");
-        var overlay = $(this).val();
-        var ptd = $.get('@ix.idg.controllers.routes.HarmonogramApp.hgForTarget(null,null,null,null)'+'?q='+target+'&type='+aggType);
-        var pud;
-        if (overlay == 'none')
-            pud = $.Deferred().resolve().promise();
-        else
-            pud = $.get('@ix.idg.controllers.routes.HarmonogramApp.hgForTarget(null,null,null,null)'+'?q='+overlay+'&type='+aggType);
-        $.when(ptd, pud).then(function(atd, aud) {
-            var chartData = atd[0];
-            if (typeof chartData == 'string' || chartData instanceof String)
-                chartData = JSON.parse(chartData);
-            if (overlay != 'none')
-                chartData.push(JSON.parse(aud[0])[0]);
-            $("#modalLabelRadar" ).text("Data type summary for "+target);
-            renderChart(chartData, aggType, 'modal-radardiv');
-        });
+
+    $("#select-overlay").on('change', function () {
+        _handleModalSelectEvents($("#select-agg"), $(this), $("#modal-radardiv").attr("target"));
     });
+
 
     $("#compare-selected" ).click(function(e) {
        var ents = _.map(selectEntities("#target-table  input:checked"),
