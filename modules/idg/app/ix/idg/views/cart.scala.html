@@ -542,10 +542,10 @@ $("#target-table").on("click", ".radar-div", function () {
     });
 
     $("#cartRadar").click(function (e) {
-        var ids = [];
-        $(".radar-div").each(function () {
-            ids.push($(this).attr("id").split("-")[1]);
+        var ids = _.map(selectEntities("#target-table  input:checked"), function (x) {
+            return ( x );
         });
+
         var promises = [];
         for (var i = 0; i < ids.length; i++)
             promises.push($.get('@ix.idg.controllers.routes.HarmonogramApp.hgForTarget(null, null, null, null)' + '?q=' + ids[i] + '&type=radar-attr_type'));
