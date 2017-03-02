@@ -476,14 +476,17 @@ public class IDGApp extends App implements Commons {
                 if (label.equalsIgnoreCase("gpcr")) {
                     return "<a href=\"http://en.wikipedia.org/wiki/G_protein%E2%80%93coupled_receptor\">"+label+"</a> <i class='fa fa-external-link'></i>";
                 }
-                if (label.equalsIgnoreCase("kinase")) {
+                else if (label.equalsIgnoreCase("kinase")) {
                     return "<a href=\"http://en.wikipedia.org/wiki/Kinase\">"+label+"</a> <i class='fa fa-external-link'></i>";
                 }
-                if (label.equalsIgnoreCase("ion channel")) {
+                else if (label.equalsIgnoreCase("ion channel")) {
                     return "<a href=\"http://en.wikipedia.org/wiki/Ion_channel\">"+label+"</a> <i class='fa fa-external-link'></i>";
                 }
-                if (label.equalsIgnoreCase("nuclear receptor")) {
+                else if (label.equalsIgnoreCase("nuclear receptor")) {
                     return "<a href=\"http://en.wikipedia.org/wiki/Nuclear_receptor\">"+label+"</a> <i class='fa fa-external-link'></i>";
+                }
+                else if (label.equalsIgnoreCase("Transcription Factor")) {
+                    return "<a href=\"https://en.wikipedia.org/wiki/Transcription_factor\">"+label+"</a> <i class='fa fa-external-link'></i>";
                 }
 
                 if ("unknown".equalsIgnoreCase(label)) 

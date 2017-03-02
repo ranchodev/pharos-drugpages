@@ -10,7 +10,9 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import java.io.*;
 import java.util.*;
 import java.sql.*;
+import javax.sql.DataSource;
 import play.Logger;
+import com.zaxxer.hikari.HikariDataSource;
 
 public class DTOParser implements Serializable {
     
@@ -87,17 +89,10 @@ public class DTOParser implements Serializable {
                 String parent = rset.getString("parent");
                 
                 Node n = new Node (id, name);
-                nodes.put(name, n);
+                // there are duplicate names; e.g., Bile acid receptor
+                Node old = nodes.put(name, n);
                 ids.put(id, n);
-                
-                if (parent != null) {
-                    parents.put(id, parent);
-                }
-                else {
-                    parents.put(id, root.id);
-                    n.parent = root;
-                    root.children.add(n);
-                }
+                parents.put(id, parent != null ? parent : root.id);
             }
             rset.close();
 
@@ -201,6 +196,27 @@ public class DTOParser implements Serializable {
                 System.out.println
                     (mapper.writerWithDefaultPrettyPrinter()
                      .writeValueAsString(n));
+            }
+        }
+    }
+
+    public static class Jdbc {
+        /*                
+sbt idg/'runMain ix.idg.controllers.DTOParser$Jdbc foobar.json jdbc:mysql://localhost/tcrd432?user=root'
+        */
+        public static void main (String[] argv) throws Exception {
+            if (argv.length < 2) {
+                System.err.println("Usage: "+Jdbc.class.getName()+" FILE JDBC");
+                System.exit(1);
+            }
+
+            HikariDataSource ds = new HikariDataSource ();
+            ds.setJdbcUrl(argv[1]);
+
+            try (Connection con = ds.getConnection()) {
+               DTOParser dto = new DTOParser ();
+               dto.load(con);
+               writeJson (new File (argv[0]), dto);
             }
         }
     }

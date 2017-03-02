@@ -119,6 +119,10 @@ public class TcrdRegistry extends Controller implements Commons {
                 this.family = "Nuclear Receptor";
             else if ("ic".equalsIgnoreCase(family))
                 this.family = "Ion Channel";
+            else if ("tf".equalsIgnoreCase(family))
+                this.family = "Transcription Factor";
+            else if ("TF; Epigenetic".equalsIgnoreCase(family))
+                this.family = "TF/Epigenetic";
             else 
                 this.family = family;
 
@@ -201,7 +205,7 @@ public class TcrdRegistry extends Controller implements Commons {
                     ("select distinct " +
                      "a.target_id, d.doid, d.name, d.score as diseaseNovelty, c.score as importance,  " +
                      "e.uniprot, f.score as targetNovelty " +
-                     "from target2disease a, tinx_disease d, tinx_importance c, protein e, tinx_novelty f " +
+                     "from disease a, tinx_disease d, tinx_importance c, protein e, tinx_novelty f " +
                      "where a.target_id = ? " +
                      "and a.did = d.doid " +
                      "and c.protein_id = a.target_id " +
@@ -249,10 +253,10 @@ public class TcrdRegistry extends Controller implements Commons {
                     "AND gat.name = hg.type and hg.protein_id = ?");
 
             pstm19 = con.prepareStatement
-                ("select * from target2grant where target_id = ?");
+                ("select * from `grant` where target_id = ?");
 
             pstm20 = con.prepareStatement
-                ("select * from target2disease where target_id = ? ");
+                ("select * from disease where target_id = ? ");
 
             pstm21 = con.prepareStatement
                 ("select * from mlp_assay_info where protein_id = ? order by aid");
@@ -1981,7 +1985,7 @@ public class TcrdRegistry extends Controller implements Commons {
                 while (rset.next()) {
                     final String name = rset.getString("name");
 
-                    String dtype = rset.getString("datype");
+                    String dtype = rset.getString("dtype");
                     Keyword source = datasources.get(dtype);
                     if (source == null) {
                         String url = null;
@@ -2540,7 +2544,7 @@ public class TcrdRegistry extends Controller implements Commons {
                 }
                 
                 long id = rset.getLong("target_id");
-                String fam = rset.getString("idgfam");
+                String fam = rset.getString("fam");
                 String tdl = rset.getString("tdl");
                 String acc = rset.getString("uniprot");
                 String dtoid = rset.getString("dtoid");
