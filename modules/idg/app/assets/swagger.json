@@ -1,0 +1,1152 @@
+{
+  "swagger": "2.0",
+  "info": {
+    "title": "Pharos API",
+    "description": "Documentation for the Pharos API",
+    "termsOfService": "http://swagger.io/terms/",
+    "contact": {
+      "name": "Pharos Support",
+      "email": "pharos@mail.nih.gov"
+    },
+    "license": {
+      "name": "Apache 2.0",
+      "url": "http://www.apache.org/licenses/LICENSE-2.0.html"
+    },
+    "version": "1.0.1"
+  },
+  "host": "pharos.nih.gov",
+  "basePath": "/idg/api/v1",
+  "produces": [
+    "application/json"
+  ],
+  "tags": [
+    {
+      "name": "browse",
+      "description": "Browse Pharos API"
+    },
+    {
+      "name": "details",
+      "description": "Get details of a substance"
+    },
+    {
+      "name": "search",
+      "description": "Search by name or structure"
+    },
+    {
+      "name": "more",
+      "description": "Other supported operations"
+    }
+  ],
+  "schemes": [
+    "https"
+  ],
+  "securityDefinitions": {
+    "auth-username": {
+      "type": "apiKey",
+      "name": "auth-username",
+      "in": "header"
+    },
+    "auth-key": {
+      "type": "apiKey",
+      "name": "auth-key",
+      "in": "header"
+    }
+  },
+  "security": [
+    {
+      "auth-username": [],
+      "auth-key": []
+    }
+  ],
+  "paths": {
+    "/": {
+      "get": {
+        "tags": [
+          "browse"
+        ],
+        "summary": "Get all Resources & Operations",
+        "description": "Returns high level description of resources, and their supported operations",
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Successful response"
+          }
+        }
+      }
+    },
+    "/targets({id})": {
+      "get": {
+        "tags": [
+          "details"
+        ],
+        "summary": "Get a target by id",
+        "description": "Returns a specific target JSON. Not fully expanded, but contains a link for full view",
+        "parameters": [
+          {
+            "name": "id",
+            "description": "The id of the target",
+            "in": "path",
+            "type": "string",
+            "required": "true",
+            "default": "1"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful response"
+          },
+          "404": {
+            "description": "Bad request"
+          }
+        }
+      }
+    },
+    "/targets/{id}": {
+      "get": {
+        "tags": [
+          "details"
+        ],
+        "summary": "Get a target by id - alternative",
+        "description": "Alternative syntax for above. NOT PREFERRED",
+        "parameters": [
+          {
+            "name": "id",
+            "description": "The id of the target",
+            "in": "path",
+            "type": "string",
+            "required": "true",
+            "default": "1"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful response"
+          },
+          "404": {
+            "description": "Bad request"
+          }
+        }
+      }
+    },
+    "/targets({id})?view=full": {
+      "get": {
+        "tags": [
+          "details"
+        ],
+        "summary": "Get a target by id",
+        "description": "Returns a specific target JSON, fully expanded",
+        "parameters": [
+          {
+            "name": "id",
+            "description": "The id of the target",
+            "in": "path",
+            "type": "string",
+            "required": "true",
+            "default": "1"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful response"
+          },
+          "404": {
+            "description": "Bad request"
+          }
+        }
+      }
+    },
+    "/targets({id})/synonyms": {
+      "get": {
+        "tags": [
+          "details"
+        ],
+        "summary": "Get synonym list for a target",
+        "description": "Gets a JSONArray of the synonyms for a target. Consists of a label, term and/or a url",
+        "parameters": [
+          {
+            "name": "id",
+            "description": "The id of the target",
+            "type": "string",
+            "in": "path",
+            "required": "true",
+            "default": "1"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful response"
+          },
+          "404": {
+            "description": "Bad request"
+          }
+        }
+      }
+    },
+    "/targets({id})/publications": {
+      "get": {
+        "tags": [
+          "details"
+        ],
+        "summary": "Get publication list for a target",
+        "description": "Gets a JSONArray of the publications for a target. Primarily a PMID, year, title and abstract",
+        "parameters": [
+          {
+            "name": "id",
+            "description": "The id of the target",
+            "type": "string",
+            "in": "path",
+            "required": "true",
+            "default": "1"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful response"
+          },
+          "404": {
+            "description": "Bad request"
+          }
+        }
+      }
+    },
+    "/targets({id})/properties": {
+      "get": {
+        "tags": [
+          "details"
+        ],
+        "summary": "Get property list for a target",
+        "description": "Gets a JSONArray of the properties for a target.  Consists of a label, term and/or a url",
+        "parameters": [
+          {
+            "name": "id",
+            "description": "The id of the target",
+            "in": "path",
+            "type": "string",
+            "required": "true",
+            "default": "1"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful response"
+          },
+          "404": {
+            "description": "Bad request"
+          }
+        }
+      }
+    },
+    "/targets({id})/links": {
+      "get": {
+        "tags": [
+          "details"
+        ],
+        "summary": "Get synonym list for a target",
+        "description": "Gets a JSONArray of the publications for a target. Primarily a PMID, year, title and abstract",
+        "parameters": [
+          {
+            "name": "id",
+            "description": "The id of the target",
+            "type": "string",
+            "in": "path",
+            "required": "true",
+            "default": "1"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful response"
+          },
+          "404": {
+            "description": "Bad request"
+          }
+        }
+      }
+    },
+    "/ligands({id})": {
+      "get": {
+        "tags": [
+          "details"
+        ],
+        "summary": "Get a ligand by id",
+        "description": "Returns a specific ligand JSON. Not fully expanded, but contains a link for full view",
+        "parameters": [
+          {
+            "name": "id",
+            "description": "The id of the ligand",
+            "in": "path",
+            "type": "string",
+            "required": "true",
+            "default": "1"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful response"
+          },
+          "404": {
+            "description": "Bad request"
+          }
+        }
+      }
+    },
+    "/ligands/{id}": {
+      "get": {
+        "tags": [
+          "details"
+        ],
+        "summary": "Get a ligand by id - alternative",
+        "description": "Alternative syntax for above. NOT PREFERRED",
+        "parameters": [
+          {
+            "name": "id",
+            "description": "The id of the ligand",
+            "in": "path",
+            "type": "string",
+            "required": "true",
+            "default": "1"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful response"
+          },
+          "404": {
+            "description": "Bad request"
+          }
+        }
+      }
+    },
+    "/ligands({id})?view=full": {
+      "get": {
+        "tags": [
+          "details"
+        ],
+        "summary": "Get a ligand by id",
+        "description": "Returns a specific ligand JSON, fully expanded",
+        "parameters": [
+          {
+            "name": "id",
+            "description": "The id of the ligand",
+            "in": "path",
+            "type": "string",
+            "required": "true",
+            "default": "1"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful response"
+          },
+          "404": {
+            "description": "Bad request"
+          }
+        }
+      }
+    },
+    "/ligands({id})/synonyms": {
+      "get": {
+        "tags": [
+          "details"
+        ],
+        "summary": "Get synonym list for a ligand",
+        "description": "Gets a JSONArray of the synonyms for a ligand. Consists of a label, term and/or a url",
+        "parameters": [
+          {
+            "name": "id",
+            "description": "The id of the ligand",
+            "type": "string",
+            "in": "path",
+            "required": "true",
+            "default": "1"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful response"
+          },
+          "404": {
+            "description": "Bad request"
+          }
+        }
+      }
+    },
+    "/ligands({id})/publications": {
+      "get": {
+        "tags": [
+          "details"
+        ],
+        "summary": "Get publication list for a ligand",
+        "description": "Gets a JSONArray of the publications for a ligand. Primarily a PMID, year, title and abstract",
+        "parameters": [
+          {
+            "name": "id",
+            "description": "The id of the ligand",
+            "type": "string",
+            "in": "path",
+            "required": "true",
+            "default": "1"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful response"
+          },
+          "404": {
+            "description": "Bad request"
+          }
+        }
+      }
+    },
+    "/ligands({id})/properties": {
+      "get": {
+        "tags": [
+          "details"
+        ],
+        "summary": "Get property list for a ligand",
+        "description": "Gets a JSONArray of the properties for a ligand.  Consists of a label, term and/or a url",
+        "parameters": [
+          {
+            "name": "id",
+            "description": "The id of the ligand",
+            "in": "path",
+            "type": "string",
+            "required": "true",
+            "default": "1"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful response"
+          },
+          "404": {
+            "description": "Bad request"
+          }
+        }
+      }
+    },
+    "/ligands({id})/links": {
+      "get": {
+        "tags": [
+          "details"
+        ],
+        "summary": "Get synonym list for a ligand",
+        "description": "Gets a JSONArray of the publications for a ligand. Primarily a PMID, year, title and abstract",
+        "parameters": [
+          {
+            "name": "id",
+            "description": "The id of the ligand",
+            "type": "string",
+            "in": "path",
+            "required": "true",
+            "default": "1"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful response"
+          },
+          "404": {
+            "description": "Bad request"
+          }
+        }
+      }
+    },
+    "/diseases({id})": {
+      "get": {
+        "tags": [
+          "details"
+        ],
+        "summary": "Get a disease by id",
+        "description": "Returns a specific disease JSON. Not fully expanded, but contains a link for full view",
+        "parameters": [
+          {
+            "name": "id",
+            "description": "The id of the disease",
+            "in": "path",
+            "type": "string",
+            "required": "true",
+            "default": "1"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful response"
+          },
+          "404": {
+            "description": "Bad request"
+          }
+        }
+      }
+    },
+    "/diseases/{id}": {
+      "get": {
+        "tags": [
+          "details"
+        ],
+        "summary": "Get a disease by id - alternative",
+        "description": "Alternative syntax for above. NOT PREFERRED",
+        "parameters": [
+          {
+            "name": "id",
+            "description": "The id of the disease",
+            "in": "path",
+            "type": "string",
+            "required": "true",
+            "default": "1"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful response"
+          },
+          "404": {
+            "description": "Bad request"
+          }
+        }
+      }
+    },
+    "/diseases({id})?view=full": {
+      "get": {
+        "tags": [
+          "details"
+        ],
+        "summary": "Get a disease by id",
+        "description": "Returns a specific disease JSON, fully expanded",
+        "parameters": [
+          {
+            "name": "id",
+            "description": "The id of the disease",
+            "in": "path",
+            "type": "string",
+            "required": "true",
+            "default": "1"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful response"
+          },
+          "404": {
+            "description": "Bad request"
+          }
+        }
+      }
+    },
+    "/diseases({id})/synonyms": {
+      "get": {
+        "tags": [
+          "details"
+        ],
+        "summary": "Get synonym list for a disease",
+        "description": "Gets a JSONArray of the synonyms for a disease. Consists of a label, term and/or a url",
+        "parameters": [
+          {
+            "name": "id",
+            "description": "The id of the disease",
+            "type": "string",
+            "in": "path",
+            "required": "true",
+            "default": "1"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful response"
+          },
+          "404": {
+            "description": "Bad request"
+          }
+        }
+      }
+    },
+    "/diseases({id})/publications": {
+      "get": {
+        "tags": [
+          "details"
+        ],
+        "summary": "Get publication list for a disease",
+        "description": "Gets a JSONArray of the publications for a disease. Primarily a PMID, year, title and abstract",
+        "parameters": [
+          {
+            "name": "id",
+            "description": "The id of the disease",
+            "type": "string",
+            "in": "path",
+            "required": "true",
+            "default": "1"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful response"
+          },
+          "404": {
+            "description": "Bad request"
+          }
+        }
+      }
+    },
+    "/diseases({id})/properties": {
+      "get": {
+        "tags": [
+          "details"
+        ],
+        "summary": "Get property list for a disease",
+        "description": "Gets a JSONArray of the properties for a disease.  Consists of a label, term and/or a url",
+        "parameters": [
+          {
+            "name": "id",
+            "description": "The id of the disease",
+            "in": "path",
+            "type": "string",
+            "required": "true",
+            "default": "1"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful response"
+          },
+          "404": {
+            "description": "Bad request"
+          }
+        }
+      }
+    },
+    "/diseases({id})/links": {
+      "get": {
+        "tags": [
+          "details"
+        ],
+        "summary": "Get synonym list for a disease",
+        "description": "Gets a JSONArray of the publications for a disease. Primarily a PMID, year, title and abstract",
+        "parameters": [
+          {
+            "name": "id",
+            "description": "The id of the disease",
+            "type": "string",
+            "in": "path",
+            "required": "true",
+            "default": "1"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful response"
+          },
+          "404": {
+            "description": "Bad request"
+          }
+        }
+      }
+    },
+    "/assays({id})": {
+      "get": {
+        "tags": [
+          "details"
+        ],
+        "summary": "Get a assay by id",
+        "description": "Returns a specific assay JSON. Not fully expanded, but contains a link for full view",
+        "parameters": [
+          {
+            "name": "id",
+            "description": "The id of the assay",
+            "in": "path",
+            "type": "string",
+            "required": "true",
+            "default": "1"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful response"
+          },
+          "404": {
+            "description": "Bad request"
+          }
+        }
+      }
+    },
+    "/assays/{id}": {
+      "get": {
+        "tags": [
+          "details"
+        ],
+        "summary": "Get a assay by id - alternative",
+        "description": "Alternative syntax for above. NOT PREFERRED",
+        "parameters": [
+          {
+            "name": "id",
+            "description": "The id of the assay",
+            "in": "path",
+            "type": "string",
+            "required": "true",
+            "default": "1"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful response"
+          },
+          "404": {
+            "description": "Bad request"
+          }
+        }
+      }
+    },
+    "/assays({id})?view=full": {
+      "get": {
+        "tags": [
+          "details"
+        ],
+        "summary": "Get a assay by id",
+        "description": "Returns a specific assay JSON, fully expanded",
+        "parameters": [
+          {
+            "name": "id",
+            "description": "The id of the assay",
+            "in": "path",
+            "type": "string",
+            "required": "true",
+            "default": "1"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful response"
+          },
+          "404": {
+            "description": "Bad request"
+          }
+        }
+      }
+    },
+    "/assays({id})/synonyms": {
+      "get": {
+        "tags": [
+          "details"
+        ],
+        "summary": "Get synonym list for a assay",
+        "description": "Gets a JSONArray of the synonyms for a assay. Consists of a label, term and/or a url",
+        "parameters": [
+          {
+            "name": "id",
+            "description": "The id of the assay",
+            "type": "string",
+            "in": "path",
+            "required": "true",
+            "default": "1"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful response"
+          },
+          "404": {
+            "description": "Bad request"
+          }
+        }
+      }
+    },
+    "/assays({id})/publications": {
+      "get": {
+        "tags": [
+          "details"
+        ],
+        "summary": "Get publication list for a assay",
+        "description": "Gets a JSONArray of the publications for a assay. Primarily a PMID, year, title and abstract",
+        "parameters": [
+          {
+            "name": "id",
+            "description": "The id of the assay",
+            "type": "string",
+            "in": "path",
+            "required": "true",
+            "default": "1"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful response"
+          },
+          "404": {
+            "description": "Bad request"
+          }
+        }
+      }
+    },
+    "/assays({id})/properties": {
+      "get": {
+        "tags": [
+          "details"
+        ],
+        "summary": "Get property list for a assay",
+        "description": "Gets a JSONArray of the properties for a assay.  Consists of a label, term and/or a url",
+        "parameters": [
+          {
+            "name": "id",
+            "description": "The id of the assay",
+            "in": "path",
+            "type": "string",
+            "required": "true",
+            "default": "1"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful response"
+          },
+          "404": {
+            "description": "Bad request"
+          }
+        }
+      }
+    },
+    "/assays({id})/links": {
+      "get": {
+        "tags": [
+          "details"
+        ],
+        "summary": "Get synonym list for a assay",
+        "description": "Gets a JSONArray of the publications for a assay. Primarily a PMID, year, title and abstract",
+        "parameters": [
+          {
+            "name": "id",
+            "description": "The id of the assay",
+            "type": "string",
+            "in": "path",
+            "required": "true",
+            "default": "1"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful response"
+          },
+          "404": {
+            "description": "Bad request"
+          }
+        }
+      }
+    },
+    "/structures({id})": {
+      "get": {
+        "tags": [
+          "details"
+        ],
+        "summary": "Get a structure by id",
+        "description": "Returns a specific structure JSON. Not fully expanded, but contains a link for full view",
+        "parameters": [
+          {
+            "name": "id",
+            "description": "The id of the structure",
+            "in": "path",
+            "type": "string",
+            "required": "true",
+            "default": "000b005-6084-401a-9255-4dfe780ba28d"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful response"
+          },
+          "404": {
+            "description": "Bad request"
+          }
+        }
+      }
+    },
+    "/structures/{id}": {
+      "get": {
+        "tags": [
+          "details"
+        ],
+        "summary": "Get a structure by id - alternative",
+        "description": "Alternative syntax for above. NOT PREFERRED",
+        "parameters": [
+          {
+            "name": "id",
+            "description": "The id of the structure",
+            "in": "path",
+            "type": "string",
+            "required": "true",
+            "default": "000b005-6084-401a-9255-4dfe780ba28d"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful response"
+          },
+          "404": {
+            "description": "Bad request"
+          }
+        }
+      }
+    },
+    "/structures({id})?view=full": {
+      "get": {
+        "tags": [
+          "details"
+        ],
+        "summary": "Get a structure by id",
+        "description": "Returns a specific structure JSON, fully expanded",
+        "parameters": [
+          {
+            "name": "id",
+            "description": "The id of the structure",
+            "in": "path",
+            "type": "string",
+            "required": "true",
+            "default": "000b005-6084-401a-9255-4dfe780ba28d"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful response"
+          },
+          "404": {
+            "description": "Bad request"
+          }
+        }
+      }
+    },
+    "/structures({id})/properties": {
+      "get": {
+        "tags": [
+          "details"
+        ],
+        "summary": "Get property list for a structure",
+        "description": "Gets a JSONArray of the properties for a structure.  Consists of a label, term and/or a url",
+        "parameters": [
+          {
+            "name": "id",
+            "description": "The id of the structure",
+            "in": "path",
+            "type": "string",
+            "required": "true",
+            "default": "000b005-6084-401a-9255-4dfe780ba28d"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful response"
+          },
+          "404": {
+            "description": "Bad request"
+          }
+        }
+      }
+    },
+    "/structures({id})/links": {
+      "get": {
+        "tags": [
+          "details"
+        ],
+        "summary": "Get synonym list for a structure",
+        "description": "Gets a JSONArray of the publications for a structure. Primarily a PMID, year, title and abstract",
+        "parameters": [
+          {
+            "name": "id",
+            "description": "The id of the structure",
+            "type": "string",
+            "in": "path",
+            "required": "true",
+            "default": "1"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful response"
+          },
+          "404": {
+            "description": "Bad request"
+          }
+        }
+      }
+    },
+    "/compartments": {
+      "get": {
+        "tags": [
+          "browse"
+        ],
+        "summary": "Get compartments",
+        "description": "Returns a pageable list of compartments",
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Successful response"
+          }
+        }
+      }
+    },
+    "/expression": {
+      "get": {
+        "tags": [
+          "browse"
+        ],
+        "summary": "Get expression data",
+        "description": "Returns a pageable list of expression data",
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Successful response"
+          }
+        }
+      }
+    },
+    "/harmonogram": {
+      "get": {
+        "tags": [
+          "browse"
+        ],
+        "summary": "Get harmonogram data",
+        "description": "Returns a pageable list of harmonogram data",
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Successful response"
+          }
+        }
+      }
+    },
+    "/keywords": {
+      "get": {
+        "tags": [
+          "browse"
+        ],
+        "summary": "Get keywords",
+        "description": "This resource is for handling of keywords, which is a specific resource of Value. Returns a pageable list of keywords",
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Successful response"
+          }
+        }
+      }
+    },
+    "/predicates": {
+      "get": {
+        "tags": [
+          "browse"
+        ],
+        "summary": "Get predicates",
+        "description": "This resource provides support for predicates (i.e., n-tuples of the form <subject> <relationship> <objects...>). Returns a pageable list of predicates",
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Successful response"
+          }
+        }
+      }
+    },
+    "/publications": {
+      "get": {
+        "tags": [
+          "browse"
+        ],
+        "summary": "Get publications",
+        "description": "Returns a pageable list of compartments",
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Successful response"
+          }
+        }
+      }
+    },
+    "/timeline": {
+      "get": {
+        "tags": [
+          "browse"
+        ],
+        "summary": "Get timeline",
+        "description": "Resource describing event timeline. Returns a pageable list of events",
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Successful response"
+          }
+        }
+      }
+    },
+    "/tinx": {
+      "get": {
+        "tags": [
+          "browse"
+        ],
+        "summary": "Get tinx scores",
+        "description": "Returns a pageable list of tinx scores",
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Successful response"
+          }
+        }
+      }
+    },
+    "/values": {
+      "get": {
+        "tags": [
+          "browse"
+        ],
+        "summary": "Get values",
+        "description": "Returns a pageable list of values, primarily a label, term and link",
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Successful response"
+          }
+        }
+      }
+    },
+    "/xrefs": {
+      "get": {
+        "tags": [
+          "browse"
+        ],
+        "summary": "Get Cross References",
+        "description": "Cross references are handled by this resource. An XRef is also be used as an indirect way (i.e., pointer) to reference a particular entity. Returns a pageable list of cross references",
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Successful response"
+          }
+        }
+      }
+    }
+  }
+}

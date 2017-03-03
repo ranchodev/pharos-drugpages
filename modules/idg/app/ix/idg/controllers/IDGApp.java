@@ -1075,6 +1075,32 @@ public class IDGApp extends App implements Commons {
         }
     }
 
+    @Cached(key="_api", duration = Integer.MAX_VALUE)
+    public static Result api() {
+        final String key = "idg/api";
+        try {
+            return getOrElse (key, new Callable<Result> () {
+                    public Result call () throws Exception {
+                        TextIndexer.Facet[] target =
+                            getFacets (Target.class, "Namespace");
+                        TextIndexer.Facet[] disease =
+                            getFacets (Disease.class, "Namespace");
+                        TextIndexer.Facet[] ligand =
+                            getFacets (Ligand.class, "Namespace");
+                        return ok(ix.idg.views.html.api.render
+                                ("Pharos: Illuminating the Druggable Genome",
+                                        target.length > 0 ? target[0] : null,
+                                        disease.length > 0 ? disease[0] : null,
+                                        ligand.length > 0 ? ligand[0] : null));
+                    }
+                });
+        }
+        catch (Exception ex) {
+            Logger.error("Can't get api page", ex);
+            return error (500, "Unable to fulfil request");
+        }
+    }
+
     @Cached(key="_index", duration = Integer.MAX_VALUE)
     public static Result index () {
         response().setHeader("X-Frame-Options", "SAMEORIGIN");

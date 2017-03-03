@@ -1,4 +1,4 @@
-@(title: String)(header: Html)(breadcrumb: Html)(content: Html)
+@(title: String, scripts: Html = Html(""))(header: Html)(breadcrumb: Html)( content: Html)
 
 <!DOCTYPE html>
 <html>
@@ -20,13 +20,18 @@
 	<![endif]-->
     <title>@title</title>
     <meta name=viewport content="width=device-width, initial-scale=1">
+    @*This is for the swagger api documentation*@
+    <link rel="stylesheet" href='@routes.WebJarAssets.at(WebJarAssets.locate("reset.css"))' type="text/css"/>
+    <link rel="stylesheet" href='@routes.WebJarAssets.at(WebJarAssets.locate("screen.css"))' type="text/css"/>
+    @**@
     <link rel="stylesheet" href='@routes.WebJarAssets.at(WebJarAssets.locate("bootstrap.min.css"))'>
     <link rel="stylesheet" href='@routes.WebJarAssets.at(WebJarAssets.locate("font-awesome.min.css"))'>
     <link rel="stylesheet" href='@routes.Assets.versioned("ncats/css/jquery.treegrid.css")'>
+    <link type="text/css" rel="stylesheet" href='@routes.WebJarAssets.at(WebJarAssets.locate("smoothness/jquery-ui.css"))' />
     <link rel="stylesheet" href='@routes.Assets.versioned("ncats/css/footer.css")'>
     <link rel="stylesheet" href='@routes.Assets.versioned("ncats/css/idg.css")'>
-    <link rel="icon" type="image/png" href='@routes.Assets.versioned("images/favicon.png")'>    
-    <link type="text/css" rel="stylesheet" href='@routes.WebJarAssets.at(WebJarAssets.locate("smoothness/jquery-ui.css"))' />
+
+    <link rel="icon" type="image/png" href='@routes.Assets.versioned("images/favicon.png")'>
     <script src='@routes.WebJarAssets.at(WebJarAssets.locate("jquery.min.js"))' type='text/javascript'></script>
     <!-- make sure jquery-ui is loaded before bootstrap... otherwise it
 	 will override bootstrap's ui elements such as tooltip !-->
@@ -40,7 +45,7 @@
     <script src='@routes.Assets.versioned("javascripts/jquery.cookie.js")'></script>
 
     <script src='@routes.WebJarAssets.at(WebJarAssets.locate("store.min.js"))' type='text/javascript'></script>
-
+        @scripts
     <script>
         $(document).ready(function () {
           $('.loader').on('click', function (event) {
@@ -124,8 +129,10 @@
     <div class="container-fluid">
       <div id="visit-alert"></div>
       @breadcrumb
-    </div>      
+    </div>
+    <div class="content">
     @content
+    </div>
     @if(!"embedded".equals(request.getQueryString("v"))) {
        @footer()
     }
