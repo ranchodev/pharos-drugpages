@@ -1052,7 +1052,7 @@ public class TcrdRegistry extends Controller implements Commons {
                                 Keyword kw = KeywordFactory.registerIfAbsent
                                     (OMIM_TERM, disorder,
                                      "http://omim.org/entry/"+id);
-                                target.properties.add(kw);
+                                target.addIfAbsent((Value)kw);
                             }
                         }
                     }

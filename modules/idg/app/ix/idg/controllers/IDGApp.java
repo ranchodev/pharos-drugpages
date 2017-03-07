@@ -488,6 +488,15 @@ public class IDGApp extends App implements Commons {
                 else if (label.equalsIgnoreCase("Transcription Factor")) {
                     return "<a href=\"https://en.wikipedia.org/wiki/Transcription_factor\">"+label+"</a> <i class='fa fa-external-link'></i>";
                 }
+                else if (label.equalsIgnoreCase("epigenetic")) {
+                    return "<a href=\"https://en.wikipedia.org/wiki/Epigenetics\">"+label+"</a> <i class='fa fa-external-link'></i>";
+                }
+                else if (label.equalsIgnoreCase("transporter")) {
+                    return "<a href=\"https://en.wikipedia.org/wiki/Membrane_transport_protein\">"+label+"</a> <i class='fa fa-external-link'></i>";
+                }
+                else if (label.equalsIgnoreCase("enzyme")) {
+                    return "<a href=\"https://en.wikipedia.org/wiki/Enzyme\">"+label+"</a> <i class='fa fa-external-link'></i>";
+                }
 
                 if ("unknown".equalsIgnoreCase(label)) 
                     return "Non-IDG";

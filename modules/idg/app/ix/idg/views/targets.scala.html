@@ -35,7 +35,8 @@ facets: Array[FacetDecorator], targets: List[Target], ctx: String )
         <td>@t.patentCount@**<span class="inlinesparkline">@IDGApp.getPatentSparkline(t)</span>**@</td>
 	-->
         @*<td><div style="display: inline;" id="radar-@IDGApp.getId(t)" class="radar-div"></div></td>*@
-        <td><div id="radar-@IDGApp.getId(t)" class="radar-div" genesym="@IDGApp.getGeneSymbol(t)"
+        <td><div id="radar-@IDGApp.getId(t)" 
+		 class="radar-div" genesym="@IDGApp.getGeneSymbol(t)"
                  tdlLabel="@t.idgTDL.label" tdl="@t.idgTDL" tname="@t.name"></div></td>
     </tr>
     @if(ctx != null) {
@@ -328,7 +329,6 @@ role="dialog" aria-labelledby="modalLabelFolder" aria-hidden="true">
     <!--<script src="https://code.highcharts.com/modules/exporting.js"></script>-->
     <!--<script src="https://code.highcharts.com/js/modules/offline-exporting.js"></script>-->
 
-    <link type="text/css" rel="stylesheet" href="https://code.highcharts.com/css/highcharts.css" />
     <script type="text/javascript" src='@routes.Assets.versioned("javascripts/d3.js")'></script>
     <script type="text/javascript" src='@routes.Assets.versioned("javascripts/d3-tip.js")'></script>
     <script type="text/javascript" src='@routes.Assets.versioned("javascripts/underscore.js")'></script>
@@ -347,6 +347,8 @@ role="dialog" aria-labelledby="modalLabelFolder" aria-hidden="true">
     <script type="text/javascript" src='@routes.WebJarAssets.at(WebJarAssets.locate("raphael-min.js"))'></script>
     <script type="text/javascript" src='@routes.WebJarAssets.at(WebJarAssets.locate("morris.min.js"))'></script>
     <script type="text/javascript" src='@routes.WebJarAssets.at(WebJarAssets.locate("fabric.min.js"))'></script>
+
+    <link type="text/css" rel="stylesheet" href="https://code.highcharts.com/css/highcharts.css"/>
     <link type="text/css" rel="stylesheet" href='@routes.Assets.versioned("stylesheets/clustergram.css")' />
     <link type="text/css" rel="stylesheet" href='@routes.Assets.versioned("stylesheets/radar-chart.css")' />
     <link type="text/css" rel="stylesheet" href='@routes.WebJarAssets.at(WebJarAssets.locate("morris.css"))' />
@@ -582,7 +584,7 @@ $(document).ready(function () {
                             polar: true,
                             type: "line",
                             height: 75, width: 75,
-                            backgroundColor: 'rgba(0,0,0,0,0)',
+                            backgroundColor: 'transparent',
                             margin: [0,0,0,0],
                             spacing: [5,5,5,5]
                         },
