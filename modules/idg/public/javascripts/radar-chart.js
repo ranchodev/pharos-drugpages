@@ -58,7 +58,85 @@ function getModalChartConfig(mouseOverUrl) {
     };
 }
 
-function renderChart(chartData, chartConfig, show) {
+function _createSeriesStructure(obj, aggType) {
+    return ({
+        name: obj.className,
+        marker: {enabled: false},
+        point: {
+            events: {
+                mouseOver: function () {
+                    var category = this.category;
+                    showDataSources('#radar-ds-container',
+                            '@ix.idg.controllers.routes.HarmonogramApp.dataSources(null,null)' +
+                            '?field=' + aggType)({name: category});
+                }
+            }
+        },
+        data: _.map(obj.axes, function (obj2) {
+            return (obj2.value);
+        })
+    });
+}
+
+function renderChart(chartData, aggType, container, cfg) {
+    var seriesData = null;
+    if (chartData.length == 1) {
+        seriesData = [_createSeriesStructure(chartData[0], aggType)];
+    } else {
+        seriesData = _.map(chartData, function (obj) {
+            return (_createSeriesStructure(obj, aggType));
+        });
+    }
+
+    var config = {
+        chart: {
+            polar: true,
+            type: "line"
+        },
+        credits: {
+            enabled: false
+        },
+        title: {
+            text: null
+        },
+        legend: {
+            enabled: false
+        },
+        pane: {
+            size: "90%"
+        },
+        yAxis: {
+            gridLineInterpolation: 'polygon',
+            lineWidth: 0.0,
+            min: 0, max: 1,
+            labels: {
+                enabled: false
+            }
+        },
+        xAxis: {
+            categories: _.map(chartData[0].axes, function (obj) {
+                return (obj.axis);
+            }),
+            tickmarkPlacement: 'on',
+            lineWidth: 0.2,
+            autoRotation: [-45],
+            labels: {
+                style: {
+                    fontSize: "8px"
+                }
+            }
+        },
+        series: seriesData
+    };
+
+    if (cfg != undefined) {
+       config = _.extend(config, cfg);
+    }
+    Highcharts.chart(container, config);
+}
+
+
+function renderChart_old(chartData, chartConfig, show) {
     var chart = RadarChart.chart();
     chart.config(chartConfig);
     $("#modal-radardiv").empty();

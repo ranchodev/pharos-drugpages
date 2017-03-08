@@ -5,6 +5,8 @@ import java.nio.*;
 import java.nio.file.*;
 import java.nio.channels.FileChannel;
 import java.util.*;
+import java.util.zip.GZIPInputStream;
+import java.util.zip.GZIPOutputStream;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.security.MessageDigest;
@@ -81,7 +83,9 @@ public class IxCache extends Plugin
                     ("Cache file "+file+" is not available!");
             
             ObjectInputStream ois = new ObjectInputStream
-                (Files.newInputStream(file.toPath(), StandardOpenOption.READ));
+                (new GZIPInputStream (Files.newInputStream
+                                      (file.toPath(), 
+                                       StandardOpenOption.READ)));
             Object obj = ois.readObject();
             ois.close();
             return obj;
@@ -541,7 +545,8 @@ public class IxCache extends Plugin
         try {
             MessageDigest md = MessageDigest.getInstance("sha1");
             ObjectOutputStream oos = new ObjectOutputStream
-                (new DigestOutputStream (new FileOutputStream (file), md));
+                (new DigestOutputStream 
+                 (new GZIPOutputStream (new FileOutputStream (file)), md));
 
             CacheObject entry = new CacheObject (obj);
             oos.writeObject(entry);
@@ -597,8 +602,11 @@ public class IxCache extends Plugin
     
     protected Object deserialize (byte[] data, int offset, int size)
         throws Exception {
+        int magic = ((data[1] & 0xff) << 8) | (data[0] & 0xff);
+        InputStream is = new ByteArrayInputStream (data, offset, size);
         ObjectInputStream ois = new ObjectInputStream
-            (new ByteArrayInputStream(data, offset, size));
+             (magic == GZIPInputStream.GZIP_MAGIC 
+              ? new GZIPInputStream (is) : is);
         Object obj = ois.readObject();
         if (obj instanceof CacheFilePointer) {
             obj = ((CacheFilePointer)obj).deserialize();

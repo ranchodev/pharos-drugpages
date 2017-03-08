@@ -56,7 +56,6 @@
         <td>@t.grantCount</td>
         <td>@t.patentCount</td>
         <td>@t.antibodyCount</td>
-        @*<td><div style="display: inline;" id="radar-@IDGApp.getId(t)" class="radar-div"></div></td>*@
         <td><div id="radar-@IDGApp.getId(t)" class="radar-div" genesym="@IDGApp.getGeneSymbol(t)"></div></td>
     </tr>
 }
@@ -95,18 +94,19 @@
                         <li><a href="#cartIntersectModal" data-toggle="modal"><i class="fa fa-random"></i>&nbsp;Intersect</a></li>
                     </ul>
                 </div>
-@** 
+
                 <div class="dropdown pull-right" data-toggle="tooltip" title="Visualization tools">
                     <a type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown"
                     aria-haspopup="true" aria-expanded="false" style="margin-right : 1px ; margin-left : 1px ;">
                         <i class="fa fa-eye"></i>
                     </a>
                     <ul class="dropdown-menu pull-left">
+                        <li><a href="#" id="cartRadar" data-toggle="modal"><i class="fa fa-eye"></i> Compare Data Types</a></li>
                         <li><a href="#hgramModal" data-toggle="modal" ><i class="fa fa-cubes"></i>&nbsp;Harmonogram</a></li>
-                        <li><a href="#" data-toggle="modal"><i class="fa fa-sitemap"></i>&nbsp;Kinase networks</a></li>
+                        <!--<li><a href="#" data-toggle="modal"><i class="fa fa-sitemap"></i>&nbsp;Kinase networks</a></li>-->
                     </ul>
                 </div>
-**@		
+
             </div>
         </div>
     </div>
@@ -160,7 +160,7 @@
                         <h3>Diseases</h3>
                         <table id="disease-table" class="table table-striped">
                             <tr>
-                                <th><button id="cb-addall" class="btn btn-default" type="button"><i class="fa fa-check fa-fw"></i></button></th>
+                                <th><button id="cb-addall-disease" class="btn btn-default" type="button"><i class="fa fa-check fa-fw"></i></button></th>
                                 <th>ID <i class="fa fa-external-link"></i></th>
                                 <th>Name</th>
                                 <th>Description</th>
@@ -387,6 +387,12 @@ role="dialog" aria-labelledby="hgramModalLabel" aria-hidden="true" >
 
     <link type="text/css" rel="stylesheet" href='@routes.Assets.versioned("stylesheets/main.css")'/>
 
+    <script src="https://code.highcharts.com/highcharts.js"></script>
+    <script src="https://code.highcharts.com/highcharts-more.js"></script>
+    <script src="https://code.highcharts.com/modules/exporting.js"></script>
+    <link type="text/css" rel="stylesheet" href="https://code.highcharts.com/css/highcharts.css" />
+
+
 </head>
 
 <script>
@@ -401,11 +407,10 @@ $(document).ready(function () {
     });
     $('#hgramModal').on('shown.bs.modal', function (e) {
         console.log('hgram modal is shown...');
-	var ents = _.map(selectEntities("#target-table input"), function (x) {
-           return x;
+        var ents = _.map(selectEntities("#target-table input"), function (x) {
+            return x;
         });
-
-        load_clustergram('@ix.idg.controllers.routes.HarmonogramApp.hgForTarget(null, null, null)'+'?q='+ents.join(','));
+        load_clustergram('@ix.idg.controllers.routes.HarmonogramApp.hgForTarget(null, null, null)' + '?q=' + ents.join(','));
     });
 
     $('#modal-radar').on('hidden.bs.modal', function (e) {
@@ -432,6 +437,7 @@ function selectEntities(sel) {
     });
 }
 
+
 // iterate over all .radar-XXX elements and draw the radar chart
 // currently we pull chart data dynamically, but really should be
 // generated at compile time
@@ -439,18 +445,43 @@ $("div[id^='radar-']").each(function () {
     var klass = $(this).attr("id");
     var acc = klass.split("-")[1];
     $.ajax({
-        url: '@ix.idg.controllers.routes.HarmonogramApp.hgForTarget(null, null, null, "radar-attr_type")'+'&q=' + acc,
+        url: '@ix.idg.controllers.routes.HarmonogramApp.hgForTarget(null, null, null, "radar-attr_type")' + '&q=' + acc,
         dataType: "json",
         success: function (data) {
-            var chart = RadarChart.chart();
-            chart.config({
-                w: 75, h: 75,
-                axisText: false, levels: 0, circles: false
+            renderChart(data, "radar-attr_type", klass, {
+                chart: {
+                    polar: true,
+                    type: "line",
+                    height: 75, width: 75,
+                    backgroundColor: 'rgb(255,255,255,0.1)',
+                    margin: [0, 0, 0, 0],
+                    spacing: [5, 5, 5, 5]
+                },
+                pane: {
+                    size: "100%"
+                },
+                plotOptions: {
+                    line: {
+                        animation: false
+                    },
+                    series: {
+                        enableMouseTracking: false,
+                        lineWidth: 1,
+                        states: {
+                            hover: {
+                                enabled: false
+                            }
+                        }
+                    }
+                },
+                exporting: {enabled: false},
+                xAxis: {
+                    maxPadding: 0.01,
+                    categories: _.map(data[0].axes, function (obj) {
+                        return "";
+                    })
+                }
             });
-            var svg = d3.select("#" + klass).append('svg')
-                    .attr("width", 75)
-                    .attr("height", 75)
-                    .append('g').classed('focus', 1).datum(data).call(chart);
         }
     });
 });
@@ -467,65 +498,80 @@ $("#target-table").on("click", ".radar-div", function () {
             $("#modal-radardiv").attr("target", target);
             $("#modalLabelRadar").text("Data type summary for " + target);
             $("#radardownloadlink").attr("href", "http://amp.pharm.mssm.edu/Harmonizome/api/1.0/download/associations?gene=" + gene);
-            renderChart(data, chartConfig);
+            renderChart(data, "radar-attr_type", 'modal-radardiv');
+            $("#modal-radar" ).modal("show");
         }
     });
 });
 
-$("#select-agg").on('change', function () {
-    var aggType = $(this).val();
-    var target = $("#modal-radardiv").attr("target");
-    var overlay = $("#select-overlay").val();
-    var chartConfig = getModalChartConfig('@ix.idg.controllers.routes.HarmonogramApp.dataSources(null, null)' + '?field=' + aggType);
-    var ptd = $.get(' @ix.idg.controllers.routes.HarmonogramApp.hgForTarget(null, null, null, null)' + '?q=' + target + '&type=' + aggType);
-    var pud;
-    if (overlay == 'none')
-        pud = $.Deferred().resolve().promise();
-    else
-        pud = $.get('@ix.idg.controllers.routes.HarmonogramApp.hgForTarget(null, null, null, null)' + '?q=' + overlay + '&type=' + aggType);
-    $.when(ptd, pud).then(function (atd, aud) {
-        var chartData = atd[0];
-        if (overlay != 'none')
-            chartData.push(aud[0][0]);
-        $("#modalLabelRadar").text("Data type summary for " + target);
-        renderChart(chartData, chartConfig);
+    $("#select-agg").on('change', function () {
+        var aggType = $(this).val();
+        var target = $("#modal-radardiv").attr("target");
+        var overlay = $("#select-overlay").val();
+        var ptd = $.get(' @ix.idg.controllers.routes.HarmonogramApp.hgForTarget(null, null, null, null)' + '?q=' + target + '&type=' + aggType);
+        var pud;
+        if (overlay == 'none')
+            pud = $.Deferred().resolve().promise();
+        else
+            pud = $.get('@ix.idg.controllers.routes.HarmonogramApp.hgForTarget(null, null, null, null)' + '?q=' + overlay + '&type=' + aggType);
+        $.when(ptd, pud).then(function (atd, aud) {
+            var chartData = atd[0];
+            if (overlay != 'none')
+                chartData.push(aud[0][0]);
+            $("#modalLabelRadar").text("Data type summary for " + target);
+            renderChart(chartData, aggType, 'modal-radardiv');
+        });
     });
-});
-$("#select-overlay").on('change', function () {
-    var aggType = $("#select-agg").val();
-    var target = $("#modal-radardiv").attr("target");
-    var chartConfig = getModalChartConfig('@ix.idg.controllers.routes.HarmonogramApp.dataSources(null, null)' + '?field=' + aggType);
-    var overlay = $(this).val();
-    var ptd = $.get('@ix.idg.controllers.routes.HarmonogramApp.hgForTarget(null, null, null, null)' + '?q=' + target + '&type=' + aggType);
-    var pud;
-    if (overlay == 'none')
-        pud = $.Deferred().resolve().promise();
-    else
-        pud = $.get('@ix.idg.controllers.routes.HarmonogramApp.hgForTarget(null, null, null, null)' + '?q=' + overlay + '&type=' + aggType);
-    $.when(ptd, pud).then(function (atd, aud) {
-        var chartData = atd[0];
-        if (overlay != 'none')
-            chartData.push(aud[0][0]);
-        $("#modalLabelRadar").text("Data type summary for " + target);
-        renderChart(chartData, chartConfig);
+    $("#select-overlay").on('change', function () {
+        var aggType = $("#select-agg").val();
+        var target = $("#modal-radardiv").attr("target");
+        var overlay = $(this).val();
+        var ptd = $.get('@ix.idg.controllers.routes.HarmonogramApp.hgForTarget(null, null, null, null)' + '?q=' + target + '&type=' + aggType);
+        var pud;
+        if (overlay == 'none')
+            pud = $.Deferred().resolve().promise();
+        else
+            pud = $.get('@ix.idg.controllers.routes.HarmonogramApp.hgForTarget(null, null, null, null)' + '?q=' + overlay + '&type=' + aggType);
+        $.when(ptd, pud).then(function (atd, aud) {
+            var chartData = atd[0];
+            if (overlay != 'none')
+                chartData.push(aud[0][0]);
+            $("#modalLabelRadar").text("Data type summary for " + target);
+            renderChart(chartData, aggType, 'modal-radardiv');
+        });
     });
-});
 
-$("#compare-selected").click(function (e) {
-  var ents = _.map(selectEntities("#target-table  input:checked"), function (x) {
-        return ( x );
-  });
+    $("#cartRadar").click(function (e) {
+        var ids = _.map(selectEntities("#target-table  input:checked"), function (x) {
+            return ( x );
+        });
+        var promises = _.map(ids, function (x) {
+            return ($.get('@ix.idg.controllers.routes.HarmonogramApp.hgForTarget(null, null, null, null)' + '?q=' + x + '&type=radar-attr_type'));
+        });
+        $.when.apply($, promises).then(function () {
+            var chartData = _.map(arguments, function (arr) {
+                return (JSON.parse(arr[0])[0]);
+            });
+            renderChart(chartData, "radar-attr_type", 'modal-radardiv');
+            $("#modal-radar").modal("show");
+        });
+    });
 
-  if (ents.length > 0) {
-    window.location.href = "@ix.idg.controllers.routes.IDGApp.compareTargets2()?q=" + ents.join();
-  } else {
-    // use all entries
-    ents = _.map(selectEntities("#target-table input"), function (x) {
-       return x;
-       });
-    window.location.href = "@ix.idg.controllers.routes.IDGApp.compareTargets2()?q=" + ents.join();
-  }			
-})
+    $("#compare-selected").click(function (e) {
+        var ents = _.map(selectEntities("#target-table  input:checked"), function (x) {
+            return ( x );
+        });
+
+        if (ents.length > 0) {
+            window.location.href = "@ix.idg.controllers.routes.IDGApp.compareTargets2()?q=" + ents.join();
+        } else {
+            // use all entries
+            ents = _.map(selectEntities("#target-table input"), function (x) {
+                return x;
+            });
+            window.location.href = "@ix.idg.controllers.routes.IDGApp.compareTargets2()?q=" + ents.join();
+        }
+    });
 
 /////////////////////////////////////////////
 //
@@ -600,7 +646,7 @@ function showLoadModal() {
     });
 }
 
-$(window).unload(function () {
+$(window).on('unload', function (e) {
     $('#loadmodal').modal('hide');
     $('#hgramModal').modal('hide');
 });

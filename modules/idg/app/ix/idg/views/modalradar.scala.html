@@ -1,6 +1,6 @@
 @import ix.idg.models.Target
 @import ix.idg.controllers.IDGApp
-
+@import ix.idg.controllers.DossierApp
 @(title: String, gene: String)
 
 <div class="modal fade" id="modal-radar" tabindex="-1"
@@ -46,6 +46,15 @@ role="dialog" aria-labelledby="modalLabelRadar" aria-hidden="true">
                                     <option value="kinase">Kinase</option>
                                     <option value="ic">Ion Channel</option>
                                     <option value="nr">Nuclear Receptor</option>
+                                    <option disabled>&#9472;&#9472;&#9472;&#9472;</option>
+                                    <option value="dossier-Default" tids='@DossierApp.getTargetsForFolder("Default").mkString(",")'>&#x1f4c2; Default</option>
+                                    @defining(DossierApp.getFolderNames()) { folderNames =>
+                                        @if(folderNames.size() > 0) {
+                                            @for(folderName <- folderNames) {
+                                    <option value="dossier-@folderName" tids='@DossierApp.getTargetsForFolder(folderName).mkString(",")'>&#x1f4c2; @folderName</option>
+                                            }
+                                        }
+                                    }
                                 </select>
                             </div>
                         </form>
@@ -57,7 +66,8 @@ role="dialog" aria-labelledby="modalLabelRadar" aria-hidden="true">
                     <div class="col-md-9">
 
                         <span class="pull-right">
-                        <a class="btn btn-default" href="@ix.idg.controllers.routes.IDGApp.faq()#collapse5?expand=true" role="button" style="margin-right:1px; margin-left:1px;">
+                        <a class="btn btn-default" href="@ix.idg.controllers.routes.IDGApp.faq()#collapse5?expand=true"
+                           role="button" style="margin-right:1px; margin-left:1px;">
                             <i class="fa fa-info-circle fa-lg "></i></a></span>
 
                         <span class="pull-right"></span>

@@ -414,18 +414,34 @@ public class HarmonogramApp extends App {
         Logger.debug("Working with " + hgs.size() + " CDF's from " + ntarget + " targets for q = " + q);
 
         HashMap<String, Double> attrMap = new HashMap<>();
+        HashMap<String, Integer> countMap = new HashMap<>();
         for (HarmonogramCDF hg : hgs) {
-            String attrGroup = hg.getAttrGroup();
-            if (fieldName.equals("attr_type"))
-                attrGroup = hg.getAttrType();
-            else if (fieldName.equals("data_type"))
-                attrGroup = hg.getDataType();
-            else if (fieldName.equals("attr_group"))
-                attrGroup = hg.getAttrGroup();
+            String akey = hg.getAttrGroup();
+            switch (fieldName) {
+                case "attr_type":
+                    akey = hg.getAttrType();
+                    break;
+                case "data_type":
+                    akey = hg.getDataType();
+                    break;
+                case "attr_group":
+                    akey = hg.getAttrGroup();
+                    break;
+            }
             Double value;
-            if (attrMap.containsKey(attrGroup)) value = attrMap.get(attrGroup) + hg.getCdf();
-            else value = hg.getCdf();
-            attrMap.put(attrGroup, value);
+            if (attrMap.containsKey(akey)) {
+                value = attrMap.get(akey) + hg.getCdf();
+                countMap.put(akey, countMap.get(akey)+1);
+            } else {
+                value = hg.getCdf();
+                countMap.put(akey, 1);
+            }
+            attrMap.put(akey, value);
+        }
+
+        // convert CDF sums to means (which should scale to 0-1)
+        for (String akey : countMap.keySet()) {
+            attrMap.put(akey, attrMap.get(akey) / ((double) countMap.get(akey).intValue()));
         }
 
         // need to scale in case we were aggregating over target sets (all, Tdark, Tclin, etc)

@@ -11,7 +11,6 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
-import com.ning.http.client.AsyncHttpClientConfig;
 import controllers.AssetsBuilder;
 import ix.core.controllers.EntityFactory;
 import ix.core.controllers.KeywordFactory;
@@ -49,33 +48,20 @@ import ix.utils.Util;
 import org.apache.commons.lang3.StringUtils;
 import play.Logger;
 import play.Play;
-import play.api.libs.ws.DefaultWSClientConfig;
-import play.api.libs.ws.WSClientConfig;
-import play.api.libs.ws.ning.NingAsyncHttpClientConfigBuilder;
-import play.api.libs.ws.ssl.SSLConfig;
 import play.api.mvc.Action;
 import play.api.mvc.AnyContent;
 import play.cache.Cached;
 import play.db.ebean.Model;
 import play.libs.Akka;
-import play.libs.F;
-import play.libs.XML;
-import play.libs.ws.WS;
-import play.libs.ws.WSClient;
-import play.libs.ws.WSRequestHolder;
-import play.libs.ws.WSResponse;
 import play.mvc.BodyParser;
 import play.mvc.Call;
 import play.mvc.Result;
 import play.mvc.Security;
 import play.twirl.api.Content;
-import scala.Option;
 import tripod.chem.indexer.StructureIndexer;
 
-import java.net.*;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.PipedInputStream;
@@ -106,6 +92,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.atomic.AtomicLong;
+import java.util.stream.Collectors;
 
 import static ix.core.search.TextIndexer.Facet;
 import static ix.core.search.TextIndexer.SearchResult;
@@ -489,14 +476,26 @@ public class IDGApp extends App implements Commons {
                 if (label.equalsIgnoreCase("gpcr")) {
                     return "<a href=\"http://en.wikipedia.org/wiki/G_protein%E2%80%93coupled_receptor\">"+label+"</a> <i class='fa fa-external-link'></i>";
                 }
-                if (label.equalsIgnoreCase("kinase")) {
+                else if (label.equalsIgnoreCase("kinase")) {
                     return "<a href=\"http://en.wikipedia.org/wiki/Kinase\">"+label+"</a> <i class='fa fa-external-link'></i>";
                 }
-                if (label.equalsIgnoreCase("ion channel")) {
+                else if (label.equalsIgnoreCase("ion channel")) {
                     return "<a href=\"http://en.wikipedia.org/wiki/Ion_channel\">"+label+"</a> <i class='fa fa-external-link'></i>";
                 }
-                if (label.equalsIgnoreCase("nuclear receptor")) {
+                else if (label.equalsIgnoreCase("nuclear receptor")) {
                     return "<a href=\"http://en.wikipedia.org/wiki/Nuclear_receptor\">"+label+"</a> <i class='fa fa-external-link'></i>";
+                }
+                else if (label.equalsIgnoreCase("Transcription Factor")) {
+                    return "<a href=\"https://en.wikipedia.org/wiki/Transcription_factor\">"+label+"</a> <i class='fa fa-external-link'></i>";
+                }
+                else if (label.equalsIgnoreCase("epigenetic")) {
+                    return "<a href=\"https://en.wikipedia.org/wiki/Epigenetics\">"+label+"</a> <i class='fa fa-external-link'></i>";
+                }
+                else if (label.equalsIgnoreCase("transporter")) {
+                    return "<a href=\"https://en.wikipedia.org/wiki/Membrane_transport_protein\">"+label+"</a> <i class='fa fa-external-link'></i>";
+                }
+                else if (label.equalsIgnoreCase("enzyme")) {
+                    return "<a href=\"https://en.wikipedia.org/wiki/Enzyme\">"+label+"</a> <i class='fa fa-external-link'></i>";
                 }
 
                 if ("unknown".equalsIgnoreCase(label)) 
@@ -1386,7 +1385,25 @@ public class IDGApp extends App implements Commons {
                     }
                 });
     }
-    
+
+    public static List<XRef> getDiseasesWithDifferentialExpression(final Target t)
+            throws Exception {
+        final String key = "targets/" + t.id + "/dysregulated";
+
+        return getOrElse(key, new Callable<List<XRef>>() {
+            @Override
+            public List<XRef> call() throws Exception {
+                List<XRef> ret = new ArrayList<XRef>();
+                t.getLinks().stream().filter(xref -> xref.kind.equals(Disease.class.getName())).forEach(xref -> {
+                    ret.addAll(xref.properties.stream().filter(v -> v.label.equals("Data Source")
+                            && v.getValue().equals("Expression Atlas")).map(v -> xref).collect(Collectors.toList()));
+                });
+                return ret;
+
+            }
+        });
+    }
+
 
     static Content getTargetContent (final List<Target> targets)
         throws Exception {

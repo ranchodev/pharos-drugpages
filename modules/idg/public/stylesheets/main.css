@@ -16,3 +16,7 @@ body {
 .page-header {
     border-bottom: 1px solid #a94442;
 }
+
+.highcharts-background {
+    fill: none !important;
+}

@@ -9,6 +9,8 @@
 @import ix.idg.models.{Assay, Compartment, Disease, Ligand, Target, Techdev}
 @import ix.utils.Util
 @import ix.utils.Global
+@import ix.core.models.XRef
+@import ix.core.models.VNum
 
 @(target: Target, diseases: List[DiseaseRelevance], breadcrumb: List[Keyword])
 
@@ -69,7 +71,7 @@
                 }
                 </div>
              </div>
-          </div>          
+          </div>
        </div>
        <div class="panel panel-default">
           <div class="panel-heading">
@@ -137,7 +139,7 @@
                      }
                 </div>
              </div>
-          </div>          
+          </div>
        </div>
        <div class="panel panel-default">
           <div class="panel-heading">
@@ -217,6 +219,30 @@
 <a href="http://diseases.jensenlab.org/Entity?documents=10&type1=9606&id2=@IDGApp.getId(d)&id1=@target.getSynonym(STRING_ID).term">@x</a>
 }
 
+@diffexprow(xref: XRef) = {
+<tr>
+    <td>
+        @defining(xref.properties.filter(v => v.label == "IDG Disease").head.getValue().asInstanceOf[java.lang.String]) {dname =>
+            @if(dname.length > 40) {
+                <a id="keyword" class="label label-primary loader"
+                   data-toggle="tooltip"
+                   data-html="true"
+                   data-trigger="hover"
+                   data-placement="top"
+                   title="@dname"
+                   data-content="<p align='left'>@dname</p>"
+                   >@{dname.substring(0,40)}... </a>
+            } else {
+                <a class="label label-primary loader"
+                   href="@{ix.idg.controllers.routes.IDGApp.targets()+"?facet="+URLEncoder.encode(IDG_DISEASE,"utf8")+"/"+URLEncoder.encode(dname, "utf8")}">@dname</a>
+            }
+        }
+    </td>
+    <td>@{"%1$.3f".format(xref.properties.filter(v => v.label == "log2foldchange").head.getValue())}</td>
+    <td>@{"%1$.3f".format(xref.properties.filter(v => v.label == "pvalue").head.getValue())}</td>
+</tr>
+}
+
 @diseaserow(dr: DiseaseRelevance) = {
   @defining(IDGApp.getTermCount(classOf[Target], IDG_DISEASE, dr.disease.name)) { count =>
      <tr @*class="treegrid-@dr.disease.id"*@>
@@ -247,7 +273,7 @@
      </tr>
 
      @for(i <- 0 until dr.lineage.size()) {
-       @defining(dr.lineage(i)) { x =>      
+       @defining(dr.lineage(i)) { x =>
          <tr class="treegrid-@x.disease.id treegrid-parent-@dr.disease.id">
             <td><a class="loader" href="@ix.idg.controllers.routes.IDGApp.disease(IDGApp.getId(x.disease))">@x.disease.name</a></td>
             <td>@diseasedblink(x.disease,x.zscore)</td>
@@ -267,7 +293,7 @@
    <div class="row">
       <div class="col-md-6">
          <img class="img-responsive" height="200" src='@ix.idg.controllers.routes.ExpressionApp.homunculus(IDGApp.getId(target), skull)' />
-	 
+
       </div>
       <div class="col-md-6" style="max-height:300px;overflow-y: auto;">
          @defining(ExpressionApp.getLinkedExpr(target, name)){ exprs =>
@@ -449,7 +475,7 @@
 @techdev(t: Target) = {
   @defining(IDGApp.getLinkedObjects(t, classOf[Techdev])){ techdev =>
      @if(techdev != null && !techdev.isEmpty) {
-        <div class="panel panel-default" 
+        <div class="panel panel-default"
               style="max-height: 300px; overflow-y: auto;">
            <a name="techdev" tocname="TechDev Info"></a>
            <div class="panel-heading">
@@ -463,7 +489,7 @@
                @for(td <- techdev){
 	          <tr>
 		    <td>
-		      <a id="keyword" class="label label-primary loader" 
+		      <a id="keyword" class="label label-primary loader"
           	      	 href='@{ix.idg.controllers.routes.IDGApp.targets()+"?facet="+URLEncoder.encode(TECHDEV_PI,"utf8")+"/"}@URLEncoder.encode(td.pi, "utf8")'>@td.pi <span class="badge">@IDGApp.getTermCount(classOf[Target], TECHDEV_PI, td.pi)</span></a>
 		    </td>
 		    <td>
@@ -501,7 +527,7 @@
                 @if(p != null) {
                    @p.getValue
                 }
-             }       
+             }
              /
              @defining(a.getProperty(MLP_ASSAY_INACTIVE)) { p =>
                 @if(p != null) {
@@ -555,7 +581,7 @@
                                      title="<p align='left'>Number of transmembrane helices according to Survey of the Human Transmembrane Proteome (https://modbase.compbio.ucsf.edu/projects/membrane/). At least 2 are required to be in their list.</p>">Transmembrane</span>
                                 }
                                 case _ => {
-                                  @iv.label  
+                                  @iv.label
                                 }
                              }
                               </td>
@@ -737,36 +763,39 @@ This is TCRD target <a href='@ix.core.controllers.v1.routes.RouteFactory.get("ta
       <!--
         -- first row
         -->
-      <div class="col-md-6">
+
+<div class="row">
+    <div class="col-md-6">
         @targetsummary(target)
-      </div>
-      <div class="col-md-6">
-        <div class="row">
-	  <div class="col-md-12">
-            <div class="panel panel-default">
-              <div class="panel-heading">
-		<a name="datatypes" tocname="Data Types"></a>
-		<h3 class="panel-title">
-                  <span data-toggle="tooltip" title="Radar plot depicting the variety of knowledge obtained by Pharos for a particular target. The more spikes in the plot, the more variety. The longer the length, the higher the quantity of that particular knowledge. Click expansion icon to explore the plot fuller by seeing plot with annotations of the different radii, allowing for aggregation of knowledge radii based on attribution type, group, or data type, as well as overlay plot with other information, and provide download file.">
-                            Knowledge Summary</span>
-                  <a href="#" id="modal-radar-btn" data-toggle="modal" data-target="#modal-radar">
-                    <span class="fa fa-external-link pull-right" aria-hidden="true"></span>
-                  </a>
-		</h3>
-              </div>
-              <div class="panel-body">
-		<div id="attr-type-radar"></div>
-              </div>
-            </div>
-          </div>
-	</div>
-	<div class="row">
-	  <div class="col-md-12">
-          @targetpatent(target)
-	  </div>
-	</div>
-      </div>
     </div>
+
+    <div class="col-md-6">
+        <div class="row">
+            <div class="panel panel-default">
+                <div class="panel-heading">
+                    <a name="datatypes" tocname="Data Types"></a>
+                    <h3 class="panel-title">
+                  <span data-toggle="tooltip"
+                        title="Radar plot depicting the variety of knowledge obtained by Pharos for a particular target. The more spikes in the plot, the more variety. The longer the length, the higher the quantity of that particular knowledge. Click expansion icon to explore the plot fuller by seeing plot with annotations of the different radii, allowing for aggregation of knowledge radii based on attribution type, group, or data type, as well as overlay plot with other information, and provide download file.">
+                            Knowledge Summary</span>
+                        <a href="#" id="modal-radar-btn" data-toggle="modal" data-target="#modal-radar">
+                            <span class="fa fa-external-link pull-right" aria-hidden="true"></span>
+                        </a>
+                    </h3>
+                </div>
+                <div class="panel-body">
+                    <div id="attr-type-radar" style="width: 100%;"></div>
+                </div>
+            </div>
+        </div>
+        <div class="row">
+            @targetpatent(target)
+        </div>
+    </div>
+
+
+</div>
+
 
     <!--
       -- Disease Relevance (second row)
@@ -779,7 +808,7 @@ This is TCRD target <a href='@ix.core.controllers.v1.routes.RouteFactory.get("ta
           <div class="panel-heading">
             <h3 class="panel-title">TINX Plot
                   @defining(IDGApp.getDTOId(target)){ dto =>
-                    @if(dto != null) {  
+                    @if(dto != null) {
                        <a href="http://dev.newdrugtargets.org/?target=@dto.replace("_","")">
                        <span class="fa fa-external-link pull-right" aria-hidden="true"></span></a>
                     }
@@ -791,7 +820,7 @@ This is TCRD target <a href='@ix.core.controllers.v1.routes.RouteFactory.get("ta
           </div>
         </div>
       </div>
-      <div class="col-md-6">   
+      <div class="col-md-6">
         <div class="panel panel-default">
           <a name="diseases" tocname="Diseases"></a>
           <div class="panel-heading">
@@ -811,7 +840,7 @@ This is TCRD target <a href='@ix.core.controllers.v1.routes.RouteFactory.get("ta
                 <th>Confidence <i class="fa fa-info-circle"
 				     data-toggle="tooltip" data-placement="top" data-html="true"
 				     title="<p align='left'>Half the Z-score, described in <a href='http://www.sciencedirect.com/science/article/pii/S1046202314003831'>Franklid et al, Methods, 2015, 83-89</a></p>"></i></th>
-		   @** this doesn't seem to be available anymore? 
+		   @** this doesn't seem to be available anymore?
                    <th>Importance <i class="fa fa-info-circle"
 				     data-toggle="tooltip" data-placement="top" data-html="true"
 				     title="<p align='left'>A score characterizing the importance of the target, based on occurences in the published literature.</p>"></i></th>
@@ -826,6 +855,8 @@ This is TCRD target <a href='@ix.core.controllers.v1.routes.RouteFactory.get("ta
       </div>
     </div>
      }
+
+
 
     <!--
       -- Expression (third row)
@@ -845,24 +876,80 @@ This is TCRD target <a href='@ix.core.controllers.v1.routes.RouteFactory.get("ta
             <div class="panel-body">
                <div class="row">
                  <div class="col-md-4">
-                    <div class="panel panel-default">
-                         <div class="panel-body">
-                         <div class="row">
-                              <div class="col-md-2"></div>
-                              <div class="col-md-8">
-                                   <div id="tissue-specificity-radar"></div>
-                              </div>
-                              <div class="col-md-2"></div>
+
+                     <ul class="nav nav-tabs">
+                         <li role="presentation" class="active">
+                             <a id="exprtab-specificity" href="#specificity-tab" role="tab" aria-controls="specificity"
+                                data-toggle="tab">
+                                <span data-toggle="tooltip" data-html="true" title="<p align='left'>Target tissue specificity, ranges from 0 (non-specific) - 1 specific to one tissue, calculated according to Yanai et al, Bioinformatics 2005, 650-659</p>">
+                                    Tissue Specificity
+                                </span>
+                             </a>
+                         </li>
+                         <li role="presentation">
+                             <a id="exprtab-diffexp" href="#diffexp-tab" role="tab" aria-controls="diffexp"
+                                data-toggle="tab">
+                                <span data-toggle="tooltip" data-html="true" title="Differential Expression">
+                                    Differential Expression
+                                </span>
+                             </a>
+                         </li>
+                     </ul>
+
+                     <div class="tab-content">
+                         <div role="tabpanel" class="tab-pane active" id="specificity-tab">
+                             <div class="panel panel-default">
+                                 <div class="panel-body">
+                                     <div id="tissue-specificity-radar" style="margin: 0 auto; width: 100%;"></div>
+                                 </div>
+                             </div>
                          </div>
-                         <div class="panel-footer"><span data-toggle="tooltip"
-                                         data-html="true"
-                                         title="<p align='left'>Target tissue specificity, ranges from 0 (non-specific) - 1 specific to one tissue, calculated according to Yanai et al, Bioinformatics 2005, 650-659</p>">
-                              Tissue Specificity Index</span>
+                         <div role="tabpanel" class="tab-pane" id="diffexp-tab">
+                             @defining(IDGApp.getDiseasesWithDifferentialExpression(target)) {xrefs =>
+                                 @if(xrefs.size() > 0) {
+                                     <div class="panel panel-default">
+                                         <a name="diffexpression" tocname="Differential Expression"></a>
+                                         <div class="panel-heading">
+                                             <h3 class="panel-title">&nbsp;
+                                                 <span data-toggle="tooltip"
+                                                       data-html="true"
+                                                       title="<p align='left'>Diseases in which this target has shown to have differential expression as reported in
+                                                                           Expression Atlas</p>">Differential Expression</span> (@xrefs.size())
+                                                 <a class="pull-right"
+                                                    href='@{ix.core.controllers.v1.routes.RouteFactory.get("targets",target.id,null)+"/links(kind="+classOf[Disease].getName+")"}'><i
+                                                         class="fa fa-code"></i></a></h3>
+                                         </div>
+                                         <div class="panel-body table-responsive" style="max-height:300px;overflow-y:auto;">
+                                             <table id="diffexptable" class="tree table table-striped">
+                                                 <thead>
+                                                 <tr>
+                                                     <th data-sort="string">Disease</th>
+                                                     <th data-sort="float">log2 FC <i class="fa fa-info-circle"
+                                                                                      data-toggle="tooltip" data-placement="top" data-html="true"
+                                                                                      title="<p align='left'>log2 Fold Change is the ratio between the expression level in the normal state vs the disease state. Larger absolute values imply a bigger difference in expression between healthy and disease states</p>"></i>
+                                                     </th>
+                                                     <th data-sort="float">p <i class="fa fa-info-circle"
+                                                                                data-toggle="tooltip" data-placement="top" data-html="true"
+                                                                                title="<p align='left'>The p-value associated with the fold change.</p>"></i>
+                                                     </th>
+                                                 </tr>
+                                                 </thead>
+                                                 <tbody>
+                                                 @for(axref <- xrefs) {
+                                                 @diffexprow(axref)
+                                                 }
+                                                 </tbody>
+                                             </table>
+                                         </div>
+                                     </div>
+                                 }
+                             }
                          </div>
-                    </div>
+                     </div>
+
+
                  </div>
-                 
-                 </div>
+
                <div class="col-md-8">
                    <ul class="nav nav-tabs">
                        <li role="presentation" class="active">
@@ -873,7 +960,7 @@ This is TCRD target <a href='@ix.core.controllers.v1.routes.RouteFactory.get("ta
                            data-html="true"
                            title="<p align='left'>Tissue expression data from The Genotype-Tissue Expression (GTEx) project</p>">
                                GTEx</span></a></li>
-                               
+
                        <li role="presentation">
 		       	   <a id="exprtab-@HPM_TISSUE"
 			      href="#hpm-tab" role="tab" data-toggle="tab">
@@ -881,7 +968,7 @@ This is TCRD target <a href='@ix.core.controllers.v1.routes.RouteFactory.get("ta
                            data-html="true"
                            title="<p align='left'>Tissue expression data from The Human Proteome Map (HPM)</p>">
                                HPM</span></a></li>
-                               
+
                        <li role="presentation">
 		       	   <a id="exprtab-@HPA_RNA_TISSUE"
 			      href="#hpa-tab" role="tab" data-toggle="tab">
@@ -889,7 +976,7 @@ This is TCRD target <a href='@ix.core.controllers.v1.routes.RouteFactory.get("ta
                            data-html="true"
                            title="<p align='left'>Tissue expression data from The Human Protein Atlas</p>">
                                HPA</span></a></li>
-                               
+
                        <li role="presentation">
 		       	   <a id="exprtab-@IDG_TISSUE"
 			      href="#idg-tab" role="tab" aria-controls="idg"
@@ -950,7 +1037,7 @@ This is TCRD target <a href='@ix.core.controllers.v1.routes.RouteFactory.get("ta
                        @defining(target.getProperty(IDG_TISSUE_REF)) { ref =>
                            <div role="tabpanel" class="tab-pane" id="jensen-kb-tab">
                                 @expression(JENSEN_KB_EXPR, "jensen-kb", ref.asInstanceOf[Keyword])
-                           </div>                                      
+                           </div>
                            <div role="tabpanel" class="tab-pane" id="jensen-tm-tab">
                                @expression(JENSEN_TM_EXPR, "jensen-tm", ref.asInstanceOf[Keyword])
                            </div>
@@ -966,8 +1053,8 @@ This is TCRD target <a href='@ix.core.controllers.v1.routes.RouteFactory.get("ta
     <!--
       -- fourth row
       -->
-    <div class="row">    
-      <div class="col-md-4" >	 
+    <div class="row">
+      <div class="col-md-4" >
 	<!--
         -- Synonyms
         -->
@@ -1042,7 +1129,7 @@ This is TCRD target <a href='@ix.core.controllers.v1.routes.RouteFactory.get("ta
         @property(GRANT_APPLICATION, null, 0, "Count of NIH grant applications including target reported in parenthesis. Listing individual grants with links to NIH RePORT site and tally of occurance of target for particular grant in circle. Click on the bargraph icon to explore further the Summary of Grant Application information.")
         @defining(target.getSynonyms(PDB_ID)) { pdbids =>
               @if(pdbids.size() > 0) {
-                  <div class="panel panel-default" 
+                  <div class="panel panel-default"
                        style="max-height: 300px; overflow-y: auto;">
                       <a name="pdb" tocname="PDB"></a>
                       <div class="panel-heading">
@@ -1063,7 +1150,7 @@ This is TCRD target <a href='@ix.core.controllers.v1.routes.RouteFactory.get("ta
               }
           }
       </div>
-      <div class="col-md-4">	
+      <div class="col-md-4">
         <a name="goterms" tocname="GO Terms"></a>
         @property(GO_FUNCTION, null, 0, "Function listed by GO database for target, with total count listed in parenthesis. Listing individual functions with links to GO. Click on bargraph icon to explore further the Summary of GO Function.")
         @property(GO_COMPONENT, null, 0, "Cellular component listed by GO database for target, with total count listed in parenthesis. Listing individual functions with links to GO. Click on bargraph icon to explore further the Summary of GO Function.")
@@ -1089,7 +1176,7 @@ This is TCRD target <a href='@ix.core.controllers.v1.routes.RouteFactory.get("ta
                           }
                        </div>
                     </div>
-                 </div>          
+                 </div>
               </div>
               <div class="panel panel-default">
                 <div class="panel-heading">
@@ -1117,10 +1204,10 @@ This is TCRD target <a href='@ix.core.controllers.v1.routes.RouteFactory.get("ta
 		 </div>
       	       </div>
 	   }
-	}        
+	}
       </div>
       <div class="col-md-4">
-        @property(COLLECTION)	      
+        @property(COLLECTION)
         @techdev(target)
         @property(IMPC_TERM)
         @property("Pathway", null, 1, "Biological pathways associated with target based on KEGG PATHWAY database, with links back to KEGG.")
@@ -1155,8 +1242,8 @@ This is TCRD target <a href='@ix.core.controllers.v1.routes.RouteFactory.get("ta
         }
        </div>
     </div> <!-- row -->
-        
-      
+
+
     <!--
       -- MeSH
       -->
@@ -1233,7 +1320,7 @@ This is TCRD target <a href='@ix.core.controllers.v1.routes.RouteFactory.get("ta
          </div>
        }
     }
-    <!-- 
+    <!--
       -- Publications
       -->
    @if(false && !target.getPublications.isEmpty()) {
@@ -1300,7 +1387,7 @@ This is TCRD target <a href='@ix.core.controllers.v1.routes.RouteFactory.get("ta
     @defining(IDGApp.getDrugLigands(target)) { drugs =>
       @ligandcarousel("Drug", drugs)
     }
-    
+
     @defining(IDGApp.getChemblLigands(target)) { ligands =>
       @ligandcarousel("Ligand", ligands)
     }
@@ -1332,7 +1419,7 @@ This is TCRD target <a href='@ix.core.controllers.v1.routes.RouteFactory.get("ta
                 </tr>
 		@defining(request().getQueryString("view")) { view =>
 		   @view match {
-		      case "full" => {	
+		      case "full" => {
                          @for(a <- assays) {
                             @assayrow(a)
 			 }
@@ -1365,7 +1452,7 @@ This is TCRD target <a href='@ix.core.controllers.v1.routes.RouteFactory.get("ta
   @*************
   Gene RIF
   *************@
-                
+
   @defining(IDGApp.getGeneRIFs(target)) { generifs =>
     @if(!generifs.isEmpty) {
     <div class="row">
@@ -1529,7 +1616,7 @@ This is TCRD target <a href='@ix.core.controllers.v1.routes.RouteFactory.get("ta
          </div>
        }
     }
-    <div id="disqus_thread"></div>    
+    <div id="disqus_thread"></div>
     </div>
 </div>
 
@@ -1569,7 +1656,10 @@ role="dialog" aria-labelledby="modalLabelFolder" aria-hidden="true">
 
 
 <head>
-    <script src='@routes.WebJarAssets.at(WebJarAssets.locate("highcharts.js"))' type='text/javascript'></script>
+    <!--<script src='@routes.WebJarAssets.at(WebJarAssets.locate("js/highcharts.js"))' type='text/javascript'></script>-->
+    <!--<script src='@routes.WebJarAssets.at(WebJarAssets.locate("js/highcharts-more.js"))' type='text/javascript'></script>-->
+    <!--<script src="https://code.highcharts.com/modules/exporting.js"></script>-->
+    <!--<script src="https://code.highcharts.com/js/modules/offline-exporting.js"></script>-->
     <script type="text/javascript" src='@routes.Assets.versioned("javascripts/d3.js")'></script>
     <script type="text/javascript" src='@routes.Assets.versioned("javascripts/tinx.js")'></script>
     <script type="text/javascript" src='@routes.Assets.versioned("javascripts/d3-tip.js")'></script>
@@ -1582,7 +1672,8 @@ role="dialog" aria-labelledby="modalLabelFolder" aria-hidden="true">
     <script type="text/javascript" src='@routes.Assets.versioned("javascripts/d3.layout.cloud.js")'></script>
     <script type="text/javascript" src='@routes.Assets.versioned("javascripts/wordcloud.js")'></script>
     <script type="text/javascript" src='@routes.Assets.versioned("javascripts/jquery.sparkline.js")'></script>
-    <script type="text/javascript" src='@routes.Assets.versioned("javascripts/flickity.pkgd.min.js")'></script>    
+    <script type="text/javascript" src='@routes.Assets.versioned("javascripts/flickity.pkgd.min.js")'></script>
+    <script type="text/javascript" src='@routes.Assets.versioned("javascripts/stupidtable.min.js")'></script>
     <link type="text/css" rel="stylesheet" href='@routes.Assets.versioned("stylesheets/d3-tip.css")' />
     <link type="text/css" rel="stylesheet" href='@routes.Assets.versioned("stylesheets/radar-chart.css")' />
     <link type="text/css" rel="stylesheet" href='@routes.WebJarAssets.at(WebJarAssets.locate("morris.css"))' />
@@ -1590,36 +1681,23 @@ role="dialog" aria-labelledby="modalLabelFolder" aria-hidden="true">
     <link type="text/css" rel="stylesheet" href='@routes.Assets.versioned("stylesheets/flickity.css")'/>
     <link type="text/css" rel="stylesheet" href='@routes.Assets.versioned("stylesheets/main.css")'/>
 
+    <script src="https://code.highcharts.com/highcharts.js"></script>
+    <script src="https://code.highcharts.com/highcharts-more.js"></script>
+    <script src="https://code.highcharts.com/modules/exporting.js"></script>
+    <!--<link type="text/css" rel="stylesheet" href="https://code.highcharts.com/css/highcharts.css"></script>-->
+
     <style type="text/css">
-    .axis path,
-    .axis line {
-    fill: none;
-    stroke: black;
-    shape-rendering: crispEdges;
-    }
 
-    .axis text {
-    font-family: sans-serif;
-    font-size: 11px;
-    }
 
-    .point:hover {
-    opacity: 0.5;
-    }
-
-    .tick text {
-    visibility:inherit;
-    }
-    
     .carousel-image {
        min-width: 100px;
        min-height: 190px;
     }
-    
+
     .carousel-cell {
        width: 150px;
     }
-    
+
     .flickity-page-dots {
        bottom: -2px;
     }
@@ -1649,6 +1727,8 @@ $(function () {
 });
 
 $(document).ready(function () {
+    $("#diffexptable").stupidtable();
+
     /* populate TOC menu */
     var tocs = [];
     $("a[tocname]" ).each(function(){
@@ -1674,7 +1754,7 @@ $(document).ready(function () {
         ]);
 
         var tpubwc = $('#tpub-wc svg:first-child');
-	    tpubpanel = $('#tpub-wc'),	
+	    tpubpanel = $('#tpub-wc'),
 	    tpubasp = tpubpanel.width()/tpubpanel.height();
 
         $(window).on("resize", function() {
@@ -1702,7 +1782,7 @@ $(document).ready(function () {
           console.log('tissue \''+tissue+'\'');
        }
     });
-    
+
     /* Cart related methods and vars */
     $.ajax({
         url:'@ix.idg.controllers.routes.DossierApp.count',
@@ -1758,127 +1838,221 @@ $('.tree').treegrid({
 //     showLoadModal();
 //  });
 
-  $.ajax({
-     url: '@ix.idg.controllers.routes.IDGApp.targetTissue(IDGApp.getId(target))',
-     dataType:"json",
-     success:function(data) {
-          var chart = RadarChart.chart();
-          chart.config({
-                    w:150, h:250,
-                    axisText:true, levels:0, circles:true
-          });
-          var svg = d3.select("#tissue-specificity-radar").append('svg' )
-                     .attr("width", 150)
-                     .attr("height", 250)
-                .append('g') //.attr("transform","rotate(45)")
-                .classed('focus', 1).datum(data).call(chart);
-      }
-  });
+    $.ajax({
+        url: '@ix.idg.controllers.routes.IDGApp.targetTissue(IDGApp.getId(target))',
+        dataType: "json",
+        success: function (data) {
 
-  $('#attr-type-radar').html('<i class="fa fa-spinner fa-spin fa-3x fa-fw"></i><span class="sr-only">Loading...</span>');
-  $.ajax({
-     url: '@ix.idg.controllers.routes.HarmonogramApp.hgForTarget(null,null,null,"radar-attr_type")&q=@IDGApp.getId(target)',
-     dataType:"json",
-     success:function(data) {
-        $('#attr-type-radar').html('');
-        var chart = RadarChart.chart();
-        chart.config({
-            w:150, h:150,
-                    axisText:false, levels:0, circles:false
-        });
-        var svg = d3.select("#attr-type-radar").append('svg' )
-           .attr("width", 180)
-           .attr("height", 180)
-           .append('g').classed('focus', 1).datum(data).call(chart);
-     },
-     error:function () {
-        $('#attr-type-radar').html('<h5><em>No data available</em></h5>');
-	$('#modal-radar-btn').attr('disabled','true');
-     }
-  });
+            Highcharts.chart("tissue-specificity-radar", {
+                chart: {
+                    polar: true,
+                    type: "line",
+                },
+                credits: {
+                    enabled: false
+                },
+                title: {
+                    text: null
+                },
+                legend: {
+                    enabled: false
+                },
+                pane: {
+                    size: "75%"
+                },
+                yAxis: {
+                    gridLineInterpolation: 'polygon',
+                    lineWidth: 0,
+                    min: 0,
+                    labels: {
+                        enabled: false
+                    }
+                },
+                xAxis: {
+                    categories: _.map(data[0].axes, function (obj) {
+                        return (obj.axis);
+                    }),
+                    tickmarkPlacement: 'on',
+                    lineWidth: 0,
+                    autoRotation: false
+                },
+                series: [{
+                    name: "",
+                    data: _.map(data[0].axes, function (obj) {
+                        return (obj.value);
+                    }),
+                    pointPlacement: 'on'
+                }]
+            });
+        }
+    });
 
-  $.ajax({
-      url: '@ix.idg.controllers.routes.HarmonogramApp.hgForTarget(null,null,null,"radar-attr_type")&q=@IDGApp.getId(target)',
-      dataType:"json",
-      success:function(data) {
-          var chart = RadarChart.chart();
-          chart.config({
-              w:600, h:600,
-              axisText:true, levels:0, circles:true,
-              axisTextMouseOverFunc: showDataSources('#radar-ds-container', '@ix.idg.controllers.routes.HarmonogramApp.dataSources(null,null)'+'?field=radar-attr_type')
-          });
-          var svg = d3.select("#modal-radardiv").append('svg' )
-                  .attr("width", 600 )
-                    .attr("height", 600)
-                    .append('g').classed('focus', 1).datum(data).call(chart);
-          $("#modalLabelRadar" ).html
-             ('<h4><span class="label label-@target.idgTDL.label">@target.idgTDL</span> @target.getName</h4>');
-      }
-   });
+    $('#attr-type-radar').html('<i class="fa fa-spinner fa-spin fa-3x fa-fw"></i><span class="sr-only">Loading...</span>');
+    $.ajax({
+        url: '@ix.idg.controllers.routes.HarmonogramApp.hgForTarget(null,null,null,"radar-attr_type")&q=@IDGApp.getId(target)',
+        dataType: "json",
+        success: function (data) {
+            $('#attr-type-radar').html('');
+            renderChart(data, 'radar-attr_type', 'attr-type-radar',
+                    {
+                        chart: {
+                            polar: true,
+                            type: "line",
+                            height: 200,
+                            backgroundColor: 'rgba(255, 255, 255, 0.1)',
+                            margin: [0, 0, 0, 0],
+                            spacing: [5, 5, 5, 5]
+                        },
+                        plotOptions: {
+                            line: {
+                                animation: false
+                            },
+                            series: {
+                                enableMouseTracking: false,
+                                lineWidth: 1,
+                                states: {
+                                    hover: {
+                                        enabled: false
+                                    }
+                                }
+                            }
+                        },
+                        pane: {size: "75%"},
+                        xAxis: {
+                            categories: _.map(data[0].axes, function (obj) {
+                                return "";
+                            }),
+                            maxPadding: 0.05,
+                            lineWidth: 1
+                        }
+                    });
+        },
+        error: function () {
+            $('#attr-type-radar').html('<h5><em>No data available</em></h5>');
+            $('#modal-radar-btn').attr('disabled', 'true');
+        }
+    });
 
-    function renderChart(chartData, aggType, target) {
-        var chart = RadarChart.chart();
-        chart.config({
-            w:600, h:600,
-            axisText:true, levels:0, circles:true,
-            axisTextMouseOverFunc: showDataSources('#radar-ds-container',
-                '@ix.idg.controllers.routes.HarmonogramApp.dataSources(null,null)'+'?field='+aggType)
-        });
+
+
+    $(window).on("shown.bs.modal", function(e){
+        $.ajax({
+              url: '@ix.idg.controllers.routes.HarmonogramApp.hgForTarget(null,null,null,"radar-attr_type")&q=@IDGApp.getId(target)',
+              dataType:"json",
+              success:function(data) {
+                  $('#modal-radardiv').html('');
+                  var chart = Highcharts.chart("modal-radardiv", {
+                      chart: {
+                          polar: true,
+                          type: "line"
+                      },
+                      credits: {
+                          enabled: false
+                      },
+                      title: {
+                          text: null
+                      },
+                      legend: {
+                          enabled: false
+                      },
+                      pane: {
+                          size: "90%"
+                      },
+                      yAxis: {
+                          gridLineInterpolation: 'polygon',
+                          lineWidth: 0,
+                          min: 0,
+                          labels: {
+                              enabled: false
+                          }
+                      },
+                      xAxis: {
+                          categories: _.map(data[0].axes, function (obj) {
+                              return(obj.axis);
+                          }),
+                          tickmarkPlacement: 'on',
+                          lineWidth: 0.5,
+                          autoRotation: true
+                      },
+                      series: [{
+                          name: "Attribute Type",
+                          marker: { enabled: false},
+                          point: {
+                              events: {
+                                  mouseOver: function() {
+                                      var category = this.category;
+                                      showDataSources('#radar-ds-container',
+                                              '@ix.idg.controllers.routes.HarmonogramApp.dataSources(null,null)'+
+                                              '?field=radar-attr_type')({name:category});
+                                  }
+                              }
+                          },
+                          data: _.map(data[0].axes, function (obj) {
+                              return (obj.value);
+                          })
+                      }]
+                  });
+                  $("#modalLabelRadar" ).html
+                     ('<h4><span class="label label-@target.idgTDL.label">@target.idgTDL</span> @target.getName</h4>');
+              }
+           });
+    });
+
+    function _renderChart(chartData, aggType) {
         $("#modal-radardiv" ).empty();
         $("#radar-ds-container" ).empty();
-        var svg = d3.select("#modal-radardiv").append('svg' )
-            .attr("width", 600 )
-            .attr("height", 600)
-            .append('g').classed('focus', 1).datum(chartData).call(chart);
+        renderChart(chartData, aggType, 'modal-radardiv');
+        $("#modalLabelRadar" ).html
+           ('<h4><span class="label label-@target.idgTDL.label">@target.idgTDL</span> @target.getName</h4>');
         $("#modal-radar" ).modal("show");
     }
 
-    $("#select-agg" ).on('change', function() {
-        var aggType = $(this ).val();
-        var target = '@IDGApp.getId(target)';
-        var overlay = $("#select-overlay" ).val();
-        var ptd = $.get('@ix.idg.controllers.routes.HarmonogramApp.hgForTarget(null,null,null,null)'+'?q='+target+'&type='+aggType);
-        var pud;
-        if (overlay == 'none')
-            pud = $.Deferred().resolve().promise();
-        else
-            pud = $.get('@ix.idg.controllers.routes.HarmonogramApp.hgForTarget(null,null,null,null)'+'?q='+overlay+'&type='+aggType);
-        $.when(ptd, pud).then(function(atd, aud) {
-            var chartData = atd[0];
-            if (typeof chartData == 'string' || chartData instanceof String)
-                chartData = JSON.parse(chartData);
-            if (overlay != 'none') {
-                chartData.push(JSON.parse(aud[0])[0]);
-            }
-            renderChart(chartData, aggType, target);
-        });
-    });
-    $("#select-overlay" ).on('change', function() {
-        var aggType = $("#select-agg"   ).val();
-        var target = '@IDGApp.getId(target)';
-        var overlay = $(this).val();
-        var ptd = $.get('@ix.idg.controllers.routes.HarmonogramApp.hgForTarget(null,null,null,null)'+'?q='+target+'&type='+aggType);
-        var pud;
-        if (overlay == 'none')
-            pud = $.Deferred().resolve().promise();
-        else
-            pud = $.get('@ix.idg.controllers.routes.HarmonogramApp.hgForTarget(null,null,null,null)'+'?q='+overlay+'&type='+aggType);
-        $.when(ptd, pud).then(function(atd, aud) {
-            var chartData = atd[0];
-            if (typeof chartData == 'string' || chartData instanceof String)
-                chartData = JSON.parse(chartData);
-            if (overlay != 'none') {
-                chartData.push(JSON.parse(aud[0])[0]);
-            }
 
-            renderChart(chartData, aggType, target);
+    function _handleModalSelectEvents(aggTypeElem, overlayElem, target) {
+        var aggType = $(aggTypeElem).val();
+        var overlay = $(overlayElem).val();
+
+        var promises = [$.get('@ix.idg.controllers.routes.HarmonogramApp.hgForTarget(null,null,null,null)' + '?q=' + target + '&type=' + aggType)];
+        if (overlay == 'none') {
+            // promises.push($.Deferred().resolve().promise());
+        } else if (overlay.includes("dossier-")) {
+            var opt = $(overlayElem).find(":selected");
+            var tids = $(opt).attr("tids").split(",");
+            if (tids.length == 0) return;
+            _.each(tids, function (x) {
+                promises.push($.get('@ix.idg.controllers.routes.HarmonogramApp.hgForTarget(null, null, null, null)' + '?q=' + x + '&type=' + aggType));
+            });
+        } else
+            promises.push($.get('@ix.idg.controllers.routes.HarmonogramApp.hgForTarget(null,null,null,null)' + '?q=' + overlay + '&type=' + aggType));
+        $.when.apply($, promises).then(function () {
+            // first should be the target in question, the rest will be overlays
+            var chartData = _.map(arguments, function (arr) {
+                if (arr == "success") return (undefined);
+                if (_.isString(arr)) return (JSON.parse(arr)[0]);
+                else if (_.isArray(arr)) return (JSON.parse(arr[0])[0]);
+                else return (undefined);
+            });
+            chartData = _.filter(chartData, function (x) {
+                return (x != undefined);
+            });
+            renderChart(chartData, "radar-attr_type", 'modal-radardiv', {legend: {enabled: true}});
+            $("#modal-radar").modal("show");
         });
+    }
+
+    $("#select-agg").on('change', function () {
+        _handleModalSelectEvents($(this), $("#select-overlay"), $("#modal-radardiv").attr("target"));
     });
 
-   plotAAProfile('#aa-profile');
+    $("#select-overlay").on('change', function () {
+        _handleModalSelectEvents($("#select-agg"), $(this), $("#modal-radardiv").attr("target"));
+    });
 
-   @if(target.patentCount != null && target.patentCount > 0) {	      
-     new Morris.Line({
+
+    plotAAProfile('aa-profile');
+
+   @if(target.patentCount != null && target.patentCount > 0) {
+        new Morris.Line({
         element: 'patent-line-plot',
         data: @HtmlFormat.raw(IDGApp.getPatents(target).toString),
         xkey: 'year',
@@ -1911,54 +2085,55 @@ $('.tree').treegrid({
    tinx_target_plot("#tinx-plot", "@IDGApp.getId(target)");
 });
 
-function plotAAProfile (container) {
-   $(container).highcharts({
+function plotAAProfile(container) {
+    var chart = Highcharts.chart(container, {
         chart: {
             type: 'column',
-	    height: 150
+            height: 150
         },
         title: {
             text: null
         },
         credits: {enabled: false},
-	xAxis: {
-	/*
- 	   categories:['A','R','N','D','C','E','Q','G','H','I',
-		        'L','K','M','F','P','S','T','W','Y','V'],*/
-	    categories: ['@target.name'],
-	    title: {
-	       text: null
-	    },
-	    labels: {
-    	       enabled: false,
-	    }
-	},
+        xAxis: {
+            /*
+             categories:['A','R','N','D','C','E','Q','G','H','I',
+             'L','K','M','F','P','S','T','W','Y','V'],*/
+            categories: ['@target.name'],
+            title: {
+                text: null
+            },
+            labels: {
+                enabled: false,
+            }
+        },
         yAxis: {
             min: 0,
-	    title: {
-	       text: null
-	    }
+            title: {
+                text: null
+            }
         },
         legend: {
             enabled: false
         },
         series: @HtmlFormat.raw(IDGApp.getAminoAcidProfile(target).toString)
-    });
+})
+    ;
 }
 
 function showLoadModal () {
-   $('#page-loader').addClass('loader-wait');    
-/*            
+   $('#page-loader').addClass('loader-wait');
+/*
   $('#loadmodal').modal({
       keyboard: false,
       show: true,
       backdrop: 'static'
         });
-*/      
+*/
 }
-	      
-$(window).unload(function () {
-    $('#loadmodal').modal('hide');    
+
+$(window).on("unload", function (e) {
+    $('#loadmodal').modal('hide');
 });
 </script>
 

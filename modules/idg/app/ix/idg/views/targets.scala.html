@@ -35,7 +35,8 @@ facets: Array[FacetDecorator], targets: List[Target], ctx: String )
         <td>@t.patentCount@**<span class="inlinesparkline">@IDGApp.getPatentSparkline(t)</span>**@</td>
 	-->
         @*<td><div style="display: inline;" id="radar-@IDGApp.getId(t)" class="radar-div"></div></td>*@
-        <td><div id="radar-@IDGApp.getId(t)" class="radar-div" genesym="@IDGApp.getGeneSymbol(t)"
+        <td><div id="radar-@IDGApp.getId(t)" 
+		 class="radar-div" genesym="@IDGApp.getGeneSymbol(t)"
                  tdlLabel="@t.idgTDL.label" tdl="@t.idgTDL" tname="@t.name"></div></td>
     </tr>
     @if(ctx != null) {
@@ -323,7 +324,11 @@ role="dialog" aria-labelledby="modalLabelFolder" aria-hidden="true">
     <style type="text/css">
     .jqstooltip { box-sizing: content-box;}
     </style>
-    <script src='@routes.WebJarAssets.at(WebJarAssets.locate("highcharts.js"))' type='text/javascript'></script>
+    <!--<script src='@routes.WebJarAssets.at(WebJarAssets.locate("js/highcharts.js"))' type='text/javascript'></script>-->
+    <!--<script src='@routes.WebJarAssets.at(WebJarAssets.locate("js/highcharts-more.js"))' type='text/javascript'></script>-->
+    <!--<script src="https://code.highcharts.com/modules/exporting.js"></script>-->
+    <!--<script src="https://code.highcharts.com/js/modules/offline-exporting.js"></script>-->
+
     <script type="text/javascript" src='@routes.Assets.versioned("javascripts/d3.js")'></script>
     <script type="text/javascript" src='@routes.Assets.versioned("javascripts/d3-tip.js")'></script>
     <script type="text/javascript" src='@routes.Assets.versioned("javascripts/underscore.js")'></script>
@@ -342,12 +347,19 @@ role="dialog" aria-labelledby="modalLabelFolder" aria-hidden="true">
     <script type="text/javascript" src='@routes.WebJarAssets.at(WebJarAssets.locate("raphael-min.js"))'></script>
     <script type="text/javascript" src='@routes.WebJarAssets.at(WebJarAssets.locate("morris.min.js"))'></script>
     <script type="text/javascript" src='@routes.WebJarAssets.at(WebJarAssets.locate("fabric.min.js"))'></script>
+
+    <link type="text/css" rel="stylesheet" href="https://code.highcharts.com/css/highcharts.css"/>
     <link type="text/css" rel="stylesheet" href='@routes.Assets.versioned("stylesheets/clustergram.css")' />
     <link type="text/css" rel="stylesheet" href='@routes.Assets.versioned("stylesheets/radar-chart.css")' />
     <link type="text/css" rel="stylesheet" href='@routes.WebJarAssets.at(WebJarAssets.locate("morris.css"))' />
     <link type="text/css" rel="stylesheet" href='@routes.Assets.versioned("ncats/css/loader.css")'/>
     <link type="text/css" rel="stylesheet" href='@routes.Assets.versioned("css/bootstrap-select.min.css")'/>        
-    <link type="text/css" rel="stylesheet" href='@routes.Assets.versioned("stylesheets/main.css")'/>    
+    <link type="text/css" rel="stylesheet" href='@routes.Assets.versioned("stylesheets/main.css")'/>
+
+    <script src="https://code.highcharts.com/highcharts.js"></script>
+    <script src="https://code.highcharts.com/highcharts-more.js"></script>
+    <script src="https://code.highcharts.com/modules/exporting.js"></script>
+
 </head>
 <script>
 
@@ -464,9 +476,7 @@ $(document).ready(function () {
       console.log('hgram modal is shown...');
       load_clustergram ('@ix.idg.controllers.routes.HarmonogramApp.hgForTarget(null, ctx, null)');
    });
-   $('#modal-radar').on('hidden.bs.modal', function (e) {
-       d3.select("#modal-radardiv").select('svg').remove();
-   });
+
 
     function selectEntities(sel) {
         return $(sel).map(function() {
@@ -563,29 +573,56 @@ $(document).ready(function () {
     $("div[id^='radar-']" ).each(function() {
         var klass = $(this ).attr("id");
         var acc = klass.split("-")[1];
-	if (acc.length == 6) {
-          $.ajax({
-             url: '@ix.idg.controllers.routes.HarmonogramApp.hgForTarget(null,null,null,"radar-attr_type")'+'&q='+acc,
-             dataType:"json",
-             success:function(data) {
-                var chart = RadarChart.chart();
-                chart.config({
-                    w:75, h:75,
-                    axisText:false, levels:0, circles:false
-                });
-                var svg = d3.select("#"+klass).append('svg' )
-                .attr("width", 75 )
-                .attr("height", 75)
-                .append('g').classed('focus', 1).datum(data).call(chart);
-             },
-	     error: function () {
-	        console.log('No harmonogram data for target '+acc);
-	     }
-          });
-	}
+        if (acc.length == 6) {
+            $.ajax({
+                url: '@ix.idg.controllers.routes.HarmonogramApp.hgForTarget(null,null,null,"radar-attr_type")' + '&q=' + acc,
+                dataType: "json",
+                success: function (data) {
+
+                    renderChart(data, "radar-attr_type", klass, {
+                        chart: {
+                            polar: true,
+                            type: "line",
+                            height: 75, width: 75,
+                            backgroundColor: 'transparent',
+                            margin: [0,0,0,0],
+                            spacing: [5,5,5,5]
+                        },
+                        pane: {
+                            size: "100%"
+                        },
+                        plotOptions: {
+                            line: {
+                                animation: false
+                            },
+                            series: {
+                                enableMouseTracking: false,
+                                lineWidth: 0.5,
+                                states: {
+                                    hover: {
+                                        enabled: false
+                                    }
+                                }
+                            }
+                        },
+                        exporting: {enabled: false},
+                        xAxis: {
+                            maxPadding: 0.01,
+                            categories: _.map(data[0].axes, function (obj) {
+                                return "";
+                            })
+                        }
+                    });
+
+                },
+                error: function () {
+                    console.log('No harmonogram data for target ' + acc);
+                }
+            });
+        }
     });
 
-    $("#target-table" ).on("click", ".radar-div", function() {
+    $("#target-table .radar-div" ).on("click", function() {
         var target = $(this ).attr("id" ).split("-")[1];
         var tdlLabel = $(this ).attr("tdlLabel" );
         var tdl = $(this ).attr("tdl" );
@@ -595,58 +632,58 @@ $(document).ready(function () {
             url: '@ix.idg.controllers.routes.HarmonogramApp.hgForTarget(null,null,null,"radar-attr_type")'+'&q='+target,
             dataType:"json",
             success:function(data) {
-                var chartConfig = getModalChartConfig('@ix.idg.controllers.routes.HarmonogramApp.dataSources(null,null)'+'?field=radar-attr_type');
                 $("#modal-radardiv" ).attr("target", target);
                 $("#modalLabelRadar" ).html('<h4><span class="label label-'+tdlLabel+'">&nbsp;'+tdl+'</span>'+tname+'</h4>');
                 $("#radardownloadlink" ).attr("href", "http://amp.pharm.mssm.edu/Harmonizome/api/1.0/download/associations?gene="+gene);
-                renderChart(data, chartConfig);
+                $(window).on("shown.bs.modal", function(e){
+                    var divid = $(e.target).attr("id");
+                    if (divid == "modal-radar")
+                        renderChart(data, "radar-attr_type", 'modal-radardiv');
+                });
+                $("#modal-radar" ).modal("show");
             }
         });
+    });
+    function _handleModalSelectEvents(aggTypeElem, overlayElem, target) {
+        var aggType = $(aggTypeElem).val();
+        var overlay = $(overlayElem).val();
+
+        var promises = [$.get('@ix.idg.controllers.routes.HarmonogramApp.hgForTarget(null,null,null,null)' + '?q=' + target + '&type=' + aggType)];
+        if (overlay == 'none') {
+            // promises.push($.Deferred().resolve().promise());
+        } else if (overlay.includes("dossier-")) {
+            var opt = $(overlayElem).find(":selected");
+            var tids = $(opt).attr("tids").split(",");
+            if (tids.length == 0) return;
+            _.each(tids, function (x) {
+                promises.push($.get('@ix.idg.controllers.routes.HarmonogramApp.hgForTarget(null, null, null, null)' + '?q=' + x + '&type=' + aggType));
+            });
+        } else
+            promises.push($.get('@ix.idg.controllers.routes.HarmonogramApp.hgForTarget(null,null,null,null)' + '?q=' + overlay + '&type=' + aggType));
+        $.when.apply($, promises).then(function () {
+            // first should be the target in question, the rest will be overlays
+            var chartData = _.map(arguments, function (arr) {
+                if (arr == "success") return (undefined);
+                if (_.isString(arr)) return (JSON.parse(arr)[0]);
+                else if (_.isArray(arr)) return (JSON.parse(arr[0])[0]);
+                else return (undefined);
+            });
+            chartData = _.filter(chartData, function (x) {
+                return (x != undefined);
+            });
+            renderChart(chartData, "radar-attr_type", 'modal-radardiv', {legend: {enabled: true}});
+            $("#modal-radar").modal("show");
+        });
+    }
+
+    $("#select-agg").on('change', function () {
+        _handleModalSelectEvents($(this), $("#select-overlay"), $("#modal-radardiv").attr("target"));
     });
 
-    $("#select-agg" ).on('change', function() {
-        var aggType = $(this ).val();
-        var target = $("#modal-radardiv" ).attr("target");
-        var overlay = $("#select-overlay" ).val();
-        var chartConfig = getModalChartConfig('@ix.idg.controllers.routes.HarmonogramApp.dataSources(null,null)' + '?field=' + aggType);
-        var ptd = $.get('@ix.idg.controllers.routes.HarmonogramApp.hgForTarget(null,null,null,null)'+'?q='+target+'&type='+aggType);
-        var pud;
-        if (overlay == 'none')
-            pud = $.Deferred().resolve().promise();
-        else
-            pud = $.get('@ix.idg.controllers.routes.HarmonogramApp.hgForTarget(null,null,null,null)'+'?q='+overlay+'&type='+aggType);
-        $.when(ptd, pud).then(function(atd, aud) {
-            var chartData = atd[0];
-            if (typeof chartData == 'string' || chartData instanceof String)
-                chartData = JSON.parse(chartData);
-            if (overlay != 'none') {
-                chartData.push(JSON.parse(aud[0])[0]);
-            }
-            $("#modalLabelRadar" ).text("Data type summary for "+target);
-            renderChart(chartData, chartConfig);
-        });
+    $("#select-overlay").on('change', function () {
+        _handleModalSelectEvents($("#select-agg"), $(this), $("#modal-radardiv").attr("target"));
     });
-    $("#select-overlay" ).on('change', function() {
-        var aggType = $("#select-agg"   ).val();
-        var target = $("#modal-radardiv" ).attr("target");
-        var chartConfig = getModalChartConfig('@ix.idg.controllers.routes.HarmonogramApp.dataSources(null,null)' + '?field=' + aggType);
-        var overlay = $(this).val();
-        var ptd = $.get('@ix.idg.controllers.routes.HarmonogramApp.hgForTarget(null,null,null,null)'+'?q='+target+'&type='+aggType);
-        var pud;
-        if (overlay == 'none')
-            pud = $.Deferred().resolve().promise();
-        else
-            pud = $.get('@ix.idg.controllers.routes.HarmonogramApp.hgForTarget(null,null,null,null)'+'?q='+overlay+'&type='+aggType);
-        $.when(ptd, pud).then(function(atd, aud) {
-            var chartData = atd[0];
-            if (typeof chartData == 'string' || chartData instanceof String)
-                chartData = JSON.parse(chartData);
-            if (overlay != 'none')
-                chartData.push(JSON.parse(aud[0])[0]);
-            $("#modalLabelRadar" ).text("Data type summary for "+target);
-            renderChart(chartData, chartConfig);
-        });
-    });
+
 
     $("#compare-selected" ).click(function(e) {
        var ents = _.map(selectEntities("#target-table  input:checked"),
