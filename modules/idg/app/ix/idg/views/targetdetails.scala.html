@@ -418,23 +418,30 @@
 
 @ligandcell(lig: Ligand) = {
    @defining(IDGApp.getStructure(lig)) { struc =>
-      @if(struc != null) {
        <div class="carousel-cell">
          <div class="thumbnail" style="border:0px; padding:0px;">
+         @if(struc != null) {
            <img class="carousel-image" alt="Structure of @IDGApp.getId(lig)"
-             src='@ix.ncats.controllers.routes.App.structure(struc.getId,"svg",150,null)'>
+		src='@ix.ncats.controllers.routes.App.structure(struc.getId,"svg",150,null)'>
+	 }
 	   <div class="caption" style="padding:0px;">
              <p class="text-center"><a class="loader" href='@ix.idg.controllers.routes.IDGApp.ligand(IDGApp.getId(lig))'>@lig.getName()</a>
              @defining(IDGApp.getActivity(target, lig)) { act =>
                @if(act != null) {
-                 <br>@{act.label} @{"%1$.2f".format(act.getValue())}
+	         @act.label match {
+	           case "IC50" | "EC50" | "Ki" | "Kd" => {
+                     <br>p@{act.label} @{"%1$.2f".format(act.getValue())}
+	           }
+	           case _ => {
+                     <br>@{act.label} @{"%1$.2f".format(act.getValue())}
+		     }
+		 }
                }
 	     }
 	     </p>
 	   </div>
          </div>
        </div>
-      }
    }
 }
 
@@ -542,147 +549,203 @@
 }
 
 @targetsummary(target: Target) = {
-        @defining(IDGApp.getProperties(target, "Count", 1)) { props =>
-            @if(!props.isEmpty()) {
-               <div class="panel panel-default" >
-                   <a name="properties" tocname="Properties"></a>
-                   <div class="panel-heading">
-                       <h3 class="panel-title">
-                           <span data-toggle="tooltip" title="Table summarizing target characteristics tallied by Pharos. Antibody counts from Antibodypedia, EBI Total Patent Count, Monoclonal Antibody count from Antibodypedia, NCBI Gene PubMed Count, Grant Count, R01 Count, Funding ($) from NIH, JensenLab PubMed Score and temporal graph">
-                               Property Summary</span></h3>
-                   </div>
-                 <div class="panel-body">
-                   <table class="table table-striped">
-                   @for(p <- props) {
-                        @p match {
-                          case iv: VInt => {
-			    @if(iv.intval != null) {
-			     <tr>
-                               <td>
-                             @iv.label match {
-                                case "Ab Count" => {
-                                  <span data-toggle="tooltip"
-                                     data-html="true"
-                                     title="<p align='left'>Antibody count from antibodypedia.com</p>"><a href="@IDGApp.getProperties(target, URL_ANTIBODYPEDIA).get(0) match { case s: Text => @s.getValue()}">Antibody</a></span>
-                                }
-                                case "MAb Count" => {
-                                  <span data-toggle="tooltip"
-                                     data-html="true"
-                                     title="<p align='left'>Monoclonal Antibody count from antibodypedia.com</p>"><a href="@IDGApp.getProperties(target, URL_ANTIBODYPEDIA).get(0) match { case s: Text => @s.getValue()}">Monoclonal Antibody</a></span>
-                                }
-                                case "PubMed Count" => {
-                                  <span data-toggle="tooltip"
-                                     data-html="true"
-                                     title="<p align='left'>Number of PubMed references for target and all its aliases</p>">PubMed</span>
-                                }
-                                case "TM Count" => {
-                                  <span data-toggle="tooltip"
-                                     data-html="true"
-                                     title="<p align='left'>Number of transmembrane helices according to Survey of the Human Transmembrane Proteome (https://modbase.compbio.ucsf.edu/projects/membrane/). At least 2 are required to be in their list.</p>">Transmembrane</span>
-                                }
-                                case _ => {
-                                  @iv.label
-                                }
-                             }
-                              </td>
-                              <td>@Util.format(iv.intval)</td>
-			     </tr>
-			    }
-                          }
-                          case _ => {
-                          }
-                        }
-                   }
-		   @if(target.grantCount != null) {
-                   <tr>
-                     <td>
-                        <span data-toggle="tooltip"
-                                 data-html="true"
-                                 title="<p align='left'>Number of NIH funded grant applications for 2010-2014 based on text mining of application titles and abstracts, due to nature of text mining results might be inaccurate</p>">Grant Count</span>
-                                         </td>
-                     <td>@Util.format(target.grantCount)</td>
-                   </tr>
-		   }
-		   @if(target.r01Count != null) {
-                   <tr>
-                     <td><span data-toggle="tooltip"
-                         data-html="true"
-                         title="<p align='left'>Number of NIH funded R01 grants for 2010-2014 based on text mining of application titles and abstracts, due to nature of text mining results might be inaccurate</p>">R01 Count</span></td>
-                     <td>@Util.format(target.r01Count)</td>
-                   </tr>
-		   }
-		   @if(target.grantTotalCost != null) {
-                   <tr>
-                     <td><span data-toggle="tooltip"
-                         data-html="true"
-                               title="<p align='left'>NIH funding (2010-2014) based on text mining of grant application titles and abstracts, due to nature of text mining results might be inaccurate</p>">Funding</span></td>
-                     @if(target.grantTotalCost != null) {
-                     <td>$@Util.format(target.grantTotalCost)</td>
-                     } else {
-                     <td></td>
+   @defining(IDGApp.getProperties(target, "Count", 1)) { props =>
+      @if(!props.isEmpty()) {
+<div class="panel panel-default" >
+  <a name="properties" tocname="Properties"></a>
+  <div class="panel-heading">
+    <h3 class="panel-title">
+      <span data-toggle="tooltip" title="Table summarizing target characteristics tallied by Pharos. Antibody counts from Antibodypedia, EBI Total Patent Count, Monoclonal Antibody count from Antibodypedia, NCBI Gene PubMed Count, Grant Count, R01 Count, Funding ($) from NIH, JensenLab PubMed Score and temporal graph">
+        Property Summary</span></h3>
+  </div>
+  <div class="panel-body">
+    <table class="table table-striped">
+      @for(p <- props) {
+        @p match {
+           case iv: VInt => {
+ 	     @if(iv.intval != null) {
+	<tr>
+          <td>
+	        @iv.label match {
+                   case "Ab Count" => {
+                <span data-toggle="tooltip"
+                      data-html="true"
+                      title="<p align='left'>Antibody count from antibodypedia.com</p>"><a href="@IDGApp.getProperties(target, URL_ANTIBODYPEDIA).get(0) match { case s: Text => @s.getValue()}">Antibody</a></span>
+                    }
+                    case "MAb Count" => {
+                <span data-toggle="tooltip"
+                      data-html="true"
+                      title="<p align='left'>Monoclonal Antibody count from antibodypedia.com</p>"><a href="@IDGApp.getProperties(target, URL_ANTIBODYPEDIA).get(0) match { case s: Text => @s.getValue()}">Monoclonal Antibody</a></span>
                      }
-                   </tr>
-		   }
-		   @if(target.jensenScore != null) {
-                   <tr>
-                     <td><a href="@ix.idg.controllers.routes.IDGApp.pmscore()">PubMed Score</a></td>
-                     <td>@{"%.2f".format(target.jensenScore)}
-                   </tr>
-		   <tr>
-		     <td colspan="2">
-			 <div id="pubmedscore-plot" style="height:100px;width:400px;"></div>
-		     </td>
-		   </tr>
-		   }
-		   @if(target.pubTatorScore != null) {
-                   <tr>
-                     <td><a href="https://www.ncbi.nlm.nih.gov/CBBresearch/Lu/Demo/PubTator/">PubTator Score</a></td>
-                     <td>@{"%.2f".format(Math.pow(10,target.pubTatorScore))}</td>
-                   </tr>
-		   <tr>
-		     <td colspan="2">
-			 <div id="pubtator-plot" style="height:100px;width:400px;"></div>
-		     </td>
-		   </tr>
-		   }
-                   </table>
-                 </div>
-               </div>
-            } else {
-	       <div class="panel panel-default">
-	          <div class="panel-body">
-		  </div>
-	       </div>
-	    }
-         }
+                     case "PubMed Count" => {
+                <span data-toggle="tooltip"
+                      data-html="true"
+                      title="<p align='left'>Number of PubMed references for target and all its aliases</p>">PubMed</span>
+                     }
+                     case "TM Count" => {
+                <span data-toggle="tooltip"
+                      data-html="true"
+                      title="<p align='left'>Number of transmembrane helices according to Survey of the Human Transmembrane Proteome (https://modbase.compbio.ucsf.edu/projects/membrane/). At least 2 are required to be in their list.</p>">Transmembrane</span>
+                      }
+                      case _ => {
+                          @iv.label
+                      }
+                }
+          </td>
+          <td>@Util.format(iv.intval)</td>
+	</tr>
+	     }
+           }
+           case _ => {
+           }
+        }
+     }
+     @if(target.grantCount != null) {
+        <tr>
+          <td>
+            <span data-toggle="tooltip"
+                  data-html="true"
+                  title="<p align='left'>Number of NIH funded grant applications for 2010-2014 based on text mining of application titles and abstracts, due to nature of text mining results might be inaccurate</p>">Grant Count</span>
+          </td>
+          <td>@Util.format(target.grantCount)</td>
+        </tr>
+      }
+      @if(target.r01Count != null) {
+        <tr>
+          <td><span data-toggle="tooltip"
+                    data-html="true"
+                    title="<p align='left'>Number of NIH funded R01 grants for 2010-2014 based on text mining of application titles and abstracts, due to nature of text mining results might be inaccurate</p>">R01 Count</span></td>
+          <td>@Util.format(target.r01Count)</td>
+        </tr>
+      }
+      @if(target.grantTotalCost != null) {
+        <tr>
+          <td><span data-toggle="tooltip"
+                    data-html="true"
+                    title="<p align='left'>NIH funding (2010-2014) based on text mining of grant application titles and abstracts, due to nature of text mining results might be inaccurate</p>">Funding</span></td>
+          @if(target.grantTotalCost != null) {
+          <td>$@Util.format(target.grantTotalCost)</td>
+          } else {
+          <td></td>
+          }
+        </tr>
+       }
+	@if(target.jensenScore != null) {
+        <tr>
+          <td><a href="@ix.idg.controllers.routes.IDGApp.pmscore()">PubMed Score</a></td>
+          <td>@{"%.2f".format(target.jensenScore)}
+        </tr>
+	<tr>
+	  <td colspan="2">
+	    <div id="pubmedscore-plot" style="height:100px;width:400px;"></div>
+	  </td>
+	</tr>
+	}
+	@if(target.pubTatorScore != null) {
+        <tr>
+          <td><a href="https://www.ncbi.nlm.nih.gov/CBBresearch/Lu/Demo/PubTator/">PubTator Score</a></td>
+          <td>@{"%.2f".format(Math.pow(10,target.pubTatorScore))}</td>
+        </tr>
+	<tr>
+	  <td colspan="2">
+	    <div id="pubtator-plot" style="height:100px;width:400px;"></div>
+	  </td>
+	</tr>
+	}
+    </table>
+  </div>
+</div>
+       } else {
+<div class="panel panel-default">
+  <div class="panel-body">
+  </div>
+</div>
+       }
+    }
 }
 
 @targetpatent(target: Target) = {
-        @if(target.patentCount != null && target.patentCount > 0) {
-          <div class="panel panel-default">
-            <div class="panel-heading">
-              <h3 class="panel-title">
-                  <span data-toggle="tooltip" title="Graph of timeline of patents based on EBI patent counts, with specific yearly values shown when hovering over year's dot.">
-                      Patent</span> (@Util.format(target.patentCount))</h3>
-            </div>
-            <div class="panel-body">
-                   <div id="patent-line-plot" style="height:200px;"></div>
-            </div>
-          </div>
-        } else {
-	  <div class="panel panel-default">
-	    <div class="panel-heading">
-	      <h3 class="panel-title">
-              <span data-toggle="tooltip" title="Graph of timeline of patents based on EBI patent counts, with specific yearly values shown when hovering over year's dot.">
-	                            Patent</span></h3>
-	    </div>
-	    <div class="panel-body">
-	       <h5><em>No data available</em></h5>
-	    </div>
-	  </div>
-	}
+  @if(target.patentCount != null && target.patentCount > 0) {
+<div class="panel panel-default">
+  <div class="panel-heading">
+    <h3 class="panel-title">
+      <span data-toggle="tooltip" title="Graph of timeline of patents based on EBI patent counts, with specific yearly values shown when hovering over year's dot.">
+        Patent</span> (@Util.format(target.patentCount))</h3>
+  </div>
+  <div class="panel-body">
+    <div id="patent-line-plot" style="height:200px;"></div>
+  </div>
+</div>
+} else {
+<div class="panel panel-default">
+  <div class="panel-heading">
+    <h3 class="panel-title">
+      <span data-toggle="tooltip" title="Graph of timeline of patents based on EBI patent counts, with specific yearly values shown when hovering over year's dot.">
+	Patent</span></h3>
+  </div>
+  <div class="panel-body">
+    <h5><em>No data available</em></h5>
+  </div>
+</div>
+  }
 }
 
+@targetheader(target: Target) = {
+<div class="page-header">
+  <h1>
+    <table style="width:100%;">
+      <tr>
+        <td style="width:10%;">
+          <span class="label label-@target.idgTDL.label"
+                data-toggle="tooltip" data-html="true" data-placement="right"
+                title="<p align='left'>@target.idgTDL.desc</p><p align='left' style='color:yellow;'>This target is classified as  @target.idgTDL because
+		       it @explainTdl(target)</p>">@target.idgTDL</span>
+        </td>
+        <td style="padding:5px;"></td>
+        <td><a href="#target-description"
+	       data-toggle="collapse">@target.name</a></td>
+        <td style="text-align:right;">
+	  <div role="group">
+            <div class="dropdown btn-group pull-right" role="group">
+              <button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown">
+                <i class="fa fa-list"></i>
+              </button>
+              <ul class="dropdown-menu pull-left" id="toc">
+		
+              </ul>
+            </div>
+            <div class="dropdown btn-group pull-right" role="group">
+              <button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown">
+                <i class="fa fa-shopping-cart"></i>&nbsp;<span id="sc-count"></span>
+              </button>
+              <ul class="dropdown-menu pull-left">
+                <li><a href="#" id="sc-add-selected">Add to cart</a></li>
+                <li><a href="@ix.idg.controllers.routes.DossierApp.view(null)" id="sc-view">View Collections</a></li>
+                <li><a href="#" id="sc-empty">Empty Collection</a></li>
+              </ul>
+            </div>
+	  </div>
+        </td>
+      </tr>
+    </table>
+  </h1>
+
+  <div class="panel panel-default collapse" id="target-description">
+    <div class="panel-body">
+	   @defining(IDGApp.getDescriptions(target)){ text =>
+	   @for(i <- 0 until text.length) {
+	         @if(i > 0) {
+		   <br><br>
+		 }
+		 @text(i)
+	      }
+	   }
+    </div>
+  </div>
+  <br><i class="fa fa-comments"></i>&nbsp;<a href="#disqus_thread">Comments</a>
+</div>
+}
+	  
 @ix.ncats.views.html.main(target.name){
 @targetmenu(null)
 }{
@@ -705,98 +768,42 @@ This is TCRD target <a href='@ix.core.controllers.v1.routes.RouteFactory.get("ta
 <div id="page-loader"></div>
 <div class="container-fluid">
   <div class="col-md-12">
-    <div class="page-header">
-      <h1>
-        <table style="width:100%;">
-        <tr>
-         <td style="width:10%;">
-           <span class="label label-@target.idgTDL.label"
-                 data-toggle="tooltip" data-html="true" data-placement="right"
-                 title="<p align='left'>@target.idgTDL.desc</p><p align='left' style='color:yellow;'>This target is classified as  @target.idgTDL because
-             it @explainTdl(target)</p>">@target.idgTDL</span>
-         </td>
-         <td style="padding:5px;"></td>
-         <td><a href="#target-description"
-	 	data-toggle="collapse">@target.name</a></td>
-            <td style="text-align:right;">
-	      <div role="group">
-                <div class="dropdown btn-group pull-right" role="group">
-                    <button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown">
-                        <i class="fa fa-list"></i>
-                    </button>
-                    <ul class="dropdown-menu pull-left" id="toc">
+    @targetheader(target)
 
-                    </ul>
-                </div>
-                <div class="dropdown btn-group pull-right" role="group">
-                    <button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown">
-                        <i class="fa fa-shopping-cart"></i>&nbsp;<span id="sc-count"></span>
-                    </button>
-                    <ul class="dropdown-menu pull-left">
-                        <li><a href="#" id="sc-add-selected">Add to cart</a></li>
-                        <li><a href="@ix.idg.controllers.routes.DossierApp.view(null)" id="sc-view">View Collections</a></li>
-                        <li><a href="#" id="sc-empty">Empty Collection</a></li>
-                    </ul>
-                </div>
-	      </div>
-            </td>
-        </tr>
-        </table>
-      </h1>
-
-      <div class="panel panel-default collapse" id="target-description">
-         <div class="panel-body">
-	   @defining(IDGApp.getDescriptions(target)){ text =>
-	      @for(i <- 0 until text.length) {
-	         @if(i > 0) {
-		   <br><br>
-		 }
-		 @text(i)
-	      }
-	   }
-	 </div>
-      </div>
-      
-    <br><i class="fa fa-comments"></i>&nbsp;<a href="#disqus_thread">Comments</a>
-    </div>
+    <!-- first row --!>
     <div class="row">
-      <!--
-        -- first row
-        -->
-
-<div class="row">
-    <div class="col-md-6">
-        @targetsummary(target)
-    </div>
-
-    <div class="col-md-6">
-        <div class="row">
+      <div class="col-md-6">
+	@targetsummary(target)
+      </div>
+      <div class="col-md-6">
+	<div class="row">
+	  <div class="col-md-12">
             <div class="panel panel-default">
-                <div class="panel-heading">
-                    <a name="datatypes" tocname="Data Types"></a>
-                    <h3 class="panel-title">
-                  <span data-toggle="tooltip"
-                        title="Radar plot depicting the variety of knowledge obtained by Pharos for a particular target. The more spikes in the plot, the more variety. The longer the length, the higher the quantity of that particular knowledge. Click expansion icon to explore the plot fuller by seeing plot with annotations of the different radii, allowing for aggregation of knowledge radii based on attribution type, group, or data type, as well as overlay plot with other information, and provide download file.">
-                            Knowledge Summary</span>
-                        <a href="#" id="modal-radar-btn" data-toggle="modal" data-target="#modal-radar">
-                            <span class="fa fa-external-link pull-right" aria-hidden="true"></span>
-                        </a>
-                    </h3>
-                </div>
-                <div class="panel-body">
-                    <div id="attr-type-radar" style="width: 100%;"></div>
-                </div>
+              <div class="panel-heading">
+		<a name="datatypes" tocname="Data Types"></a>
+		<h3 class="panel-title">
+		  <span data-toggle="tooltip"
+			title="Radar plot depicting the variety of knowledge obtained by Pharos for a particular target. The more spikes in the plot, the more variety. The longer the length, the higher the quantity of that particular knowledge. Click expansion icon to explore the plot fuller by seeing plot with annotations of the different radii, allowing for aggregation of knowledge radii based on attribution type, group, or data type, as well as overlay plot with other information, and provide download file.">Knowledge Summary</span>
+		  <a href="#" id="modal-radar-btn"
+		     data-toggle="modal" data-target="#modal-radar">
+                    <span class="fa fa-external-link pull-right" aria-hidden="true"></span>
+		  </a>
+		</h3>
+              </div>
+              <div class="panel-body">
+		<div id="attr-type-radar" style="width: 100%;"></div>
+              </div>
             </div>
-        </div>
-        <div class="row">
+	  </div>
+	</div>
+	<div class="row">
+	  <div class="col-md-12">
             @targetpatent(target)
-        </div>
-    </div>
-
-
-</div>
-
-
+	  </div>
+	</div>
+      </div> <!-- col --!>
+    </div> <!-- row --!>
+  
     <!--
       -- Disease Relevance (second row)
       -->
@@ -882,7 +889,7 @@ This is TCRD target <a href='@ix.core.controllers.v1.routes.RouteFactory.get("ta
                              <a id="exprtab-specificity" href="#specificity-tab" role="tab" aria-controls="specificity"
                                 data-toggle="tab">
                                 <span data-toggle="tooltip" data-html="true" title="<p align='left'>Target tissue specificity, ranges from 0 (non-specific) - 1 specific to one tissue, calculated according to Yanai et al, Bioinformatics 2005, 650-659</p>">
-                                    Tissue Specificity
+                                    Specificity
                                 </span>
                              </a>
                          </li>
@@ -890,7 +897,7 @@ This is TCRD target <a href='@ix.core.controllers.v1.routes.RouteFactory.get("ta
                              <a id="exprtab-diffexp" href="#diffexp-tab" role="tab" aria-controls="diffexp"
                                 data-toggle="tab">
                                 <span data-toggle="tooltip" data-html="true" title="Differential Expression">
-                                    Differential Expression
+                                    Differential
                                 </span>
                              </a>
                          </li>
@@ -900,7 +907,7 @@ This is TCRD target <a href='@ix.core.controllers.v1.routes.RouteFactory.get("ta
                          <div role="tabpanel" class="tab-pane active" id="specificity-tab">
                              <div class="panel panel-default">
                                  <div class="panel-body">
-                                     <div id="tissue-specificity-radar" style="margin: 0 auto; width: 100%;"></div>
+                                     <div id="tissue-specificity-radar" style="margin: 0 auto; width: 100%;max-height: 300px"></div>
                                  </div>
                              </div>
                          </div>
@@ -987,7 +994,7 @@ This is TCRD target <a href='@ix.core.controllers.v1.routes.RouteFactory.get("ta
                                IDG </span></a>
 
                        </li>
-
+@******
 		       <li role="presentation">
 		           <a id="exprtab-@UNIPROT_TISSUE"
 			      href="#uniprot-tab" aria-controls="uniprot"
@@ -1014,9 +1021,10 @@ This is TCRD target <a href='@ix.core.controllers.v1.routes.RouteFactory.get("ta
                            data-html="true"
                            title="<p align='left'>Text mined tissue expression data from the Jensen Lab</p>">
                                Jensen-TM
-                           </span></a></li>
+                       </span></a></li>
+******@		       
 			   <li class="pull-right">
-			      <a id="tissue-descriptor" class="loader" href="@ix.idg.controllers.routes.IDGApp.targetdescriptor(GTEx_TISSUE)"><i class="fa fa-bar-chart"></i></a></li>
+			     <a id="tissue-descriptor" class="loader" href="@ix.idg.controllers.routes.IDGApp.targetdescriptor(GTEx_TISSUE)"><i class="fa fa-bar-chart"></i></a></li>
                    </ul>
                    <div class="tab-content">
                        <div role="tabpanel" class="tab-pane active" id="gtex-tab">
