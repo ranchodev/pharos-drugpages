@@ -111,7 +111,10 @@
 </div>
 <head>
   <link type="text/css" rel="stylesheet" href='@routes.Assets.versioned("stylesheets/main.css")'/>
-  <script src='@routes.WebJarAssets.at(WebJarAssets.locate("highcharts.js"))' type='text/javascript'></script>
+  @*  <script src='@routes.WebJarAssets.at(WebJarAssets.locate("highcharts.js"))' type='text/javascript'></script>*@
+    <script src="https://code.highcharts.com/highcharts.js"></script>
+    <script src="https://code.highcharts.com/highcharts-more.js"></script>
+    <script src="https://code.highcharts.com/modules/exporting.js"></script>
    <script type="text/javascript" src='@routes.Assets.versioned("javascripts/d3.js")'></script>
 </head>
 }
@@ -128,7 +131,7 @@ function filter (term) {
 }
 
 $(document).ready(function () {
-    $('#term-count-profile').highcharts({
+    Highcharts.chart('term-count-profile',{
         chart: {
 	   type: 'column',
 	   zoomType: 'x'
@@ -162,7 +165,7 @@ $(document).ready(function () {
 	}]
     });
 
-    $('#term-profile').highcharts({
+    Highcharts.chart('term-profile',{
        @if(dvc.condition.equals(IDG_DEVELOPMENT)) {
        colors: [
     	'#f0ad4e', // Tbio

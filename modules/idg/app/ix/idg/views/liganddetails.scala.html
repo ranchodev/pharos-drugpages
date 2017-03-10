@@ -28,7 +28,13 @@
    @for(a <- act.activities) {
    <tr class="treegrid-@a.id treegrid-parent-@act.target.id">
      <td><a id="keyword" class="label label-primary loader" 
-            href='@{ix.idg.controllers.routes.IDGApp.ligands()+"?facet="+URLEncoder.encode(LIGAND_ACTIVITY,"utf8")+"/"}@URLEncoder.encode(a.label, "utf8")'>@a.label <span class="badge">@IDGApp.getTermCount(classOf[Ligand],LIGAND_ACTIVITY,a.label)</span></a></td>   
+            href='@{ix.idg.controllers.routes.IDGApp.ligands()+"?facet="+URLEncoder.encode(LIGAND_ACTIVITY,"utf8")+"/"}@URLEncoder.encode(a.label, "utf8")'>
+	 @a.label match {
+	    case "IC50" | "EC50" | "Kd" | "Ki" => {
+               p@a.label
+            }
+            case _ => { @a.label }
+	 }<span class="badge">@IDGApp.getTermCount(classOf[Ligand],LIGAND_ACTIVITY,a.label)</span></a></td>   
      <td>@a.numval @a.unit</td>
    </tr>
    }

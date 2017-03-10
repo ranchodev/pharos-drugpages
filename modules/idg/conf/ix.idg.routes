@@ -20,6 +20,7 @@ GET	/api/v1/targets/_dump		ix.idg.controllers.TargetVectorFactory.dumpDescriptor
 
 GET	/targets/similarity		ix.idg.controllers.IDGApp.targetSimilarityForm
 POST	/targets/similarity		ix.idg.controllers.IDGApp.targetSimilarity
+GET	/surprise			ix.idg.controllers.IDGApp.sampleTermValues(size: Int ?= 10)
 
 #
 # main app

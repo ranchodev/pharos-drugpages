@@ -84,6 +84,7 @@ import java.util.Set;
 import java.util.TreeMap;
 import java.util.TreeSet;
 import java.util.UUID;
+import java.util.Random;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ConcurrentHashMap;
@@ -96,6 +97,7 @@ import java.util.stream.Collectors;
 
 import static ix.core.search.TextIndexer.Facet;
 import static ix.core.search.TextIndexer.SearchResult;
+import static ix.core.search.TextIndexer.TermVectors;
 import static play.mvc.Http.MultipartFormData;
 
 public class IDGApp extends App implements Commons {
@@ -923,7 +925,7 @@ public class IDGApp extends App implements Commons {
             //Logger.debug("+++");
             for (FacetDecorator f : decors) {
                 if (!f.hidden) {
-                    TextIndexer.TermVectors tvs = SearchFactory.getTermVectors
+                    TermVectors tvs = SearchFactory.getTermVectors
                         (kind, f.facet.getName());
                     
                     if (Global.DEBUG(2))
@@ -1019,7 +1021,7 @@ public class IDGApp extends App implements Commons {
     @Cached(key="_impc", duration = Integer.MAX_VALUE)
     public static Result impc() throws IOException {
 
-        TextIndexer.TermVectors tvs = _textIndexer.getTermVectors(Target.class, IMPC_TERM);
+        TermVectors tvs = _textIndexer.getTermVectors(Target.class, IMPC_TERM);
         Map<String, Map> terms = tvs.getTerms();
         Map<Keyword,Integer> termCounts = new HashMap<>();
         for (Map.Entry<String, Map> term : terms.entrySet()) {
@@ -4237,7 +4239,7 @@ public class IDGApp extends App implements Commons {
     }
 
     public static Integer getTermCount (Class kind, String label, String term) {
-        TextIndexer.TermVectors tvs =
+        TermVectors tvs =
             SearchFactory.getTermVectors(kind, label);
         return tvs != null ? tvs.getTermCount(term) : null;
     }
@@ -4377,5 +4379,77 @@ public class IDGApp extends App implements Commons {
         catch (Exception ex) {
             return _internalServerError (ex);
         }
+    }
+
+    public static JsonNode getSampleTermValues (int size) {
+        ObjectMapper mapper = new ObjectMapper ();
+        ArrayNode json = mapper.createArrayNode();
+        Set<String> seen = new HashSet<>();
+        int iter = 0;
+        
+        Random rand = new Random ();
+        do {
+            int j = rand.nextInt(3);
+            TermVectors tvs = null;
+            String url = null;
+            switch (j) {
+            case 0:
+                {  String facet = ALL_TARGET_FACETS
+                        [rand.nextInt(ALL_TARGET_FACETS.length)];
+                    tvs = SearchFactory.getTermVectors(Target.class, facet);
+                    url = Global.getHost()+routes.IDGApp.targets(null,10,1);
+                }
+                break;
+                
+            case 1:
+                { String facet = LIGAND_FACETS
+                        [rand.nextInt(LIGAND_FACETS.length)];
+                    tvs = SearchFactory.getTermVectors(Ligand.class, facet);
+                    url = Global.getHost()+routes.IDGApp.ligands(null,16,1);
+                }
+                break;
+                
+            case 2:
+                { String facet = DISEASE_FACETS
+                        [rand.nextInt(DISEASE_FACETS.length)];
+                    tvs = SearchFactory.getTermVectors(Disease.class, facet);
+                    url = Global.getHost()+routes.IDGApp.diseases(null,10,1);
+                }
+            }
+
+            if (tvs != null) {
+                String[] terms = tvs.getTerms()
+                    .keySet().toArray(new String[0]);
+                if (terms.length > 0) {
+                    String term = terms[rand.nextInt(terms.length)];
+                    url += "?facet="+tvs.getField()+"/"+term;
+                    
+                    Integer cnt = tvs.getTermCount(term);
+                    if (cnt != null && cnt < 5000 && !seen.contains(url)) {
+                        double freq = cnt.doubleValue()
+                            / tvs.getNumDocsWithTerms();
+                        if (freq < .5) {
+                            ObjectNode n = mapper.createObjectNode();
+                            n.put("kind", tvs.getKind().getName());
+                            n.put("name", tvs.getKind().getSimpleName());
+                            n.put("field", tvs.getField());
+                            n.put("term", term);
+                            n.put("count", cnt);
+                            n.put("total", tvs.getNumDocsWithTerms());
+                            n.put("url", url);
+                            json.add(n);
+                            seen.add(url);
+                        }
+                    }
+                }
+            }
+        }
+        while (json.size() < size && ++iter < 1000);
+        
+        return json;
+    }
+
+    public static Result sampleTermValues (int size) {
+        return ok (getSampleTermValues (size));
     }
 }
