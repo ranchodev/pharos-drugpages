@@ -41,10 +41,13 @@ current, rows, total, pages, facets){ @ligandmenu() }{
       <li class="grid-sizer"></li><!-- for Masonry column width -->
       @for(lig <-ligands) {
          @defining(IDGApp.getStructure(lig)) { struc =>
-           @if(struc != null) {
 	   <li>
 	     <figure>
+               @if(struc != null) {
 	       <img src='@ix.idg.controllers.routes.IDGApp.structure(struc.getId,"svg",150,ctx)' alt="Structure for @lig.getName"/>
+               } else {
+	       <img src='@routes.Assets.versioned("images/npc_logo.png")' alt='No structure available'/>
+	       }
 	       <figcaption>
 		 <h4><a href='@ix.idg.controllers.routes.IDGApp.ligand(IDGApp.getId(lig))'>@lig.getName</a></h4>
 		 <p>
@@ -57,7 +60,6 @@ current, rows, total, pages, facets){ @ligandmenu() }{
 	       </figcaption>
 	     </figure>
 	   </li>
-	   }
 	 }
       }
     </ul>

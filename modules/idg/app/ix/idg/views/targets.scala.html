@@ -382,32 +382,36 @@ function download () {
    var delay = 0;
    var status;
    check = function () {
-      $.get(url, function(data) {
-         if (delay == 0) {
-	    window.clearInterval(timer);
-	    delay = 1000;
-	    timer = window.setInterval(check, delay);
-	 }
+      $.ajax({
+         url: url,
+         success: function(data) {
+           if (delay == 0) {
+	      window.clearInterval(timer);
+	      delay = 1000;
+	      timer = window.setInterval(check, delay);
+	   }
 
-	 status = data.status;
-	 console.log('download...'+data.count+'/'+data.total);
-	 //$('#download-console-body').html("downloading..."+data.count);
-         if (data.url && timer != null) {
-	    $('#download-iframe').attr('src', data.url);
-      	    window.clearInterval(timer);
-	    //$('#download-modal-header').html('Downloading...done!');
-	    $('#download-console-body').html("Download complete; please turn off popup blocking if you do not see the download!");
-     	    $('#download-modal-download-btn').removeAttr('disabled')
+	   status = data.status;
+	   console.log('download...'+data.count+'/'+data.total);
+	   //$('#download-console-body').html("downloading..."+data.count);
+           if (data.url && timer != null) {
+	      $('#download-iframe').attr('src', data.url);
+      	      window.clearInterval(timer);
+	      //$('#download-modal-header').html('Downloading...done!');
+	      $('#download-console-body').html("Download complete; please turn off popup blocking if you do not see the download!");
+     	      $('#download-modal-download-btn').removeAttr('disabled')
 		.html('Close');
-            // open the url in a separate window for the download to begin!
-            window.open(data.url, '_blank');
-            timer = null;
-	 }
-      }).error(function (){
+              // open the url in a separate window for the download to begin!
+              window.open(data.url, '_blank');
+              timer = null;
+	   }
+        },
+        error: function (){
       	  window.clearInterval(timer);
 	  $('#download-console-body').html('<code>'+status+'</done>');
      	  $('#download-modal-download-btn').removeAttr('disabled')
 		.html('Close');
+        }
       });
    };
 

@@ -69,6 +69,7 @@ import java.io.PipedOutputStream;
 import java.io.PrintStream;
 import java.io.Serializable;
 import java.net.URLEncoder;
+import java.util.Arrays;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -3838,6 +3839,12 @@ public class IDGApp extends App implements Commons {
                 try {
                     Timeline tl = (Timeline)ref.deRef();
                     if ("PubTator".equals(tl.name)) {
+                        // make sure the events are sorted
+                        Collections.sort(tl.events, new Comparator<Event> () {
+                                public int compare (Event e1, Event e2) {
+                                    return (int)(e1.start - e2.start);
+                                }
+                            });
                         for (Event e : tl.events) {
                             ObjectNode n = null;
                             for (Value val : e.properties) {

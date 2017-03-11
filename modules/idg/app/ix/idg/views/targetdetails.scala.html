@@ -423,13 +423,16 @@
          @if(struc != null) {
            <img class="carousel-image" alt="Structure of @IDGApp.getId(lig)"
 		src='@ix.ncats.controllers.routes.App.structure(struc.getId,"svg",150,null)'>
+	 } else {
+           <img alt="No structure for @IDGApp.getId(lig)"
+		src='@routes.Assets.versioned("images/npc_logo.png")'/>
 	 }
 	   <div class="caption" style="padding:0px;">
              <p class="text-center"><a class="loader" href='@ix.idg.controllers.routes.IDGApp.ligand(IDGApp.getId(lig))'>@lig.getName()</a>
              @defining(IDGApp.getActivity(target, lig)) { act =>
                @if(act != null) {
 	         @act.label match {
-	           case "IC50" | "EC50" | "Ki" | "Kd" => {
+	           case "AC50" | "XC50" | "IC50" | "EC50" | "Ki" | "Kd" => {
                      <br>p@{act.label} @{"%1$.2f".format(act.getValue())}
 	           }
 	           case _ => {
@@ -463,7 +466,7 @@
 			   }
 			   <div class="carousel-cell">
 			     <div style="position:absolute;top:70px;margin-left:30px;">
-			       <a class="loader" href='@{ix.idg.controllers.routes.IDGApp.ligands() + "?facet=" + IDG_TARGET+"/"+target.getSynonym(UNIPROT_GENE).term}'><i class="fa fa-plus fa-5x"></i><br> See all @ligands.size ligands...</a>
+			       <a class="loader" href='@{ix.idg.controllers.routes.IDGApp.ligands() + "?facet=" + IDG_TARGET+"/"+target.getSynonym(UNIPROT_GENE).term}'><i class="fa fa-ellipsis-h fa-5x"></i><br> See all @ligands.size ligands...</a>
 			     </div>
 			   </div>
 		       } else {
@@ -637,7 +640,7 @@
         </tr>
 	<tr>
 	  <td colspan="2">
-	    <div id="pubmedscore-plot" style="height:100px;width:400px;"></div>
+	    <div id="pubmedscore-plot" style="height:100px;"></div>
 	  </td>
 	</tr>
 	}
@@ -648,7 +651,7 @@
         </tr>
 	<tr>
 	  <td colspan="2">
-	    <div id="pubtator-plot" style="height:100px;width:400px;"></div>
+	    <div id="pubtator-plot" style="height:100px;"></div>
 	  </td>
 	</tr>
 	}
@@ -2060,32 +2063,113 @@ $('.tree').treegrid({
     plotAAProfile('aa-profile');
 
    @if(target.patentCount != null && target.patentCount > 0) {
-        new Morris.Line({
-        element: 'patent-line-plot',
-        data: @HtmlFormat.raw(IDGApp.getPatents(target).toString),
-        xkey: 'year',
-        ykeys: ['count'],
-        labels: ['Count']
+      var data = @HtmlFormat.raw(IDGApp.getPatents(target).toString);
+      Highcharts.chart('patent-line-plot', {
+          chart: {
+            type: 'line'
+          },
+          credits: {
+            enabled: false
+          },
+          title: {
+             text: null
+          },
+          legend: {
+             enabled: false
+          },
+          xAxis: {
+             categories: _.map(data, function (d) { return d.year; })
+          },
+          yAxis: {
+             title: {
+                text: 'Count'
+             }
+          },
+          tooltip: {
+             shared: true,
+             crosshairs: true
+          },
+          series: [{
+             name: 'Count',
+             marker: {
+               radius: 3
+             },
+             data: _.map(data, function(d) { return parseInt(d.count,10); })
+          }]
       });
    }
 
    @if(target.pubTatorScore != null) {
-     new Morris.Line({
-        element: 'pubtator-plot',
-        data: @HtmlFormat.raw(IDGApp.getPubTator(target).toString),
-        xkey: 'year',
-        ykeys: ['score'],
-        labels: ['Score']
+      var data = @HtmlFormat.raw(IDGApp.getPubTator(target).toString);
+      Highcharts.chart('pubtator-plot', {
+          chart: {
+            type: 'line'
+          },
+          credits: {
+            enabled: false
+          },
+          title: {
+             text: null
+          },
+          legend: {
+             enabled: false
+          },
+          xAxis: {
+             categories: _.map(data, function (d) { return d.year; })
+          },
+          yAxis: {
+             title: {
+                text: 'Score'
+             }
+          },
+          tooltip: {
+             shared: true,
+             crosshairs: true
+          },
+          series: [{
+             name: 'PubTator Score',
+             marker: {
+               radius: 3
+             },
+             data: _.map(data, function(d) { return d.score; })
+          }]
       });
    }
 
    @if(target.jensenScore != null) {
-     new Morris.Line({
-        element: 'pubmedscore-plot',
-        data: @HtmlFormat.raw(IDGApp.getPubMedScore(target).toString),
-        xkey: 'year',
-        ykeys: ['score'],
-        labels: ['Score']
+      var data = @HtmlFormat.raw(IDGApp.getPubMedScore(target).toString);
+      Highcharts.chart('pubmedscore-plot', {
+          chart: {
+            type: 'line'
+          },
+          credits: {
+            enabled: false
+          },
+          title: {
+             text: null
+          },
+          legend: {
+             enabled: false
+          },
+          xAxis: {
+             categories: _.map(data, function (d) { return d.year; })
+          },
+          yAxis: {
+             title: {
+                text: 'Score'
+             }
+          },
+          tooltip: {
+             shared: true,
+             crosshairs: true
+          },
+          series: [{
+             name: 'PubMed Score',
+             marker: {
+               radius: 3
+             },
+             data: _.map(data, function(d) { return d.score; })
+          }]
       });
    }
 

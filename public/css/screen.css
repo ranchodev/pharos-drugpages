@@ -433,28 +433,28 @@ body {
   }
 }
 .box .content-accent {
-  font-size: 5.6rem;
+  font-size: 4.5rem;
   font-weight: 100;
   text-align: left;
 }
 @media all and (max-width: 610px) {
   .box .content-accent {
-    font-size: 5rem;
+    font-size: 4rem;
   }
 }
 @media all and (max-width: 480px) {
   .box .content-accent {
-    font-size: 4rem;
+    font-size: 3rem;
   }
 }
 @media all and (max-width: 450px) {
   .box .content-accent {
-    font-size: 3.5rem;
+    font-size: 3rem;
   }
 }
 @media all and (max-width: 420px) {
   .box .content-accent {
-    font-size: 3.3rem;
+    font-size: 2.5rem;
   }
 }
 .box .content-accent-helper {
@@ -464,7 +464,7 @@ body {
   margin-right: 10px;
 }
 .box .content-suffix {
-  font-size: 3.8rem;
+  font-size: 3.5rem;
   font-weight: 100;
   text-align: left;
   text-transform: initial;
