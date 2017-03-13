@@ -1944,15 +1944,13 @@ $('.tree').treegrid({
         }
     });
 
-
-
-    $(window).on("shown.bs.modal", function(e){
-        $.ajax({
-              url: '@ix.idg.controllers.routes.HarmonogramApp.hgForTarget(null,null,null,"radar-attr_type")&q=@IDGApp.getId(target)',
-              dataType:"json",
-              success:function(data) {
-                  $('#modal-radardiv').html('');
-                  var chart = Highcharts.chart("modal-radardiv", {
+    $.ajax({
+        url: '@ix.idg.controllers.routes.HarmonogramApp.hgForTarget(null,null,null,"radar-attr_type")&q=@IDGApp.getId(target)',
+        dataType:"json",
+        success:function(data) {
+	    console.log('rendering radar in modal...'+JSON.stringify(data));
+            $('#modal-radardiv').html('');
+            var chart = Highcharts.chart("modal-radardiv", {
                       chart: {
                           polar: true,
                           type: "line"
@@ -2003,11 +2001,10 @@ $('.tree').treegrid({
                           })
                       }]
                   });
-                  $("#modalLabelRadar" ).html
+            $("#modalLabelRadar" ).html
                      ('<h4><span class="label label-@target.idgTDL.label">@target.idgTDL</span> @target.getName</h4>');
-              }
-           });
-    });
+          }
+     });
 
     function _renderChart(chartData, aggType) {
         $("#modal-radardiv" ).empty();
