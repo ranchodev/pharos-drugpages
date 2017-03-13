@@ -282,17 +282,23 @@ function reload () {
      $.get('@ix.idg.controllers.routes.IDGApp.sampleTermValues(8)', function(d) {
          for (var i = 1; i <= 8; ++i) {
 	    var j = i-1;
-	    $('#box-'+i+'-name').html('<a style="color:white" href="'+d[j].url+'">'+d[j].name+'</a>');
+	    $('#box-'+i+'-name').html('<a style="color:white;font-weight:bold;" href="'+d[j].url+'">'+d[j].name+'</a>');
 	    $('#box-'+i+'-count').html(d[j].count+'<span class="content-accent-helper"></span>');
 	    $('#box-'+i+'-total').html(d[j].total);
-	    $('#box-'+i+'-term').html(d[j].field+':<br>'+d[j].term);
+            if (d[j].term.length > 20) {
+	       $('#box-'+i+'-term').html(d[j].field+':<br><span data-toggle="tooltip" data-trigger="hover" data-title="'+d[j].term+'">'+d[j].term.substring(0,20)+'...</span>');
+            } else {
+	       $('#box-'+i+'-term').html(d[j].field+':<br>'+d[j].term);
+            }
 	 }
+         $('[data-toggle="tooltip"]').tooltip();
      });
 }
 
 
 $(document).ready(function () {
   $('[data-toggle="popover"]').popover();
+  $('[data-toggle="tooltip"]').tooltip();
 
   if (!loaded) {
      loaded = true;

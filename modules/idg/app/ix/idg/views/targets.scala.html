@@ -637,12 +637,14 @@ $(document).ready(function () {
             dataType:"json",
             success:function(data) {
                 $("#modal-radardiv" ).attr("target", target);
-                $("#modalLabelRadar" ).html('<h4><span class="label label-'+tdlLabel+'">&nbsp;'+tdl+'</span>'+tname+'</h4>');
+                $("#modalLabelRadar" ).html('<h4><span class="label label-'+tdlLabel+'">&nbsp;'+tdl+'</span>&nbsp;'+tname+'</h4>');
                 $("#radardownloadlink" ).attr("href", "http://amp.pharm.mssm.edu/Harmonizome/api/1.0/download/associations?gene="+gene);
-                $(window).on("shown.bs.modal", function(e){
+                $(window).on("show.bs.modal", function(e){
                     var divid = $(e.target).attr("id");
-                    if (divid == "modal-radar")
-                        renderChart(data, "radar-attr_type", 'modal-radardiv');
+                    if (divid == "modal-radar") {
+		       //console.log("rendering radar..."+JSON.stringify(data));
+                       renderChart(data, "radar-attr_type", 'modal-radardiv');
+                    }
                 });
                 $("#modal-radar" ).modal("show");
             }
