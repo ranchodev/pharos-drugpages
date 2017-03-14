@@ -1160,6 +1160,8 @@ This is TCRD target <a href='@ix.core.controllers.v1.routes.RouteFactory.get("ta
                   </div>
               }
           }
+        @techdev(target)
+        @property(COLLECTION)
       </div>
       <div class="col-md-4">
         <a name="goterms" tocname="GO Terms"></a>
@@ -1218,9 +1220,10 @@ This is TCRD target <a href='@ix.core.controllers.v1.routes.RouteFactory.get("ta
 	}
       </div>
       <div class="col-md-4">
-        @property(COLLECTION)
-        @techdev(target)
         @property(IMPC_TERM)
+        @property(OMIM_TERM)
+        @property(MGI_TERM)
+        @property(GWAS_TRAIT)
         @property("Pathway", null, 1, "Biological pathways associated with target based on KEGG PATHWAY database, with links back to KEGG.")
         @property(UNIPROT_KEYWORD, null, 0, "Occurance of target in the 10 categories of UniProt keywords.")
 
@@ -1920,7 +1923,7 @@ $('.tree').treegrid({
                             },
                             series: {
                                 enableMouseTracking: false,
-                                lineWidth: 1,
+                                lineWidth: 2,
                                 states: {
                                     hover: {
                                         enabled: false
@@ -1934,7 +1937,7 @@ $('.tree').treegrid({
                                 return "";
                             }),
                             maxPadding: 0.05,
-                            lineWidth: 1
+                            lineWidth: 0
                         }
                     });
         },
@@ -1948,7 +1951,7 @@ $('.tree').treegrid({
         url: '@ix.idg.controllers.routes.HarmonogramApp.hgForTarget(null,null,null,"radar-attr_type")&q=@IDGApp.getId(target)',
         dataType:"json",
         success:function(data) {
-	    console.log('rendering radar in modal...'+JSON.stringify(data));
+	    //console.log('rendering radar in modal...'+JSON.stringify(data));
             $('#modal-radardiv').html('');
             var chart = Highcharts.chart("modal-radardiv", {
                       chart: {
@@ -1999,9 +2002,18 @@ $('.tree').treegrid({
                           data: _.map(data[0].axes, function (obj) {
                               return (obj.value);
                           })
-                      }]
-                  });
-            $("#modalLabelRadar" ).html
+                    }]
+              });
+
+	      $('#modal-radar').on('show.bs.modal', function() {
+	          $('#modal-radardiv').css('visibility', 'hidden');
+	      });
+	      $('#modal-radar').on('shown.bs.modal', function() {
+	          $('#modal-radardiv').css('visibility', 'initial');
+	          chart.reflow();
+	      });
+
+              $("#modalLabelRadar" ).html
                      ('<h4><span class="label label-@target.idgTDL.label">@target.idgTDL</span> @target.getName</h4>');
           }
      });
