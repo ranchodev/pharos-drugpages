@@ -152,4 +152,12 @@ public class BuildInfo {
       unmanagedSourceDirectories in Compile += baseDirectory.value / "src"
       //javaOptions in Runtime += "-Dconfig.resource=pharos.conf"
   ).dependsOn(ncats).aggregate(ncats)
+
+  val drug = Project("drug", file("modules/drug"))
+    .enablePlugins(PlayJava).settings(commonSettings:_*).settings(
+      libraryDependencies ++= commonDependencies,
+      javacOptions in (doc) ++= javaDocOptions,
+      javacOptions in (compile) ++= javaBuildOptions,
+      unmanagedSourceDirectories in Compile += baseDirectory.value / "src"
+  ).dependsOn(ncats).aggregate(ncats)
 }

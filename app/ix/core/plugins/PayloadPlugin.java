@@ -2,10 +2,9 @@ package ix.core.plugins;
 
 import java.io.*;
 import java.util.List;
+import java.util.zip.GZIPInputStream;
 import java.security.MessageDigest;
 import java.security.DigestInputStream;
-    
-
 
 import play.Logger;
 import play.Plugin;
@@ -45,12 +44,27 @@ public class PayloadPlugin extends Plugin {
         MessageDigest md = MessageDigest.getInstance("SHA1");
         File tmp = File.createTempFile("___", ".tmp", ctx.payload);
         FileOutputStream fos = new FileOutputStream (tmp);
-        DigestInputStream dis = new DigestInputStream (is, md);
+
+        BufferedInputStream bis = new BufferedInputStream (is, 1024);
+        bis.mark(1024);
+
+        byte[] buf = new byte[1024];    
+        int nb = bis.read(buf, 0, 2);
+        if (nb == -1) {
+            throw new IllegalArgumentException
+                ("Invalid input stream; premature EOF encountered!");
+        }
+        bis.reset();
         
-        byte[] buf = new byte[2048];
+        int magic = ((buf[1] & 0xff) << 8) | (buf[0] & 0xff);
+        // right now we only recognize this magic
+        is = magic == GZIPInputStream.GZIP_MAGIC
+            ? new GZIPInputStream (bis) : bis;
+        
+        DigestInputStream dis = new DigestInputStream (is, md);
         Payload payload = new Payload ();            
         payload.size = 0l;
-        for (int nb; (nb = dis.read(buf, 0, buf.length)) > 0; ) {
+        while ((nb = dis.read(buf, 0, buf.length)) != -1) {
             fos.write(buf, 0, nb);
             payload.size += nb;
         }

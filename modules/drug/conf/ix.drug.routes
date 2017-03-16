@@ -1,0 +1,6 @@
+
+GET	/register	ix.drug.controllers.DrugApp.registerForm
+POST	/register	ix.drug.controllers.DrugApp.register
+
+->	/	ix.ncats.Routes
+->	/	ix.core.test.Routes

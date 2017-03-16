@@ -1023,7 +1023,7 @@ public class App extends Authentication {
                         WSResponse res = ws.get().get(5000);
                         byte[] data = res.asByteArray();
                         if (data.length > 0) {
-                            return ok (data);
+                            return ok(data).as("image/svg+xml");
                         }
                         return null;
                     }
@@ -1036,7 +1036,7 @@ public class App extends Authentication {
             ex.printStackTrace();
             Logger.trace("Can't render "+value, ex);
         }
-        response().setContentType("image/svg+xml");
+        
         return result;
     }
 
@@ -1044,7 +1044,6 @@ public class App extends Authentication {
         String key = App.class.getName()+"/render/"
             +Util.sha1(value)+"/"+size;
         try {
-            response().setContentType("image/svg+xml");
             return getOrElse (0l, key, new Callable<Result>() {
                     public Result call () throws Exception {
                         MolHandler mh = new MolHandler (value);
@@ -1053,7 +1052,8 @@ public class App extends Authentication {
                             mol.clean(2, null);
                         }
                         Logger.info("ok");
-                        return ok (render (mol, "svg", size, null));
+                        return ok (render (mol, "svg", size, null))
+                            .as("image/svg+xml");
                     }
                 });
         }
@@ -1084,9 +1084,8 @@ public class App extends Authentication {
             svg.endExport();
             svg.dispose();
             
-            response().setContentType("image/svg+xml");
             //response().setContentType("image/png");
-            return ok(bos.toByteArray());
+            return ok(bos.toByteArray()).as("image/svg+xml");
         }
         catch (Exception ex) {
             ex.printStackTrace();
@@ -1248,19 +1247,20 @@ public class App extends Authentication {
                 App.class.getName()+"/"+Structure.class.getName()+"/"
                 +id+"/"+size+"/"+id+"."+format
                 +(atomMap != null ? ":" + atomMap:"");
-            String mime = format.equals("svg") ? "image/svg+xml" : "image/png";
+            final String mime =
+                format.equals("svg") ? "image/svg+xml" : "image/png";
             try {
                 Result result = getOrElse_ (key, new Callable<Result> () {
                         public Result call () throws Exception {
                             Structure struc = StructureFactory.getStructure(id);
                             if (struc != null) {
-                                return ok (render (struc, format, size, amap));
+                                return ok (render (struc, format,
+                                                   size, amap)).as(mime);
                             }
                             return null;
                         }
                     });
                 if (result != null) {
-                    response().setContentType(mime);
                     return result;
                 }
             }

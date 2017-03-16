@@ -29,16 +29,16 @@ public class ProcessingJobFactory extends EntityFactory {
     public static List<ProcessingRecord> getJobRecords (Long id) {      
         return recordFinder.where().eq("job.id", id).findList();
     }
-    
 
     public static List<ProcessingJob> getJobsByPayload (String uuid) {
         return finder.setDistinct(false)
-            .where().eq("payload.id", uuid).findList();
+            .where().eq("payload.id", uuid)
+            .orderBy("job_start desc").findList();
     }
     public static List<ProcessingJob> getProcessingJobs
-    (int top, int skip, String filter) {
-            return filter (new FetchOptions (top, skip, filter), finder);
-        }
+        (int top, int skip, String filter) {
+        return filter (new FetchOptions (top, skip, filter), finder);
+    }
 
     public static ProcessingJob getJob (String key) {
         //finder.setDistinct(false).where().eq("keys.term", key).findUnique();
@@ -46,16 +46,16 @@ public class ProcessingJobFactory extends EntityFactory {
         // This is because the built SQL for oracle includes a "DISTINCT"
         // statement, which doesn't appear to be extractable.
         List<ProcessingJob> gotJobsv= finder.findList();
-        for(ProcessingJob pj : gotJobsv){
-                if(pj.hasKey(key))return pj;
+        for (ProcessingJob pj : gotJobsv) {
+            if(pj.hasKey(key)) return pj;
         }
         return null;
     }
     
     public static Integer getCount () 
-            throws InterruptedException, ExecutionException {
-            return ProcessingJobFactory.getCount(finder);
-        }
+        throws InterruptedException, ExecutionException {
+        return ProcessingJobFactory.getCount(finder);
+    }
     
     public static Result count () { return count (finder); }
     
@@ -74,8 +74,6 @@ public class ProcessingJobFactory extends EntityFactory {
         }
         return field (id, path, finder);
     }
-    
-    
 
     public static Result create () {
         throw new UnsupportedOperationException
