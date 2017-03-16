@@ -22,6 +22,7 @@ import play.mvc.Result;
 import play.mvc.Results;
 import play.mvc.Call;
 import play.mvc.BodyParser;
+import play.db.ebean.Model;
 import play.libs.ws.*;
 import play.libs.F;
 import play.libs.Akka;
@@ -56,8 +57,10 @@ import ix.core.plugins.PersistenceQueue;
 import ix.core.plugins.PayloadPlugin;
 import ix.core.controllers.search.SearchFactory;
 import ix.core.chem.StructureProcessor;
+import ix.core.models.EntityModel;
 import ix.core.models.Structure;
 import ix.core.models.VInt;
+import ix.core.models.Keyword;
 import ix.core.search.SearchOptions;
 import ix.core.controllers.StructureFactory;
 import ix.core.controllers.EntityFactory;
@@ -167,6 +170,159 @@ public class App extends Authentication {
             String[] tokens = input.split(pattern);
             return Collections.enumeration(Arrays.asList(tokens));
         }
+    }
+
+    static abstract class GetResult<T extends EntityModel> {
+        final Model.Finder<Long, T> finder;
+        final Class<T> cls;
+        GetResult (Class<T> cls, Model.Finder<Long, T> finder) {
+            this.cls = cls;
+            this.finder = finder;
+        }
+
+        public List<T> find (final String name) throws Exception {
+            long start = System.currentTimeMillis();
+            final String key = cls.getName()+"/"+name;
+            List<T> e = getOrElse
+                (key, new Callable<List<T>> () {
+                        public List<T> call () throws Exception {
+                            return _find (key, name);
+                        }
+                    });
+            double elapsed = (System.currentTimeMillis()-start)*1e-3;
+            Logger.debug("Elapsed time "+String.format("%1$.3fs", elapsed)
+                         +" to retrieve "+(e!=null?e.size():-1)
+                         +" matches for "+name);
+            return e;
+        }
+
+        /*
+         * perform basic validation; subclass should override to provide
+         * more control.
+         */
+        protected boolean validation (String name) {
+            int len = name.length();
+            if (name == null || len == 0 || len > 128)
+                return false;
+
+            for (int i = 0; i < len; ++i) {
+                char ch = name.charAt(i);
+                if (Character.isLetterOrDigit(ch) 
+                    || Character.isWhitespace(ch)
+                    || ch == '-' || ch == '+' || ch == ':'
+                    || ch == ',' || ch == '.')
+                    ;
+                else
+                    return false;
+            }
+
+            return true;
+        }
+
+        protected void cacheAlias (Keyword kw, String name, String key) {
+            Set<String> aliases = new HashSet<String>();
+            if (!kw.term.equals(name))
+                aliases.add(cls.getName()+"/"+kw.term);
+            if (!kw.term.toUpperCase().equals(name))
+                aliases.add(cls.getName()+"/"+kw.term.toUpperCase());
+            if (!kw.term.toLowerCase().equals(name))
+                aliases.add(cls.getName()+"/"+kw.term.toLowerCase());
+            for (String a : aliases)
+                IxCache.alias(a, key);
+        }
+
+        protected List<T> _find (String key, String name) throws Exception {
+            List<T> values = finder.where()
+                .eq("synonyms.term", name).findList();
+            if (values.isEmpty()) {
+                // let try name directly
+                values = finder.where()
+                    .eq("name", name).findList();
+            }
+                                                        
+            // also cache all the synonyms
+            T best = null;
+            int rank = 0;
+            for (T v : values) {
+                Set<String> labels = new HashSet<String>();
+                for (Keyword kw : v.getSynonyms()) {
+                    if (kw.term == null) {
+                        Logger.warn("NULL term for synonym"
+                                    +" keyword label: "
+                                    +kw.label);
+                    }
+                    else if (kw.term.equalsIgnoreCase(name)) {
+                        labels.add(kw.label);
+                    }
+                }
+
+                int r = 0;
+                for (String l : labels)
+                    r += getLabelRank (l);
+
+                if (best == null || r > rank) {
+                    rank = r;
+                    best = v;
+                }
+            }
+
+            List<T> matches = new ArrayList<T>();
+            if (best != null) {
+                for (Keyword kw : best.getSynonyms()) {
+                    if (kw.term != null && getLabelRank (kw.label) > 0)
+                        cacheAlias (kw, name, key);
+                }
+                matches.add(best);
+            }
+                            
+            return matches;
+        }
+
+        // override by subclass
+        protected int getLabelRank (String label) {
+            return 1;
+        }
+
+        public Result get (final String name) {
+            if (!validation (name)) {
+                return notFound ("Not a valid name: '"+name+"'");
+            }
+
+            try {
+                String view = request().getQueryString("view");
+                final String key = getClass().getName()
+                    +"/"+cls.getName()+"/"+name+"/result/"
+                    +(view != null?view:"");
+                
+                CachableContent content =
+                    getOrElse_ (key, new Callable<CachableContent> () {
+                        public CachableContent call () throws Exception {
+                            List<T> e = find (name);
+                            if (!e.isEmpty()) {
+                                return CachableContent.wrap(getContent (e));
+                            }
+                            return null;
+                        }
+                    });
+
+                return content != null ? content.ok()
+                    :  notFound ("Unknown name: "+name);
+            }
+            catch (Exception ex) {
+                Logger.error("Unable to generate Result for \""+name+"\"", ex);
+                return error (ex);
+            }
+        }
+
+        Result notFound (String mesg) {
+            return notFound (mesg);
+        }
+        
+        Result error (Exception ex) {
+            return internalServerError (ex.getMessage());
+        }
+        
+        abstract Content getContent (List<T> e) throws Exception;
     }
     
     public static class FacetDecorator {

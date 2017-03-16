@@ -19,6 +19,14 @@ public class EntityFactory extends ix.core.controllers.EntityFactory {
     public static final Model.Finder<Long, Entity> finder =
         new Model.Finder(Long.class, Entity.class);
 
+    public static Entity getEntity (Long id) {
+        return getEntity (id, finder);
+    }
+    
+    public static List<Entity> getEntities (int top, int skip, String filter) {
+        return filter (new FetchOptions (top, skip, filter), finder);
+    }
+    
     public static Result count () { return count (finder); }
     public static Result page (int top, int skip, String filter) {
         return page (top, skip, filter, finder);

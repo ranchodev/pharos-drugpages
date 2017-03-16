@@ -1,0 +1,43 @@
+@ix.ncats.views.html.header{
+<a class="navbar-brand" href="@ix.drug.controllers.routes.DrugApp.index"
+   style="padding: 0px 5px; margin-left: 0px;">
+  <img height="50" alt="NPC Logo"
+       src='@routes.Assets.versioned("images/npc_logo.png")'/>
+</a>
+}{
+<ul class="nav navbar-nav navbar-left">
+  <li role="presentation"><a href="@ix.drug.controllers.routes.DrugApp.register">Register</a></li>
+  @**
+  <li role="presentation"><a href='@ix.drug.controllers.routes.DrugApp.entities("facet=Entity Type/Compound", 15, 1)'>Compounds</a></li>
+  **@
+</ul>
+
+<form class="nav navbar-form navbar-right" role="search" method="GET"
+        action="@ix.drug.controllers.routes.DrugApp.entities(null,10,1)">
+  <div class="form-group">      
+    <input type="text" id="search-header-field" name="q"
+	   style="width:200px;"
+	   class="typeahead form-control" placeholder="Search..."/>
+
+    <div class="dropdown pull-right">
+        <button type="submit" class="btn btn-default" style="margin-left: 2px"
+        data-toggle="tooltip" data-placement="bottom" title="Search entities">
+         <span class="fa fa-search fa-fw" aria-hidden="true"></span>
+        </button>
+@**
+        <a class="btn btn-default" href="@ix.drug.controllers.routes.DrugApp.sketcher(null)"
+            role="button" style="margin-right : 1px"
+            data-toggle="tooltip" data-placement="bottom" title="Structure search"
+        ><i class="fa fa-flask"></i></a>
+**@
+    </div>
+  </div>
+</form>
+}
+
+@**
+** Specify all fields that you want to support autocomplete;
+** Look at /api/v1/suggest/@fields
+** for a list of fields that can be specified!
+**@
+@ix.ncats.views.html.typeahead(Array("Target","Disease","Ligand","Gene","MeSH"))

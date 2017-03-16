@@ -7,6 +7,7 @@ import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import ix.core.models.DynamicFacet;
 import ix.core.models.Indexable;
+import ix.core.models.XRef;
 import ix.core.plugins.IxCache;
 import ix.utils.Global;
 import ix.utils.Util;
@@ -1612,7 +1613,7 @@ public class TextIndexer {
         fields.add(new StringField
                    (FIELD_KIND, entity.getClass().getName(), YES));
 
-        instrument (new LinkedList<String>(), entity, fields);
+        instrument (new LinkedList<String>(), new HashSet (), entity, fields);
 
         Document doc = new Document ();
         for (IndexableField f : fields) {
@@ -1724,8 +1725,12 @@ public class TextIndexer {
     }
 
     protected void instrument (LinkedList<String> path,
-                               Object entity, 
+                               Set indexed, Object entity, 
                                List<IndexableField> ixFields) {
+        if (indexed.contains(entity))
+            return;
+
+        indexed.add(entity);
         try {
             Class cls = entity.getClass();
             ixFields.add(new FacetField (DIM_CLASS, cls.getName()));
@@ -1808,7 +1813,8 @@ public class TextIndexer {
                         // recursively evaluate each element in the array
                         for (int i = 0; i < len; ++i) {
                             path.push(String.valueOf(i));
-                            instrument (path, Array.get(value, i), ixFields); 
+                            instrument (path, indexed,
+                                        Array.get(value, i), ixFields); 
                             path.pop();
                         }
                     }
@@ -1816,7 +1822,7 @@ public class TextIndexer {
                         Iterator it = ((Collection)value).iterator();
                         for (int i = 0; it.hasNext(); ++i) {
                             path.push(String.valueOf(i));
-                            instrument (path, it.next(), ixFields);
+                            instrument (path, indexed, it.next(), ixFields);
                             path.pop();
                         }
                     }
@@ -1824,7 +1830,7 @@ public class TextIndexer {
                     else if (value.getClass()
                              .isAnnotationPresent(Entity.class)) {
                         // composite type; recurse
-                        instrument (path, value, ixFields);
+                        instrument (path, indexed, value, ixFields);
                     }
                     else { // treat as string
                         indexField (ixFields, indexable, path, value);
@@ -1874,6 +1880,12 @@ public class TextIndexer {
                                     +"arguments method \""+m.getName()+"\""); 
                     }
                 }
+            }
+
+            if (cls.isAssignableFrom(XRef.class)) {
+                // traverse the link.. can be dangerous!
+                XRef xref = (XRef)entity;
+                instrument (path, indexed, xref.deRef(), ixFields);
             }
         }
         catch (Exception ex) {

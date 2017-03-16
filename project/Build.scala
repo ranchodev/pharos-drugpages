@@ -66,8 +66,8 @@ object ApplicationBuild extends Build {
       ,"org.freehep" % "freehep-graphicsio-svg" % "2.4"
       ,"org.freehep" % "freehep-graphics2d" % "2.4"
       //,"ws.securesocial" %% "securesocial" % "master-SNAPSHOT"
-      ,"org.webjars.bower" % "spin.js" % "2.0.2"
       ,"com.sleepycat" % "je" % "5.0.73"
+      ,"org.webjars" % "store.js" % "1.3.17-1"
   )
 
   val scalaBuildOptions = Seq(
@@ -145,7 +145,6 @@ public class BuildInfo {
       libraryDependencies += "org.webjars" % "datatables" % "1.10.12",
       libraryDependencies += "org.webjars" % "datatables-plugins" % "1.10.12",
       libraryDependencies += "org.webjars" % "highcharts" % "5.0.7",
-      libraryDependencies += "org.webjars" % "store.js" % "1.3.17-1",
 
       javacOptions in (doc) ++= javaDocOptions,
       javacOptions in (compile) ++= javaBuildOptions,

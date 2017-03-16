@@ -1,0 +1,52 @@
+
+@import ix.drug.controllers.EntityFactory
+@import ix.drug.controllers.DrugApp
+@import ix.ncats.controllers.App.FacetDecorator
+@import ix.ncats.controllers.App
+@import ix.drug.models.Entity
+@import ix.core.models.Structure
+@import ix.core.models.Keyword
+@import ix.drug.models.Properties
+
+@(current: Int, rows: Int, total: Int, pages: Array[Int],
+facets: Array[FacetDecorator], entities: List[Entity])
+
+@cell(e: Entity) = {
+ <div class="col-sm-6 col-md-4">
+   <div class="thumbnail">
+     @defining(e.getLinkedObject(classOf[Structure], new Keyword (Properties.STRUCTURE_TYPE, Properties.STRUCTURE_ORIGINAL))) { struc =>
+        <img src='@ix.ncats.controllers.routes.App.structure(struc.getId, "svg", 400,null)' alt="Structure for entity @e.getName"> 
+     }
+
+     <div class="caption">@e.getName</div>
+   </div>
+ </div>
+}
+
+@ix.ncats.views.html.content("Entities", "ix.drug.models.Entity",
+ix.drug.controllers.routes.DrugApp.entities().url,
+current, rows, total, pages, facets){ @entitiesmenu() }{
+<ol class="breadcrumb" style="margin-top:60px;">
+  <li><a href="@ix.drug.controllers.routes.DrugApp.index"><span class="fa fa-home"></span> Home</a></li>
+</ol>
+}{
+  @defining(DrugApp.toMatrix(3, entities)) { emat =>
+     @for(i <- 0 until emat.length) {
+	  <div class="row">
+	    @for(e <- emat(i)) {
+	       @if(e != null) {
+	           @cell(e)
+	       }
+	    }
+	  </div>
+     }
+  }
+}{
+}
+
+<script>
+$(function () {
+  $('[data-toggle="popover"]').popover();
+  $('[data-toggle="tooltip"]').tooltip();
+});
+</script>

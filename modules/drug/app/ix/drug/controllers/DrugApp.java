@@ -62,6 +62,16 @@ public class DrugApp extends App implements ix.drug.models.Properties {
     static final StructureIndexer MOLIDX = Play.application()
         .plugin(StructureIndexerPlugin.class).getIndexer();
 
+    static final String[] ENTITY_FACETS = {
+        "Dataset",
+        "Entity Type",
+        "StereoChemistry",
+        "Stereocenters",
+        "Defined Stereocenters",
+        "LyChI_L4",
+        "LyChI_L3"
+    };
+    
     static class MolJobPersistence
         extends PersistenceQueue.AbstractPersistenceContext {
 
@@ -71,26 +81,27 @@ public class DrugApp extends App implements ix.drug.models.Properties {
         }
 
         public void persists () throws Exception {
+            int count = 0;          
             try {
                 job.start = System.currentTimeMillis();
                 job.status = ProcessingJob.Status.RUNNING;
+
+                Keyword ds = KeywordFactory.registerIfAbsent
+                    (DATASET, job.payload.name, null);
                 
                 MolImporter mi = new MolImporter
                     (PayloadFactory.getStream(job.payload));
                 mi.setGrabbingEnabled(true);
-                int count = 0;
                 for (Molecule mol = new Molecule (); mi.read(mol); ) {
-                    Entity ent = new Entity
-                        (Entity.Type.Compound, mol.getName());
+                    Entity ent = instrument (mol);
                     ent.properties.add
-                        (new Text (MolInput, mi.getGrabbedMoleculeString()));
+                        (new Text (ORIGINAL_INPUT,
+                                   mi.getGrabbedMoleculeString()));
                     
-                    Structure struc = StructureProcessor.instrument(mol);
-                    struc.save();
-                    MOLIDX.add(null, struc.id.toString(), struc.molfile);
-                    
-                    XRef xref = new XRef (struc);
+                    XRef xref = new XRef (job.payload);
+                    xref.properties.add(ds);
                     ent.links.add(xref);
+                    
                     ent.save();
                     
                     if (count++ % 100 == 0) {
@@ -106,11 +117,76 @@ public class DrugApp extends App implements ix.drug.models.Properties {
             catch (Exception ex) {
                 job.message = ex.getMessage();
                 job.status = ProcessingJob.Status.FAILED;
+                Logger.error("Job "+job.id+" for payload "+job.payload.name
+                             +" failed!", ex);
             }
             job.stop = System.currentTimeMillis();
             job.update();
-            Logger.debug("Job "+job.id+"/"+job.payload.name+" finished!");
+            Logger.debug("Job "+job.id+"/"+job.payload.name
+                         +" finished processing "+count+" entities!");
         }
+    }
+
+    static Entity instrument (Molecule mol) throws Exception {
+        Entity ent = new Entity (Entity.Type.Compound, mol.getName());
+        
+        List<Structure> moieties = new ArrayList<>();
+        Structure struc = StructureProcessor.instrument(mol, moieties, false);
+        struc.save();
+        MOLIDX.add(null, struc.id.toString(), struc.molfile);
+        
+        XRef xref = new XRef (struc);
+        xref.properties.addAll(struc.properties);
+        xref.properties.add
+            (KeywordFactory.registerIfAbsent
+             (STRUCTURE_TYPE, STRUCTURE_ORIGINAL, null));
+        xref.properties.add
+            (new VInt (MOIETY_COUNT,
+                       (long)(moieties.isEmpty()
+                              ? 1 : moieties.size())));
+        xref.save();
+        ent.links.add(xref);
+
+        struc = StructureProcessor.instrument(mol); // standardized
+        struc.save();
+        
+        xref = new XRef (struc);
+        xref.properties.addAll(struc.properties);
+        xref.properties.add
+            (KeywordFactory.registerIfAbsent
+             (STRUCTURE_TYPE, STRUCTURE_STANDARDIZED, null));
+        xref.save();
+        ent.links.add(xref);
+
+        /*
+         * TODO: we need to take a configuration and specify the
+         * property type and whether a property should be indexed or not
+         */  
+        for (int i = 0; i < mol.getPropertyCount(); ++i) {
+            String prop = mol.getPropertyKey(i);
+            String value = mol.getProperty(prop);
+            if (value.length() < 255)
+                ent.properties.add
+                    (KeywordFactory.registerIfAbsent(prop, value, null));
+            else
+                ent.properties.add(new Text (prop, value));
+        }
+
+        return ent;
+    }
+
+    static public FacetDecorator[] decorate (Facet... facets) {
+        List<FacetDecorator> decors = new ArrayList<FacetDecorator>();
+        // override decorator as needed here
+        for (int i = 0; i < facets.length; ++i) {
+            decors.add(new FacetDecorator (facets[i], false, 100));
+        }
+        
+        return decors.toArray(new FacetDecorator[0]);
+    }
+
+    public static Result index () {
+        return redirect (routes.DrugApp.entities(null, 15, 1));
     }
     
     public static Result registerForm () {
@@ -175,4 +251,112 @@ public class DrugApp extends App implements ix.drug.models.Properties {
             ("Unable to create payload from multipart request!");
     }
 
+    static Result _entities (final String q, final int rows, final int page)
+        throws Exception {
+        final String key = "entities/"+Util.sha1(request ());
+        Logger.debug("entities: q="+q+" rows="+rows+" page="+page+" key="+key);
+        
+        final int total = EntityFactory.finder.findRowCount();
+        if (request().queryString().containsKey("facet") || q != null) {
+            final SearchResult result =
+                getSearchResult (Entity.class, q, total, getRequestQuery ());
+            
+
+            return createEntityResult (result, rows, page);
+        }
+        else {
+            return getOrElse (key, new Callable<Result> () {
+                    public Result call () throws Exception {
+                        Facet[] facets =
+                            filter (getFacets (Entity.class, FACET_DIM),
+                                    ENTITY_FACETS);
+            
+                        int _rows = Math.max(1, Math.min(total, rows));
+                        int[] pages = paging (_rows, page, total);
+            
+                        List<Entity> entities = EntityFactory.getEntities
+                            (_rows, (page-1)*_rows, null);
+            
+                        return ok (ix.drug.views.html.entities.render
+                                   (page, _rows, total, pages,
+                                    decorate (facets), entities));
+                    }
+                });
+        }
+    }
+
+    static Result createEntityResult
+        (final SearchResult result, final int rows, final int page) {
+        try {
+            if (result.finished()) {
+                final String key = "createEntityResult/"+Util.sha1(request());
+                return ok (getOrElse (key, new Callable<Content>() {
+                        public Content call () throws Exception {
+                            return CachableContent.wrap
+                                (createEntityContent (result, rows, page));
+                        }
+                    }));
+            }
+            return ok (createEntityContent (result, rows, page));
+        }
+        catch (Exception ex) {
+            return internalServerError (ex.getMessage());
+        }
+    }
+
+    static Content createEntityContent
+        (SearchResult result, int rows, int page) {
+        Facet[] facets = filter (result.getFacets(), ENTITY_FACETS);
+
+        List<Entity> entities = new ArrayList<Entity>();
+        int[] pages = new int[0];
+        if (result.count() > 0) {
+            rows = Math.min(result.count(), Math.max(1, rows));
+            pages = paging (rows, page, result.count());
+            result.copyTo(entities, (page-1)*rows, rows);
+        }
+
+        return ix.drug.views.html.entities.render
+            (page, rows, result.count(),
+             pages, decorate (facets), entities);
+    }
+
+    /*
+    static final GetResult<Entity> EntityResult =
+        new GetResult<Entity>(Entity.class, EntityFactory.finder) {
+            public Content getContent (List<Entity> entities) throws Exception {
+                return getEntityContent (entities);
+            }
+        };
+
+    static Content getEntityContent (List<Entity> entities) throws Exception {
+        Entity e = entities.get(0);
+        return ix.drug.views.html.entitydetails.render(e);
+    }
+    */
+    
+    public static Result entities (String q, final int rows, final int page) {
+        String type = request().getQueryString("type");
+        if (q != null && q.trim().length() == 0)
+            q = null;
+        
+        long start = System.currentTimeMillis();
+        try {
+            if (type != null) {
+            }
+
+            return _entities (q, rows, page);
+        }
+        catch (Exception ex) {
+            return internalServerError (ex.getMessage());
+        }
+    }
+
+    public static Entity[][] toMatrix (int column, List<Entity> entities) {
+        int nr = (entities.size()+column-1)/column;
+        Entity[][] m = new Entity[nr][column];
+        for (int i = 0; i < entities.size(); ++i)
+            m[i/column][i%column] = entities.get(i);
+        return m;
+    }
 }

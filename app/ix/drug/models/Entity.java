@@ -22,6 +22,8 @@ import ix.core.models.EntityModel;
 import com.fasterxml.jackson.annotation.JsonView;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
+import play.Logger;
+
 @javax.persistence.Entity
 @Table(name="ix_drug_entity")
 public class Entity extends EntityModel {
@@ -93,4 +95,33 @@ public class Entity extends EntityModel {
     public List<Value> getProperties () { return properties; }
     public List<XRef> getLinks () { return links; }
     public List<Publication> getPublications () { return publications; }
+
+    public <T> T getLinkedObject (Class<T> cls) {
+        return getLinkedObject (cls, null);
+    }
+    
+    public <T> T getLinkedObject (Class<T> cls, Keyword key) {
+        for (XRef xref : getLinks ()) {
+            try {
+                if (cls.isAssignableFrom(Class.forName(xref.kind))) {
+                    if (key != null) {
+                        for (Value v : xref.properties) {
+                            if (v instanceof Keyword) {
+                                Keyword kw = (Keyword)v;
+                                if (kw.label.equals(key.label)
+                                    && kw.term.equals(key.term))
+                                    return (T) xref.deRef();
+                            }
+                        }
+                    }
+                    else 
+                        return (T)xref.deRef();
+                }
+            }
+            catch (Exception ex) {
+                Logger.error("Can't resolve xref type: "+xref.kind, ex);
+            }
+        }
+        return null;
+    }
 }
