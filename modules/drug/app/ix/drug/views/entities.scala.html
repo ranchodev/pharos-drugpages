@@ -14,8 +14,8 @@ facets: Array[FacetDecorator], entities: List[Entity])
 @cell(e: Entity) = {
  <div class="col-sm-6 col-md-4">
    <div class="thumbnail">
-     @defining(e.getLinkedObject(classOf[Structure], new Keyword (Properties.STRUCTURE_TYPE, Properties.STRUCTURE_ORIGINAL))) { struc =>
-        <img src='@ix.ncats.controllers.routes.App.structure(struc.getId, "svg", 400,null)' alt="Structure for entity @e.getName"> 
+     @defining(DrugApp.getStructure(e)) { struc =>
+        <a href='@ix.drug.controllers.routes.DrugApp.entity(e.getId.toString)'><img src='@ix.ncats.controllers.routes.App.structure(struc.getId, "svg", 200)' alt="Structure for entity @e.getName"> </a>
      }
 
      <div class="caption">@e.getName</div>

@@ -1,0 +1,101 @@
+
+@import ix.drug.models.Entity
+@import ix.core.models.Payload
+@import ix.core.models.Keyword
+@import ix.drug.controllers.DrugApp
+@import ix.ncats.controllers.App
+@import ix.drug.models.Properties
+@import java.net.URLEncoder
+
+@(entity: Entity)
+
+@ix.ncats.views.html.main(entity.getName){ @entitiesmenu() }{
+<ol class="breadcrumb" style="margin-top:60px;">
+  <li><a href="@ix.drug.controllers.routes.DrugApp.entities(null,15,1)"><span class="fa fa-home"></span> Entities</a></li>
+  <li class="active">@entity.getName</li>
+</ol>
+}{
+<div class="container-fluid">
+  <div class="col-md-12">
+    <div class="page-header">
+      <h1>@entity.getName</h1>
+    </div>
+    <div class="row">
+      <div class="col-md-4">
+	<div class="panel panel-default">
+	  <div class="panel-body">
+	    @defining(DrugApp.getStructure(entity)) { struc =>
+	    @if(struc != null) {
+	    <center>
+	      <img alt="Structure of @entity.getName"
+		   src='@ix.ncats.controllers.routes.App.structure(struc.getId,"svg",300)'>
+	    </center>
+	    @**
+	    <a href='@ix.idg.controllers.routes.IDGApp.sketcher(IDGApp.getStructure(ligand).getId)' class="btn btn-default" style="float:right;" role="button">
+	        <span class="fa fa-search" aria-hidden="true"></span>
+	    </a>
+	    **@
+	       }
+	    }
+	  </div>
+	</div>
+      </div>
+      <div class="col-md-8" style="max-height:600px;overflow-y:auto;">
+        <div>
+	   <ul class="nav nav-tabs" role="tablist">
+	      <li role="presentation" class="active"><a href="#properties"
+	      	  aria-controls="properties" role="tab"
+		  data-toggle="tab">Properties</a></li>
+	      <li role="presentation"><a href="#original"
+	      	  aria-controls="profile" role="tab"
+		  data-toggle="tab">Original</a></li>
+           </ul>
+	   <div class="tab-content">
+	      <div role="tabpanel" class="tab-pane active" id="properties">
+  	      	 <table class="table table-striped">
+		   <tr>
+		     <th>Property</th>
+		     <th>Value</th>
+	           </tr>
+		   @defining(entity.getLinkedObject(classOf[Payload])) { py =>
+		      @if(py != null) {
+		        <tr>
+			  <td>Dataset</td>
+			  <td><a href='@{ix.drug.controllers.routes.DrugApp.entities(null,15,1)+"?facet=Dataset/"+URLEncoder.encode(py.name,"utf8")}'>@py.name</a></td>
+  	      		</tr>
+                      }
+                   }
+	           @for((k,v) <- entity.groupProperties()) {
+		      <tr>
+		        <td>@k</td>
+			<td>
+		        @for(p <- v) {
+		           @p match {
+			     case kw: Keyword => {
+			       <a href='@{ix.drug.controllers.routes.DrugApp.entities(null,15,1)+"?facet="+kw.label+"/"+URLEncoder.encode(kw.term,"utf8")}'>@kw.term</a>                     }
+		             case _ => {
+			       @if(!k.equals(Properties.ORIGINAL_INPUT)) {
+		                  @p.getValue
+			       }
+			     }
+			   }
+			}
+			</td>
+		      </tr>
+	           }
+		 </table>
+	      </div>
+	      <div role="tabpanel" class="tab-pane" id="original">
+	         @defining(entity.getProperty(Properties.ORIGINAL_INPUT)) { p =>
+		    @if(p != null) {
+	              <pre class="pre-scrollable">@p.getValue</pre>
+		    }
+		 }
+	      </div>
+	   </div>
+         </div>
+      </div>
+    </div>
+  </div>
+</div>
+}

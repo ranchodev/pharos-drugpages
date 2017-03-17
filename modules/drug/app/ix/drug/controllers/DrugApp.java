@@ -164,12 +164,14 @@ public class DrugApp extends App implements ix.drug.models.Properties {
          */  
         for (int i = 0; i < mol.getPropertyCount(); ++i) {
             String prop = mol.getPropertyKey(i);
-            String value = mol.getProperty(prop);
-            if (value.length() < 255)
-                ent.properties.add
-                    (KeywordFactory.registerIfAbsent(prop, value, null));
-            else
-                ent.properties.add(new Text (prop, value));
+            String[] values = mol.getProperty(prop).split("\n");
+            for (String v : values) {
+                if (v.length() < 255)
+                    ent.addIfAbsent
+                        ((Value)KeywordFactory.registerIfAbsent(prop, v, null));
+                else
+                    ent.properties.add(new Text (prop, v));
+            }
         }
 
         return ent;
@@ -242,9 +244,8 @@ public class DrugApp extends App implements ix.drug.models.Properties {
             else {
                 job = jobs.iterator().next();
             }
-            
-            ObjectMapper mapper = new ObjectMapper ();
-            return ok ((JsonNode)mapper.valueToTree(job));
+
+            return redirect (routes.DrugApp.index());
         }
         
         return internalServerError
@@ -321,9 +322,9 @@ public class DrugApp extends App implements ix.drug.models.Properties {
              pages, decorate (facets), entities);
     }
 
-    /*
     static final GetResult<Entity> EntityResult =
         new GetResult<Entity>(Entity.class, EntityFactory.finder) {
+            @Override
             public Content getContent (List<Entity> entities) throws Exception {
                 return getEntityContent (entities);
             }
@@ -333,7 +334,6 @@ public class DrugApp extends App implements ix.drug.models.Properties {
         Entity e = entities.get(0);
         return ix.drug.views.html.entitydetails.render(e);
     }
-    */
     
     public static Result entities (String q, final int rows, final int page) {
         String type = request().getQueryString("type");
@@ -352,11 +352,21 @@ public class DrugApp extends App implements ix.drug.models.Properties {
         }
     }
 
+    public static Result entity (String name) {
+        return EntityResult.get(name);
+    }
+
     public static Entity[][] toMatrix (int column, List<Entity> entities) {
         int nr = (entities.size()+column-1)/column;
         Entity[][] m = new Entity[nr][column];
         for (int i = 0; i < entities.size(); ++i)
             m[i/column][i%column] = entities.get(i);
         return m;
+    }
+
+    static final Keyword STRUCTURE_KW =
+        new Keyword (STRUCTURE_TYPE, STRUCTURE_ORIGINAL);
+    public static Structure getStructure (Entity e) {
+        return e.getLinkedObject(Structure.class, STRUCTURE_KW);
     }
 }

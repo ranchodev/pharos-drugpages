@@ -8,6 +8,9 @@ import java.util.List;
 import java.util.ArrayList;
 import java.util.Set;
 import java.util.HashSet;
+import java.util.Map;
+import java.util.TreeMap;
+import java.util.HashMap;
 
 import com.fasterxml.jackson.annotation.JsonView;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -193,6 +196,21 @@ public abstract class EntityModel extends IxModel {
             if (label.equals(v.label))
                 props.add(v);
         return props;
+    }
+
+    public Map<String, Value[]> groupProperties () {
+        Map<String, List<Value>> groups = new HashMap<>();
+        for (Value v : getProperties ()) {
+            List<Value> vals = groups.get(v.label);
+            if (vals == null)
+                groups.put(v.label, vals = new ArrayList<>());
+            vals.add(v);
+        }
+        
+        Map<String, Value[]> vg = new TreeMap<>();
+        for (Map.Entry<String, List<Value>> me : groups.entrySet())
+            vg.put(me.getKey(), me.getValue().toArray(new Value[0]));
+        return vg;
     }
     
     public boolean hasProperty (String label) {

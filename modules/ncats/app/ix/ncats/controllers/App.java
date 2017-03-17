@@ -172,10 +172,10 @@ public class App extends Authentication {
         }
     }
 
-    static abstract class GetResult<T extends EntityModel> {
+    static protected abstract class GetResult<T extends EntityModel> {
         final Model.Finder<Long, T> finder;
         final Class<T> cls;
-        GetResult (Class<T> cls, Model.Finder<Long, T> finder) {
+        public GetResult (Class<T> cls, Model.Finder<Long, T> finder) {
             this.cls = cls;
             this.finder = finder;
         }
@@ -238,6 +238,16 @@ public class App extends Authentication {
                 // let try name directly
                 values = finder.where()
                     .eq("name", name).findList();
+            }
+
+            if (values.isEmpty()) {
+                try {
+                    long id = Long.parseLong(name);
+                    values = new ArrayList<>();
+                    values.add(finder.byId(id));
+                }
+                catch (NumberFormatException ex) {
+                }
             }
                                                         
             // also cache all the synonyms
@@ -314,15 +324,15 @@ public class App extends Authentication {
             }
         }
 
-        Result notFound (String mesg) {
+        protected Result notFound (String mesg) {
             return notFound (mesg);
         }
         
-        Result error (Exception ex) {
+        protected Result error (Exception ex) {
             return internalServerError (ex.getMessage());
         }
         
-        abstract Content getContent (List<T> e) throws Exception;
+        abstract public Content getContent (List<T> e) throws Exception;
     }
     
     public static class FacetDecorator {
