@@ -4123,12 +4123,6 @@ public class IDGApp extends App implements Commons {
         return ok (ix.idg.views.html.targetcompare2.render(targets));
     }
 
-    public static Integer getTermCount (Class kind, String label, String term) {
-        TermVectors tvs =
-            SearchFactory.getTermVectors(kind, label);
-        return tvs != null ? tvs.getTermCount(term) : null;
-    }
-
     public static Result targetdescriptor (final String name) {
         try {
             final String key = "targets/descriptor/"+name;

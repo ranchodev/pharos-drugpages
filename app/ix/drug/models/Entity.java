@@ -96,6 +96,7 @@ public class Entity extends EntityModel {
     public List<XRef> getLinks () { return links; }
     public List<Publication> getPublications () { return publications; }
 
+    public Type getType () { return type; }
     public <T> T getLinkedObject (Class<T> cls) {
         return getLinkedObject (cls, null);
     }

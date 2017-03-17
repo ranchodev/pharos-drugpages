@@ -95,6 +95,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import net.sf.ehcache.Element;
 import ix.ncats.controllers.auth.*;
 
+import static ix.core.search.TextIndexer.TermVectors;
+
 /**
  * Basic plumbing for an App
  */
@@ -2289,5 +2291,11 @@ public class App extends Authentication {
         */
         
         return nodes;
+    }
+    
+    public static Integer getTermCount (Class kind, String label, String term) {
+        TermVectors tvs =
+            SearchFactory.getTermVectors(kind, label);
+        return tvs != null ? tvs.getTermCount(term) : null;
     }
 }

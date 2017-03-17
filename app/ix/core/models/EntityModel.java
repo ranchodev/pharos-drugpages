@@ -10,6 +10,7 @@ import java.util.Set;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.TreeMap;
+import java.util.TreeSet;
 import java.util.HashMap;
 
 import com.fasterxml.jackson.annotation.JsonView;
@@ -20,6 +21,7 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 
 import ix.utils.Global;
+import ix.utils.Util;
 
 @MappedSuperclass
 public abstract class EntityModel extends IxModel {
@@ -163,6 +165,19 @@ public abstract class EntityModel extends IxModel {
         }
         return null;
     }
+
+    public XRef getLink (String label, String term) {
+        for (XRef xref : getLinks ()) {
+            for (Value v : xref.properties) {
+                if (v instanceof Keyword) {
+                    Keyword kw = (Keyword)v;
+                    if (label.equals(kw.label) && term.equals(kw.term))
+                        return xref;
+                }
+            }
+        }
+        return null;
+    }
     
     /**
      * return the first synonym that matches the given label
@@ -199,18 +214,11 @@ public abstract class EntityModel extends IxModel {
     }
 
     public Map<String, Value[]> groupProperties () {
-        Map<String, List<Value>> groups = new HashMap<>();
-        for (Value v : getProperties ()) {
-            List<Value> vals = groups.get(v.label);
-            if (vals == null)
-                groups.put(v.label, vals = new ArrayList<>());
-            vals.add(v);
-        }
-        
-        Map<String, Value[]> vg = new TreeMap<>();
-        for (Map.Entry<String, List<Value>> me : groups.entrySet())
-            vg.put(me.getKey(), me.getValue().toArray(new Value[0]));
-        return vg;
+        return Util.groups(getProperties ());
+    }
+
+    public Map<String, String[]> groupKeywordProperties () {
+        return Util.groupKeywords(getProperties ());
     }
     
     public boolean hasProperty (String label) {

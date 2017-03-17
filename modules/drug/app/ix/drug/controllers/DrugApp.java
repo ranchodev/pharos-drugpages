@@ -183,6 +183,23 @@ public class DrugApp extends App implements ix.drug.models.Properties {
         for (int i = 0; i < facets.length; ++i) {
             decors.add(new FacetDecorator (facets[i], false, 100));
         }
+
+        for (FacetDecorator f : decors) {
+            if (!f.hidden) {
+                TermVectors tvs = SearchFactory.getTermVectors
+                    (Entity.class, f.facet.getName());
+                
+                if (Global.DEBUG(2))
+                    Logger.debug("Facet "+f.facet.getName());
+                for (int i = 0; i < f.facet.size(); ++i) {
+                    TextIndexer.FV fv = f.facet.getValue(i);
+                    f.total[i] = tvs.getTermCount(fv.getLabel());
+                    if (Global.DEBUG(2))
+                        Logger.debug("  + "+fv.getLabel()+" "
+                                     +fv.getCount()+"/"+f.total[i]);
+                }
+            }
+        }
         
         return decors.toArray(new FacetDecorator[0]);
     }

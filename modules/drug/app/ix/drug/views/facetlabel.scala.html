@@ -1,0 +1,35 @@
+
+@import ix.utils.Util
+@import java.net.URLEncoder
+@import ix.drug.controllers.DrugApp
+@import ix.ncats.controllers.App
+@import ix.drug.models.Entity
+@import ix.core.models.Keyword
+
+@(label: String, value: String, href: String = null, max: Int = 40)
+
+@defining(App.getTermCount(classOf[Entity], label, value)) { count =>
+    <div>@if(max > 0 && value.length > max) {
+       <a id="keyword" class="label label-primary loader"
+          data-toggle="tooltip"
+       	  data-html="true"
+       	  data-trigger="hover"
+       	  data-placement="top"
+       	  title="@value"
+       	  data-content="<p align='left'>@value</p>"
+       	  href='@{ix.drug.controllers.routes.DrugApp.entities()+"?facet="+URLEncoder.encode(label,"utf8")+"/"}@URLEncoder.encode(value, "utf8")'>@{value.substring(0, max)}... <span class="badge">@Util.format(count)</span></a>&nbsp;
+     } else {
+       <a id="keyword" class="label label-primary loader"
+        @if(href != null && !href.startsWith("http")) {
+          data-toggle="tooltip"
+       	  data-html="true"
+       	  data-trigger="hover"
+       	  data-placement="top"
+       	  title="<p align='left'>@href</p>"
+	}
+        href='@{ix.drug.controllers.routes.DrugApp.entities()+"?facet="+URLEncoder.encode(label,"utf8")+"/"}@URLEncoder.encode(value, "utf8")'>@value <span class="badge">@Util.format(count)</span></a>
+     }
+     @if(href != null && href.startsWith("http")) {
+       <a href="@href"><i class="fa fa-external-link"></i></a>
+     }</div>
+}

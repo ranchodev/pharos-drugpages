@@ -15,6 +15,8 @@ import java.lang.annotation.Annotation;
 import javax.persistence.Id;
 
 import java.text.NumberFormat;
+import ix.core.models.Value;
+import ix.core.models.Keyword;
 
 import play.Logger;
 import play.mvc.Http;
@@ -280,5 +282,39 @@ public class Util {
         if (value != null)
             return NumberFormat.getInstance().format(value);
         return "";
+    }
+
+    public static Map<String, Value[]> groups (Collection<Value> values) {
+        Map<String, List<Value>> groups = new HashMap<>();
+        for (Value v : values) {
+            List<Value> vals = groups.get(v.label);
+            if (vals == null)
+                groups.put(v.label, vals = new ArrayList<>());
+            vals.add(v);
+        }
+        
+        Map<String, Value[]> vg = new TreeMap<>();
+        for (Map.Entry<String, List<Value>> me : groups.entrySet())
+            vg.put(me.getKey(), me.getValue().toArray(new Value[0]));
+        return vg;
+    }
+
+    public static Map<String, String[]> groupKeywords
+        (Collection<Value> values) {
+        Map<String, Set<String>> groups = new HashMap<>();
+        for (Value v : values) {
+            if (v instanceof Keyword) {
+                Keyword kw = (Keyword)v;
+                Set<String> terms = groups.get(kw.label);
+                if (terms == null)
+                    groups.put(kw.label, terms = new TreeSet<>());
+                terms.add(kw.term);
+            }
+        }
+        
+        Map<String, String[]> kg = new TreeMap<>();
+        for (Map.Entry<String, Set<String>> me : groups.entrySet())
+            kg.put(me.getKey(), me.getValue().toArray(new String[0]));
+        return kg;
     }
 }
