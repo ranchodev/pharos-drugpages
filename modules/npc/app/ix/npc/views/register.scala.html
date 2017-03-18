@@ -1,4 +1,4 @@
-@import ix.drug.models.Entity
+@import ix.npc.models.Entity
 
 @ix.core.views.html.main("Entity Registration") {
       <div class="site-wrapper">
@@ -8,7 +8,7 @@
               <h1 class="cover-heading">Entity Registration</h1>
               <form class="form-horizontal" role="form" method="POST"
 		    enctype="multipart/form-data"
-                    action="@ix.drug.controllers.routes.DrugApp.register">
+                    action="@ix.npc.controllers.routes.Registration.register">
 		@if(play.Play.isProd()) {
 		<div class="form-group">
                    <label for="secret-code" class="col-sm-2 control-label">Code</label>
@@ -55,7 +55,7 @@
               <div class="form-group">
                 <div class="col-sm-offset-2 col-sm-10">
                   <button type="submit" class="btn btn-default">Register</button>
-                  <a href='@ix.drug.controllers.routes.DrugApp.index' class="btn btn-default">Cancel</a>
+                  <a href='@ix.npc.controllers.routes.NPCApp.index' class="btn btn-default">Cancel</a>
                 </div>
               </div>
             </form>

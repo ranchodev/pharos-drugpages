@@ -1,10 +1,10 @@
 
-@import ix.drug.models.Entity
+@import ix.npc.models.Entity
 @import ix.core.models.Payload
 @import ix.core.models.Keyword
-@import ix.drug.controllers.DrugApp
+@import ix.npc.controllers.NPCApp
 @import ix.ncats.controllers.App
-@import ix.drug.models.Properties
+@import ix.npc.models.Properties
 @import java.net.URLEncoder
 
 
@@ -12,7 +12,7 @@
 
 @ix.ncats.views.html.main(entity.getName){ @entitiesmenu() }{
 <ol class="breadcrumb" style="margin-top:60px;">
-  <li><a href="@ix.drug.controllers.routes.DrugApp.entities(null,15,1)"><span class="fa fa-home"></span> Entities</a></li>
+  <li><a href="@ix.npc.controllers.routes.NPCApp.entities(null,15,1)"><span class="fa fa-home"></span> Entities</a></li>
   <li class="active">@entity.getName</li>
 </ol>
 }{

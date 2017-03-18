@@ -152,7 +152,7 @@ public class BuildInfo {
       //javaOptions in Runtime += "-Dconfig.resource=pharos.conf"
   ).dependsOn(ncats).aggregate(ncats)
 
-  val drug = Project("drug", file("modules/drug"))
+  val npc = Project("npc", file("modules/npc"))
     .enablePlugins(PlayJava).settings(commonSettings:_*).settings(
       libraryDependencies ++= commonDependencies,
       javacOptions in (doc) ++= javaDocOptions,

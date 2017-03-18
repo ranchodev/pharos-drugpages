@@ -271,7 +271,7 @@ public class StructureProcessor {
         Molecule stdmol = mol.cloneMolecule();
         if (standardize) {
             LyChIStandardizer mstd = new LyChIStandardizer ();
-            mstd.removeSaltOrSolvent(false);
+            mstd.removeSaltOrSolvent(true);
             
             try {
                 mstd.standardize(stdmol);

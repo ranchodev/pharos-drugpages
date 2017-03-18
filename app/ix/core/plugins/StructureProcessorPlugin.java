@@ -53,11 +53,11 @@ import ix.core.plugins.StructureIndexerPlugin;
 import ix.core.models.XRef;
 import ix.core.models.Keyword;
 import ix.core.models.Payload;
-import ix.core.models.ProcessingJob;
-import ix.core.models.ProcessingRecord;
+import ix.core.models.Job;
+import ix.core.models.Record;
 import ix.core.models.Structure;
 import ix.core.chem.StructureProcessor;
-import ix.core.controllers.ProcessingJobFactory;
+import ix.core.controllers.JobFactory;
 import ix.core.controllers.PayloadFactory;
 import ix.utils.Util;
 
@@ -179,10 +179,10 @@ public class StructureProcessorPlugin extends Plugin {
     }
 
     public static class PayloadRecord implements Serializable {
-        public final ProcessingJob job;
+        public final Job job;
         public final Molecule mol;
 
-        public PayloadRecord (ProcessingJob job, Molecule mol) {
+        public PayloadRecord (Job job, Molecule mol) {
             this.job = job;
             this.mol = mol;
         }
@@ -237,12 +237,12 @@ public class StructureProcessorPlugin extends Plugin {
 
     public static class PersistRecord implements Serializable {
         public final Structure struc;
-        public final ProcessingRecord rec;
+        public final Record rec;
         final Molecule mol;
         final StructureIndexer indexer;
         
         public PersistRecord (Structure struc, Molecule mol,
-                              ProcessingRecord rec, StructureIndexer indexer) {
+                              Record rec, StructureIndexer indexer) {
             this.struc = struc;
             this.rec = rec;
             this.mol = mol;
@@ -377,12 +377,11 @@ public class StructureProcessorPlugin extends Plugin {
                 if (child != null) {
                     // the given payload is currently processing
                     // at the moment!
-                    ProcessingJob job = new ProcessingJob ();
-                    job.start = job.stop = System.currentTimeMillis();
+                    Job job = new Job ();
                     job.keys.add(new Keyword
                                  (StructureProcessorPlugin.class.getName(),
                                   payload.key));
-                    job.status = ProcessingJob.Status.NOT_RUN;
+                    job.status = Job.Status.NOT_RUN;
                     job.message = "Payload "+payload.payload.id+" is "
                         +"currently being processed.";
                     job.payload = payload.payload;
@@ -396,7 +395,7 @@ public class StructureProcessorPlugin extends Plugin {
                     context().watch(child);
 
                     try {
-                        ProcessingJob job = process
+                        Job job = process
                             (reporter, child, self (), payload);
                     }
                     catch (Exception ex) {
@@ -445,19 +444,16 @@ public class StructureProcessorPlugin extends Plugin {
             else if (mesg instanceof PayloadRecord) {
                 PayloadRecord pr = (PayloadRecord)mesg;
                 //log.info("processing "+pr.record.getName());
-                ProcessingRecord rec = new ProcessingRecord ();
+                Record rec = new Record ();
                 rec.name = pr.mol.getName();
                 rec.job = pr.job;
-                rec.start = System.currentTimeMillis();
                 Structure struc = null;
                 try {
                     struc = StructureProcessor.instrument(pr.mol);
-                    rec.stop = System.currentTimeMillis();
-                    rec.status = ProcessingRecord.Status.OK;
+                    rec.status = Record.Status.OK;
                 }
                 catch (Throwable t) {
-                    rec.stop = System.currentTimeMillis();
-                    rec.status = ProcessingRecord.Status.FAILED;
+                    rec.status = Record.Status.FAILED;
                     rec.message = t.getMessage();
                     t.printStackTrace();
                 }
@@ -473,10 +469,9 @@ public class StructureProcessorPlugin extends Plugin {
                 if (pos > 0) {
                     String jid = id.substring(pos+1);
                     try {                   
-                        ProcessingJob job = ProcessingJobFactory.getJob(jid);
+                        Job job = JobFactory.getJob(jid);
                         if (job != null) {
-                            job.stop = System.currentTimeMillis();
-                            job.status = ProcessingJob.Status.COMPLETE;
+                            job.status = Job.Status.COMPLETE;
                             reporter.tell
                                 (PersistModel.Update(job), self ());
                             log.info("done processing job {}!", jid);
@@ -596,18 +591,17 @@ public class StructureProcessorPlugin extends Plugin {
     /**
      * batch processing
      */
-    static ProcessingJob process (ActorRef reporter,
-                                  ActorRef proc, ActorRef sender,
-                                  PayloadProcessor pp) throws Exception {
-        List<ProcessingJob> jobs = ProcessingJobFactory.getJobsByPayload
+    static Job process (ActorRef reporter,
+                        ActorRef proc, ActorRef sender,
+                        PayloadProcessor pp) throws Exception {
+        List<Job> jobs = JobFactory.getJobsByPayload
             (pp.payload.id.toString());
-        ProcessingJob job = null;       
+        Job job = null;       
         if (jobs.isEmpty()) {
-            job = new ProcessingJob ();
-            job.start = System.currentTimeMillis();
+            job = new Job ();
             job.keys.add(new Keyword
                          (StructureProcessorPlugin.class.getName(), pp.key));
-            job.status = ProcessingJob.Status.RUNNING;
+            job.status = Job.Status.RUNNING;
             job.payload = pp.payload;
             try {
                 InputStream is = PayloadFactory.getStream(pp.payload);      
@@ -620,8 +614,7 @@ public class StructureProcessorPlugin extends Plugin {
             }
             catch (Throwable t) {
                 job.message = t.getMessage();
-                job.status = ProcessingJob.Status.FAILED;
-                job.stop = System.currentTimeMillis();
+                job.status = Job.Status.FAILED;
                 Logger.trace("Failed to process payload "+pp.payload.id, t);
             }
             finally {

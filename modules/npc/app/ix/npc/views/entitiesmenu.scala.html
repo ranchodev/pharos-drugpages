@@ -1,19 +1,19 @@
 @ix.ncats.views.html.header{
-<a class="navbar-brand" href="@ix.drug.controllers.routes.DrugApp.index"
+<a class="navbar-brand" href="@ix.npc.controllers.routes.NPCApp.index"
    style="padding: 0px 5px; margin-left: 0px;">
   <img height="50" alt="NPC Logo"
        src='@routes.Assets.versioned("images/npc_logo.png")'/>
 </a>
 }{
 <ul class="nav navbar-nav navbar-left">
-  <li role="presentation"><a href="@ix.drug.controllers.routes.DrugApp.register">Register</a></li>
+  <li role="presentation"><a href="@ix.npc.controllers.routes.Registration.register">Register</a></li>
   @**
-  <li role="presentation"><a href='@ix.drug.controllers.routes.DrugApp.entities("facet=Entity Type/Compound", 15, 1)'>Compounds</a></li>
+  <li role="presentation"><a href='@ix.npc.controllers.routes.NPCApp.entities("facet=Entity Type/Compound", 15, 1)'>Compounds</a></li>
   **@
 </ul>
 
 <form class="nav navbar-form navbar-right" role="search" method="GET"
-        action="@ix.drug.controllers.routes.DrugApp.entities(null,10,1)">
+        action="@ix.npc.controllers.routes.NPCApp.entities(null,10,1)">
   <div class="form-group">      
     <input type="text" id="search-header-field" name="q"
 	   style="width:200px;"
@@ -25,7 +25,7 @@
          <span class="fa fa-search fa-fw" aria-hidden="true"></span>
         </button>
 @**
-        <a class="btn btn-default" href="@ix.drug.controllers.routes.DrugApp.sketcher(null)"
+        <a class="btn btn-default" href="@ix.npc.controllers.routes.NPCApp.sketcher(null)"
             role="button" style="margin-right : 1px"
             data-toggle="tooltip" data-placement="bottom" title="Structure search"
         ><i class="fa fa-flask"></i></a>

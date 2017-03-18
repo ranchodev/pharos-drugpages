@@ -1,8 +1,8 @@
-package ix.drug.controllers;
+package ix.npc.controllers;
 
 import ix.core.NamedResource;
 import ix.core.controllers.EntityFactory.FetchOptions;
-import ix.drug.models.Entity;
+import ix.npc.models.Entity;
 
 import java.util.List;
 import java.util.concurrent.ExecutionException;

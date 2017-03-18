@@ -1,13 +1,13 @@
-@import ix.drug.models.Entity
+@import ix.npc.models.Entity
 @import ix.core.models.Payload
 @import ix.core.models.Keyword
 @import ix.core.models.Structure
-@import ix.drug.controllers.DrugApp
+@import ix.npc.controllers.NPCApp
 @import ix.ncats.controllers.App
-@import ix.drug.models.Properties
+@import ix.npc.models.Properties
 @import java.net.URLEncoder
 @import ix.utils.Util
-@import ix.drug.models.Properties._
+@import ix.npc.models.Properties._
 @import ix.core.models.Structure._
 
 @(entity: Entity)
@@ -18,11 +18,10 @@
       @for((k,values) <- Util.groupKeywords(link.properties)) {
          @if(k.equals(kind)) {
 	       @for(v <- values) {
-                 <a href='@{ix.drug.controllers.routes.DrugApp.entities()+"?facet="+URLEncoder.encode(k,"utf8")+"/"}@URLEncoder.encode(v, "utf8")'>@text
+                 <a href='@{ix.npc.controllers.routes.NPCApp.entities()+"?facet="+URLEncoder.encode(k,"utf8")+"/"}@URLEncoder.encode(v, "utf8")'>@text</a>
 		 @defining(App.getTermCount(classOf[Entity], k, v)) { count =>
-		   <span class="badge">@Util.format(count)</span>
+		   <span class="badge pull-right">@Util.format(count)</span>
 		 }
-		 </a>
 	       }
 	 }
       }
@@ -39,7 +38,7 @@
       <div class="col-md-4">
 	<div class="panel panel-default">
 	  <div class="panel-body">
-	    @defining(DrugApp.getStructure(entity)) { struc =>
+	    @defining(NPCApp.getStructure(entity)) { struc =>
 	    @if(struc != null) {
 	    <center>
 	      <img alt="Structure of @entity.getName"
@@ -56,7 +55,7 @@
 	</div>
 	<div class="panel panel-default">
 	  <div class="panel-body">
-            @struclabel("Identify structure",STRUCTURE_ORIGINAL, H_LyChI_L4)
+            @struclabel("Identical structure",STRUCTURE_ORIGINAL, H_LyChI_L4)
 	    <br>@struclabel("Same structure", STRUCTURE_STANDARDIZED, H_LyChI_L4)
 	    <br>@struclabel("Stereo incensitive", STRUCTURE_STANDARDIZED, H_LyChI_L3)
 	    <br>@struclabel("Same topology", STRUCTURE_STANDARDIZED, H_LyChI_L1)
@@ -84,20 +83,20 @@
 		      @if(py != null) {
 		        <tr>
 			  <td>Dataset</td>
-			  <td><a href='@{ix.drug.controllers.routes.DrugApp.entities(null,15,1)+"?facet=Dataset/"+URLEncoder.encode(py.name,"utf8")}'>@py.name</a></td>
+			  <td><a href='@{ix.npc.controllers.routes.NPCApp.entities(null,15,1)+"?facet=Dataset/"+URLEncoder.encode(py.name,"utf8")}'>@py.name</a></td>
   	      		</tr>
                       }
                    }
 	           @for((k,v) <- entity.groupProperties()) {
 		      <tr>
-		        <td>@k</td>
-			<td>
-		        @for(p <- v) {
-		           @p match {
-			     case kw: Keyword => {
-			       <a href='@{ix.drug.controllers.routes.DrugApp.entities(null,15,1)+"?facet="+kw.label+"/"+URLEncoder.encode(kw.term,"utf8")}'>@kw.term</a>                     }
-		             case _ => {
-			       @if(!k.equals(Properties.ORIGINAL_INPUT)) {
+		        @if(!k.equals(ORIGINAL_INPUT)) {
+		          <td>@k</td>
+			  <td>
+		          @for(p <- v) {
+		             @p match {
+			       case kw: Keyword => {
+			       <a href='@{ix.npc.controllers.routes.NPCApp.entities(null,15,1)+"?facet="+kw.label+"/"+URLEncoder.encode(kw.term,"utf8")}'>@kw.term</a>                       }
+		               case _ => {
 		                  @p.getValue
 			       }
 			     }

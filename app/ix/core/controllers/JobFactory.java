@@ -2,8 +2,8 @@ package ix.core.controllers;
 
 import ix.core.NamedResource;
 import ix.core.controllers.EntityFactory.FetchOptions;
-import ix.core.models.ProcessingJob;
-import ix.core.models.ProcessingRecord;
+import ix.core.models.Job;
+import ix.core.models.Record;
 
 import java.util.List;
 import java.util.concurrent.ExecutionException;
@@ -14,39 +14,39 @@ import play.db.ebean.Model;
 import play.mvc.Result;
 
 @NamedResource(name="jobs",
-               type=ProcessingJob.class,
+               type=Job.class,
                description="Resource for handling processing jobs")
-public class ProcessingJobFactory extends EntityFactory {
-    public static final Model.Finder<Long, ProcessingJob> finder =
-        new Model.Finder(Long.class, ProcessingJob.class);
-    public static final Model.Finder<Long, ProcessingRecord> recordFinder =
-        new Model.Finder(Long.class, ProcessingRecord.class);
+public class JobFactory extends EntityFactory {
+    public static final Model.Finder<Long, Job> finder =
+        new Model.Finder(Long.class, Job.class);
+    public static final Model.Finder<Long, Record> recordFinder =
+        new Model.Finder(Long.class, Record.class);
 
-    public static ProcessingJob getJob (Long id) {
+    public static Job getJob (Long id) {
         return getEntity (id, finder);
     }
     
-    public static List<ProcessingRecord> getJobRecords (Long id) {      
+    public static List<Record> getJobRecords (Long id) {      
         return recordFinder.where().eq("job.id", id).findList();
     }
 
-    public static List<ProcessingJob> getJobsByPayload (String uuid) {
+    public static List<Job> getJobsByPayload (String uuid) {
         return finder.setDistinct(false)
             .where().eq("payload.id", uuid)
-            .orderBy("job_start desc").findList();
+            .orderBy("created desc").findList();
     }
-    public static List<ProcessingJob> getProcessingJobs
+    public static List<Job> getJobs
         (int top, int skip, String filter) {
         return filter (new FetchOptions (top, skip, filter), finder);
     }
 
-    public static ProcessingJob getJob (String key) {
+    public static Job getJob (String key) {
         //finder.setDistinct(false).where().eq("keys.term", key).findUnique();
         
         // This is because the built SQL for oracle includes a "DISTINCT"
         // statement, which doesn't appear to be extractable.
-        List<ProcessingJob> gotJobsv= finder.findList();
-        for (ProcessingJob pj : gotJobsv) {
+        List<Job> gotJobsv= finder.findList();
+        for (Job pj : gotJobsv) {
             if(pj.hasKey(key)) return pj;
         }
         return null;
@@ -54,7 +54,7 @@ public class ProcessingJobFactory extends EntityFactory {
     
     public static Integer getCount () 
         throws InterruptedException, ExecutionException {
-        return ProcessingJobFactory.getCount(finder);
+        return JobFactory.getCount(finder);
     }
     
     public static Result count () { return count (finder); }

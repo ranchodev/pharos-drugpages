@@ -15,30 +15,21 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import ix.utils.Global;
 
 @Entity
-@Table(name="ix_core_procrec")
-public class ProcessingRecord extends Model {
+@Table(name="ix_core_record")
+public class Record extends Model {
     public enum Status {
         OK, FAILED, PENDING, UNKNOWN, ADAPTED
     }
 
-    @Id
-    public Long id;
-    @Column(name="rec_start")
-    public Long start;
-    @Column(name="rec_stop")
-    public Long stop;
+    @Id public Long id;
+    @Version public Long version;
 
-    @Column(length=128)
+    @Column(length=255)
     public String name;
     
     @ManyToMany
-    @JoinTable(name="ix_core_procrec_prop")
+    @JoinTable(name="ix_core_record_prop")
     public List<Value> properties = new ArrayList<Value>();
-    
-    
-    @Version
-    public Timestamp lastUpdate; // here
-    
     
     /**
      * record status
@@ -57,7 +48,10 @@ public class ProcessingRecord extends Model {
     
     @ManyToOne(cascade=CascadeType.ALL)
     @JsonView(BeanViews.Full.class)
-    public ProcessingJob job;
+    public Job job;
 
-    public ProcessingRecord () {}
+    public final Timestamp created =
+        new Timestamp (System.currentTimeMillis());
+    
+    public Record () {}
 }

@@ -1,12 +1,12 @@
 
-@import ix.drug.controllers.EntityFactory
-@import ix.drug.controllers.DrugApp
+@import ix.npc.controllers.EntityFactory
+@import ix.npc.controllers.NPCApp
 @import ix.ncats.controllers.App.FacetDecorator
 @import ix.ncats.controllers.App
-@import ix.drug.models.Entity
+@import ix.npc.models.Entity
 @import ix.core.models.Structure
 @import ix.core.models.Keyword
-@import ix.drug.models.Properties
+@import ix.npc.models.Properties
 
 @(current: Int, rows: Int, total: Int, pages: Array[Int],
 facets: Array[FacetDecorator], entities: List[Entity])
@@ -14,8 +14,8 @@ facets: Array[FacetDecorator], entities: List[Entity])
 @cell(e: Entity) = {
  <div class="col-sm-6 col-md-4">
    <div class="thumbnail">
-     @defining(DrugApp.getStructure(e)) { struc =>
-        <a href='@ix.drug.controllers.routes.DrugApp.entity(e.getId.toString)'><img src='@ix.ncats.controllers.routes.App.structure(struc.getId, "svg", 200)' alt="Structure for entity @e.getName"> </a>
+     @defining(NPCApp.getStructure(e)) { struc =>
+        <a href='@ix.npc.controllers.routes.NPCApp.entity(e.getId.toString)'><img src='@ix.ncats.controllers.routes.App.structure(struc.getId, "svg", 200)' alt="Structure for entity @e.getName"> </a>
      }
 
      <div class="caption">@e.getName</div>
@@ -23,14 +23,14 @@ facets: Array[FacetDecorator], entities: List[Entity])
  </div>
 }
 
-@ix.ncats.views.html.content("Entities", "ix.drug.models.Entity",
-ix.drug.controllers.routes.DrugApp.entities().url,
+@ix.ncats.views.html.content("Entities", "ix.npc.models.Entity",
+ix.npc.controllers.routes.NPCApp.entities().url,
 current, rows, total, pages, facets){ @entitiesmenu() }{
 <ol class="breadcrumb" style="margin-top:60px;">
-  <li><a href="@ix.drug.controllers.routes.DrugApp.index"><span class="fa fa-home"></span> Home</a></li>
+  <li><a href="@ix.npc.controllers.routes.NPCApp.index"><span class="fa fa-home"></span> Home</a></li>
 </ol>
 }{
-  @defining(DrugApp.toMatrix(3, entities)) { emat =>
+  @defining(NPCApp.toMatrix(3, entities)) { emat =>
      @for(i <- 0 until emat.length) {
 	  <div class="row">
 	    @for(e <- emat(i)) {

@@ -214,7 +214,8 @@ public class SearchFactory extends EntityFactory {
         (final Class kind, final String field) {
         try {
             final String key = getTermVectorCacheKey (kind, field);
-            return IxCache.getOrElse(key, new Callable<TermVectors> () {
+            return IxCache.getOrElse
+                (_indexer.lastModified(), key, new Callable<TermVectors> () {
                     public TermVectors call ()
                         throws Exception {
                         return _indexer.getTermVectors(kind, field);
@@ -260,12 +261,13 @@ public class SearchFactory extends EntityFactory {
             final String key = getConditionalTermVectorCacheKey
                 (kind, field, conditional);
             return IxCache.getOrElse
-                (key, new Callable<Map<String, TermVectors>>() {
-                        public Map<String, TermVectors> call ()
-                            throws Exception {
-                            TermVectors tv = getTermVectors (kind, conditional);
-                            Map<String, TermVectors> result = null;
-                            if (tv != null) {
+                (_indexer.lastModified(),
+                 key, new Callable<Map<String, TermVectors>>() {
+                         public Map<String, TermVectors> call ()
+                             throws Exception {
+                             TermVectors tv = getTermVectors (kind, conditional);
+                             Map<String, TermVectors> result = null;
+                             if (tv != null) {
                                 result = new TreeMap<String, TermVectors>();
                                 Map<String, String> cond =
                                     new HashMap<String, String>();
@@ -275,10 +277,10 @@ public class SearchFactory extends EntityFactory {
                                         (kind, field, cond);
                                     result.put(term, ctv);
                                 }
-                            }
-                            return result;
-                        }
-                    });
+                             }
+                             return result;
+                         }
+                     });
         }
         catch (Exception ex) {
             Logger.error("Can't generate conditional termVectors("
@@ -302,13 +304,14 @@ public class SearchFactory extends EntityFactory {
             final String key = SearchFactory.class.getName()
                 +"/termVectors/"+kind.getName()+"/"+field+"/"
                 +Util.sha1(params.toArray(new String[0]));
-            return IxCache.getOrElse(key, new Callable<TermVectors> () {
-                    public TermVectors call ()
-                        throws Exception {
-                        return _indexer.getTermVectors
-                            (kind, field, conditionals);
-                    }
-                });
+            return IxCache.getOrElse
+                (_indexer.lastModified(), key, new Callable<TermVectors> () {
+                        public TermVectors call ()
+                            throws Exception {
+                            return _indexer.getTermVectors
+                                (kind, field, conditionals);
+                        }
+                    });
         }
         catch (Exception ex) {
             Logger.error("Can't generate termVectors for "+kind+"/"+field
@@ -397,13 +400,14 @@ public class SearchFactory extends EntityFactory {
         final String sha1 = Util.sha1(SearchFactory.class.getName()
                                       +"/facets/"+kind.getName()+"/"+fdim);
         try {
-            return IxCache.getOrElse(sha1, new Callable<List<Facet>>() {
-                    public List<Facet> call () throws Exception {
-                        SearchResult result = search
-                            (kind, null, 0, 0, fdim, null);
-                        return result.getFacets();
-                    }
-                });
+            return IxCache.getOrElse
+                (_indexer.lastModified(), sha1, new Callable<List<Facet>>() {
+                        public List<Facet> call () throws Exception {
+                            SearchResult result = search
+                                (kind, null, 0, 0, fdim, null);
+                            return result.getFacets();
+                        }
+                    });
         }
         catch (Exception ex) {
             Logger.trace("Can't retrieve facets for "+kind, ex);

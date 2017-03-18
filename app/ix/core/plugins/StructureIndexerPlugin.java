@@ -32,11 +32,9 @@ import tripod.chem.indexer.StructureIndexer;
 import ix.core.plugins.IxContext;
 import ix.core.models.XRef;
 import ix.core.models.Payload;
-import ix.core.models.ProcessingJob;
-import ix.core.models.ProcessingRecord;
+import ix.core.models.Job;
 import ix.core.models.Structure;
 import ix.core.controllers.PayloadFactory;
-import ix.core.controllers.ProcessingJobFactory;
 import ix.utils.Util;
 
 public class StructureIndexerPlugin extends Plugin {

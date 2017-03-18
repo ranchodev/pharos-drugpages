@@ -10,18 +10,7 @@ import java.util.Date;
 import java.util.List;
 import java.util.Map;
 
-import javax.persistence.Basic;
-import javax.persistence.CascadeType;
-import javax.persistence.Column;
-import javax.persistence.Entity;
-import javax.persistence.FetchType;
-import javax.persistence.Id;
-import javax.persistence.JoinTable;
-import javax.persistence.Lob;
-import javax.persistence.ManyToMany;
-import javax.persistence.OneToOne;
-import javax.persistence.Table;
-import javax.persistence.Version;
+import javax.persistence.*;
 
 import play.Logger;
 import play.db.ebean.Model;
@@ -33,36 +22,26 @@ import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 @Entity
-@Table(name="ix_core_procjob")
-public class ProcessingJob extends Model {
+@Table(name="ix_core_job")
+public class Job extends Model {
         
     public enum Status {
         COMPLETE, RUNNING, NOT_RUN, FAILED, PENDING, STOPPED, UNKNOWN
     }
     
-    @Id
-    public Long id;
-
+    @Id public Long id;
+    @Version public Long version;
+    
     @ManyToMany(cascade=CascadeType.ALL)
-    @JoinTable(name="ix_core_procjob_key")
+    @JoinTable(name="ix_core_job_key")
     public List<Keyword> keys = new ArrayList<Keyword>();
 
     @Indexable(facet=true, name="Job Status")
     public Status status = Status.PENDING;
-    
-    @Column(name="job_start")
-    public Long start;
-    @Column(name="job_stop")
-    public Long stop;
 
     @Lob
     @Basic(fetch=FetchType.EAGER)
     public String message;
-    
-    @Lob
-    @Basic(fetch=FetchType.EAGER)
-    @JsonView(BeanViews.Private.class)
-    public String statistics;
 
     @OneToOne(cascade=CascadeType.ALL)
     @JsonView(BeanViews.Full.class)
@@ -71,11 +50,15 @@ public class ProcessingJob extends Model {
     @OneToOne(cascade=CascadeType.ALL)
     @JsonView(BeanViews.Full.class)
     public Payload payload;
-    
-    @Version
-    public Timestamp lastUpdate; // here
 
-    public ProcessingJob () {
+    public final Timestamp created =
+        new Timestamp (System.currentTimeMillis());
+    public Timestamp lastUpdate;
+
+    public Integer processed;
+    public Integer failed;
+
+    public Job () {
     }
 
     @JsonView(BeanViews.Compact.class)
@@ -107,5 +90,11 @@ public class ProcessingJob extends Model {
             }
         }
         return false;
+    }
+
+    @PrePersist
+    @PreUpdate
+    public void modified () {
+        lastUpdate = new Timestamp (System.currentTimeMillis());
     }
 }

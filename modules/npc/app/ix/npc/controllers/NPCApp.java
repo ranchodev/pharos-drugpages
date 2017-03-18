@@ -1,4 +1,4 @@
-package ix.drug.controllers;
+package ix.npc.controllers;
 
 import akka.actor.ActorRef;
 import akka.actor.Props;
@@ -50,17 +50,11 @@ import static ix.core.search.TextIndexer.SearchResult;
 import static ix.core.search.TextIndexer.TermVectors;
 import static play.mvc.Http.MultipartFormData;
 
-import ix.drug.models.*;
+import ix.npc.models.*;
 
-public class DrugApp extends App implements ix.drug.models.Properties {
+public class NPCApp extends App implements ix.npc.models.Properties {
     public static final ThreadPoolPlugin THREAD_POOL =
         Play.application().plugin(ThreadPoolPlugin.class);
-    public static final PayloadPlugin PAYLOAD =
-        Play.application().plugin(PayloadPlugin.class);
-    public static final PersistenceQueue PQ =
-        Play.application().plugin(PersistenceQueue.class);
-    static final StructureIndexer MOLIDX = Play.application()
-        .plugin(StructureIndexerPlugin.class).getIndexer();
 
     static final String[] ENTITY_FACETS = {
         "Dataset",
@@ -72,111 +66,6 @@ public class DrugApp extends App implements ix.drug.models.Properties {
         "LyChI_L3"
     };
     
-    static class MolJobPersistence
-        extends PersistenceQueue.AbstractPersistenceContext {
-
-        final ProcessingJob job;
-        MolJobPersistence (ProcessingJob job) {
-            this.job = job;
-        }
-
-        public void persists () throws Exception {
-            int count = 0;          
-            try {
-                job.start = System.currentTimeMillis();
-                job.status = ProcessingJob.Status.RUNNING;
-
-                Keyword ds = KeywordFactory.registerIfAbsent
-                    (DATASET, job.payload.name, null);
-                
-                MolImporter mi = new MolImporter
-                    (PayloadFactory.getStream(job.payload));
-                mi.setGrabbingEnabled(true);
-                for (Molecule mol = new Molecule (); mi.read(mol); ) {
-                    Entity ent = instrument (mol);
-                    ent.properties.add
-                        (new Text (ORIGINAL_INPUT,
-                                   mi.getGrabbedMoleculeString()));
-                    
-                    XRef xref = new XRef (job.payload);
-                    xref.properties.add(ds);
-                    ent.links.add(xref);
-                    
-                    ent.save();
-                    
-                    if (count++ % 100 == 0) {
-                        job.message = "Processing structure "+count;
-                        job.update();
-                        Logger.debug(job.payload.name+": "+count);
-                    }
-                }
-                mi.close();
-                job.status = ProcessingJob.Status.COMPLETE;
-                job.message = count+" structures processed!";
-            }
-            catch (Exception ex) {
-                job.message = ex.getMessage();
-                job.status = ProcessingJob.Status.FAILED;
-                Logger.error("Job "+job.id+" for payload "+job.payload.name
-                             +" failed!", ex);
-            }
-            job.stop = System.currentTimeMillis();
-            job.update();
-            Logger.debug("Job "+job.id+"/"+job.payload.name
-                         +" finished processing "+count+" entities!");
-        }
-    }
-
-    static Entity instrument (Molecule mol) throws Exception {
-        Entity ent = new Entity (Entity.Type.Compound, mol.getName());
-        
-        List<Structure> moieties = new ArrayList<>();
-        Structure struc = StructureProcessor.instrument(mol, moieties, false);
-        struc.save();
-        MOLIDX.add(null, struc.id.toString(), struc.molfile);
-        
-        XRef xref = new XRef (struc);
-        xref.properties.addAll(struc.properties);
-        xref.properties.add
-            (KeywordFactory.registerIfAbsent
-             (STRUCTURE_TYPE, STRUCTURE_ORIGINAL, null));
-        xref.properties.add
-            (new VInt (MOIETY_COUNT,
-                       (long)(moieties.isEmpty()
-                              ? 1 : moieties.size())));
-        xref.save();
-        ent.links.add(xref);
-
-        struc = StructureProcessor.instrument(mol); // standardized
-        struc.save();
-        
-        xref = new XRef (struc);
-        xref.properties.addAll(struc.properties);
-        xref.properties.add
-            (KeywordFactory.registerIfAbsent
-             (STRUCTURE_TYPE, STRUCTURE_STANDARDIZED, null));
-        xref.save();
-        ent.links.add(xref);
-
-        /*
-         * TODO: we need to take a configuration and specify the
-         * property type and whether a property should be indexed or not
-         */  
-        for (int i = 0; i < mol.getPropertyCount(); ++i) {
-            String prop = mol.getPropertyKey(i);
-            String[] values = mol.getProperty(prop).split("\n");
-            for (String v : values) {
-                if (v.length() < 255)
-                    ent.addIfAbsent
-                        ((Value)KeywordFactory.registerIfAbsent(prop, v, null));
-                else
-                    ent.properties.add(new Text (prop, v));
-            }
-        }
-
-        return ent;
-    }
-
     static public FacetDecorator[] decorate (Facet... facets) {
         List<FacetDecorator> decors = new ArrayList<FacetDecorator>();
         // override decorator as needed here
@@ -205,68 +94,7 @@ public class DrugApp extends App implements ix.drug.models.Properties {
     }
 
     public static Result index () {
-        return redirect (routes.DrugApp.entities(null, 15, 1));
-    }
-    
-    public static Result registerForm () {
-        return ok (ix.drug.views.html.register.render());
-    }
-
-    @BodyParser.Of(value = BodyParser.MultipartFormData.class,
-                   maxLength = 100*1024 * 1024)
-    public static Result register () {
-        if (request().body().isMaxSizeExceeded()) {
-            return badRequest ("Upload is too large!");
-        }
-        
-        MultipartFormData form = request().body().asMultipartFormData();
-        Map<String, String[]> params = form.asFormUrlEncoded();
-        
-        MultipartFormData.FilePart part = form.getFile("dataset");
-        Payload py = null;
-        if (part != null) {
-            File file = part.getFile();
-            try {
-                String mime = Files.probeContentType(file.toPath());
-                Logger.debug("register: file="
-                             +part.getFilename()+" mime="+mime);
-                
-                String name = part.getFilename();
-                if (params.containsKey("name")) {
-                    String[] ns = params.get("name");
-                    if (ns.length > 0 && ns[0].length() > 0)
-                        name = ns[0];
-                }
-
-                py = PAYLOAD.createPayload
-                    (name, mime, new FileInputStream (file));
-            }
-            catch (Exception ex) {
-                Logger.error("Can't create payload for file: "+file, ex);
-                ex.printStackTrace();
-            }
-        }
-
-        if (py != null) {
-            List<ProcessingJob> jobs = ProcessingJobFactory
-                .getJobsByPayload(py.id.toString());
-            
-            ProcessingJob job;
-            if (jobs.isEmpty()) {
-                job = new ProcessingJob ();
-                job.payload = py;
-                job.save();
-                PQ.submit(new MolJobPersistence (job));
-            }
-            else {
-                job = jobs.iterator().next();
-            }
-
-            return redirect (routes.DrugApp.index());
-        }
-        
-        return internalServerError
-            ("Unable to create payload from multipart request!");
+        return redirect (routes.NPCApp.entities(null, 15, 1));
     }
 
     static Result _entities (final String q, final int rows, final int page)
@@ -295,7 +123,7 @@ public class DrugApp extends App implements ix.drug.models.Properties {
                         List<Entity> entities = EntityFactory.getEntities
                             (_rows, (page-1)*_rows, null);
             
-                        return ok (ix.drug.views.html.entities.render
+                        return ok (ix.npc.views.html.entities.render
                                    (page, _rows, total, pages,
                                     decorate (facets), entities));
                     }
@@ -334,7 +162,7 @@ public class DrugApp extends App implements ix.drug.models.Properties {
             result.copyTo(entities, (page-1)*rows, rows);
         }
 
-        return ix.drug.views.html.entities.render
+        return ix.npc.views.html.entities.render
             (page, rows, result.count(),
              pages, decorate (facets), entities);
     }
@@ -349,7 +177,7 @@ public class DrugApp extends App implements ix.drug.models.Properties {
 
     static Content getEntityContent (List<Entity> entities) throws Exception {
         Entity e = entities.get(0);
-        return ix.drug.views.html.entitydetails.render(e);
+        return ix.npc.views.html.entitydetails.render(e);
     }
     
     public static Result entities (String q, final int rows, final int page) {
