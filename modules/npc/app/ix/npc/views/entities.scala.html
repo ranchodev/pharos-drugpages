@@ -25,7 +25,7 @@ facets: Array[FacetDecorator], entities: List[Entity])
 
 @ix.ncats.views.html.content("Entities", "ix.npc.models.Entity",
 ix.npc.controllers.routes.NPCApp.entities().url,
-current, rows, total, pages, facets){ @entitiesmenu() }{
+current, rows, total, pages, facets){ @entitiesmenu("Entities") }{
 <ol class="breadcrumb" style="margin-top:60px;">
   <li><a href="@ix.npc.controllers.routes.NPCApp.index"><span class="fa fa-home"></span> Home</a></li>
 </ol>

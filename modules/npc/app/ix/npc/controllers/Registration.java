@@ -48,7 +48,7 @@ import static play.mvc.Http.MultipartFormData;
 
 import ix.npc.models.*;
 
-public class Registration extends App  implements ix.npc.models.Properties {
+public class Registration extends NPCApp {
     public static final ThreadPoolPlugin THREAD_POOL =
         Play.application().plugin(ThreadPoolPlugin.class);
     public static final PayloadPlugin PAYLOAD =
@@ -62,55 +62,33 @@ public class Registration extends App  implements ix.npc.models.Properties {
         extends PersistenceQueue.AbstractPersistenceContext {
 
         final Job job;
+        final Keyword ds;
+        final String source;
         MolJobPersistence (Job job) {
             this.job = job;
+            ds = KeywordFactory.registerIfAbsent
+                (DATASET, job.payload.name, null);
+            source = job.payload.sha1.substring(0,9);
         }
 
         public void persists () throws Exception {
             int count = 0;          
             try {
-                job.status = Job.Status.RUNNING;
-
-                Keyword ds = KeywordFactory.registerIfAbsent
-                    (DATASET, job.payload.name, null);
-                
                 MolImporter mi = new MolImporter
                     (PayloadFactory.getStream(job.payload));
                 mi.setGrabbingEnabled(true);
-                
+                job.status = Job.Status.RUNNING;        
                 job.processed = job.failed = 0;
-                for (Molecule mol = new Molecule (); mi.read(mol); ) {
-                    Text input = new Text
-                        (ORIGINAL_INPUT, mi.getGrabbedMoleculeString());
-                    
+                do {
                     try {
-                        Entity ent = instrument (mol);
-                        ent.properties.add(input);
-                        
-                        XRef xref = new XRef (job.payload);
-                        xref.properties.add(ds);
-                        ent.links.add(xref);
-                        
-                        ent.save();
-                        
-                        if (job.processed++ % 100 == 0) {
-                            job.update();
-                            Logger.debug(job.payload.name+": "+job.processed);
-                        }
+                        process (mi);
                     }
                     catch (Exception ex) {
                         ++job.failed;
-                        Record rec = new Record ();
-                        rec.status = Record.Status.FAILED;
-                        rec.message = ex.getMessage();
-                        rec.properties.add(input);
-                        rec.job = job;
-                        rec.save();
-                        
-                        Logger.warn("Job "+job.id+": record "+rec.id
-                                    +" failed: "+ex.getMessage());
                     }
                 }
+                while (mi.skipToNext());
+
                 mi.close();
                 job.status = Job.Status.COMPLETE;
                 job.message = null;
@@ -120,20 +98,81 @@ public class Registration extends App  implements ix.npc.models.Properties {
                 job.status = Job.Status.FAILED;
                 Logger.error("Job "+job.id+" for payload "+job.payload.name
                              +" failed!", ex);
+                ex.printStackTrace();
             }
-            job.update();
-            Logger.debug("Job "+job.id+"/"+job.payload.name
-                         +" finished processing "+job.processed+" entities!");
+            
+            if (job.id != null) {
+                job.update();
+                Logger.debug("Job "+job.id+"/"+job.payload.name
+                             +" finished processing "+job.processed
+                             +" entities!");
+            }
+            else {
+                MOLIDX.remove(source);
+            }
+        }
+
+        void process (MolImporter mi) throws Exception {
+            for (Molecule mol = new Molecule (); mi.read(mol); ) {
+                Logger.debug("processing "
+                             +job.processed+"..."+mol.getName());
+                Text input = new Text
+                    (ORIGINAL_INPUT, mi.getGrabbedMoleculeString());
+                
+                try {
+                    Entity ent = instrument (source, mol);
+                    ent.properties.add(input);
+                    
+                    XRef xref = new XRef (job.payload);
+                    xref.properties.add(ds);
+                    ent.links.add(xref);
+                    
+                    ent.save();
+
+                    /*
+                     * a job could be delete while we're still processing;
+                     * this checkpointing mechanism allows us to sync with
+                     * the database and act accordingly if the job has been
+                     * deleted.
+                     */
+                    if (job.processed++ % 100 == 0) {
+                        if (null != JobFactory.getJob(job.id)) {
+                            job.update();
+                            Logger.debug(job.payload.name+": "+job.processed);
+                        }
+                        else {
+                            Logger.warn("Job "+job.id+" no longer available!");
+                            job.id = null;
+                            mi.close();
+                            break;
+                        }
+                    }
+                }
+                catch (Exception ex) {
+                    ++job.failed;
+                    Record rec = new Record ();
+                    rec.status = Record.Status.FAILED;
+                    rec.message = ex.getMessage();
+                    rec.properties.add(input);
+                    rec.job = job;
+                    rec.save();
+                    
+                    Logger.warn("Job "+job.id+": record "+rec.id
+                                +" failed: "+ex.getMessage());
+                }
+            }
         }
     }
 
-    static Entity instrument (Molecule mol) throws Exception {
+    static Entity instrument (String ds, Molecule mol) throws Exception {
         Entity ent = new Entity (Entity.Type.Compound, mol.getName());
         
         List<Structure> moieties = new ArrayList<>();
         Structure struc = StructureProcessor.instrument(mol, moieties, false);
         struc.save();
-        MOLIDX.add(null, struc.id.toString(), struc.molfile);
+
+        // FIXME: this needs to be tied to EntityPersistenceAdapters somehow!
+        MOLIDX.add(ds, struc.id.toString(), struc.molfile);
         
         XRef xref = new XRef (struc);
         xref.properties.addAll(struc.properties);
@@ -147,16 +186,19 @@ public class Registration extends App  implements ix.npc.models.Properties {
         xref.save();
         ent.links.add(xref);
 
-        struc = StructureProcessor.instrument(mol); // standardized
-        struc.save();
-        
-        xref = new XRef (struc);
-        xref.properties.addAll(struc.properties);
-        xref.properties.add
-            (KeywordFactory.registerIfAbsent
-             (STRUCTURE_TYPE, STRUCTURE_STANDARDIZED, null));
-        xref.save();
-        ent.links.add(xref);
+        if (mol.getAtomCount() < 500) {
+            // only standardize if we a small molecule
+            struc = StructureProcessor.instrument(mol);
+            struc.save();
+            
+            xref = new XRef (struc);
+            xref.properties.addAll(struc.properties);
+            xref.properties.add
+                (KeywordFactory.registerIfAbsent
+                 (STRUCTURE_TYPE, STRUCTURE_STANDARDIZED, null));
+            xref.save();
+            ent.links.add(xref);
+        }
 
         /*
          * TODO: we need to take a configuration and specify the
@@ -185,7 +227,7 @@ public class Registration extends App  implements ix.npc.models.Properties {
                    maxLength = 100*1024 * 1024)
     public static Result register () {
         if (request().body().isMaxSizeExceeded()) {
-            return badRequest ("Upload is too large!");
+            return _badRequest ("Upload is too large!");
         }
         
         MultipartFormData form = request().body().asMultipartFormData();
@@ -209,6 +251,8 @@ public class Registration extends App  implements ix.npc.models.Properties {
 
                 py = PAYLOAD.createPayload
                     (name, mime, new FileInputStream (file));
+                py.filename = part.getFilename();
+                py.update();
             }
             catch (Exception ex) {
                 Logger.error("Can't create payload for file: "+file, ex);
@@ -234,7 +278,55 @@ public class Registration extends App  implements ix.npc.models.Properties {
             return redirect (routes.NPCApp.index());
         }
         
-        return internalServerError
+        return _internalServerError
             ("Unable to create payload from multipart request!");
+    }
+
+    public static Result deleteDataset (String id) {
+        try {
+            Payload py = PayloadFactory.getPayload(UUID.fromString(id));
+            if (py == null)
+                return notFound ("Unknown payload: "+id);
+
+            int count = 0;
+            QueryIterator<Entity> it = EntityFactory.finder.where()
+                .eq("links.refid", py.id).findIterate();
+            try {
+                while (it.hasNext()) {
+                    Entity e = it.next();
+                    e.delete();
+                    ++count;
+                }
+            }
+            finally {
+                it.close();
+            }
+            
+            QueryIterator<Job> jit = JobFactory.finder.where()
+                .eq("payload.id", py.id).findIterate();
+            try {
+                while (jit.hasNext()) {
+                    Job job = jit.next();
+                    Logger.debug("deleting job "+job.id);
+                    job.delete();
+                }
+            }
+            finally {
+                jit.close();
+            }
+
+            //py.delete();            
+            //Logger.debug("deleting payload "+id);
+
+            return ok (count+" entities deleted for dataset "+id);
+        }
+        catch (Exception ex) {
+            ex.printStackTrace();
+            return internalServerError (ex.getMessage());
+        }
+    }
+
+    public static Result admin () {
+        return ok (ix.npc.views.html.admin.render());
     }
 }

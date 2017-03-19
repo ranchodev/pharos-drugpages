@@ -10,7 +10,7 @@
 
 @(entity: Entity)
 
-@ix.ncats.views.html.main(entity.getName){ @entitiesmenu() }{
+@ix.ncats.views.html.main(entity.getName){ @entitiesmenu("@entity.getName") }{
 <ol class="breadcrumb" style="margin-top:60px;">
   <li><a href="@ix.npc.controllers.routes.NPCApp.entities(null,15,1)"><span class="fa fa-home"></span> Entities</a></li>
   <li class="active">@entity.getName</li>

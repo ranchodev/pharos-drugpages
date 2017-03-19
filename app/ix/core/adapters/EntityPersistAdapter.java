@@ -239,6 +239,15 @@ public class EntityPersistAdapter extends BeanPersistAdapter {
                 }
             }
         }
+
+        try {
+            if (plugin != null)
+                plugin.getIndexer().remove(bean);
+        }
+        catch (Exception ex) {
+            Logger.trace("Can't remove bean "+bean+" from index!", ex);
+        }
+        
         return true;
     }
 
@@ -258,14 +267,6 @@ public class EntityPersistAdapter extends BeanPersistAdapter {
                                  +m.getName()+"["+name+"]", ex);
                 }
             }
-        }
-
-        try {
-            if (plugin != null)
-                plugin.getIndexer().remove(bean);
-        }
-        catch (Exception ex) {
-            Logger.trace("Can't remove bean "+bean+" from index!", ex);
         }
     }
 

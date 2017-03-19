@@ -1,3 +1,12 @@
+
+@(active: String)
+
+@item(name: String, url: String) = {
+<li role="presentation"
+    @if(name.equals(active)){class="active"}><a href='@url'>@name</a>
+</li>
+}
+
 @ix.ncats.views.html.header{
 <a class="navbar-brand" href="@ix.npc.controllers.routes.NPCApp.index"
    style="padding: 0px 5px; margin-left: 0px;">
@@ -6,10 +15,9 @@
 </a>
 }{
 <ul class="nav navbar-nav navbar-left">
-  <li role="presentation"><a href="@ix.npc.controllers.routes.Registration.register">Register</a></li>
-  @**
-  <li role="presentation"><a href='@ix.npc.controllers.routes.NPCApp.entities("facet=Entity Type/Compound", 15, 1)'>Compounds</a></li>
-  **@
+  @item("Admin", ix.npc.controllers.routes.Registration.admin.url)
+  @item("Register", ix.npc.controllers.routes.Registration.register.url)
+  @item("Entities", ix.npc.controllers.routes.NPCApp.entities(null, 15, 1).url)
 </ul>
 
 <form class="nav navbar-form navbar-right" role="search" method="GET"

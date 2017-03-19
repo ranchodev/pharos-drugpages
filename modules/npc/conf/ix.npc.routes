@@ -2,6 +2,8 @@
 GET	/index	ix.npc.controllers.NPCApp.index
 GET	/register	ix.npc.controllers.Registration.registerForm
 POST	/register	ix.npc.controllers.Registration.register
+GET	/admin		ix.npc.controllers.Registration.admin
+DELETE	/dataset/:id	ix.npc.controllers.Registration.deleteDataset(id: String)
 GET	/entities/:name	ix.npc.controllers.NPCApp.entity(name)
 GET	/entities	ix.npc.controllers.NPCApp.entities(q: String ?= null, rows: Int ?= 15, page: Int ?= 1)
 

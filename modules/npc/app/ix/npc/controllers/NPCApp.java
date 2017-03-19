@@ -61,9 +61,7 @@ public class NPCApp extends App implements ix.npc.models.Properties {
         "Entity Type",
         "StereoChemistry",
         "Stereocenters",
-        "Defined Stereocenters",
-        "LyChI_L4",
-        "LyChI_L3"
+        "Defined Stereocenters"
     };
     
     static public FacetDecorator[] decorate (Facet... facets) {
@@ -146,7 +144,7 @@ public class NPCApp extends App implements ix.npc.models.Properties {
             return ok (createEntityContent (result, rows, page));
         }
         catch (Exception ex) {
-            return internalServerError (ex.getMessage());
+            return _internalServerError (ex);
         }
     }
 
@@ -213,5 +211,28 @@ public class NPCApp extends App implements ix.npc.models.Properties {
         new Keyword (STRUCTURE_TYPE, STRUCTURE_ORIGINAL);
     public static Structure getStructure (Entity e) {
         return e.getLinkedObject(Structure.class, STRUCTURE_KW);
+    }
+
+    public static Result error (int code, String mesg) {
+        return ok (ix.npc.views.html.error.render(code, mesg));
+    }
+
+    public static Result _notFound (String mesg) {
+        return notFound (ix.npc.views.html.error.render(404, mesg));
+    }
+
+    public static Result _badRequest (String mesg) {
+        return badRequest (ix.npc.views.html.error.render(400, mesg));
+    }
+    
+    public static Result _internalServerError (String mesg) {
+        return internalServerError
+            (ix.npc.views.html.error.render
+             (500, "Internal server error: "+mesg));    
+    }
+    
+    public static Result _internalServerError (Throwable t) {
+        t.printStackTrace();
+        return _internalServerError (t.getMessage());
     }
 }

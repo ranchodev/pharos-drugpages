@@ -1685,7 +1685,7 @@ public class TextIndexer {
     public void remove (Object entity) throws Exception {
         Class cls = entity.getClass();
         if (cls.isAnnotationPresent(Entity.class)) {
-            Field[] fields = cls.getDeclaredFields();
+            Field[] fields = cls.getFields();
             Object id = null;       
             for (Field f : fields) {
                 if (f.getAnnotation(Id.class) != null) {
@@ -1698,6 +1698,7 @@ public class TextIndexer {
                     Logger.debug("Deleting document "+field+"="+id+"...");
                 indexWriter.deleteDocuments
                     (new Term (field, id.toString()));
+                lastModified.set(System.currentTimeMillis());
             }
             else {
                 Logger.warn("Entity "+cls+"'s Id field is null!");
@@ -1716,6 +1717,7 @@ public class TextIndexer {
             Query query = parser.parse(text);
             Logger.debug("## removing documents: "+query);
             indexWriter.deleteDocuments(query);
+            lastModified.set(System.currentTimeMillis());
         }
         catch (ParseException ex) {
             Logger.warn("Can't parse query expression: "+text, ex);

@@ -47,7 +47,7 @@ public class Job extends Model {
     @JsonView(BeanViews.Full.class)
     public Principal owner;
     
-    @OneToOne(cascade=CascadeType.ALL)
+    @ManyToOne(cascade=CascadeType.ALL)
     @JsonView(BeanViews.Full.class)
     public Payload payload;
 

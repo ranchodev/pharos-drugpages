@@ -1,0 +1,133 @@
+
+@import ix.core.models.Job
+@import ix.core.models.Payload
+@import ix.core.controllers.PayloadFactory
+@import ix.core.controllers.JobFactory
+
+@datasets() = {
+<div class="col-sm-8">
+  <div class="panel panel-default" style="border:0; box-shadow:none;">
+    <div class="panel-body">
+      <table class="table table-striped">
+	<tr>
+	  <th></th>
+	  <th>Name</th>
+	  <th>Update</th>
+	  <th>Status</th>
+	  <th>Processed</th>
+	  <th>Failed</th>
+	</tr>
+	@for(job <- JobFactory.finder.all()) {    
+	  <tr>
+	    <td><input type="checkbox" id="ds-@job.id"
+	    	       value="@job.payload.id" name="@job.payload.name"></td>
+	    <td>@job.payload.name</td>
+	    <td>@job.lastUpdate</td>
+	    <td>@job.status</td>
+	    <td>@job.processed</td>
+	    <td>@job.failed</td>
+	  </tr>
+	}
+      </table>
+      <button class="btn btn-default" onclick="deleteDatasets()">Delete</button>
+    </div>
+  </div>
+</div>
+}
+
+@ix.ncats.views.html.main("Administration Tools"){ @entitiesmenu("Admin") }(HtmlFormat.empty){
+<div class="container-fluid" style="margin-top:60px;">
+  <div class="col-md-12">
+    <div class="page-header">
+      <h1>NPC Administration</h1>
+    </div>
+    <div class="row">
+      <div class="col-md-12">
+	<ul class="nav nav-tabs" role="tablist">
+	  <li role="presentation" class="active">
+	    <a href="#datasets" aria-controls="properties" role="tab"
+		  data-toggle="tab">Datasets</a></li>
+	  <li role="presentation">
+	    <a href="#facets" aria-controls="profile" role="tab"
+	       data-toggle="tab">Facets</a></li>
+        </ul>
+	<div class="tab-content">
+	  <div role="tabpanel" class="tab-pane active" id="datasets">
+	    @datasets	    
+	  </div>
+	  <div role="tabpanel" class="tab-pane active" id="facets">
+	  </div>
+	</div>
+      </div>
+    </div>
+  </div>
+</div>
+}
+
+<div class="modal fade" tabindex="-1" role="dialog" id="delete-modal"
+     aria-labelledby="DeletaModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-md" role="document">
+    <div class="modal-content">
+      <div class="modal-body">
+         <div class="alert alert-danger">
+           <h3>Delete dataset <b><span id="delete-ds-name"></span></b>?</h3>
+	 </div>
+	 <br><em><span id="delete-modal-mesg"></span></em>
+      </div>
+      <div class="modal-footer">
+	<button type="button" class="btn btn-primary"
+		id="delete-modal-btn">Delete</button>
+	<button type="button" class="btn btn-primary"
+		id="cancel-modal-btn" data-dismiss="modal">Cancel</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+$(function () {
+  $('[data-toggle="popover"]').popover();
+  $('[data-toggle="tooltip"]').tooltip();
+  
+  $('#delete-modal-btn').on('click', function () {
+     var ds = $(this).data('ds');
+     var name = $(this).data('name');
+     
+     $(this).attr('disabled','true')
+	.html('<i class="fa fa-lg fa-spinner fa-spin"></i>');
+     $('#cancel-modal-btn').attr('disabled', 'true');
+     console.log('deleting dataset...'+ds);
+     
+     $.ajax({
+        url: '@ix.npc.controllers.routes.Registration.deleteDataset("")'+ds,
+	method: 'DELETE',
+	success: function (d) {
+	   console.log('delete mesage: '+d);
+           $('#delete-modal-mesg')
+	       .html('Successfully delete dataset "'+name+'"!');
+	},
+	error: function () {
+	   console.log("can't delete dataset "+ds);
+           $('#delete-modal-mesg')
+	       .html('Unabled to delete dataset "'+name+'"!');	   
+	}
+     })
+     .always(function () {
+	$('#delete-modal-btn').remove();     
+        $('#cancel-modal-btn').removeAttr('disabled').html('Close');   
+     });
+  });
+});
+
+function deleteDatasets () {
+   $("td input:checkbox").each(function () {
+      if ($(this).is(":checked")) {
+         var ds = $(this).attr("value");
+	 var name = $(this).attr('name');
+	 $('#delete-ds-name').html(name);
+	 $('#delete-modal-btn').data('ds', ds).data('name', name);
+	 $('#delete-modal').modal({backdrop: 'static', show: true});
+      }
+   })
+}
+</script>

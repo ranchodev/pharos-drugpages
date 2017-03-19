@@ -1,0 +1,17 @@
+@(code: Int, message: String)
+@ix.ncats.views.html.main(message){
+@entitiesmenu("")
+}(HtmlFormat.empty){
+<div class="container-fluid" style="padding-top:60px;">
+    @if(code == 200) {
+    <div class="alert alert-success" role="alert">
+      <h1>Status @code: <code>@message</code></h1>
+    </div>
+    } else {
+    <div class="alert alert-danger" role="alert">
+      <h1>Status @code: <code>@message</code></h1>
+    </div>
+    }
+  </div>
+</div>
+}

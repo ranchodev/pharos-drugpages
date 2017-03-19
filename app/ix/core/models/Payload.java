@@ -17,22 +17,23 @@ import javax.persistence.*;
 @Entity
 @Table(name="ix_core_payload")
 public class Payload extends Model {
-    @Id
-    public UUID id;
+    @Id public UUID id;
+    @Version public Long version;
 
     @ManyToOne(cascade=CascadeType.ALL)
     public Namespace namespace;
     public final Date created = new Date ();
     
-    @Column(length=1024)
+    @Column(length=255)
     public String name;
+    public String filename;
 
     @Column(length=40)
     public String sha1;
     
     @Column(length=128)
     public String mimeType; // mime type
-    @Column(name="capacity")
+    @Column(name="filesize")
     public Long size;
 
     @ManyToMany(cascade=CascadeType.ALL)
