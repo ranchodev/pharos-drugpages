@@ -63,6 +63,47 @@ public class NPCApp extends App implements ix.npc.models.Properties {
         "Stereocenters",
         "Defined Stereocenters"
     };
+
+    static protected class EntityStructureSearchResultProcessor
+        extends SearchResultProcessor<StructureIndexer.Result> {
+
+        protected EntityStructureSearchResultProcessor () throws IOException {
+        }
+
+        @Override
+        protected Object instrument (final StructureIndexer.Result r)
+            throws Exception {
+            List<Entity> entities = getOrElse
+                (getClass().getName()+"/structure/"+r.getId(),
+                 new Callable<List<Entity>> () {
+                     public List<Entity> call () {
+                         return EntityFactory.finder
+                         .where().eq("links.refid", r.getId()).findList();
+                     }
+                 });
+
+            Entity e = null;
+            if (!entities.isEmpty()) {
+                e = entities.get(0);
+                
+                int[] amap = new int[r.getMol().getAtomCount()];
+                int i = 0, nmaps = 0;
+                for (MolAtom ma : r.getMol().getAtomArray()) {
+                    amap[i] = ma.getAtomMap();
+                    if (amap[i] > 0)
+                        ++nmaps;
+                    ++i;
+                }
+                
+                if (nmaps > 0) {
+                    IxCache.set("AtomMaps/"+getContext().getId()+"/"
+                                +r.getId(), amap);
+                }
+            }
+            
+            return e;
+        }
+    }
     
     static public FacetDecorator[] decorate (Facet... facets) {
         List<FacetDecorator> decors = new ArrayList<FacetDecorator>();
@@ -123,7 +164,7 @@ public class NPCApp extends App implements ix.npc.models.Properties {
             
                         return ok (ix.npc.views.html.entities.render
                                    (page, _rows, total, pages,
-                                    decorate (facets), entities));
+                                    decorate (facets), entities, null));
                     }
                 });
         }
@@ -162,7 +203,7 @@ public class NPCApp extends App implements ix.npc.models.Properties {
 
         return ix.npc.views.html.entities.render
             (page, rows, result.count(),
-             pages, decorate (facets), entities);
+             pages, decorate (facets), entities, null);
     }
 
     static final GetResult<Entity> EntityResult =
@@ -185,13 +226,25 @@ public class NPCApp extends App implements ix.npc.models.Properties {
         
         long start = System.currentTimeMillis();
         try {
-            if (type != null) {
+            if (type != null && (type.equalsIgnoreCase("substructure")
+                                 || type.equalsIgnoreCase("similarity"))) {
+                // structure search
+                String cutoff = request().getQueryString("cutoff");
+                Logger.debug("Search: q="+q+" type="+type+" cutoff="+cutoff);
+                if (type.equalsIgnoreCase("substructure")) {
+                    return substructure (q, rows, page);
+                }
+                else {
+                    return similarity
+                        (q, Double.parseDouble(cutoff), rows, page);
+                }
             }
 
             return _entities (q, rows, page);
         }
         catch (Exception ex) {
-            return internalServerError (ex.getMessage());
+            ex.printStackTrace();
+            return _internalServerError (ex);
         }
     }
 
@@ -234,5 +287,96 @@ public class NPCApp extends App implements ix.npc.models.Properties {
     public static Result _internalServerError (Throwable t) {
         t.printStackTrace();
         return _internalServerError (t.getMessage());
+    }
+
+    public static Result sketcher (String s) {
+        return ok (ix.npc.views.html.sketcher.render(s));
+    }
+
+    public static Result substructure
+        (final String query, final int rows, int page) {
+        try {
+            SearchResultContext context =
+                substructure (query, rows, page,
+                              new EntityStructureSearchResultProcessor ());
+            
+            if (context != null) {
+                return fetchResult (context, rows, page);
+            }
+        }
+        catch (Exception ex) {
+            ex.printStackTrace();
+            Logger.error("Can't perform substructure search", ex);
+        }
+        
+        return _internalServerError
+            ("Unable to perform substructure search: "+query);
+    }
+
+    public static Result similarity (final String query,
+                                     final double threshold,
+                                     final int rows,
+                                     final int page) {
+        try {
+            SearchResultContext context = similarity
+                (query, threshold, rows, page,
+                 new EntityStructureSearchResultProcessor ());
+            
+            if (context != null) {
+                return fetchResult (context, rows, page);
+            }
+        }
+        catch (Exception ex) {
+            ex.printStackTrace();
+            Logger.error("Can't perform similarity search", ex);
+        }
+        
+        return _internalServerError
+            ("Unable to perform similarity search: "+query);
+    }
+
+    public static Result fetchResult
+        (final SearchResultContext context, int rows, int page)
+        throws Exception {
+        return App.fetchResult
+            (context, rows, page, new DefaultResultRenderer<Entity> () {
+                    public Content getContent
+                        (SearchResultContext context,
+                         int page, int rows,
+                         int total, int[] pages,
+                         List<TextIndexer.Facet> facets,
+                         List<Entity> entities) {
+                        return ix.npc.views.html.entities.render
+                            (page, rows, total,
+                             pages, decorate (filter
+                                              (facets, ENTITY_FACETS)),
+                             entities, context.getId());
+                    }
+                });
+    }
+
+    /*
+     * with structure highlighting
+     */
+    public static Result structure (final String id,
+                                    final String format, final int size,
+                                    final String context) {
+        //Logger.debug("Fetching structure");
+        String atomMap = "";
+        if (context != null) {
+            int[] amap = (int[])IxCache.get("AtomMaps/"+context+"/"+id);
+            //Logger.debug("AtomMaps/"+context+" => "+amap);
+            if (amap != null && amap.length > 0) {
+                StringBuilder sb = new StringBuilder ();
+                sb.append(amap[0]);
+                for (int i = 1; i < amap.length; ++i)
+                    sb.append(","+amap[i]);
+                atomMap = sb.toString();
+            }
+            else {
+                atomMap = context;
+            }
+        }
+        return App.structure(id, format, size, atomMap);        
     }
 }

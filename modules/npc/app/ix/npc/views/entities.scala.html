@@ -9,16 +9,23 @@
 @import ix.npc.models.Properties
 
 @(current: Int, rows: Int, total: Int, pages: Array[Int],
-facets: Array[FacetDecorator], entities: List[Entity])
+facets: Array[FacetDecorator], entities: List[Entity], ctx: String)
 
 @cell(e: Entity) = {
  <div class="col-sm-6 col-md-4">
    <div class="thumbnail">
      @defining(NPCApp.getStructure(e)) { struc =>
-        <a href='@ix.npc.controllers.routes.NPCApp.entity(e.getId.toString)'><img src='@ix.ncats.controllers.routes.App.structure(struc.getId, "svg", 200)' alt="Structure for entity @e.getName"> </a>
-     }
+       @if(struc != null) {
+        <a href='@ix.npc.controllers.routes.NPCApp.entity(e.getId.toString)'><img src='@ix.ncats.controllers.routes.App.structure(struc.getId, "svg", 200, ctx)' alt="Structure for entity @e.getName"> </a>
+       }
 
-     <div class="caption">@e.getName</div>
+	<div class="caption">
+	@if(struc != null) {
+	<a role="button" class="btn" href='@ix.npc.controllers.routes.NPCApp.sketcher(struc.id.toString)'><i class="fa fa-edit" aria-hidden="true"></i></a>
+	  }
+	  @e.getName
+	</div>
+     }
    </div>
  </div>
 }

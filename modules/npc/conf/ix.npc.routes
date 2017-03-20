@@ -6,6 +6,8 @@ GET	/admin		ix.npc.controllers.Registration.admin
 DELETE	/admin/dataset/:id	ix.npc.controllers.Registration.deleteDataset(id: String)
 GET	/entities/:name	ix.npc.controllers.NPCApp.entity(name)
 GET	/entities	ix.npc.controllers.NPCApp.entities(q: String ?= null, rows: Int ?= 15, page: Int ?= 1)
+GET	/sketcher	ix.npc.controllers.NPCApp.sketcher(s: String ?= null)
+GET	/structure/$id<[a-f0-9\-]+>.$format<(svg|png|mol|sdf|smi|smiles|mrv)>	ix.npc.controllers.NPCApp.structure(id: String, format: String, size: Int ?= 150, atomMap: String ?= null)
 
 
 ->	/	ix.ncats.Routes

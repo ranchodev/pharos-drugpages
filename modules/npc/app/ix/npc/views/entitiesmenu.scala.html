@@ -18,6 +18,7 @@
   @item("Admin", ix.npc.controllers.routes.Registration.admin.url)
   @item("Register", ix.npc.controllers.routes.Registration.register.url)
   @item("Entities", ix.npc.controllers.routes.NPCApp.entities(null, 15, 1).url)
+  @item("Sketcher", ix.npc.controllers.routes.NPCApp.sketcher(null).url)
 </ul>
 
 <form class="nav navbar-form navbar-right" role="search" method="GET"
@@ -32,12 +33,6 @@
         data-toggle="tooltip" data-placement="bottom" title="Search entities">
          <span class="fa fa-search fa-fw" aria-hidden="true"></span>
         </button>
-@**
-        <a class="btn btn-default" href="@ix.npc.controllers.routes.NPCApp.sketcher(null)"
-            role="button" style="margin-right : 1px"
-            data-toggle="tooltip" data-placement="bottom" title="Structure search"
-        ><i class="fa fa-flask"></i></a>
-**@
     </div>
   </div>
 </form>
