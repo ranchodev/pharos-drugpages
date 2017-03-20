@@ -38,6 +38,9 @@ import org.apache.lucene.store.Directory;
 import org.apache.lucene.store.NIOFSDirectory;
 import org.apache.lucene.store.NoLockFactory;
 import org.apache.lucene.store.RAMDirectory;
+import org.apache.lucene.store.IndexInput;
+import org.apache.lucene.store.IndexOutput;
+import org.apache.lucene.store.IOContext;
 import org.apache.lucene.util.BytesRef;
 import org.apache.lucene.util.Version;
 import org.reflections.Reflections;
@@ -933,6 +936,17 @@ public class TextIndexer {
             index.mkdirs();
         indexDir = new NIOFSDirectory 
             (index, NoLockFactory.getNoLockFactory());
+
+        try {
+            IndexInput input = indexDir.openInput
+                ("lastModified", IOContext.DEFAULT);
+            lastModified.set(input.readLong());
+            input.close();
+            Logger.debug("Index "+index+": lastModified "
+                         +new Date(lastModified.get()));
+        }
+        catch (Exception ex) {
+        }
 
         File taxon = new File (dir, "facet");
         if (!taxon.exists())
@@ -2286,6 +2300,16 @@ public class TextIndexer {
     }
 
     public void shutdown () {
+        try {
+            IndexOutput output = indexDir.createOutput
+                ("lastModified", IOContext.DEFAULT);
+            output.writeLong(lastModified.get());
+            output.close();
+        }
+        catch (Exception ex) {
+            Logger.error("Unable to set last modified", ex);
+        }
+        
         try {
             for (int i = 0; i < fetchWorkers.length; ++i)
                 fetchQueue.put(POISON_PAYLOAD);

@@ -299,6 +299,12 @@ public class IxCache extends Plugin
         }
     }
 
+    public static void clearCache () throws Exception {
+        if (_instance == null)
+            throw new IllegalStateException ("Cache hasn't been initialized!");
+        _instance.cache.removeAll();
+    }
+    
     public static Element getElm (String key) {
         if (_instance == null)
             throw new IllegalStateException ("Cache hasn't been initialized!");

@@ -39,7 +39,10 @@
 <div class="container-fluid" style="margin-top:60px;">
   <div class="col-md-12">
     <div class="page-header">
-      <h1>NPC Administration</h1>
+      <h1>NPC Administration
+          <button type="button" class="btn btn-danger pull-right"
+	  	  id="clear-cache-btn">Clear Cache</button>
+      </h1>
     </div>
     <div class="row">
       <div class="col-md-12">
@@ -88,6 +91,19 @@
 $(function () {
   $('[data-toggle="popover"]').popover();
   $('[data-toggle="tooltip"]').tooltip();
+
+  $('#clear-cache-btn').on('click', function () {
+      $.ajax({
+         url: '@ix.ncats.controllers.routes.App.cacheClear',
+	 method: 'DELETE',
+	 success: function () {
+	    console.log('Cache cleared!');
+	 },
+	 error: function (xhr, status, err) {
+	    console.log(status+': '+err);
+	 }
+      });
+  });
   
   $('#delete-modal-btn').on('click', function () {
      var ds = $(this).data('ds');
@@ -105,6 +121,16 @@ $(function () {
 	   console.log('delete mesage: '+d);
            $('#delete-modal-mesg')
 	       .html('Successfully delete dataset "'+name+'"!');
+	   $('#cancel-modal-btn').on('click', function () {
+	       window.location = '@ix.npc.controllers.routes.Registration.admin';
+	   });
+	   $.ajax({
+	      url: '@ix.ncats.controllers.routes.App.cacheClear',
+	      method: 'DELETE',
+	      success: function () {
+	         console.log('Cache cleared!');
+	      }
+	   });
 	},
 	error: function () {
 	   console.log("can't delete dataset "+ds);

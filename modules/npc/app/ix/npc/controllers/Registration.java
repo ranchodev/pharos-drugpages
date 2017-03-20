@@ -64,6 +64,7 @@ public class Registration extends NPCApp {
         final Job job;
         final Keyword ds;
         final String source;
+        
         MolJobPersistence (Job job) {
             this.job = job;
             ds = KeywordFactory.registerIfAbsent
@@ -108,7 +109,9 @@ public class Registration extends NPCApp {
                              +" entities!");
             }
             else {
-                MOLIDX.remove(source);
+                // job deleted, we remove any leftover from this job
+                MOLIDX.remove(source);          
+                deleteDataset (job.payload);
             }
         }
 
@@ -128,7 +131,6 @@ public class Registration extends NPCApp {
                     ent.links.add(xref);
                     
                     ent.save();
-
                     /*
                      * a job could be delete while we're still processing;
                      * this checkpointing mechanism allows us to sync with
@@ -136,6 +138,13 @@ public class Registration extends NPCApp {
                      * deleted.
                      */
                     if (job.processed++ % 100 == 0) {
+                        try {
+                            IxCache.clearCache();
+                        }
+                        catch (Exception ex) {
+                            Logger.error("Can't clear cache", ex);
+                        }
+                        
                         if (null != JobFactory.getJob(job.id)) {
                             job.update();
                             Logger.debug(job.payload.name+": "+job.processed);
@@ -171,7 +180,6 @@ public class Registration extends NPCApp {
         Structure struc = StructureProcessor.instrument(mol, moieties, false);
         struc.save();
 
-        // FIXME: this needs to be tied to EntityPersistenceAdapters somehow!
         MOLIDX.add(ds, struc.id.toString(), struc.molfile);
         
         XRef xref = new XRef (struc);
@@ -282,38 +290,46 @@ public class Registration extends NPCApp {
             ("Unable to create payload from multipart request!");
     }
 
+    static int deleteDataset (Payload py) throws Exception {
+        int count = 0;
+        QueryIterator<Entity> it = EntityFactory.finder.where()
+            .eq("links.refid", py.id).findIterate();
+        try {
+            while (it.hasNext()) {
+                Entity e = it.next();
+                e.delete();
+                ++count;
+            }
+        }
+        finally {
+            it.close();
+        }
+            
+        QueryIterator<Job> jit = JobFactory.finder.where()
+            .eq("payload.id", py.id).findIterate();
+        try {
+            while (jit.hasNext()) {
+                Job job = jit.next();
+                Logger.debug("deleting job "+job.id);
+                job.delete();
+            }
+        }
+        finally {
+            jit.close();
+        }
+
+        MOLIDX.remove(py.sha1.substring(0,9));
+        
+        return count;
+    }
+    
     public static Result deleteDataset (String id) {
         try {
             Payload py = PayloadFactory.getPayload(UUID.fromString(id));
             if (py == null)
                 return notFound ("Unknown payload: "+id);
 
-            int count = 0;
-            QueryIterator<Entity> it = EntityFactory.finder.where()
-                .eq("links.refid", py.id).findIterate();
-            try {
-                while (it.hasNext()) {
-                    Entity e = it.next();
-                    e.delete();
-                    ++count;
-                }
-            }
-            finally {
-                it.close();
-            }
-            
-            QueryIterator<Job> jit = JobFactory.finder.where()
-                .eq("payload.id", py.id).findIterate();
-            try {
-                while (jit.hasNext()) {
-                    Job job = jit.next();
-                    Logger.debug("deleting job "+job.id);
-                    job.delete();
-                }
-            }
-            finally {
-                jit.close();
-            }
+            int count = deleteDataset (py);
 
             //py.delete();            
             //Logger.debug("deleting payload "+id);

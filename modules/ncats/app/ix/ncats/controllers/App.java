@@ -1219,7 +1219,6 @@ public class App extends Authentication {
                         if (mol.getDim() < 2) {
                             mol.clean(2, null);
                         }
-                        Logger.info("ok");
                         return ok (render (mol, "svg", size, null))
                             .as("image/svg+xml");
                     }
@@ -2118,7 +2117,19 @@ public class App extends Authentication {
         return ok ("No cache available!");
     }
 
-    @Security.Authenticated(Secured.class)        
+    @Security.Authenticated(Secured.class)    
+    public static Result cacheClear () {
+        try {
+            IxCache.clearCache();
+            return ok ();
+        }
+        catch (Exception ex) {
+            ex.printStackTrace();
+            return internalServerError (ex.getMessage());
+        }
+    }
+    
+    @Security.Authenticated(Secured.class)
     public static Result cacheDelete (String key) {
         try {
             Element elm = IxCache.getElm(key);
