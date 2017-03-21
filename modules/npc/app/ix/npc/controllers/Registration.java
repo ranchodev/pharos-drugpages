@@ -84,6 +84,9 @@ public class Registration extends NPCApp {
                     }
                     catch (Exception ex) {
                         ++job.failed;
+                        Logger.error("Can't process payload: "
+                                     +job.payload.name, ex);
+                        ex.printStackTrace();
                     }
                 }
                 while (mi.skipToNext());
@@ -124,12 +127,14 @@ public class Registration extends NPCApp {
                 
                 try {
                     Entity ent = instrument (source, mol);
+                    input.save();
                     ent.properties.add(input);
                     
                     XRef xref = new XRef (job.payload);
                     xref.properties.add(ds);
-                    ent.links.add(xref);
+                    xref.save();
                     
+                    ent.links.add(xref);
                     ent.save();
                     /*
                      * a job could be delete while we're still processing;
@@ -168,6 +173,7 @@ public class Registration extends NPCApp {
                     
                     Logger.warn("Job "+job.id+": record "+rec.id
                                 +" failed: "+ex.getMessage());
+                    ex.printStackTrace();
                 }
             }
         }
@@ -180,7 +186,8 @@ public class Registration extends NPCApp {
         Structure struc = StructureProcessor.instrument(mol, moieties, false);
         struc.save();
 
-        MOLIDX.add(ds, struc.id.toString(), struc.molfile);
+        if (mol.getAtomCount() > 0)
+            MOLIDX.add(ds, struc.id.toString(), struc.molfile);
         
         XRef xref = new XRef (struc);
         xref.properties.addAll(struc.properties);
@@ -214,13 +221,19 @@ public class Registration extends NPCApp {
          */  
         for (int i = 0; i < mol.getPropertyCount(); ++i) {
             String prop = mol.getPropertyKey(i);
-            String[] values = mol.getProperty(prop).split("\n");
-            for (String v : values) {
-                if (v.length() < 255)
-                    ent.addIfAbsent
-                        ((Value)KeywordFactory.registerIfAbsent(prop, v, null));
-                else
-                    ent.properties.add(new Text (prop, v));
+            if ("name".equalsIgnoreCase(prop)) {
+                ent.name = mol.getProperty(prop);
+            }
+            else {
+                String[] values = mol.getProperty(prop).split("\n");
+                for (String v : values) {
+                    if (v.length() < 255)
+                        ent.addIfAbsent
+                            ((Value)KeywordFactory
+                             .registerIfAbsent(prop, v, null));
+                    else
+                        ent.properties.add(new Text (prop, v));
+                }
             }
         }
 

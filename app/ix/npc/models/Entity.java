@@ -46,6 +46,8 @@ public class Entity extends EntityModel {
 
     @Indexable(facet=true, name="Entity Type")
     public Type type = Type.Other;
+    
+    @Indexable(facet=true, name="Entity Name")
     public String name;
 
     @Lob
