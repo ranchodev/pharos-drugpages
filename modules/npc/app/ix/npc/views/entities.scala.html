@@ -15,14 +15,14 @@ facets: Array[FacetDecorator], entities: List[Entity], ctx: String)
  <div class="col-sm-6 col-md-4">
    <div class="thumbnail">
      @defining(NPCApp.getStructure(e)) { struc =>
-       @if(struc != null) {
+     @if(struc != null) {
+     <a role="button" class="btn btn-default"
+	style="float:right;"
+	href='@ix.npc.controllers.routes.NPCApp.sketcher(struc.id.toString)'><i class="fa fa-edit" aria-hidden="true"></i></a>     
         <a href='@ix.npc.controllers.routes.NPCApp.entity(e.getId.toString)'><img src='@ix.ncats.controllers.routes.App.structure(struc.getId, "svg", 200, ctx)' alt="Structure for entity @e.getName"> </a>
        }
 
 	<div class="caption">
-	@if(struc != null) {
-	<a role="button" class="btn" href='@ix.npc.controllers.routes.NPCApp.sketcher(struc.id.toString)'><i class="fa fa-edit" aria-hidden="true"></i></a>
-	  }
 	  @e.getName
 	</div>
      }

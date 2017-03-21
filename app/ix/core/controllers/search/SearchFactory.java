@@ -49,16 +49,19 @@ public class SearchFactory extends EntityFactory {
 
     public static SearchResult
         search (Class kind, String q, int top, int skip, int fdim,
-                Map<String, String[]> queryParams) throws IOException {
-        return search (_indexer, kind, null, q, top, skip, fdim, queryParams);
+                Map<String, String[]> queryParams,
+                SearchOptions.FacetRange... rangeFacets) throws IOException {
+        return search (_indexer, kind, null, q, top,
+                       skip, fdim, queryParams, rangeFacets);
     }
 
     public static SearchResult
         search (Collection subset, String q, int fdim,
-                Map<String, String[]> queryParams) throws IOException {
+                Map<String, String[]> queryParams,
+                SearchOptions.FacetRange... rangeFacets) throws IOException {
         return search (_indexer, null, subset,
                        q, subset != null ? subset.size() : 0,
-                       0, fdim, queryParams);
+                       0, fdim, queryParams, rangeFacets);
     }
 
     public static SearchResult search (int top, int skip, int fdim,
@@ -70,28 +73,37 @@ public class SearchFactory extends EntityFactory {
 
     public static SearchResult
         search (String q, int top, int skip, int fdim,
-                Map<String, String[]> queryParams) throws IOException {
-        return search (_indexer, null, null, q, top, skip, fdim, queryParams);
+                Map<String, String[]> queryParams,
+                SearchOptions.FacetRange... rangeFacets) throws IOException {
+        return search (_indexer, null, null, q, top,
+                       skip, fdim, queryParams, rangeFacets);
     }
     
     public static SearchResult
         search (Collection subset, String q, int top, int skip, int fdim,
-                Map<String, String[]> queryParams) throws IOException {
-        return search (_indexer, null, subset, q, top, skip, fdim, queryParams);
+                Map<String, String[]> queryParams,
+                SearchOptions.FacetRange... rangeFacets) throws IOException {
+        return search (_indexer, null, subset, q, top,
+                       skip, fdim, queryParams, rangeFacets);
     }
     
     public static SearchResult
         search (TextIndexer indexer, Class kind,
                 String q, int top, int skip, int fdim,
-                Map<String, String[]> queryParams) throws IOException {
-        return search (indexer, kind, null, q, top, skip, fdim, queryParams);
+                Map<String, String[]> queryParams,
+                SearchOptions.FacetRange... rangeFacets) throws IOException {
+        return search (indexer, kind, null, q, top,
+                       skip, fdim, queryParams, rangeFacets);
     }
     
     public static SearchResult
         search (TextIndexer indexer, Class kind, Collection subset,
                 String q, int top, int skip, int fdim,
-                Map<String, String[]> queryParams) throws IOException {
+                Map<String, String[]> queryParams,
+                SearchOptions.FacetRange... rangeFacets) throws IOException {
         SearchOptions options = new SearchOptions (kind, top, skip, fdim);
+        for (SearchOptions.FacetRange fr : rangeFacets)
+            options.addFacet(fr);
         
         StringBuilder filter = new StringBuilder ();
         if (queryParams != null) {

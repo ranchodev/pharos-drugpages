@@ -1274,8 +1274,14 @@ public class TextIndexer {
         Query query = NumericRangeQuery.newIntRange
             (field, min, max, true /* minInclusive?*/, true/*maxInclusive?*/);
         
+        Filter filter = null;
+        if (options.kind != null) {
+            filter = new TermFilter
+                (new Term (FIELD_KIND, options.kind.getName()));
+        }
+        
         return search (getSearcher (), new SearchResult (options, null),
-                       query, null);
+                       query, filter);
     }
     
     protected SearchResult filter (SearchOptions options, Filter filter)
@@ -2299,16 +2305,30 @@ public class TextIndexer {
         }
     }
 
-    public void shutdown () {
+    public void flush () {
         try {
+            if (indexWriter.hasPendingMerges()) {
+                indexWriter.waitForMerges();
+                indexWriter.commit();
+                lastModified.set(System.currentTimeMillis());
+            }
+            
             IndexOutput output = indexDir.createOutput
                 ("lastModified", IOContext.DEFAULT);
             output.writeLong(lastModified.get());
             output.close();
+            
+            saveFacetsConfig (new File (baseDir, FACETS_CONFIG_FILE), 
+                              facetsConfig);
+            saveSorters (new File (baseDir, SORTER_CONFIG_FILE), sorters);
         }
         catch (Exception ex) {
-            Logger.error("Unable to set last modified", ex);
+            Logger.error("Can't flush text indexer", ex);
         }
+    }
+
+    public void shutdown () {
+        flush ();
         
         try {
             for (int i = 0; i < fetchWorkers.length; ++i)
@@ -2327,10 +2347,6 @@ public class TextIndexer {
                 taxonWriter.close();
             indexDir.close();
             taxonDir.close();
-
-            saveFacetsConfig (new File (baseDir, FACETS_CONFIG_FILE), 
-                              facetsConfig);
-            saveSorters (new File (baseDir, SORTER_CONFIG_FILE), sorters);
         }
         catch (Exception ex) {
             //ex.printStackTrace();

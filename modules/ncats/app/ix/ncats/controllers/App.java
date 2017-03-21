@@ -975,7 +975,8 @@ public class App extends Authentication {
         ("([^:]+):\\[([^,]*),([^\\]]*)\\]");
     public static SearchResult getSearchResult
         (final TextIndexer indexer, final Class kind,
-         final String q, final int total, final Map<String, String[]> query) {
+         final String q, final int total, final Map<String, String[]> query,
+         final SearchOptions.FacetRange... rangeFacets) {
         
         final String sha1 = signature (kind, q, query);
         final boolean hasFacets = q != null
@@ -1010,7 +1011,12 @@ public class App extends Authentication {
                                 public SearchResult call () throws Exception {
                                     SearchOptions options =
                                         new SearchOptions (query);
+                                    options.kind = kind;
                                     options.top = total;
+                                    for (SearchOptions.FacetRange fr
+                                             : rangeFacets)
+                                        options.addFacet(fr);
+                                    
                                     SearchResult result = _textIndexer.range
                                         (options, field, min.equals("")
                                          ? null : Integer.parseInt(min),
@@ -1029,7 +1035,7 @@ public class App extends Authentication {
                                 Logger.debug("### cache missed: "+sha1);
                                 SearchResult result = SearchFactory.search
                                 (kind, hasFacets ? null : q,
-                                 total, 0, FACET_DIM, query);
+                                 total, 0, FACET_DIM, query, rangeFacets);
                                 result.updateCacheWhenComplete(sha1);
                                 return cacheKey (result, sha1, sha1);
                             }

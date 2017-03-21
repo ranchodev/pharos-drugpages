@@ -7,6 +7,46 @@ import java.util.ArrayList;
 import java.util.Iterator;
 
 public class SearchOptions implements java.io.Serializable {
+    public static interface Range {
+        String getName ();
+        Object getRange ();
+    }
+    
+    public static class FacetRange {
+        public final String field;
+        public final List<Range> range = new ArrayList<>();
+
+        public FacetRange (String field) {
+            this.field = field;
+        }
+        
+        public void add (Range range) {
+            this.range.add(range);
+        }
+    }
+
+    public static Range newRange (final String name, final long[] range) {
+        return new Range () {
+            public String getName () { return name; }
+            public long[] getRange () { return range; }
+        };
+    }
+
+    public static Range newRange (final String name, final int[] range) {
+        return new Range () {
+            public String getName () { return name; }
+            public int[] getRange () { return range; }
+        };
+    }
+
+    public static Range newRange (final String name, final double[] range) {
+        return new Range () {
+            public String getName () { return name; }
+            public double[] getRange () { return range; }
+        };
+    }
+
+    
     public static final int DEFAULT_TOP = 10;
     public static final int DEFAULT_FDIM = 10;
     // default number of elements to fetch while blocking
@@ -28,6 +68,7 @@ public class SearchOptions implements java.io.Serializable {
     public List<String> facets = new ArrayList<String>();
     public List<String> order = new ArrayList<String>();
     public List<String> expand = new ArrayList<String>();
+    public List<FacetRange> rangeFacets = new ArrayList<>();
 
     public SearchOptions () { }
     public SearchOptions (Class<?> kind, int top, int skip, int fdim) {
@@ -46,6 +87,10 @@ public class SearchOptions implements java.io.Serializable {
     }
     public void addFacet (String facet, String value) {
         facets.add(facet+"/"+value);
+    }
+
+    public void addFacet (FacetRange facet) {
+        rangeFacets.add(facet);
     }
 
     public int max () { return skip+top; }

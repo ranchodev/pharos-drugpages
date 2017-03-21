@@ -55,6 +55,8 @@ import ix.npc.models.*;
 public class NPCApp extends App implements ix.npc.models.Properties {
     public static final ThreadPoolPlugin THREAD_POOL =
         Play.application().plugin(ThreadPoolPlugin.class);
+    public static final TextIndexer INDEXER =
+        Play.application().plugin(TextIndexerPlugin.class).getIndexer();
 
     static final String[] ENTITY_FACETS = {
         "Dataset",
@@ -150,7 +152,7 @@ public class NPCApp extends App implements ix.npc.models.Properties {
             return createEntityResult (result, rows, page);
         }
         else {
-            return getOrElse (key, new Callable<Result> () {
+            return getOrElse_ (key, new Callable<Result> () {
                     public Result call () throws Exception {
                         Facet[] facets =
                             filter (getFacets (Entity.class, FACET_DIM),

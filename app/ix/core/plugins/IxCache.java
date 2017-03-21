@@ -356,6 +356,7 @@ public class IxCache extends Plugin
                                    String key, Callable<T> generator)
         throws Exception {
         Element elm = getElm (key);
+        //Logger.debug("key="+key+" epoch="+epoch+" created="+elm.getCreationTime());
         if (elm == null || elm.getObjectValue() == null
             || elm.getCreationTime() < epoch) {
             T v = generator.call();

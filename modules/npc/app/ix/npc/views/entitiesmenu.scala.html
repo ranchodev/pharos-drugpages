@@ -1,3 +1,4 @@
+@import ix.npc.controllers.NPCApp
 
 @(active: String)
 
@@ -43,4 +44,4 @@
 ** Look at /api/v1/suggest/@fields
 ** for a list of fields that can be specified!
 **@
-@ix.ncats.views.html.typeahead(Array("Target","Disease","Ligand","Gene","MeSH"))
+@ix.ncats.views.html.typeahead(NPCApp.INDEXER.getSuggestFields().toArray(new Array[String](0)))

@@ -112,9 +112,11 @@ public class Structure extends Model implements java.io.Serializable {
     @Indexable(name="Molecular Formula", facet=true)
     public String formula;
     
+    @Indexable(name="Atom Count")
+    public Integer atomCount;
     
-    //Added for testing.
-    public Integer count;
+    @Indexable(name="Bond Count")
+    public Integer bondCount;
     
     @JsonProperty("stereochemistry")
     @Column(name="stereo")
@@ -134,9 +136,13 @@ public class Structure extends Model implements java.io.Serializable {
     
     @Indexable(name="Defined Stereocenters",ranges={0,1,2,3,4,5,6,7,8,9,10})
     public Integer definedStereo; // count of defined stereocenters
-    
+
+    @Indexable(name="E/Z Stereo")
     public Integer ezCenters; // counter of E/Z centers
+    
+    @Indexable(name="Formal Charge")
     public Integer charge; // formal charge
+    
     @Indexable(name="Molecular Weight",
                dranges={0,200,400,600,800,1000}, format="%1$.0f")
     public Double mwt; // molecular weight

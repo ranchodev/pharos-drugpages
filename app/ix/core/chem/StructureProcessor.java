@@ -324,9 +324,10 @@ public class StructureProcessor {
                             String hash=((Keyword) v).term;
                             Structure s = moietiesMap.get(hash);
                             if(s!=null){
-                                s.count++;
+                                // this value has no meaning without context
+                                //s.count++;
                             }else{
-                                moiety.count=1;
+                                //moiety.count=1;
                                 moietiesMap.put(hash,moiety);
                                 if (components != null)
                                     components.add(moiety);
@@ -352,6 +353,8 @@ public class StructureProcessor {
         struc.formula = mol.getFormula();
         struc.mwt = mol.getMass();
         struc.smiles = ChemUtil.canonicalSMILES(mol);
+        struc.atomCount = mol.getAtomCount();
+        struc.bondCount = mol.getBondCount();
 
         calcStereo (struc);
     }

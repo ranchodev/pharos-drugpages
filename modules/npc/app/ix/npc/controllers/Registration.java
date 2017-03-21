@@ -49,13 +49,11 @@ import static play.mvc.Http.MultipartFormData;
 import ix.npc.models.*;
 
 public class Registration extends NPCApp {
-    public static final ThreadPoolPlugin THREAD_POOL =
-        Play.application().plugin(ThreadPoolPlugin.class);
     public static final PayloadPlugin PAYLOAD =
         Play.application().plugin(PayloadPlugin.class);
     public static final PersistenceQueue PQ =
         Play.application().plugin(PersistenceQueue.class);
-    static final StructureIndexer MOLIDX = Play.application()
+    public static final StructureIndexer MOLIDX = Play.application()
         .plugin(StructureIndexerPlugin.class).getIndexer();
 
     static class MolJobPersistence
@@ -113,6 +111,8 @@ public class Registration extends NPCApp {
                 MOLIDX.remove(source);          
                 deleteDataset (job.payload);
             }
+            
+            INDEXER.flush();
         }
 
         void process (MolImporter mi) throws Exception {
