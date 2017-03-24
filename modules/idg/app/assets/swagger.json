@@ -14,10 +14,13 @@
     },
     "version": "1.0.1"
   },
-  "host": "localhost:9000",
+  "host": "pharos.nih.gov",
   "basePath": "/idg/api/v1",
   "produces": [
     "application/json"
+  ],
+  "schemes": [
+    "https"
   ],
   "tags": [
     {
@@ -44,9 +47,6 @@
 	"name": "assay",
 	"description": "API pertaining to assay entity"
     }
-  ],
-  "schemes": [
-    "http"
   ],
   "paths": {
     "/targets": {
