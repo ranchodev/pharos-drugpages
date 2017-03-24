@@ -1094,6 +1094,12 @@ public class IDGApp extends App implements Commons {
         }
     }
 
+    @Cached(key="_api", duration = Integer.MAX_VALUE)
+    public static Result api() {
+        return ok(ix.idg.views.html.api.render
+                  ("Pharos: Illuminating the Druggable Genome"));
+    }
+
     @Cached(key="_index", duration = Integer.MAX_VALUE)
     public static Result index () {
         response().setHeader("X-Frame-Options", "SAMEORIGIN");

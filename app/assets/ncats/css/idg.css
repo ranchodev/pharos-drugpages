@@ -1,11 +1,27 @@
-#
-# override CSS
-#
+/*#*/
+/*# override CSS*/
+/*#*/
 
-.breadcrumb > li + li:before {
-    content: "&raquo;";
-    color: #aaa;
+html {
+    height: 100%;
 }
+body {
+    min-height: 100%;
+    display: flex;
+    flex-direction: column;
+}
+.content {
+    flex: auto;
+}
+
+.swagger-section .swagger-ui-wrap .footer {
+flex: 1;
+}
+
+/*.breadcrumb > li + li:before {*/
+    /*content: "&raquo;";*/
+    /*color: #aaa;*/
+/*}*/
 
 .tt-dropdown-menu {
     background-color: rgba(255, 255, 255, .9);
