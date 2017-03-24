@@ -47,7 +47,7 @@ ga('create', 'UA-53774738-1', 'auto');
 ga('send', 'pageview');
     </script>
 
-    @ix.ncats.views.html.typeahead(Array("Target","Disease","Ligand","UniProt_Gene","OMIM_Gene","OMIM_Term","UniProt_Shortname","IMPC_Term","UniProt_Disease","MGI_Term","IDG_Drug","UniProt_Keyword","UniProt_Accession"))
+    @ix.ncats.views.html.typeahead(Array("Target","Disease","Ligand","UniProt_Gene","OMIM_Gene","OMIM_Term","UniProt_Shortname","IMPC_Term","DisGeNET_Disease","MGI_Term","IDG_Drug","KEGG_Pathway","Reactome_Pathway","GWAS_Trait","WikePathways_Pathway","UniProt_Keyword","UniProt_Accession"))
     <style type="text/css">
       .twitter-typeahead {
           position: relative;
@@ -58,7 +58,7 @@ ga('send', 'pageview');
         .twitter-typeahead { display: flex !important; }
       }
       #scrollable-dropdown-menu .tt-dropdown-menu {
-         background-color: rgba(255, 255, 255, .9);
+         background-color: rgba(128, 128, 128, .9);
          overflow-y: auto;
          max-height: 400px;
          text-align: left;

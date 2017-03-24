@@ -2,6 +2,7 @@
 @import play.Play
 @import java.net.URLEncoder
 @import ix.core.models.{Keyword, Publication, Text, VInt, Value}
+@import ix.ncats.controllers.App
 @import ix.idg.controllers.Commons._
 @import ix.idg.controllers.IDGApp._
 @import ix.idg.controllers.{ExpressionApp, IDGApp, WordCloud}
@@ -15,7 +16,7 @@
 @(target: Target, diseases: List[DiseaseRelevance], breadcrumb: List[Keyword])
 
 @facet(label: String, value: String, href: String = null, max: Int = 40) = {
-  @defining(IDGApp.getTermCount(classOf[Target], label, value)) { count =>
+  @defining(App.getTermCount(classOf[Target], label, value)) { count =>
     <div>@if(max > 0 && value.length > max) {
        <a id="keyword" class="label label-primary loader"
           data-toggle="tooltip"
@@ -244,7 +245,7 @@
 }
 
 @diseaserow(dr: DiseaseRelevance) = {
-  @defining(IDGApp.getTermCount(classOf[Target], IDG_DISEASE, dr.disease.name)) { count =>
+  @defining(App.getTermCount(classOf[Target], IDG_DISEASE, dr.disease.name)) { count =>
      <tr @*class="treegrid-@dr.disease.id"*@>
        <td>
          @if(dr.disease.name.length > 40) {
@@ -502,7 +503,7 @@
 	          <tr>
 		    <td>
 		      <a id="keyword" class="label label-primary loader"
-          	      	 href='@{ix.idg.controllers.routes.IDGApp.targets()+"?facet="+URLEncoder.encode(TECHDEV_PI,"utf8")+"/"}@URLEncoder.encode(td.pi, "utf8")'>@td.pi <span class="badge">@IDGApp.getTermCount(classOf[Target], TECHDEV_PI, td.pi)</span></a>
+          	      	 href='@{ix.idg.controllers.routes.IDGApp.targets()+"?facet="+URLEncoder.encode(TECHDEV_PI,"utf8")+"/"}@URLEncoder.encode(td.pi, "utf8")'>@td.pi <span class="badge">@App.getTermCount(classOf[Target], TECHDEV_PI, td.pi)</span></a>
 		    </td>
 		    <td>
 		    @if(td.resourceUrl != null) {

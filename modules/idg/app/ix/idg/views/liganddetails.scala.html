@@ -5,6 +5,7 @@
 @import ix.idg.models.Ligand
 @import ix.idg.controllers.Commons._
 @import ix.idg.controllers.ChemblRegistry._
+@import ix.ncats.controllers.App
 @import ix.idg.controllers.IDGApp
 @import ix.idg.controllers.IDGApp._
 @import java.net.URLEncoder
@@ -21,7 +22,7 @@
 @if(act.mechanism != null) {
 <tr class="treegrid-parent-@act.target.id">
    <td><a id="keyword" class="label label-primary loader" 
-      href='@{ix.idg.controllers.routes.IDGApp.ligands()+"?facet="+URLEncoder.encode(PHARMALOGICAL_ACTION,"utf8")+"/"}@URLEncoder.encode(act.mechanism, "utf8")'>@act.mechanism <span class="badge">@IDGApp.getTermCount(classOf[Ligand],PHARMALOGICAL_ACTION,act.mechanism)</span></a></td>
+      href='@{ix.idg.controllers.routes.IDGApp.ligands()+"?facet="+URLEncoder.encode(PHARMALOGICAL_ACTION,"utf8")+"/"}@URLEncoder.encode(act.mechanism, "utf8")'>@act.mechanism <span class="badge">@App.getTermCount(classOf[Ligand],PHARMALOGICAL_ACTION,act.mechanism)</span></a></td>
   <td></td>
 </tr>
 }
@@ -34,7 +35,7 @@
                p@a.label
             }
             case _ => { @a.label }
-	 }<span class="badge">@IDGApp.getTermCount(classOf[Ligand],LIGAND_ACTIVITY,a.label)</span></a></td>   
+	 }<span class="badge">@App.getTermCount(classOf[Ligand],LIGAND_ACTIVITY,a.label)</span></a></td>   
      <td>@a.numval @a.unit</td>
    </tr>
    }

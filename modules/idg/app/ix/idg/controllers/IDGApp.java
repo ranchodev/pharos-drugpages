@@ -1215,10 +1215,10 @@ public class IDGApp extends App implements Commons {
                 return 1;
             }
 
-            @Override Result notFound (String mesg) {
+            @Override protected Result notFound (String mesg) {
                 return _notFound (mesg);
             }
-            @Override Result error (Exception ex) {
+            @Override protected Result error (Exception ex) {
                 return _internalServerError (ex);
             }
         };
@@ -2420,10 +2420,10 @@ public class IDGApp extends App implements Commons {
             public Content getContent (List<Ligand> ligands) throws Exception {
                 return getLigandContent (ligands);
             }
-            @Override Result notFound (String mesg) {
+            @Override protected Result notFound (String mesg) {
                 return _notFound (mesg);
             }
-            @Override Result error (Exception ex) {
+            @Override protected Result error (Exception ex) {
                 return _internalServerError (ex);
             }
         };
@@ -2645,10 +2645,10 @@ public class IDGApp extends App implements Commons {
                 throws Exception {
                 return getDiseaseContent (diseases);
             }
-            @Override Result notFound (String mesg) {
+            @Override protected Result notFound (String mesg) {
                 return _notFound (mesg);
             }
-            @Override Result error (Exception ex) {
+            @Override protected Result error (Exception ex) {
                 return _internalServerError (ex);
             }       
         };
