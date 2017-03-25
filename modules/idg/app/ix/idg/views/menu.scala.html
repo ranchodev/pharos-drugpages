@@ -1,4 +1,4 @@
-@(active: String)(nav: Html)
+@(active: String)
 
 @item(name: String, url: String) = {
 <li role="presentation" @if(name.equals(active)){class="active"}><a href="@url">@name</a></li>
@@ -11,7 +11,6 @@
        src='@routes.Assets.versioned("ncats/images/Pharos_Logo_Rd8.svg")'/>
 </a>
 }{
-@nav
 <ul class="nav navbar-nav navbar-left">
   @item("Diseases", ix.idg.controllers.routes.IDGApp.diseases(null, 10, 1).url)
   @item("Targets", ix.idg.controllers.routes.IDGApp.targets(null, 10, 1).url)

@@ -1,4 +1,4 @@
-{
+@(scheme: String, host: String){
   "swagger": "2.0",
   "info": {
     "title": "Pharos API",
@@ -6,7 +6,7 @@
     "termsOfService": "http://swagger.io/terms/",
     "contact": {
       "name": "Pharos Support",
-      "email": "pharos@mail.nih.gov"
+      "email": "pharos@@mail.nih.gov"
     },
     "license": {
       "name": "Apache 2.0",
@@ -14,13 +14,13 @@
     },
     "version": "1.0.1"
   },
-  "host": "pharos.nih.gov",
+  "host": "@host",
   "basePath": "/idg/api/v1",
   "produces": [
     "application/json"
   ],
   "schemes": [
-    "https"
+    "@scheme"
   ],
   "tags": [
     {
@@ -311,6 +311,79 @@
         }
       }
     },
+    "/ligands": {
+      "get": {
+         "tags": [
+             "browse","ligand"
+          ],
+          "summary": "Browse ligands by page",
+          "description": "Paging through the ligand",
+          "parameters": [
+             {
+                "name": "top",
+                "description": "Specify the number of ligands per page",
+                "in": "query",
+		"type": "integer",
+                "default": 10
+             },
+	     {
+		 "name": "skip",
+		 "description": "Specify the number of ligands to skip",
+		 "in": "query",
+		 "type": "integer",
+		 "default": 0
+             }
+          ],
+          "responses": {
+              "200": {
+		  "description": "Successful response"
+              },
+              "404": {
+		  "description": "Bad request"
+              }
+          }
+       }
+    },
+    "/ligands/search": {
+      "get": {
+         "tags": [
+             "search","ligand"
+         ],
+         "summary": "Search ligands",
+         "description": "Search ligands",
+         "parameters": [
+             {
+                "name": "q",
+                "description": "Search term",
+                "in": "query",
+                "type": "string",
+		"default": ""
+             },
+             {
+                "name": "top",
+                "description": "Specify the number of ligands per page",
+                "in": "query",
+		"type": "integer",
+                "default": 10
+             },
+	     {
+		 "name": "skip",
+		 "description": "Specify the number of ligands to skip",
+		 "in": "query",
+		 "type": "integer",
+		 "default": 0
+             }
+         ],
+         "responses": {
+              "200": {
+		  "description": "Successful response"
+              },
+              "404": {
+		  "description": "Bad request"
+              }
+         }
+      }
+    },    
     "/ligands({id})": {
       "get": {
         "tags": [
@@ -746,7 +819,7 @@
     "/assays({id})/links": {
       "get": {
         "tags": [
-          "browse", "target"
+          "browse", "assay"
         ],
         "summary": "Get synonym list for a assay",
         "description": "Gets a JSONArray of the publications for a assay. Primarily a PMID, year, title and abstract",

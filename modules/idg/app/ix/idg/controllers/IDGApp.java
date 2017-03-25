@@ -987,6 +987,16 @@ public class IDGApp extends App implements Commons {
         return ok (ix.idg.views.html.discussion.render());
     }
 
+    @Cached(key="_apiswagger", duration=Integer.MAX_VALUE)
+    public static Result apiswagger () {
+        String h = Global.getHost();
+        int p = h.indexOf(':');
+        String s = h.substring(0, p);
+        String u = h.substring(p+3);
+        return ok (ix.idg.views.txt.apiswagger.render(s,u))
+            .as("application/json");
+    }
+
     @Cached(key="_faq", duration = Integer.MAX_VALUE)
     public static Result faq () throws IOException {
         return ok(ix.idg.views.html.faq.render());

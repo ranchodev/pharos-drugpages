@@ -27,6 +27,7 @@ GET	/surprise		ix.idg.controllers.IDGApp.sampleTermValues(size: Int ?= 10)
 #
 GET	/		ix.idg.controllers.IDGApp.home
 GET     /about    ix.idg.controllers.IDGApp.about
+GET	/api/@swagger	  ix.idg.controllers.IDGApp.apiswagger
 GET     /api      ix.idg.controllers.IDGApp.api
 GET     /impc     ix.idg.controllers.IDGApp.impc
 GET     /pmscore  ix.idg.controllers.IDGApp.pmscore

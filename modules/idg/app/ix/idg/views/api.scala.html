@@ -33,7 +33,7 @@
                     window.SwaggerTranslator.translate();
                 }
                 window.swaggerUi = new SwaggerUi({
-                    url: '@routes.Assets.versioned("swagger.json")',
+                    url: '@ix.idg.controllers.routes.IDGApp.apiswagger',
                     dom_id: "swagger-ui-container",
                     supportedSubmitMethods: ['get', 'post', 'put', 'delete', 'patch'],
                     docExpansion: "list",
@@ -75,12 +75,12 @@
 }
 
 @ix.ncats.views.html.main(title, scripts) {
-    @menu("API")(HtmlFormat.empty)
+    @menu("API")
 } {
     @HtmlFormat.empty
 } {
 
-    <div  class="swagger-section">
+    <div  class="swagger-section" style="margin-top:60px;">
         <div id="message-bar" class="swagger-ui-wrap" data-sw-translate>&nbsp;</div>
         <div id="swagger-ui-container" class="swagger-ui-wrap"></div>
     </div>
