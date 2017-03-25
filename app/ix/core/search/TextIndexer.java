@@ -19,6 +19,7 @@ import org.apache.lucene.analysis.miscellaneous.PerFieldAnalyzerWrapper;
 import org.apache.lucene.analysis.standard.StandardAnalyzer;
 import org.apache.lucene.document.*;
 import org.apache.lucene.facet.*;
+import org.apache.lucene.facet.range.*;
 import org.apache.lucene.facet.taxonomy.FastTaxonomyFacetCounts;
 import org.apache.lucene.facet.taxonomy.TaxonomyReader;
 import org.apache.lucene.facet.taxonomy.directory.DirectoryTaxonomyReader;
@@ -1346,6 +1347,50 @@ public class TextIndexer {
             }
             
             List<String> drills = options.facets;
+            // remove all range facets
+            Map<String, List<Filter>> filters =
+                new HashMap<String, List<Filter>>();
+            
+            List<String> remove = new ArrayList<String>();
+            for (String f : drills) {
+                int pos = f.indexOf('/');
+                if (pos > 0) {
+                    String facet = f.substring(0, pos);
+                    String value = f.substring(pos+1);
+                    Logger.warn("facet="+facet+" value="+value);
+                    for (SearchOptions.FacetRange fr : options.rangeFacets) {
+                        if (facet.equals(fr.field)) {
+                            List<Filter> fl = new ArrayList<>();
+                            createRangeFilters (fr, value, fl);
+                            if (!fl.isEmpty()) {
+                                List<Filter> old = filters.get(facet);
+                                if (old != null)
+                                    old.addAll(fl);
+                                else
+                                    filters.put(facet, fl);
+                                remove.add(f);
+                            }
+                        }
+                    }
+                }
+            }
+
+            drills.removeAll(remove);
+            if (!filters.isEmpty()) {
+                List<Filter> all = new ArrayList<Filter>();
+                if (filter != null)
+                    all.add(filter);
+                
+                for (Map.Entry<String, List<Filter>> me : filters.entrySet()) {
+                    ChainedFilter cf = new ChainedFilter
+                        (me.getValue().toArray(new Filter[0]),
+                         ChainedFilter.OR);
+                    all.add(cf);
+                }
+                filter = new ChainedFilter (all.toArray(new Filter[0]),
+                                            ChainedFilter.AND);
+            }
+            
             if (drills.isEmpty()) {
                 hits = sorter != null 
                     ? (FacetsCollector.search
@@ -1400,6 +1445,9 @@ public class TextIndexer {
                     DrillSideways.DrillSidewaysResult swResult = 
                         sideway.search(ddq, filter, null, 
                                        options.max(), sorter, false, false);
+                    // collector
+                    FacetsCollector.search
+                        (searcher, ddq, filter, options.max(), fc);
                     
                     facets = swResult.facets;
                     hits = swResult.hits;
@@ -1478,7 +1526,9 @@ public class TextIndexer {
                         searchResult.facets.add(f);
                     }
                 }
-            }
+            } // facets is empty
+
+            collectRangeFacets (fc, searchResult);
         }
         finally {
             taxon.close();
@@ -1528,7 +1578,130 @@ public class TextIndexer {
         return searchResult;
     }
 
+    protected void collectRangeFacets (FacetsCollector fc,
+                                       SearchResult searchResult)
+        throws IOException {
+        SearchOptions options = searchResult.getOptions();
+        for (SearchOptions.FacetRange frange : options.rangeFacets) {
+            if (!frange.range.isEmpty()) {
+                Facets facets = createLongRangeFacets (fc, frange);
+                if (facets == null)
+                    facets = createDoubleRangeFacets (fc, frange);
+                
+                if (facets != null) {
+                    FacetResult result = facets.getTopChildren
+                        (frange.range.size(), frange.field);
+                    Facet f = new Facet (result.dim);
+                    if (DEBUG (1)) {
+                        Logger.info(" + ["+result.dim+"]");
+                    }
+                    for (int i = 0; i < result.labelValues.length; ++i) {
+                        LabelAndValue lv = result.labelValues[i];
+                        if (DEBUG (1)) {
+                            Logger.info("     \""+lv.label+"\": "+lv.value);
+                        }
+                        f.values.add(new FV (lv.label, lv.value.intValue()));
+                    }
+                    searchResult.facets.add(f);
+                }
+            }
+        }
+    }
 
+    static Facets createLongRangeFacets (FacetsCollector fc,
+                                         SearchOptions.FacetRange frange)
+        throws IOException {
+        Logger.debug("[Range facet: \""+frange.field+"\"");
+        
+        LongRange[] lrange = new LongRange[frange.range.size()];
+        int i = 0;
+        for (SearchOptions.Range range : frange.range) {
+            String name = range.getName();
+            Object r = range.getRange();
+            if (r instanceof long[]) {
+                long[] lr = (long[])r;
+                lrange[i++] = new LongRange (name, lr[0], true, lr[1], true);
+            }
+            else if (r instanceof int[]) {
+                int[] ir = (int[])r;
+                long[] lr = new long[ir.length];
+                for (int k = 0; k < ir.length; ++k)
+                    lr[k] = ir[k];
+                lrange[i++] = new LongRange (name, lr[0], true, lr[1], true);
+            }
+            else
+                return null;
+        }
+        
+        return new LongRangeFacetCounts (frange.field, fc, lrange);
+    }
+
+    static Facets createDoubleRangeFacets (FacetsCollector fc,
+                                           SearchOptions.FacetRange frange)
+        throws IOException {
+        Logger.debug("[Range facet: \""+frange.field+"\"");
+        
+        DoubleRange[] drange = new DoubleRange[frange.range.size()];
+        int i = 0;
+        for (SearchOptions.Range range : frange.range) {
+            String name = range.getName();
+            Object r = range.getRange();
+            if (r instanceof double[]) {
+                double[] dr = (double[])r;
+                drange[i++] = new DoubleRange (name, dr[0], true, dr[1], true);
+            }
+            else if (r instanceof float[]) {
+                float[] fr = (float[])r;
+                double[] dr = new double[fr.length];
+                for (int k = 0; k < fr.length; ++k)
+                    dr[k] = fr[k];
+                drange[i++] = new DoubleRange (name, dr[0], true, dr[1], true);
+            }
+            else
+                return null;
+        }
+        
+        return new DoubleRangeFacetCounts (frange.field, fc, drange);
+    }
+    
+    static void createRangeFilters
+        (SearchOptions.FacetRange frange, String value, List<Filter> filters) {
+        for (SearchOptions.Range range : frange.range) {
+            if (value.equals(range.getName())) {
+                Object r = range.getRange();
+                if (r != null) {
+                    if (r instanceof long[]) {
+                        long[] lr = (long[])r;
+                        // add this as filter..
+                        Logger.debug("adding range filter \""
+                                     +value+"\": "+lr[0]+" "+lr[1]);
+                        filters.add(FieldCacheRangeFilter.newLongRange
+                                    (frange.field, lr[0], lr[1], true, true));
+                    }
+                    else if (r instanceof int[]) {
+                        int[] ir = (int[])r;
+                        filters.add(FieldCacheRangeFilter.newIntRange
+                                    (frange.field, ir[0], ir[1], true, true));
+                    }
+                    else if (r instanceof float[]) {
+                        float[] fr = (float[])r;
+                        filters.add(FieldCacheRangeFilter.newFloatRange
+                                    (frange.field, fr[0], fr[1], true, true));
+                    }
+                    else if (r instanceof double[]) {
+                        double[] dr = (double[])r;
+                        filters.add(FieldCacheRangeFilter.newDoubleRange
+                                    (frange.field, dr[0], dr[1], true, true));
+                    }
+                    else {
+                        throw new IllegalArgumentException
+                            ("Bad range type: "+r.getClass());
+                    }
+                }
+            }
+        }
+    }
+        
     protected Term getTerm (Object entity) {
         Term term = null;
         if (entity != null) {

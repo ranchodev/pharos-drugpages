@@ -738,10 +738,11 @@ public class App extends Authentication {
         return false;
     }
 
-    public static List<Facet> getFacets (final Class kind, final int fdim) {
+    public static List<Facet> getFacets (final Class kind, final int fdim,
+                                         SearchOptions.FacetRange... facets) {
         try {
             SearchResult result =
-                SearchFactory.search(kind, null, 0, 0, fdim, null);
+                SearchFactory.search(kind, null, 0, 0, fdim, null, facets);
             return result.getFacets();
         }
         catch (IOException ex) {
@@ -821,6 +822,49 @@ public class App extends Authentication {
         }
         return new TextIndexer.Facet[0];
     }
+
+    public static SearchOptions.FacetRange
+        createDateFacetRange (String field) {
+        SearchOptions.FacetRange frange = new SearchOptions.FacetRange(field);
+        
+        Calendar now = Calendar.getInstance();
+        now.setTimeInMillis(System.currentTimeMillis());
+
+        Calendar cal = (Calendar)now.clone();
+        cal.set(Calendar.HOUR_OF_DAY, 0);
+        cal.set(Calendar.MINUTE, 0);
+        cal.set(Calendar.SECOND, 0);
+        cal.set(Calendar.MILLISECOND, 0);
+
+        // add a single character prefix so as to keep the map sorted; the
+        // decorator strips this out
+        frange.add(SearchOptions.newRange("Today", new long[]{
+                    cal.getTimeInMillis(), now.getTimeInMillis()}));
+
+        now = (Calendar)cal.clone();
+        cal.set(Calendar.DAY_OF_WEEK, cal.getFirstDayOfWeek());
+        frange.add(SearchOptions.newRange("This week", new long[]{
+                    cal.getTimeInMillis(), now.getTimeInMillis()}));
+
+        now = (Calendar)cal.clone();
+        cal.set(Calendar.WEEK_OF_MONTH, 1);
+        frange.add(SearchOptions.newRange("This month", new long[]{
+                    cal.getTimeInMillis(), now.getTimeInMillis()}));
+
+        now = (Calendar)cal.clone();
+        cal = (Calendar)now.clone();
+        cal.add(Calendar.MONTH, -6);
+        frange.add(SearchOptions.newRange("Past 6 months", new long[]{
+                    cal.getTimeInMillis(), now.getTimeInMillis()}));
+
+        now = (Calendar)cal.clone();
+        cal = (Calendar)now.clone();
+        cal.add(Calendar.YEAR, -1);
+        frange.add(SearchOptions.newRange("Past 1 year", new long[]{
+                    cal.getTimeInMillis(), now.getTimeInMillis()}));
+
+        return frange;
+    }
     
     public static String randvar (int size) {
         return Util.randvar(size, request ());
@@ -845,21 +889,23 @@ public class App extends Authentication {
 
     public static SearchResult getSearchResult
         (final Class kind, final String q, final int total,
-         Map<String, String[]> query) {
-        return getSearchResult (_textIndexer, kind, q, total, query);
+         Map<String, String[]> query, SearchOptions.FacetRange... facets) {
+        return getSearchResult (_textIndexer, kind, q, total, query, facets);
     }
     
     public static SearchResult getSearchResult
         (final TextIndexer indexer, final Class kind,
-         final String q, final int total) {
-        return getSearchResult (indexer, kind, q, total, getRequestQuery());
+         final String q, final int total, SearchOptions.FacetRange... facets) {
+        return getSearchResult (indexer, kind, q,
+                                total, getRequestQuery(), facets);
     }
 
     public static String signature (String q, Map<String, String[]> query) {
         return signature (null, q, query);
     }
     
-    public static String signature (Class kind, String q, Map<String, String[]> query) {
+    public static String signature (Class kind, String q,
+                                    Map<String, String[]> query) {
         List<String> qfacets = new ArrayList<String>();
 
         if (query.get("facet") != null) {
@@ -926,12 +972,14 @@ public class App extends Authentication {
     }
 
     public static SearchResult getSearchFacets
-        (final Class kind, final Collection subset) {
-        return getSearchFacets (kind, subset, FACET_DIM);
+        (final Class kind, final Collection subset,
+         SearchOptions.FacetRange... facets) {
+        return getSearchFacets (kind, subset, FACET_DIM, facets);
     }
     
     public static SearchResult getSearchFacets
-        (final Class kind, final Collection subset, final int fdim) {
+        (final Class kind, final Collection subset, final int fdim,
+         final SearchOptions.FacetRange... facets) {
         final String sha1 = Util.sha1(kind.getName()+"/"+fdim,
                                       Util.sha1(subset));
         try {
@@ -939,7 +987,7 @@ public class App extends Authentication {
                     public SearchResult call () throws Exception {
                         SearchResult result = SearchFactory.search
                             (subset, null, subset.size(), 0, fdim,
-                             request().queryString());
+                             request().queryString(), facets);
                         return cacheKey (result, sha1, sha1);
                     }
                 });
@@ -951,15 +999,16 @@ public class App extends Authentication {
         return null;
     }
     
-    public static SearchResult getSearchFacets (final Class kind,
-                                                final int fdim) {
+    public static SearchResult getSearchFacets
+        (final Class kind, final int fdim,
+         final SearchOptions.FacetRange... facets) {
         final String sha1 = Util.sha1
             (App.class.getName()+"/facets/"+kind.getName()+"/"+fdim);
         try {
             return getOrElse_ (sha1, new Callable<SearchResult>() {
                     public SearchResult call () throws Exception {
                         SearchResult result = SearchFactory.search
-                            (kind, null, 0, 0, fdim, null);
+                            (kind, null, 0, 0, fdim, null, facets);
                         return cacheKey (result, sha1, sha1);
                     }
                 });

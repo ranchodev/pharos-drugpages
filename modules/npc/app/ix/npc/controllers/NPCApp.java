@@ -63,7 +63,8 @@ public class NPCApp extends App implements ix.npc.models.Properties {
         "Entity Type",
         "StereoChemistry",
         "Stereocenters",
-        "Defined Stereocenters"
+        "Defined Stereocenters",
+        "modified"
     };
 
     static protected class EntityStructureSearchResultProcessor
@@ -146,18 +147,20 @@ public class NPCApp extends App implements ix.npc.models.Properties {
         final int total = EntityFactory.finder.findRowCount();
         if (request().queryString().containsKey("facet") || q != null) {
             final SearchResult result =
-                getSearchResult (Entity.class, q, total, getRequestQuery ());
-            
+                getSearchResult (Entity.class, q, total, getRequestQuery (),
+                                 createDateFacetRange ("modified"));
 
             return createEntityResult (result, rows, page);
         }
         else {
             return getOrElse_ (key, new Callable<Result> () {
                     public Result call () throws Exception {
-                        Facet[] facets =
-                            filter (getFacets (Entity.class, FACET_DIM),
-                                    ENTITY_FACETS);
-            
+                        Facet[] facets = filter
+                            (getFacets
+                             (Entity.class, FACET_DIM,
+                              createDateFacetRange ("modified")),
+                             ENTITY_FACETS);
+                                                    
                         int _rows = Math.max(1, Math.min(total, rows));
                         int[] pages = paging (_rows, page, total);
             
