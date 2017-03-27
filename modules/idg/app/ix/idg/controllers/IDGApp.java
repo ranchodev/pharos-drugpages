@@ -4054,7 +4054,7 @@ public class IDGApp extends App implements Commons {
         return new ArrayList<Target>();
     }
 
-    public static List<Target> getTargetsByPMID (final long pmid)
+    public static List<Target> getTargetsByPMIDOld (final long pmid)
         throws Exception {
         final String key = "publications/"+pmid+"/targets";
         return getOrElse (key, new Callable<List<Target>> () {
@@ -4081,6 +4081,11 @@ public class IDGApp extends App implements Commons {
                     return targets;
                 }
             });
+    }
+
+    public static List<Target> getTargetsByPMID (final long pmid) throws Exception {
+        return TargetFactory.finder.where()
+            .eq("publications.pmid", pmid).findList();
     }
 
     public static Result _publicationsForTarget (String name, int top, int skip)
@@ -4129,7 +4134,7 @@ public class IDGApp extends App implements Commons {
     public static Result targetsForPublication
         (final long pmid, final int rows, final int page) {
         try {
-            final String key = "targets/"+pmid+"/publication";
+            final String key = "targets/"+pmid+"/pmid";
             return getOrElse (key, new Callable<Result> () {
                     public Result call () throws Exception {
                         SearchResultProcessor<Target> processor =
@@ -4138,8 +4143,10 @@ public class IDGApp extends App implements Commons {
                                 return t;
                             }
                         };
+
+                        List<Target> targets = getTargetsByPMID (pmid);
                         processor.setResults
-                            (rows, Collections.enumeration(getTargetsByPMID (pmid)));
+                            (targets.size(), Collections.enumeration(targets));
                         
                         return App.fetchResult
                             (processor.getContext(), rows, page,
