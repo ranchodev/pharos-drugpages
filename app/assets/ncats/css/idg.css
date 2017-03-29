@@ -18,6 +18,9 @@ body {
 flex: 1;
 }
 
+.swagger-ui .info hgroup.main {
+    margin-top: 6em !important;
+}
 /*.breadcrumb > li + li:before {*/
     /*content: "&raquo;";*/
     /*color: #aaa;*/
