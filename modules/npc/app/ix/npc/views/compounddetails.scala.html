@@ -83,7 +83,15 @@
 			  <td><a href='@{ix.npc.controllers.routes.NPCApp.entities(null,15,1)+"?facet=Dataset/"+URLEncoder.encode(py.name,"utf8")}'>@py.name</a></td>
   	      		</tr>
                       }
-                   }
+	           }
+		   <tr>
+		     <td>Synonyms</td>
+		     <td>
+		       @for(kw <- entity.getSynonyms) {
+			  <a href='@{ix.npc.controllers.routes.NPCApp.entities(null,15,1)+"?facet="+URLEncoder.encode(kw.label,"utf8")+"/"+URLEncoder.encode(kw.term,"utf8")}'>@kw.term</a>&nbsp;
+		       }
+		     </td>
+		   </tr>
 	           @for((k,v) <- entity.groupProperties()) {
 		      <tr>
 		        @if(!k.equals(ORIGINAL_INPUT)) {

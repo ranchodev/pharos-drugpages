@@ -43,6 +43,10 @@ public class Job extends Model {
     @Basic(fetch=FetchType.EAGER)
     public String message;
 
+    @Lob
+    @Basic(fetch=FetchType.EAGER)
+    public String configuration;
+
     @OneToOne(cascade=CascadeType.ALL)
     @JsonView(BeanViews.Full.class)
     public Principal owner;

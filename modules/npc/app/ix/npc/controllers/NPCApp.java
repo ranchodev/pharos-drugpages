@@ -384,4 +384,12 @@ public class NPCApp extends App implements ix.npc.models.Properties {
         }
         return App.structure(id, format, size, atomMap);        
     }
+
+    public static TermVectors getTermVectors
+        (String field, String facet, String value) {
+        Map<String, String> params = new HashMap<>();
+        params.put(facet, value);
+        return SearchFactory.getConditionalTermVectors
+            (Entity.class, field, params);
+    }
 }

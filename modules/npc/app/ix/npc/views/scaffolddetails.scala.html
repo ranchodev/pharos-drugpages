@@ -1,0 +1,50 @@
+@import ix.npc.models.Entity
+@import ix.core.models.Payload
+@import ix.core.models.Keyword
+@import ix.core.models.Structure
+@import ix.npc.controllers.NPCApp
+@import ix.ncats.controllers.App
+@import ix.npc.models.Properties
+@import java.net.URLEncoder
+@import ix.utils.Util
+@import ix.npc.models.Properties._
+@import ix.core.models.Structure._
+
+@(entity: Entity)
+
+<div class="container-fluid">
+  <div class="col-md-12">
+    <div class="page-header">
+      <h1>Scaffold <span style="font-family:mono">@entity.getName</span></h1>
+    </div>
+    <div class="row">
+      <div class="col-md-4">
+	<div class="panel panel-default">
+	  <div class="panel-body">
+	    @defining(NPCApp.getStructure(entity)) { struc =>
+               @if(struc != null) {
+	       <a role="button" class="btn btn-default" style="float:right;"
+		  href='@ix.npc.controllers.routes.NPCApp.sketcher(struc.id.toString)'><i class="fa fa-edit" aria-hidden="true"></i></a>	
+	    <center>
+	      <img alt="Scaffold @entity.getName"
+		   src='@ix.ncats.controllers.routes.App.structure(struc.getId,"svg",300)'>
+	    </center>
+	       }
+	    }
+	  </div>
+	</div>
+      </div>
+      <div class="col-md-8">
+	<div class="panel panel-default">
+	  <div class="panel-body">
+	    @defining(NPCApp.getTermVectors("Entity Type", "LyChI_L4", entity.getName)){ tv =>
+   	       @for((k,v) <- tv.getTerms) {
+	          There are <span class="badge">@tv.getTermCount(k)</span> <a href='@{ix.npc.controllers.routes.NPCApp.entities(null,15,1)+"?facet=LyChI_L4/"+entity.getName+"&facet="+URLEncoder.encode("Entity Type","utf8")+"/"+k}'>@k</a> entities with this scaffold.<br>
+	       }
+	    }
+	  </div>
+	</div>
+      </div>
+    </div>
+  </div>
+</div>

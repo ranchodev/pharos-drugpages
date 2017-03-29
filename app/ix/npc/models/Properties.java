@@ -10,6 +10,7 @@ public interface Properties {
     final String STRUCTURE_STANDARDIZED = "Standardized";
     final String STRUCTURE_MOIETY = "Moiety";
     final String STRUCTURE_ORIGINAL = "Original";
+    final String STRUCTURE_SCAFFOLD = "Scaffold";
 
     final String DATASET = "Dataset";
 }

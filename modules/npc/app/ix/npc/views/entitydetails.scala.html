@@ -20,6 +20,9 @@
     case Entity.Type.Compound => {
       @compounddetails(entity)
     }
+    case Entity.Type.Scaffold => {
+      @scaffolddetails(entity)
+    }
     case _ => {
       <div class="alert alert-danger alert-dismissible"
       	     	  style="overflow:auto;" role="alert">

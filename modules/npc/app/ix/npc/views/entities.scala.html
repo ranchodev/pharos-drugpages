@@ -4,12 +4,19 @@
 @import ix.ncats.controllers.App.FacetDecorator
 @import ix.ncats.controllers.App
 @import ix.npc.models.Entity
+@import ix.npc.models.Entity._
 @import ix.core.models.Structure
 @import ix.core.models.Keyword
 @import ix.npc.models.Properties
+@import java.net.URLEncoder
+@import ix.core.search.TextIndexer.TermVectors
 
 @(current: Int, rows: Int, total: Int, pages: Array[Int],
 facets: Array[FacetDecorator], entities: List[Entity], ctx: String)
+
+@tvlink(tv: TermVectors, value: String, t: Type) = {
+<a href='@{ix.npc.controllers.routes.NPCApp.entities(null,15,1)+"?facet=LyChI_L4/"+value+"&facet="+URLEncoder.encode("Entity Type","utf8")+"/"+t}'><span class="badge">@tv.getTermCount(t.toString)</span></a>
+}
 
 @cell(e: Entity) = {
  <div class="col-sm-6 col-md-4">
@@ -23,7 +30,14 @@ facets: Array[FacetDecorator], entities: List[Entity], ctx: String)
        }
 
 	<div class="caption">
-	  @e.getName
+	  <span style="font-family:mono">@e.getName</span>
+	  @if(e.getType == Type.Scaffold) {
+	    @defining(NPCApp.getTermVectors("Entity Type", "LyChI_L4", e.getName)){ tv =>
+	      @if(tv != null) {
+	       <span class="pull-right">@tvlink(tv,e.getName,Type.Compound)</span>
+	      }
+	    }
+	  }
 	</div>
      }
    </div>
