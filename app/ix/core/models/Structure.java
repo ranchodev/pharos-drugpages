@@ -36,6 +36,7 @@ public class Structure extends Model implements java.io.Serializable {
     public static final String F_MDL = "MDL";
     public static final String F_SMILES = "SMILES";
     public static final String F_MRV = "MRV";
+    public static final String F_LyChI_MOL = "LyChI_MOL";
     public static final String F_LyChI_SMILES = "LyChI_SMILES";
     public static final String H_LyChI_L1 = "LyChI_L1";
     public static final String H_LyChI_L2 = "LyChI_L2";

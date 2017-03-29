@@ -11,7 +11,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
-
+import com.fasterxml.jackson.core.util.DefaultPrettyPrinter;
 import ix.core.controllers.*;
 import ix.core.controllers.search.SearchFactory;
 import ix.core.models.*;
@@ -21,6 +21,7 @@ import ix.core.chem.StructureProcessor;
 import ix.ncats.controllers.App;
 import ix.utils.Global;
 import ix.utils.Util;
+import tripod.chem.MolecularFramework;
 
 import play.*;
 import play.api.mvc.Action;
@@ -55,19 +56,43 @@ public class Registration extends NPCApp {
         Play.application().plugin(PersistenceQueue.class);
     public static final StructureIndexer MOLIDX = Play.application()
         .plugin(StructureIndexerPlugin.class).getIndexer();
-
+    static final ObjectMapper JSON = new ObjectMapper ();
+    
     static class MolJobPersistence
         extends PersistenceQueue.AbstractPersistenceContext {
 
         final Job job;
+        final JsonNode config;
         final Keyword ds;
         final String source;
+        final String sep;
+        final Map<String, JsonNode> props = new HashMap<>();
+        final MolecularFramework mf;
         
-        MolJobPersistence (Job job) {
+        MolJobPersistence (Job job, JsonNode config) {
             this.job = job;
+            this.config = config;
             ds = KeywordFactory.registerIfAbsent
                 (DATASET, job.payload.name, null);
             source = job.payload.sha1.substring(0,9);
+            sep = config != null && config.hasNonNull("separator")
+                ? config.get("separator").asText() : "\n";
+            if (config != null) {
+                JsonNode pn = config.get("properties");
+                Logger.debug("CONFIGURATION: props="
+                             +pn.size() +" sep='"+sep+"'");          
+                for (int i = 0; i < pn.size(); ++i) {
+                    JsonNode n = pn.get(i);
+                    if (n.hasNonNull("property")) {
+                        Logger.debug("..."+n.get("property").asText());
+                        props.put(n.get("property").asText(), n);
+                    }
+                }
+            }
+            
+            mf = MolecularFramework.createMurckoInstance();
+            mf.setGenerateAtomMapping(true);
+            mf.setAllowBenzene(false);      
         }
 
         public void persists () throws Exception {
@@ -177,75 +202,216 @@ public class Registration extends NPCApp {
                 }
             }
         }
-    }
 
-    static Entity instrument (String ds, Molecule mol) throws Exception {
-        Entity ent = new Entity (Entity.Type.Compound, mol.getName());
+        Entity instrument (String ds, Molecule mol) throws Exception {
+            Entity ent = new Entity (Entity.Type.Compound, mol.getName());
         
-        List<Structure> moieties = new ArrayList<>();
-        Structure struc = StructureProcessor.instrument(mol, moieties, false);
-        struc.save();
-
-        if (mol.getAtomCount() > 0)
-            MOLIDX.add(ds, struc.id.toString(), struc.molfile);
-        
-        XRef xref = new XRef (struc);
-        xref.properties.addAll(struc.properties);
-        xref.properties.add
-            (KeywordFactory.registerIfAbsent
-             (STRUCTURE_TYPE, STRUCTURE_ORIGINAL, null));
-        xref.properties.add
-            (new VInt (MOIETY_COUNT,
-                       (long)(moieties.isEmpty()
-                              ? 1 : moieties.size())));
-        xref.save();
-        ent.links.add(xref);
-
-        if (mol.getAtomCount() < 500) {
-            // only standardize if we a small molecule
-            struc = StructureProcessor.instrument(mol);
+            List<Structure> moieties = new ArrayList<>();
+            Structure struc =
+                StructureProcessor.instrument(mol, moieties, false);
             struc.save();
+
+            if (mol.getAtomCount() > 0)
+                MOLIDX.add(ds, struc.id.toString(), struc.molfile);
+
+            add (ent, struc, KeywordFactory.registerIfAbsent
+                 (STRUCTURE_TYPE, STRUCTURE_ORIGINAL, null),
+                 new VInt (MOIETY_COUNT,
+                           (long)(moieties.isEmpty()
+                                  ? 1 : moieties.size())));
+
+            if (mol.getAtomCount() < 500) {
+                // only standardize if we a small molecule
+                struc = StructureProcessor.instrument(mol);
+                struc.save();
+
+                Map<String, Structure> fragments = generateFragments (struc);
+                for (Map.Entry<String, Structure> me : fragments.entrySet()) {
+                    add (ent, me.getValue(),
+                         KeywordFactory.registerIfAbsent
+                         (STRUCTURE_SCAFFOLD, me.getKey(), null));
+                    createScaffoldIfAbsent (me.getKey(), me.getValue());
+                }
             
-            xref = new XRef (struc);
+                add (ent, struc, 
+                     KeywordFactory.registerIfAbsent
+                     (STRUCTURE_TYPE, STRUCTURE_STANDARDIZED, null));
+            }
+
+            properties (ent, mol);
+
+            return ent;
+        } // instrument
+
+        XRef add (Entity ent, Structure struc, Value... props) {
+            XRef xref = new XRef (struc);
             xref.properties.addAll(struc.properties);
-            xref.properties.add
-                (KeywordFactory.registerIfAbsent
-                 (STRUCTURE_TYPE, STRUCTURE_STANDARDIZED, null));
+            for (Value p : props)
+                xref.properties.add(p);
             xref.save();
             ent.links.add(xref);
+            return xref;
         }
 
-        /*
-         * TODO: we need to take a configuration and specify the
-         * property type and whether a property should be indexed or not
-         */  
-        for (int i = 0; i < mol.getPropertyCount(); ++i) {
-            String prop = mol.getPropertyKey(i);
-            if ("name".equalsIgnoreCase(prop)) {
-                ent.name = mol.getProperty(prop);
+        Entity createScaffoldIfAbsent (String key, Structure struc) {
+            List<Entity> entities = EntityFactory
+                .finder.where().eq("name", key).findList();
+            Entity ent;
+            if (entities.isEmpty()) {
+                ent = new Entity (Entity.Type.Scaffold, key);
+                struc = StructureProcessor.clone(struc);
+                struc.save();
+                add (ent, struc, 
+                     KeywordFactory.registerIfAbsent
+                     (STRUCTURE_TYPE, STRUCTURE_ORIGINAL, null));
+                ent.save();
             }
-            else {
-                String[] values = mol.getProperty(prop).split("\n");
-                for (String v : values) {
-                    if (v.length() < 255)
-                        ent.addIfAbsent
-                            ((Value)KeywordFactory
-                             .registerIfAbsent(prop, v, null));
-                    else
+            else
+                ent = entities.get(0);
+            return ent;
+        }
+        
+        void properties (Entity ent, Molecule mol) {
+            for (int i = 0; i < mol.getPropertyCount(); ++i) {
+                String prop = mol.getPropertyKey(i);
+                String pval = mol.getProperty(prop);
+                String[] values = pval.split(sep);
+                if ("name".equalsIgnoreCase(prop)) {
+                    ent.name = values.length > 0 ? values[0] : null;
+                }
+                else if (props.containsKey(prop)) {
+                    parse (ent, props.get(prop), values);
+                }
+                else {
+                    Logger.warn(mol.getName()
+                                +": No config for property \""+prop+"\"...");
+                    for (String v : values)
                         ent.properties.add(new Text (prop, v));
                 }
             }
+
+            if (ent.name == null)
+                ent.name = mol.getName();
         }
 
-        return ent;
-    }
+        void parse (Entity ent, JsonNode node, String... values) {
+            if (node.hasNonNull("ignore")
+                && node.get("ignore").booleanValue())
+                return;
+            
+            String name = node.hasNonNull("name")
+                ? node.get("name").asText() : node.get("property").asText();
+
+            if (node.hasNonNull("transform")) {
+                JsonNode n = node.get("transform");
+                String p = n.get("pattern").asText();
+                String v = n.hasNonNull("replace")
+                    ? n.get("replace").asText() : "";
+                for (int i = 0; i < values.length; ++i)
+                    values[i] = values[i].replaceAll(p, v);
+            }
+            
+            if (node.hasNonNull("type")) {
+                switch (node.get("type").asText()) {
+                case "synonym":
+                    for (String v : values) {
+                        Logger.debug("Adding synonym \""+v+"\"");
+                        if (v.length() < 64) {
+                            ent.addIfAbsent(KeywordFactory.registerIfAbsent
+                                            (name, v, null));
+                        }
+                        else
+                            ent.addIfAbsent(new Text (name, v));
+                    }
+                    break;
+                
+                case "date":
+                    Logger.warn("I don't know how to handle date yet!");
+                    break;
+                            
+                case "long": case "integer": case "int":
+                    for (String v : values) {
+                        try {
+                            ent.addIfAbsent(new VInt
+                                            (name, Long.parseLong(v)));
+                        }
+                        catch (NumberFormatException ex) {
+                            Logger.error("Not a valid long: "+v, ex);
+                        }
+                    }
+                    break;
+                            
+                case "number": case "float": case "double":
+                    for (String v : values) {
+                        try {
+                            ent.addIfAbsent
+                                (new VNum (name,
+                                           Double.parseDouble(v)));
+                        }
+                        catch (NumberFormatException ex) {
+                            Logger.error("Not a valid number: "+v, ex);
+                        }
+                    }
+                    break;
+                
+                case "text":
+                    for (String v : values)
+                        ent.addIfAbsent(new Text (name, v));
+                    break;
+
+                case "uri": case "url":
+                    for (String v : values)
+                        ent.addIfAbsent(new Text (name, v));
+                    break;
+                    
+                default:
+                    for (String v : values)
+                        ent.addIfAbsent(new Text (name, v));                
+                }
+            }
+            else {
+                for (String v : values)
+                    ent.addIfAbsent(new Text (name, v));
+            }
+        } // parse ()
+
+        Map<String, Structure> generateFragments (Structure parent) {
+            String molfile = null;
+            for (Value v : parent.properties) {
+                if (Structure.F_LyChI_MOL.equals(v.label)) {
+                    molfile = ((Text)v).getValue();
+                    break;
+                }
+            }
+
+            Map<String, Structure> fragments = new HashMap<>();
+            if (molfile != null) {
+                mf.setMolecule(molfile);
+                mf.run();
+                for (Enumeration<Molecule> en = mf.getFragments();
+                     en.hasMoreElements(); ) {
+                    Molecule f = en.nextElement();
+                    if (!fragments.containsKey(f.getName())) {
+                        Structure struc =
+                            StructureProcessor.instrument(f, null, false);
+                        struc.links.add(new XRef (parent));
+                        struc.save();
+                        fragments.put(f.getName(), struc);
+                    }
+                }
+            }
+            
+            return fragments;
+        } // generateFragments ()
+    } // MolJobPersistence
+
 
     public static Result registerForm () {
         return ok (ix.npc.views.html.register.render());
     }
 
     @BodyParser.Of(value = BodyParser.MultipartFormData.class,
-                   maxLength = 100*1024 * 1024)
+                   maxLength = 200*1024*1024)
     public static Result register () {
         if (request().body().isMaxSizeExceeded()) {
             return _badRequest ("Upload is too large!");
@@ -253,8 +419,21 @@ public class Registration extends NPCApp {
         
         MultipartFormData form = request().body().asMultipartFormData();
         Map<String, String[]> params = form.asFormUrlEncoded();
-        
-        MultipartFormData.FilePart part = form.getFile("dataset");
+
+        JsonNode config = null;
+        MultipartFormData.FilePart part;
+        part = form.getFile("config");
+        if (part != null) {
+            File file = part.getFile();
+            try {
+                config = JSON.readTree(new FileInputStream (file));
+            }
+            catch (Exception ex) {
+                Logger.error("Can't parse JSON configuration: "+file, ex);
+            }
+        }
+
+        part = form.getFile("dataset");
         Payload py = null;
         if (part != null) {
             File file = part.getFile();
@@ -263,7 +442,14 @@ public class Registration extends NPCApp {
                 Logger.debug("register: file="
                              +part.getFilename()+" mime="+mime);
                 
-                String name = part.getFilename();
+                String name = null;
+                if (config != null) {
+                    name = config.has("dataset")
+                        ? config.get("dataset").asText() : part.getFilename();
+                }
+                else 
+                    name = part.getFilename();
+                
                 if (params.containsKey("name")) {
                     String[] ns = params.get("name");
                     if (ns.length > 0 && ns[0].length() > 0)
@@ -289,8 +475,18 @@ public class Registration extends NPCApp {
             if (jobs.isEmpty()) {
                 job = new Job ();
                 job.payload = py;
+                if (config != null) {
+                    try {
+                        job.configuration = JSON.writer
+                            (new DefaultPrettyPrinter ())
+                            .writeValueAsString(config);
+                    }
+                    catch (Exception ex) {
+                        Logger.error("Can't write configuration JSON", ex);
+                    }
+                }
                 job.save();
-                PQ.submit(new MolJobPersistence (job));
+                PQ.submit(new MolJobPersistence (job, config));
             }
             else {
                 job = jobs.iterator().next();

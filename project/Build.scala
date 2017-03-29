@@ -121,6 +121,18 @@ public class BuildInfo {
     javacOptions in (compile) ++= javaBuildOptions,
     mainClass in (Compile,run) := Some("ix.seqaln.SequenceIndexer")
   )
+
+  val tripod = Project("tripod", file("modules/tripod"))
+    .settings(commonSettings:_*).settings(
+    unmanagedBase <<= baseDirectory { base => base / "../../lib" },
+      libraryDependencies ++= commonDependencies,
+      javacOptions in (doc) ++= javaDocOptions,
+      javacOptions in (compile) ++= javaBuildOptions,
+
+    // example: sbt tripod/"run murcko file1.sdf file2.sdf..."
+    // output goes to the file "fragments.sdf" 
+    mainClass in (Compile,run) := Some("tripod.chem.MolecularFramework")
+  )
   
   val core = Project("core", file("."))
     .enablePlugins(PlayJava).settings(commonSettings:_*).settings(
@@ -144,8 +156,7 @@ public class BuildInfo {
       libraryDependencies += "org.webjars" % "fabric.js" % "1.4.12",
       libraryDependencies += "org.webjars" % "datatables" % "1.10.12",
       libraryDependencies += "org.webjars" % "datatables-plugins" % "1.10.12",
-      libraryDependencies += "org.webjars" % "highcharts" % "5.0.7",
-      libraryDependencies += "org.webjars" % "store.js" % "1.3.17-1",
+      libraryDependencies += "org.webjars" % "highcharts" % "5.0.7"
       javacOptions in (doc) ++= javaDocOptions,
       javacOptions in (compile) ++= javaBuildOptions,
       unmanagedSourceDirectories in Compile += baseDirectory.value / "src"
@@ -158,5 +169,5 @@ public class BuildInfo {
       javacOptions in (doc) ++= javaDocOptions,
       javacOptions in (compile) ++= javaBuildOptions,
       unmanagedSourceDirectories in Compile += baseDirectory.value / "src"
-  ).dependsOn(ncats).aggregate(ncats)
+  ).dependsOn(ncats,tripod).aggregate(ncats,tripod)
 }

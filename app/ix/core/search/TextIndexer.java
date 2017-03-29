@@ -2077,11 +2077,13 @@ public class TextIndexer {
                 }
             }
 
+            /*
             if (cls.isAssignableFrom(XRef.class)) {
                 // traverse the link.. can be dangerous!
                 XRef xref = (XRef)entity;
                 instrument (path, indexed, xref.deRef(), ixFields);
             }
+            */
         }
         catch (Exception ex) {
             Logger.trace("Fetching entity fields", ex);

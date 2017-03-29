@@ -135,6 +135,19 @@ public class StructureProcessor {
                             Molecule mol) {
         instrument (struc, components, mol, true);
     }
+
+    public static Structure clone (Structure struc) {
+        try {
+            MolHandler mh = new MolHandler (struc.molfile);
+            Molecule mol = mh.getMolecule();
+            for (int i = 0; i < mol.getAtomCount(); ++i)
+                mol.getAtom(i).setAtomMap(0);
+            return instrument (mol, false);
+        }
+        catch (Exception ex) {
+            throw new IllegalArgumentException (ex);
+        }
+    }
     
     /**
      * This should return a decomposed version of a structure for G-SRS.
@@ -275,6 +288,7 @@ public class StructureProcessor {
             
             try {
                 mstd.standardize(stdmol);
+                
                 /*
                 if (mstd.getFragmentCount() > 1) {
                     Molecule[] frags = stdmol.cloneMolecule().convertToFrags();
@@ -294,6 +308,8 @@ public class StructureProcessor {
                 struc.properties.add
                     (new Text (Structure.F_LyChI_SMILES,
                                ChemUtil.canonicalSMILES(stdmol)));
+                struc.properties.add
+                    (new Text (Structure.F_LyChI_MOL, stdmol.toFormat("mol")));
             }
             catch (Exception ex) {
                 mol.clonecopy(stdmol);
