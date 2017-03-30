@@ -1448,6 +1448,78 @@ public class App extends Authentication {
         }
         return amap;
     }
+
+    public static Structure structure (final String id) {
+        try {
+            final String key = Structure.class.getName()+"/"+id;
+            return getOrElse_ (key, new Callable<Structure> () {
+                    public Structure call () throws Exception {
+                        return StructureFactory.getStructure(id);
+                    }
+                });
+        }
+        catch (Exception ex) {
+            Logger.error("Can't retrieve structure: "+id, ex);
+        }
+        return null;
+    }
+    
+    public static Result structure (final Structure struc,
+                                    final String format,
+                                    final int size,
+                                    final String atomMap) {
+        try {
+            final int[] amap = stringToIntArray(atomMap);
+            if (format.equals("svg") || format.equals("png")) {
+                final String key =
+                    App.class.getName()+"/"+Structure.class.getName()+"/"
+                    +struc.id+"/"+size+"/"+struc.id+"."+format
+                    +(atomMap != null ? ":" + atomMap:"");
+                final String mime =
+                    format.equals("svg") ? "image/svg+xml" : "image/png";
+                
+                return getOrElse_ (key, new Callable<Result> () {
+                        public Result call () throws Exception {
+                            return ok (render (struc, format,
+                                               size, amap)).as(mime);
+                        }
+                    });
+            }
+            else {
+                final String key =
+                    Structure.class.getName()+"/"+struc.id+"."+format;
+                return getOrElse_ (key, new Callable<Result> () {
+                        public Result call () throws Exception {
+                            //response().setContentType("text/plain");
+                            if (format.equals("mrv")) {
+                                MolHandler mh =
+                                    new MolHandler (struc.molfile);
+                                if (mh.getMolecule().getDim() < 2) {
+                                    mh.getMolecule().clean(2, null);
+                                }
+                                return ok (mh.getMolecule()
+                                           .toFormat("mrv"));
+                            }
+                            else if (format.equals("mol")
+                                     || format.equals("sdf")) {
+                                return struc.molfile != null
+                                    ? ok (struc.molfile) : noContent ();
+                            }
+
+                            return struc.smiles != null
+                                ?  ok (struc.smiles) : noContent ();
+                        }
+                    });
+            }
+        }
+        catch (Exception ex) {
+            Logger.error("Can't convert format "+format+" for structure "
+                         +struc.id, ex);
+            ex.printStackTrace();
+            return internalServerError
+                ("Unable to convert structure "+struc.id+" to format "+format);
+        }
+    }
     
     /**
      * Renders a chemical structure from structure ID
@@ -1462,81 +1534,17 @@ public class App extends Authentication {
     public static Result structure (final String id,
                                     final String format, final int size,
                                     final String atomMap) {
-        
-        final int[] amap = stringToIntArray(atomMap);
-        if (format.equals("svg") || format.equals("png")) {
-            final String key =
-                App.class.getName()+"/"+Structure.class.getName()+"/"
-                +id+"/"+size+"/"+id+"."+format
-                +(atomMap != null ? ":" + atomMap:"");
-            final String mime =
-                format.equals("svg") ? "image/svg+xml" : "image/png";
-            try {
-                Result result = getOrElse_ (key, new Callable<Result> () {
-                        public Result call () throws Exception {
-                            Structure struc = StructureFactory.getStructure(id);
-                            if (struc != null) {
-                                return ok (render (struc, format,
-                                                   size, amap)).as(mime);
-                            }
-                            return null;
-                        }
-                    });
-                if (result != null) {
-                    return result;
-                }
+        try {
+            Structure struc = structure (id);
+            if (struc != null) {
+                return structure (struc, format, size, atomMap);
             }
-            catch (Exception ex) {
-                Logger.error("Can't generate image for structure "
-                             +id+" format="+format+" size="+size, ex);
-                ex.printStackTrace();
-                return internalServerError
-                    ("Unable to retrieve image for structure "+id);
-            }
+            
+            return notFound ("Unknown structure: "+id);
         }
-        else {
-            final String key = Structure.class.getName()+"/"+id+"."+format;
-            try {
-                return getOrElse_ (key, new Callable<Result> () {
-                        public Result call () throws Exception {
-                            Structure struc = StructureFactory.getStructure(id);
-                            if (struc != null) {
-                                response().setContentType("text/plain");
-                                if (format.equals("mrv")) {
-                                    MolHandler mh =
-                                        new MolHandler (struc.molfile);
-                                    if (mh.getMolecule().getDim() < 2) {
-                                        mh.getMolecule().clean(2, null);
-                                    }
-                                    return ok (mh.getMolecule()
-                                               .toFormat("mrv"));
-                                }
-                                else if (format.equals("mol")
-                                         || format.equals("sdf")) {
-                                    return struc.molfile != null
-                                        ? ok (struc.molfile) : noContent ();
-                                }
-                                else {
-                                    return struc.smiles != null
-                                        ?  ok (struc.smiles) : noContent ();
-                                }
-                            }
-                            else {
-                                Logger.warn("Unknown structure: "+id);
-                            }
-                            return noContent ();
-                        }
-                    });
-            }
-            catch (Exception ex) {
-                Logger.error("Can't convert format "+format+" for structure "
-                             +id, ex);
-                ex.printStackTrace();
-                return internalServerError
-                    ("Unable to convert structure "+id+" to format "+format);
-            }
+        catch (Exception ex) {
+            return internalServerError ("Unable retrieve structure: "+id);
         }
-        return notFound ("Not a valid structure "+id);
     }
 
     /**

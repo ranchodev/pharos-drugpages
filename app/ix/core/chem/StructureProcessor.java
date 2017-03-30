@@ -288,33 +288,17 @@ public class StructureProcessor {
             
             try {
                 mstd.standardize(stdmol);
-                
-                /*
-                if (mstd.getFragmentCount() > 1) {
-                    Molecule[] frags = stdmol.cloneMolecule().convertToFrags();
-                    // break this structure into its individual components
-                    Structure[] moieties = new Structure[frags.length];
-                    for (int i = 0; i < frags.length; ++i) {
-                        moieties[i] = new Structure ();
-                        if (components != null)
-                            components.add(moieties[i]);
-                        // sigh.. recurse
-                        instrument (moieties[i], null, frags[i], false);
-                    }
-                }
-                */
+                struc.molfile = stdmol.toFormat("mol");
+
                 // use this to indicate that the structure has
                 //  been standardized!
                 struc.properties.add
                     (new Text (Structure.F_LyChI_SMILES,
                                ChemUtil.canonicalSMILES(stdmol)));
-                struc.properties.add
-                    (new Text (Structure.F_LyChI_MOL, stdmol.toFormat("mol")));
             }
             catch (Exception ex) {
                 mol.clonecopy(stdmol);
-                logger.log(Level.SEVERE, 
-                           "Can't standardize structure", ex);
+                logger.log(Level.SEVERE, "Can't standardize structure", ex);
             }
         }
 

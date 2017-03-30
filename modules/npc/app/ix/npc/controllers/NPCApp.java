@@ -61,12 +61,62 @@ public class NPCApp extends App implements ix.npc.models.Properties {
     static final String[] ENTITY_FACETS = {
         "Dataset",
         "Entity Type",
+        "Scaffold",     
         "StereoChemistry",
         "Stereocenters",
         "Defined Stereocenters",
         "modified"
     };
 
+    static class NPCFacetDecorator extends FacetDecorator {
+        NPCFacetDecorator (Facet facet) {
+            super (facet, true, FACET_DIM);
+        }
+        NPCFacetDecorator (Facet facet, boolean raw, int dim) {
+            super (facet, raw, dim);
+        }
+
+        @Override
+        public String label (final int i) {
+            final String label = super.label(i);
+            final String name = super.name();
+
+            if (name.equals(STRUCTURE_SCAFFOLD)) {
+                StringBuilder url = new StringBuilder
+                    ("<a href='"+routes.NPCApp.entity(label)+"'");
+                try {
+                    List<Entity> entities = EntityResult.find(label);
+                    if (!entities.isEmpty()) {
+                        Structure struc = getStructure (entities.get(0));
+                        if (struc != null) {
+                            url.append(" tabindex='-1'");
+                            url.append(" data-toggle='popover'");
+                            url.append(" data-animation='true'");
+                            url.append(" data-placement='top'");
+                            url.append(" data-trigger='hover'");
+                            url.append(" data-html='true'");
+                            url.append(" data-content=\"<img src='");
+                            url.append
+                                (ix.ncats.controllers.routes.App.structure
+                                 (struc.getId(),"svg",200,null).toString());
+                            url.append("'>\"");
+                        }
+                    }
+                }
+                catch (Exception ex) {
+                    ex.printStackTrace();
+                    Logger.warn("Can't retrieve structure for ligand \""
+                                +label+"\"!");
+                }
+                url.append("><span style='font-family:monospace'>"
+                           +label+"</span></a>");
+                
+                return url.toString();
+            }
+            return label;
+        }  // label()
+    } // NPCFacetDecorator
+    
     static protected class EntityStructureSearchResultProcessor
         extends SearchResultProcessor<StructureIndexer.Result> {
 
@@ -112,7 +162,7 @@ public class NPCApp extends App implements ix.npc.models.Properties {
         List<FacetDecorator> decors = new ArrayList<FacetDecorator>();
         // override decorator as needed here
         for (int i = 0; i < facets.length; ++i) {
-            decors.add(new FacetDecorator (facets[i], false, 100));
+            decors.add(new NPCFacetDecorator (facets[i]));
         }
 
         for (FacetDecorator f : decors) {
@@ -268,6 +318,39 @@ public class NPCApp extends App implements ix.npc.models.Properties {
     static final Keyword STRUCTURE_KW =
         new Keyword (STRUCTURE_TYPE, STRUCTURE_ORIGINAL);
     public static Structure getStructure (Entity e) {
+        if (request() != null) {
+            String []facets = request().queryString().get("facet");
+            if (facets != null) {
+                for (String f : facets) {
+                    int pos = f.indexOf('/');
+                    if (pos > 0) {
+                        String fn = f.substring(0, pos);
+                        if (Structure.H_LyChI_L4.equals(fn)
+                            || STRUCTURE_SCAFFOLD.equals(fn)) {
+                            String fv = f.substring(pos+1);
+                            for (XRef ref : e.getLinks()) {
+                                try {
+                                    if (Class.forName(ref.kind)
+                                        .isAssignableFrom(Structure.class)) {
+                                        for (Value v : ref.properties) {
+                                            if (v.label.equals(STRUCTURE_SCAFFOLD)
+                                                && fv.equals(v.getValue()))
+                                                return (Structure)ref.deRef();
+                                        }
+                                    }
+                                }
+                                catch (Exception ex) {
+                                    Logger.error
+                                        ("Unknown class["+ref.kind
+                                         +"] in xref "+ref.id, ex);
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        
         return e.getLinkedObject(Structure.class, STRUCTURE_KW);
     }
 
@@ -382,7 +465,28 @@ public class NPCApp extends App implements ix.npc.models.Properties {
                 atomMap = context;
             }
         }
-        return App.structure(id, format, size, atomMap);        
+
+        Result result = null;
+        
+        Structure struc = App.structure(id);
+        if (struc != null) {
+            if ("".equals(atomMap)) {
+                for (XRef ref : struc.links) {
+                    for (Value v : ref.properties) {
+                        if (STRUCTURE_PARENT.equals(v.label)) {
+                            struc = (Structure)ref.deRef();
+                            atomMap = (String)v.getValue();
+                            break;
+                        }
+                    }
+                }
+            }
+            result = App.structure(struc, format, size, atomMap);
+        }
+        else
+            result = notFound ("Unknown structure "+id);
+        
+        return result;
     }
 
     public static TermVectors getTermVectors

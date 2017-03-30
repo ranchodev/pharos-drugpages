@@ -11,6 +11,7 @@ public interface Properties {
     final String STRUCTURE_MOIETY = "Moiety";
     final String STRUCTURE_ORIGINAL = "Original";
     final String STRUCTURE_SCAFFOLD = "Scaffold";
+    final String STRUCTURE_PARENT = "Parent";
 
     final String DATASET = "Dataset";
 }

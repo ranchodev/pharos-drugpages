@@ -211,31 +211,31 @@ public class Registration extends NPCApp {
                 StructureProcessor.instrument(mol, moieties, false);
             struc.save();
 
-            if (mol.getAtomCount() > 0)
-                MOLIDX.add(ds, struc.id.toString(), struc.molfile);
+            if (mol.getAtomCount() > 0) {
+                Map<String, Structure> fragments = generateFragments (struc);
+                for (Map.Entry<String, Structure> me : fragments.entrySet()) {
+                    addxref (ent, me.getValue(),
+                             KeywordFactory.registerIfAbsent
+                             (STRUCTURE_SCAFFOLD, me.getKey(), null));
+                    createScaffoldIfAbsent (me.getKey(), me.getValue());
+                }
+                
+                MOLIDX.add(ds, struc.id.toString(), struc.molfile);             
+            }           
 
-            add (ent, struc, KeywordFactory.registerIfAbsent
-                 (STRUCTURE_TYPE, STRUCTURE_ORIGINAL, null),
-                 new VInt (MOIETY_COUNT,
-                           (long)(moieties.isEmpty()
+            addxref (ent, struc, KeywordFactory.registerIfAbsent
+                     (STRUCTURE_TYPE, STRUCTURE_ORIGINAL, null),
+                     new VInt (MOIETY_COUNT,
+                               (long)(moieties.isEmpty()
                                   ? 1 : moieties.size())));
 
             if (mol.getAtomCount() < 500) {
                 // only standardize if we a small molecule
                 struc = StructureProcessor.instrument(mol);
                 struc.save();
-
-                Map<String, Structure> fragments = generateFragments (struc);
-                for (Map.Entry<String, Structure> me : fragments.entrySet()) {
-                    add (ent, me.getValue(),
+                addxref (ent, struc, 
                          KeywordFactory.registerIfAbsent
-                         (STRUCTURE_SCAFFOLD, me.getKey(), null));
-                    createScaffoldIfAbsent (me.getKey(), me.getValue());
-                }
-            
-                add (ent, struc, 
-                     KeywordFactory.registerIfAbsent
-                     (STRUCTURE_TYPE, STRUCTURE_STANDARDIZED, null));
+                         (STRUCTURE_TYPE, STRUCTURE_STANDARDIZED, null));
             }
 
             properties (ent, mol);
@@ -243,7 +243,7 @@ public class Registration extends NPCApp {
             return ent;
         } // instrument
 
-        XRef add (Entity ent, Structure struc, Value... props) {
+        XRef addxref (Entity ent, Structure struc, Value... props) {
             XRef xref = new XRef (struc);
             xref.properties.addAll(struc.properties);
             for (Value p : props)
@@ -261,9 +261,9 @@ public class Registration extends NPCApp {
                 ent = new Entity (Entity.Type.Scaffold, key);
                 struc = StructureProcessor.clone(struc);
                 struc.save();
-                add (ent, struc, 
-                     KeywordFactory.registerIfAbsent
-                     (STRUCTURE_TYPE, STRUCTURE_ORIGINAL, null));
+                addxref (ent, struc, 
+                         KeywordFactory.registerIfAbsent
+                         (STRUCTURE_TYPE, STRUCTURE_ORIGINAL, null));
                 ent.save();
             }
             else
@@ -376,28 +376,38 @@ public class Registration extends NPCApp {
         } // parse ()
 
         Map<String, Structure> generateFragments (Structure parent) {
-            String molfile = null;
-            for (Value v : parent.properties) {
-                if (Structure.F_LyChI_MOL.equals(v.label)) {
-                    molfile = ((Text)v).getValue();
-                    break;
-                }
-            }
-
             Map<String, Structure> fragments = new HashMap<>();
-            if (molfile != null) {
-                mf.setMolecule(molfile);
-                mf.run();
-                for (Enumeration<Molecule> en = mf.getFragments();
-                     en.hasMoreElements(); ) {
-                    Molecule f = en.nextElement();
-                    if (!fragments.containsKey(f.getName())) {
-                        Structure struc =
-                            StructureProcessor.instrument(f, null, false);
-                        struc.links.add(new XRef (parent));
-                        struc.save();
-                        fragments.put(f.getName(), struc);
+
+            mf.setMolecule(parent.molfile);
+            mf.run();
+            for (Enumeration<Molecule> en = mf.getFragments();
+                 en.hasMoreElements(); ) {
+                Molecule f = en.nextElement();
+                if (!fragments.containsKey(f.getName())) {
+                    int[] amap = new int[mf.getMolecule().getAtomCount()];
+                    for (int i = 0; i < f.getAtomCount(); ++i) {
+                        int m = f.getAtom(i).getAtomMap();
+                        if (m > 0) 
+                            amap[m-1] = i+1;
                     }
+                    StringBuilder sb = new StringBuilder ();
+                    sb.append(amap[0]);
+                    for (int i = 1; i < amap.length; ++i) {
+                        sb.append(",");
+                        sb.append(amap[i]);
+                    }
+                        
+                    XRef ref = new XRef (parent);
+                    ref.properties.add
+                        (new Text (STRUCTURE_PARENT, sb.toString()));
+                    ref.save();
+                    
+                    Structure struc =
+                        StructureProcessor.instrument(f, null, false);
+                    struc.links.add(ref);
+                    struc.save();
+                    
+                    fragments.put(f.getName(), struc);
                 }
             }
             
