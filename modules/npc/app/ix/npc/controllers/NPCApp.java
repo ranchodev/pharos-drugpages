@@ -432,13 +432,18 @@ public class NPCApp extends App implements ix.npc.models.Properties {
                         (SearchResultContext context,
                          int page, int rows,
                          int total, int[] pages,
-                         List<TextIndexer.Facet> facets,
-                         List<Entity> entities) {
+                         List<Facet> facets, List<Entity> entities) {
                         return ix.npc.views.html.entities.render
                             (page, rows, total,
                              pages, decorate (filter
                                               (facets, ENTITY_FACETS)),
                              entities, context.getId());
+                    }
+                    
+                    public SearchOptions.FacetRange[] getRangeFacets () {
+                        return new SearchOptions.FacetRange[]{
+                            createDateFacetRange ("modified")
+                        };
                     }
                 });
     }
@@ -449,44 +454,53 @@ public class NPCApp extends App implements ix.npc.models.Properties {
     public static Result structure (final String id,
                                     final String format, final int size,
                                     final String context) {
-        //Logger.debug("Fetching structure");
-        String atomMap = "";
-        if (context != null) {
-            int[] amap = (int[])IxCache.get("AtomMaps/"+context+"/"+id);
-            //Logger.debug("AtomMaps/"+context+" => "+amap);
-            if (amap != null && amap.length > 0) {
-                StringBuilder sb = new StringBuilder ();
-                sb.append(amap[0]);
-                for (int i = 1; i < amap.length; ++i)
-                    sb.append(","+amap[i]);
-                atomMap = sb.toString();
-            }
-            else {
-                atomMap = context;
-            }
+
+        Structure struc = App.structure(id);
+        if (struc == null) {
+            return notFound ("Unknown structure "+id);
         }
 
-        Result result = null;
-        
-        Structure struc = App.structure(id);
-        if (struc != null) {
-            if ("".equals(atomMap)) {
-                for (XRef ref : struc.links) {
-                    for (Value v : ref.properties) {
-                        if (STRUCTURE_PARENT.equals(v.label)) {
+        int[] amap = null;
+        if (context != null) {
+            amap = (int[])IxCache.get("AtomMaps/"+context+"/"+id);
+        }
+
+        if (amap == null) {
+            for (XRef ref : struc.links) {
+                for (Value v : ref.properties) {
+                    if (STRUCTURE_PARENT.equals(v.label)) {
+                        String sv = (String)v.getValue();
+                        if (sv != null) {
+                            String[] av = sv.split(",");
+                            amap = new int[av.length];
+                            for (int i = 0; i < av.length; ++i)
+                                amap[i] = Integer.parseInt(av[i]);
+                            
                             struc = (Structure)ref.deRef();
-                            atomMap = (String)v.getValue();
                             break;
                         }
                     }
                 }
             }
-            result = App.structure(struc, format, size, atomMap);
         }
-        else
-            result = notFound ("Unknown structure "+id);
+        else if (context != null) {
+            //Logger.warn("Can't find atom mapping for context "+context);
+        }
+
+        String atomMap = "";
+        if (amap != null && amap.length > 0) {
+            //Logger.debug("AtomMaps/"+context+" => "+amap);
+            StringBuilder sb = new StringBuilder ();
+            sb.append(amap[0]);
+            for (int i = 1; i < amap.length; ++i)
+                sb.append(","+amap[i]);
+            atomMap = sb.toString();
+        }
+        else {
+            atomMap = context;
+        }
         
-        return result;
+        return App.structure(struc, format, size, atomMap);
     }
 
     public static TermVectors getTermVectors

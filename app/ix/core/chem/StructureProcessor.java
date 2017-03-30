@@ -167,7 +167,7 @@ public class StructureProcessor {
             struc.digest = digest (mol);
         }
 
-        if (mol.getDim() < 2) {
+        if (mol.getDim() != 2) {
             mol.clean(2, null);
         }
         

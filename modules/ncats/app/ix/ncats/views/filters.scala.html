@@ -13,7 +13,7 @@
  @defining(f.name.toLowerCase.replaceAll("[\\(\\)]+","").replaceAll("[\\s]+","-")) { fname =>
 <div class="panel panel-default @{fname}-panel">
   <div class="panel-heading"  id='@fname'>
-    <h3 class="panel-title" id="facetheader-@f.facet.getName" data-toggle="tooltip"
+    <h3 class="panel-title text-capitalize" id="facetheader-@f.facet.getName" data-toggle="tooltip"
 
 	@** this shouldn't be here.. it should be in the FacetDecorator **@
         @f.name() match {

@@ -148,6 +148,7 @@ public class App extends Authentication {
              int page, int rows, int total, int[] pages,
              List<TextIndexer.Facet> facets, List<T> results);
         int getFacetDim ();
+        default SearchOptions.FacetRange[] getRangeFacets () { return null; }
     }
 
     public static abstract class DefaultResultRenderer<T>
@@ -185,7 +186,7 @@ public class App extends Authentication {
         public List<T> find (final String name) throws Exception {
             long start = System.currentTimeMillis();
             final String key = cls.getName()+"/"+name;
-            List<T> e = getOrElse
+            List<T> e = getOrElse_
                 (key, new Callable<List<T>> () {
                         public List<T> call () throws Exception {
                             return _find (key, name);
@@ -2038,7 +2039,8 @@ public class App extends Authentication {
                         SearchResult searchResult =
                         SearchFactory.search (results, null, results.size(), 0,
                                               renderer.getFacetDim(),
-                                              request().queryString());
+                                              request().queryString(),
+                                              renderer.getRangeFacets());
                         Logger.debug("Cache misses: "
                                      +key+" size="+results.size()
                                      +" class="+searchResult);
