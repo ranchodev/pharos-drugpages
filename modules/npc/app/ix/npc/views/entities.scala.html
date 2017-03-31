@@ -1,48 +1,10 @@
 
-@import ix.npc.controllers.EntityFactory
 @import ix.npc.controllers.NPCApp
 @import ix.ncats.controllers.App.FacetDecorator
-@import ix.ncats.controllers.App
 @import ix.npc.models.Entity
-@import ix.npc.models.Entity._
-@import ix.core.models.Structure
-@import ix.core.models.Keyword
-@import ix.npc.models.Properties._
-@import java.net.URLEncoder
-@import ix.core.search.TextIndexer.TermVectors
 
 @(current: Int, rows: Int, total: Int, pages: Array[Int],
 facets: Array[FacetDecorator], entities: List[Entity], ctx: String)
-
-@tvlink(tv: TermVectors, value: String, t: Type) = {
-<a href='@{ix.npc.controllers.routes.NPCApp.entities(null,15,1)+"?facet="+STRUCTURE_SCAFFOLD+"/"+value+"&facet="+URLEncoder.encode("Entity Type","utf8")+"/"+t}'><span class="badge">@tv.getTermCount(t.toString)</span></a>
-}
-
-@cell(e: Entity) = {
- <div class="col-sm-6 col-md-4">
-   <div class="thumbnail">
-     @defining(NPCApp.getStructure(e)) { struc =>
-     @if(struc != null) {
-     <a role="button" class="btn btn-default"
-	style="float:right;"
-	href='@ix.npc.controllers.routes.NPCApp.sketcher(struc.id.toString)'><i class="fa fa-edit" aria-hidden="true"></i></a>     
-        <a href='@ix.npc.controllers.routes.NPCApp.entity(e.getId.toString)'><img src='@ix.npc.controllers.routes.NPCApp.structure(struc.id.toString, "svg", 200, ctx)' alt="Structure for entity @e.getName"> </a>
-       }
-
-	<div class="caption">
-	  <span style="font-family:monospace">@e.getName</span>
-	  @if(e.getType == Type.Scaffold) {
-	    @defining(NPCApp.getTermVectors("Entity Type", STRUCTURE_SCAFFOLD, e.getName)){ tv =>
-	      @if(tv != null) {
-	       <span class="pull-right">@tvlink(tv,e.getName,Type.Compound)</span>
-	      }
-	    }
-	  }
-	</div>
-     }
-   </div>
- </div>
-}
 
 @ix.ncats.views.html.content("Entities", "ix.npc.models.Entity",
 ix.npc.controllers.routes.NPCApp.entities().url,
@@ -56,14 +18,13 @@ current, rows, total, pages, facets){ @entitiesmenu("Entities") }{
 	  <div class="row">
 	    @for(e <- emat(i)) {
 	       @if(e != null) {
-	           @cell(e)
+	           @cell(e,ctx)
 	       }
 	    }
 	  </div>
      }
   }
-}{
-}
+}(HtmlFormat.empty)
 
 <script>
 $(function () {

@@ -203,7 +203,7 @@ public class Registration extends NPCApp {
             }
         }
 
-        Entity instrument (String ds, Molecule mol) throws Exception {
+        Entity instrument (String source, Molecule mol) throws Exception {
             Entity ent = new Entity (Entity.Type.Compound, mol.getName());
         
             List<Structure> moieties = new ArrayList<>();
@@ -220,7 +220,7 @@ public class Registration extends NPCApp {
                     createScaffoldIfAbsent (me.getKey(), me.getValue());
                 }
                 
-                MOLIDX.add(ds, struc.id.toString(), struc.molfile);             
+                MOLIDX.add(source, struc.id.toString(), struc.molfile);
             }           
 
             addxref (ent, struc, KeywordFactory.registerIfAbsent
@@ -264,10 +264,14 @@ public class Registration extends NPCApp {
                 addxref (ent, struc, 
                          KeywordFactory.registerIfAbsent
                          (STRUCTURE_TYPE, STRUCTURE_ORIGINAL, null));
+                ent.properties.add(ds);
                 ent.save();
             }
-            else
+            else {
                 ent = entities.get(0);
+                ent.addIfAbsent((Value)ds);
+                ent.update();
+            }
             return ent;
         }
         

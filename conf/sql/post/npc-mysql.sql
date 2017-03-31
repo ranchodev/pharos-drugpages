@@ -32,6 +32,7 @@ ADD INDEX `structure_version_index` (`version` ASC);
 ;
 
 ALTER TABLE ix_npc_entity
+ADD INDEX `npc_name_index` (`name` ASC),
 ADD INDEX `npc_version_index` (`version` ASC),
 ADD INDEX `npc_type_index` (`type` ASC);
 ;

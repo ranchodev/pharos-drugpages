@@ -48,6 +48,7 @@ public class Entity extends EntityModel {
     public Type type = Type.Other;
     
     @Indexable(facet=true, name="Entity Name")
+    @Column(length=255)    
     public String name;
 
     @Lob
@@ -126,6 +127,26 @@ public class Entity extends EntityModel {
             }
         }
         return null;
+    }
+
+    public List<Entity> getLinkedEntities (String label) {
+        List<Entity> entities = new ArrayList<>();
+        for (XRef xref : getLinks ()) {
+            try {
+                if (Entity.class.isAssignableFrom(Class.forName(xref.kind))) {
+                    for (Value v : xref.properties) {
+                        if (label.equals(v.label)) {
+                            entities.add((Entity)xref.deRef());
+                            break;
+                        }
+                    }
+                }
+            }
+            catch (Exception ex) {
+                Logger.error("Can't resolve xref type: "+xref.kind, ex);
+            }
+        }
+        return entities;
     }
 
     @PreRemove

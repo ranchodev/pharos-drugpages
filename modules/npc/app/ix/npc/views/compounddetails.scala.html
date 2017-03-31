@@ -65,11 +65,14 @@
 	      <li role="presentation" class="active"><a href="#properties"
 	      	  aria-controls="properties" role="tab"
 		  data-toggle="tab">Properties</a></li>
+	      <li role="presentation"><a href="#scaffolds"
+	      	  aria-controls="scaffolds" role="tab"
+		  data-toggle="tab">Scaffolds</a></li>	      
 	      <li role="presentation"><a href="#original"
 	      	  aria-controls="profile" role="tab"
 		  data-toggle="tab">Original</a></li>
            </ul>
-	   <div class="tab-content">
+	   <div class="tab-content" style="margin-top:5px">
 	      <div role="tabpanel" class="tab-pane active" id="properties">
   	      	 <table class="table table-striped">
 		   <tr>
@@ -111,11 +114,24 @@
 		      </tr>
 	           }
 		 </table>
+              </div>
+              <div role="tabpanel" class="tab-pane" id="scaffolds">
+		@defining(NPCApp.toMatrix(3,NPCApp.getScaffolds(entity))){ s =>
+		  @for(i <- 0 until s.length) {
+		    <div class="row">
+		      @for(e <- s(i)) {
+		         @if(e != null) {
+		            @cell(e)
+			 }
+		      }
+		    </div>
+		  }
+	        }
 	      </div>
 	      <div role="tabpanel" class="tab-pane" id="original">
 	         @defining(entity.getProperty(Properties.ORIGINAL_INPUT)) { p =>
 		    @if(p != null) {
-	              <pre class="pre-scrollable">@p.getValue</pre>
+	              <pre class="pre-scrollable" style="max-height:400px">@p.getValue</pre>
 		    }
 		 }
 	      </div>

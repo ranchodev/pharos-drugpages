@@ -330,8 +330,9 @@ public class NPCApp extends App implements ix.npc.models.Properties {
                             String fv = f.substring(pos+1);
                             for (XRef ref : e.getLinks()) {
                                 try {
-                                    if (Class.forName(ref.kind)
-                                        .isAssignableFrom(Structure.class)) {
+                                    if (Structure.class
+                                        .isAssignableFrom
+                                        (Class.forName(ref.kind))) {
                                         for (Value v : ref.properties) {
                                             if (v.label.equals(STRUCTURE_SCAFFOLD)
                                                 && fv.equals(v.getValue()))
@@ -509,5 +510,29 @@ public class NPCApp extends App implements ix.npc.models.Properties {
         params.put(facet, value);
         return SearchFactory.getConditionalTermVectors
             (Entity.class, field, params);
+    }
+
+    public static List<Entity> getScaffolds (Entity e) {
+        List<Entity> scafs = new ArrayList<>();
+        for (XRef xref : e.getLinks()) {
+            try {
+                if (Structure.class.isAssignableFrom
+                    (Class.forName(xref.kind))) {
+                    for (Value v : xref.properties) {
+                        if (STRUCTURE_SCAFFOLD.equals(v.label)) {
+                            List<Entity> ents =
+                                EntityResult.find((String)v.getValue());
+                            if (!ents.isEmpty()) {
+                                scafs.addAll(ents);
+                            }
+                        }
+                    }
+                }
+            }
+            catch (Exception ex) {
+                Logger.error("Can't resolve xref type: "+xref.kind, ex);
+            }
+        }
+        return scafs;
     }
 }
