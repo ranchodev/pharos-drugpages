@@ -12,6 +12,9 @@ import java.lang.reflect.Array;
 import java.lang.reflect.Type;
 import java.lang.reflect.ParameterizedType;
 import javax.persistence.Entity;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.atomic.AtomicLong;
+import java.util.concurrent.locks.*;
 
 import play.libs.Json;
 import play.*;
@@ -47,6 +50,8 @@ import ix.core.models.BeanViews;
 import ix.core.models.Curation;
 import ix.core.search.TextIndexer;
 import ix.core.plugins.TextIndexerPlugin;
+import ix.core.adapters.EntityPersistAdapter;
+import ix.core.adapters.BeanInterceptor;
 import ix.utils.Util;
 import ix.utils.Global;
 
@@ -62,6 +67,81 @@ public class EntityFactory extends Controller {
     static final TextIndexer _textIndexer =
         Play.application().plugin(TextIndexerPlugin.class).getIndexer();
 
+    static protected class Reindexer<K,T> implements BeanInterceptor {
+        static final ReentrantLock lock = new ReentrantLock ();
+        static Reindexer reindexer;
+
+        long start;
+        long total;
+        AtomicLong count = new AtomicLong ();
+        String current;
+        Model.Finder<K,T> finder;
+
+        protected Reindexer (Model.Finder<K,T> finder) {
+            total = finder.findRowCount();
+            start = System.currentTimeMillis();
+            Logger.debug(EntityFactory.class.getName()
+                         +": Reindexing started on "+new java.util.Date()
+                         +" for "+total+" entities!");
+            this.finder = finder;
+        }
+
+        public static <K,T> Reindexer<K,T>
+            getInstance (Model.Finder<K,T> finder) {
+            if (!lock.isLocked()) { // can only run once per session!
+                lock.lock();
+                reindexer = new Reindexer (finder);
+                _threadPool.submit(new Runnable () {
+                        public void run () {
+                            try {
+                                reindexer.reindex();
+                            }
+                            catch (Exception ex) {
+                                Logger.error(Thread.currentThread()
+                                             +": reindex error!", ex);
+                            }
+                        }
+                    });
+            }
+            return reindexer;
+        }
+
+        /*
+        @Override
+        public void postLoad (Object bean) {
+            try {
+            }
+            catch (Exception ex) {
+                Logger.error("Can't entity id "+bean, ex);
+            }
+        }
+        */
+        
+        public long count () { return count.get(); }
+        public long start () { return start; }
+        public long total () { return total; }
+        public String current () { return current; }
+
+        void reindex () throws Exception {
+            //EntityPersistAdapter.getInstance().add(this);
+            for (T e : finder.all()) {
+                try {
+                    // work being done inside postLoad..
+                    _textIndexer.add(e);
+                    count.getAndIncrement();
+                    current = e.getClass().getName()+":"+Util.getId(e);
+                    Logger.info("Reindexing entity "+current+"..."+count.get());
+                }
+                catch (Exception ex) {
+                    Logger.error("Can't reindex entity "
+                                 +e.getClass().getName()+" "+Util.getId(e), ex);
+                }
+            }
+            //EntityPersistAdapter.getInstance().remove(this);
+            _textIndexer.flush();
+        }
+    } // Reindexer
+    
     public static class FetchOptions {
         public int top;
         public int skip;
@@ -1369,5 +1449,20 @@ public class EntityFactory extends Controller {
                 +id.substring(20);
         }
         return UUID.fromString(id);
+    }
+
+    public static <K,T> Result reindex (Model.Finder<K, T> finder) {
+        Reindexer idx = Reindexer.getInstance(finder);
+        ObjectMapper mapper = new ObjectMapper ();
+        ObjectNode json = mapper.createObjectNode();
+        json.put("start", new java.util.Date(idx.start()).toString());
+        json.put("total", idx.total());
+        json.put("count", idx.count());
+        json.put("current", idx.current());
+        if (idx.total() > 0) {
+            long pct = (long)(idx.count()*100.0 / idx.total() + 0.5);
+            json.put("percent", pct);
+        }
+        return ok (json);
     }
 }

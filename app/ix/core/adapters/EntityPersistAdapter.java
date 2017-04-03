@@ -48,9 +48,28 @@ public class EntityPersistAdapter extends BeanPersistAdapter {
         new HashMap<String, List<Method>>();
     private Map<String, List<Method>> postLoadCallback = 
         new HashMap<String, List<Method>>();
-    
+
+    private List<BeanInterceptor> interceptors = new ArrayList<>();
+
+    static EntityPersistAdapter _instance;
 
     public EntityPersistAdapter () {
+        if (_instance != null)
+            throw new RuntimeException
+                ("An instance of "+getClass().getName()+" "+_instance);
+        _instance = this;
+    }
+
+    public static EntityPersistAdapter getInstance () {
+        return _instance;
+    }
+
+    public void add (BeanInterceptor interceptor) {
+        interceptors.add(interceptor);
+    }
+
+    public void remove (BeanInterceptor interceptor) {
+        interceptors.remove(interceptor);
     }
 
     boolean debug (int level) {
@@ -105,6 +124,9 @@ public class EntityPersistAdapter extends BeanPersistAdapter {
             }
         }
 
+        for (BeanInterceptor bi : interceptors)
+            bi.preInsert(bean);
+
         return true;
     }
 
@@ -129,6 +151,9 @@ public class EntityPersistAdapter extends BeanPersistAdapter {
 
             if (plugin != null)
                 plugin.getIndexer().add(bean);
+            
+            for (BeanInterceptor bi : interceptors)
+                bi.postInsert(bean);        
         }
         catch (java.io.IOException ex) {
             Logger.trace("Can't index bean "+bean, ex);
@@ -153,6 +178,9 @@ public class EntityPersistAdapter extends BeanPersistAdapter {
                 }
             }
         }
+
+        for (BeanInterceptor bi : interceptors)
+            bi.preUpdate(bean);     
         
         return true;
     }
@@ -213,6 +241,9 @@ public class EntityPersistAdapter extends BeanPersistAdapter {
 
             if (plugin != null)
                 plugin.getIndexer().update(bean);
+
+            for (BeanInterceptor bi : interceptors)
+                bi.postUpdate(bean);
         }
         catch (java.io.IOException ex) {
             Logger.warn("Can't update bean index "+bean, ex);
@@ -243,6 +274,9 @@ public class EntityPersistAdapter extends BeanPersistAdapter {
         try {
             if (plugin != null)
                 plugin.getIndexer().remove(bean);
+
+            for (BeanInterceptor bi : interceptors)
+                bi.preDelete(bean);         
         }
         catch (Exception ex) {
             Logger.trace("Can't remove bean "+bean+" from index!", ex);
@@ -268,6 +302,9 @@ public class EntityPersistAdapter extends BeanPersistAdapter {
                 }
             }
         }
+
+        for (BeanInterceptor bi : interceptors)
+            bi.postDelete(bean);
     }
 
 
@@ -287,6 +324,9 @@ public class EntityPersistAdapter extends BeanPersistAdapter {
             }
         }
 
+        for (BeanInterceptor bi : interceptors)
+            bi.postLoad(bean);
+        
         /*
         Class cls = bean.getClass();    
         try {

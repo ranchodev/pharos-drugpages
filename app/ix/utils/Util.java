@@ -238,6 +238,10 @@ public class Util {
         return f != null ? f.get(inst) : null;
     }
 
+    public static Object getId (Object obj) throws Exception {
+        return getFieldValue (obj, Id.class);
+    }
+
     public static String sha1 (Collection values) {
         Set<String> vals = new TreeSet<String>();
         for (Object obj : values) {

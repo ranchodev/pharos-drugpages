@@ -199,6 +199,20 @@ public class RouteFactory extends Controller {
         return badRequest ("Unknown Context: \""+context+"\"");
     }
 
+    public static Result reindex (String context) {
+        try {
+            Method m = getMethod (context, "reindex");
+            if (m != null)
+                return (Result)m.invoke(null);
+        }
+        catch (Exception ex) {
+            Logger.trace("["+context+"]", ex);
+            return internalServerError (context);
+        }
+        Logger.warn("Context {} has no method reindex()", context);
+        return badRequest ("Unknown Context: \""+context+"\"");     
+    }
+
     public static Result getUUID (String context, String uuid, String expand) {
         try {
             Method m = getMethod (context, "get", UUID.class, String.class);

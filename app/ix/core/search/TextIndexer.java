@@ -1036,6 +1036,7 @@ public class TextIndexer {
         if (reader != null) {
             indexReader.close();
             indexReader = reader;
+            lastModified.set(System.currentTimeMillis());
         }
         return indexReader;
     }
@@ -1833,10 +1834,20 @@ public class TextIndexer {
             Logger.debug("++ adding document "+doc);
         
         indexWriter.addDocument(doc);
-        lastModified.set(System.currentTimeMillis());
+        lastModified.set(System.currentTimeMillis());   
     }
 
-    public long lastModified () { return lastModified.get(); }
+    public long lastModified () {
+        try {
+            if (!indexReader.isCurrent()) {
+                lastModified.set(System.currentTimeMillis());
+            }
+        }
+        catch (IOException ex) {
+            Logger.error("Can't check IndexReader status", ex);
+        }
+        return lastModified.get();
+    }
 
     public void update (Object entity) throws IOException {
         if (!entity.getClass().isAnnotationPresent(Entity.class)) {
@@ -1891,7 +1902,7 @@ public class TextIndexer {
                     Logger.debug("Deleting document "+field+"="+id+"...");
                 indexWriter.deleteDocuments
                     (new Term (field, id.toString()));
-                lastModified.set(System.currentTimeMillis());
+                lastModified.set(System.currentTimeMillis());           
             }
             else {
                 Logger.warn("Entity "+cls+"'s Id field is null!");
@@ -2482,10 +2493,13 @@ public class TextIndexer {
 
     public void flush () {
         try {
+            if (!indexReader.isCurrent()) {
+                lastModified.set(System.currentTimeMillis());
+            }
+            
             if (indexWriter.hasPendingMerges()) {
                 indexWriter.waitForMerges();
                 indexWriter.commit();
-                lastModified.set(System.currentTimeMillis());
             }
             
             IndexOutput output = indexDir.createOutput

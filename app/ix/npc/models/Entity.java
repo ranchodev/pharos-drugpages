@@ -26,7 +26,7 @@ import play.Logger;
 
 @javax.persistence.Entity
 @Table(name="ix_npc_entity")
-public class Entity extends EntityModel {
+public class Entity extends EntityModel implements Properties {
     public enum Type {
         Drug,
         Compound,
@@ -44,10 +44,10 @@ public class Entity extends EntityModel {
         Other;
     }
 
-    @Indexable(facet=true, name="Entity Type")
+    @Indexable(facet=true, name=ENTITY_TYPE)
     public Type type = Type.Other;
     
-    @Indexable(facet=true, name="Entity Name")
+    @Indexable(facet=true, name=ENTITY_NAME)
     @Column(length=255)    
     public String name;
 

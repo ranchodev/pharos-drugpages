@@ -60,20 +60,26 @@ public class NPCApp extends App implements ix.npc.models.Properties {
 
     static final String[] ENTITY_FACETS = {
         "Dataset",
-        "Entity Type",
-        "Scaffold",     
-        "StereoChemistry",
-        "Stereocenters",
-        "Defined Stereocenters",
+        ENTITY_TYPE,
+        STRUCTURE_SCAFFOLD,
         "modified"
     };
 
     static class NPCFacetDecorator extends FacetDecorator {
+        // don't show Scaffold facet value
         NPCFacetDecorator (Facet facet) {
-            super (facet, true, FACET_DIM);
+            super (facet.filter(fv -> {
+                        return !facet.getName().equals(ENTITY_TYPE)
+                            || (facet.getName().equals(ENTITY_TYPE)
+                                && !fv.getLabel().equals(STRUCTURE_SCAFFOLD));
+                    }), true, FACET_DIM);
         }
         NPCFacetDecorator (Facet facet, boolean raw, int dim) {
-            super (facet, raw, dim);
+            super (facet.filter(fv -> {
+                        return !facet.getName().equals(ENTITY_TYPE)
+                            || (facet.getName().equals(ENTITY_TYPE)
+                                && !fv.getLabel().equals(STRUCTURE_SCAFFOLD));
+                    }), raw, dim);
         }
 
         @Override
@@ -81,7 +87,8 @@ public class NPCApp extends App implements ix.npc.models.Properties {
             final String label = super.label(i);
             final String name = super.name();
 
-            if (name.equals(STRUCTURE_SCAFFOLD)) {
+            if (name.equals(STRUCTURE_SCAFFOLD)
+                || name.equals(Structure.H_LyChI_L4)) {
                 StringBuilder url = new StringBuilder
                     ("<a href='"+routes.NPCApp.entity(label)+"'");
                 try {
@@ -162,7 +169,8 @@ public class NPCApp extends App implements ix.npc.models.Properties {
         List<FacetDecorator> decors = new ArrayList<FacetDecorator>();
         // override decorator as needed here
         for (int i = 0; i < facets.length; ++i) {
-            decors.add(new NPCFacetDecorator (facets[i]));
+            NPCFacetDecorator decor = new NPCFacetDecorator (facets[i]);
+            decors.add(decor);
         }
 
         for (FacetDecorator f : decors) {

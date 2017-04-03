@@ -227,7 +227,13 @@ public class Registration extends NPCApp {
                      (STRUCTURE_TYPE, STRUCTURE_ORIGINAL, null),
                      new VInt (MOIETY_COUNT,
                                (long)(moieties.isEmpty()
-                                  ? 1 : moieties.size())));
+                                      ? 1 : moieties.size())),
+                     new VInt (ATOM_COUNT, (long)struc.atomCount),
+                     new VInt (BOND_COUNT, (long)struc.bondCount),
+                     new VInt (STEREOCENTERS, struc.definedStereo != null ?
+                               struc.definedStereo.longValue() : 0l),
+                     new VNum (MOLWT, struc.mwt)
+                     );
 
             if (mol.getAtomCount() < 500) {
                 // only standardize if we a small molecule
@@ -263,14 +269,22 @@ public class Registration extends NPCApp {
                 struc.save();
                 addxref (ent, struc, 
                          KeywordFactory.registerIfAbsent
-                         (STRUCTURE_TYPE, STRUCTURE_ORIGINAL, null));
-                ent.properties.add(ds);
+                         (STRUCTURE_TYPE, STRUCTURE_ORIGINAL, null),
+                         new VInt (ATOM_COUNT, (long)struc.atomCount),
+                         new VInt (BOND_COUNT, (long)struc.bondCount),
+                         new VInt (STEREOCENTERS, struc.definedStereo != null ?
+                                   struc.definedStereo.longValue() : 0l),
+                         new VNum (MOLWT, struc.mwt)
+                         );
+                //ent.properties.add(ds);
                 ent.save();
             }
             else {
                 ent = entities.get(0);
+                /*
                 ent.addIfAbsent((Value)ds);
                 ent.update();
+                */
             }
             return ent;
         }

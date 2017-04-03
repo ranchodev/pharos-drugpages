@@ -506,7 +506,7 @@ public class IxCache extends Plugin
                 case SUCCESS:
                     {   CacheObject obj = (CacheObject) deserialize (data);
                         elm = new Element (key, obj.data, 0l, obj.created,
-                                           System.currentTimeMillis(),
+                                           obj.lastUpdated,
                                            obj.lastUpdated, 1l);
                     }
                     break;
