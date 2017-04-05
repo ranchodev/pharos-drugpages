@@ -15,6 +15,7 @@ GET     /suggest/@fields       ix.core.controllers.search.SearchFactory.suggestF
 GET     /suggest/:field       ix.core.controllers.search.SearchFactory.suggestField(field: String, q: String, max: Int ?= 10)
 GET     /suggest       ix.core.controllers.search.SearchFactory.suggest(q: String, max: Int ?= 10)
 GET     /facet/@fields        ix.core.controllers.search.SearchFactory.facetFields
+GET     /index/@fields        ix.core.controllers.search.SearchFactory.indexFields
 GET	/$context<[a-z0-9_]+>/:field/termvec      ix.core.controllers.v1.RouteFactory.termVectors(context: String, field: String)
 GET     /$context<[a-z0-9_]+>/@count       ix.core.controllers.v1.RouteFactory.count(context: String)
 GET	/$context<[a-z0-9_]+>/@reindex	   ix.core.controllers.v1.RouteFactory.reindex(context: String)

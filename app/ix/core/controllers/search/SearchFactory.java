@@ -217,6 +217,15 @@ public class SearchFactory extends EntityFactory {
         return ok (_indexer.getFacetsConfig());
     }
 
+    public static Result indexFields () {
+        try {
+            return ok (_indexer.getIndexFields());
+        }
+        catch (Exception ex) {
+            return internalServerError (ex.getMessage());
+        }
+    }
+
     static String getTermVectorCacheKey (Class kind, String field) {
         return SearchFactory.class.getName()+"/termVectors/"
             +kind.getName()+"/"+field;

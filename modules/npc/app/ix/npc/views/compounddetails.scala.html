@@ -36,19 +36,58 @@
     </div>
     <div class="row">
       <div class="col-md-4">
-	<div class="panel panel-default">
-	  <div class="panel-body">
-	    @defining(NPCApp.getStructure(entity)) { struc =>
-               @if(struc != null) {
-	       <a role="button" class="btn btn-default" style="float:right;"
-		  href='@ix.npc.controllers.routes.NPCApp.sketcher(struc.id.toString)'><i class="fa fa-edit" aria-hidden="true"></i></a>	
-	    <center>
-	      <img alt="Structure of @entity.getName"
-		   src='@ix.ncats.controllers.routes.App.structure(struc.getId,"svg",300)'>
-	    </center>
-	       }
-	    }
-	  </div>
+        <div>
+      	   <ul class="nav nav-tabs" role="tablist">
+	      <li role="presentation" class="active"><a href="#structure"
+	      	  aria-controls="structure" role="tab"
+		  data-toggle="tab">Structure</a></li>
+	      <li role="presentation"><a href="#strucinfo"
+	      	  aria-controls="strucinfo" role="tab"
+		  data-toggle="tab">Info</a></li>	      
+           </ul>
+	   <div class="tab-content" style="margin-top:5px">
+	      <div role="tabpanel" class="tab-pane active" id="structure">
+	      	<div class="panel panel-default">
+		  <div class="panel-body">
+	    	    @defining(NPCApp.getStructure(entity)) { struc =>
+               	       @if(struc != null) {
+	       	          <a role="button" class="btn btn-default"
+			     style="float:right;"
+		  	     href='@ix.npc.controllers.routes.NPCApp.sketcher(struc.id.toString)'><i class="fa fa-edit" aria-hidden="true"></i></a>	
+	    		  <center>
+				<img alt="Structure of @entity.getName"
+		   		     src='@ix.ncats.controllers.routes.App.structure(struc.getId,"svg",300)'>
+	    		  </center>
+	               }
+	            }
+	  	 </div>
+	       </div>
+	     </div>
+	     <div role="tabpanel" class="tab-pane active" id="strucinfo">
+	       <div class="panel panel-default">
+	         <div class="panel-body" style="height:320px;">
+       	           @defining(NPCApp.getStructure(entity)) { struc =>
+	       	     @if(struc != null) {
+	               <table class="table">
+		         <tr>
+		           <td>Formula</td>
+		           <td><span style="font-family:monospace;">@struc.formula</td>
+		         </tr>
+		         <tr>
+		           <td>Stereo Chemistry</td>
+		           <td>@struc.stereoChemistry</td>
+		         </tr>
+		         <tr>
+		           <td>Stereocenters</td>
+		           <td>@struc.definedStereo/@struc.stereoCenters</td>
+		         </tr>
+		       </table>
+	             }
+	           }
+		 </div>
+	       </div>
+	     </div>
+	   </div>
 	</div>
 	<div class="panel panel-default">
 	  <div class="panel-body">

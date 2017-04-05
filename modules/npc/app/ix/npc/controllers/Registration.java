@@ -66,6 +66,7 @@ public class Registration extends NPCApp {
         final Keyword ds;
         final String source;
         final String sep;
+        final String name;
         final Map<String, JsonNode> props = new HashMap<>();
         final MolecularFramework mf;
         
@@ -75,12 +76,15 @@ public class Registration extends NPCApp {
             ds = KeywordFactory.registerIfAbsent
                 (DATASET, job.payload.name, null);
             source = job.payload.sha1.substring(0,9);
-            sep = config != null && config.hasNonNull("separator")
-                ? config.get("separator").asText() : "\n";
             if (config != null) {
+                sep = config.hasNonNull("separator")
+                    ? config.get("separator").asText() : "\n";
+                name = config.hasNonNull("name")
+                    ? config.get("name").asText() : null;
+                
                 JsonNode pn = config.get("properties");
                 Logger.debug("CONFIGURATION: props="
-                             +pn.size() +" sep='"+sep+"'");          
+                             +pn.size() +" name="+name+" sep='"+sep+"'");
                 for (int i = 0; i < pn.size(); ++i) {
                     JsonNode n = pn.get(i);
                     if (n.hasNonNull("property")) {
@@ -88,6 +92,10 @@ public class Registration extends NPCApp {
                         props.put(n.get("property").asText(), n);
                     }
                 }
+            }
+            else {
+                sep = "\n";
+                name = null;
             }
             
             mf = MolecularFramework.createMurckoInstance();
@@ -204,7 +212,13 @@ public class Registration extends NPCApp {
         }
 
         Entity instrument (String source, Molecule mol) throws Exception {
-            Entity ent = new Entity (Entity.Type.Compound, mol.getName());
+            String name = this.name != null
+                ? mol.getProperty(this.name) : mol.getName();
+            int pos = name.indexOf(sep);
+            if (pos > 0) {
+                name = name.substring(0, pos);
+            }
+            Entity ent = new Entity (Entity.Type.Compound, name);
         
             List<Structure> moieties = new ArrayList<>();
             Structure struc =
@@ -294,7 +308,7 @@ public class Registration extends NPCApp {
                 String prop = mol.getPropertyKey(i);
                 String pval = mol.getProperty(prop);
                 String[] values = pval.split(sep);
-                if ("name".equalsIgnoreCase(prop)) {
+                if ("name".equalsIgnoreCase(prop) && ent.name == null) {
                     ent.name = values.length > 0 ? values[0] : null;
                 }
                 else if (props.containsKey(prop)) {
@@ -328,15 +342,37 @@ public class Registration extends NPCApp {
                 for (int i = 0; i < values.length; ++i)
                     values[i] = values[i].replaceAll(p, v);
             }
+            else {
+                for (int i = 0; i < values.length; ++i)
+                    values[i] = values[i] != null ? values[i].trim() : null;
+            }
             
             if (node.hasNonNull("type")) {
                 switch (node.get("type").asText()) {
                 case "synonym":
                     for (String v : values) {
-                        Logger.debug("Adding synonym \""+v+"\"");
-                        if (v.length() < 64) {
-                            ent.addIfAbsent(KeywordFactory.registerIfAbsent
-                                            (name, v, null));
+                        if (v == null)
+                            ;
+                        else {
+                            Logger.debug("Adding synonym \""+v+"\"");
+                            if (v.length() < 64) {
+                                ent.addIfAbsent(KeywordFactory.registerIfAbsent
+                                                (name, v, null));
+                            }
+                            else
+                                ent.addIfAbsent(new Text (name, v));
+                        }
+                    }
+                    break;
+
+                case "facet":
+                    for (String v : values) {
+                        if (v == null)
+                            ;
+                        else if (v.length() < 255) {
+                            ent.addIfAbsent
+                                ((Value)KeywordFactory.registerIfAbsent
+                                 (name, v, null));
                         }
                         else
                             ent.addIfAbsent(new Text (name, v));

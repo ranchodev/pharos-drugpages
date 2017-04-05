@@ -8,6 +8,7 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import ix.core.models.DynamicFacet;
 import ix.core.models.Indexable;
 import ix.core.models.XRef;
+import ix.core.models.Value;
 import ix.core.plugins.IxCache;
 import ix.utils.Global;
 import ix.utils.Util;
@@ -1036,7 +1037,6 @@ public class TextIndexer {
         if (reader != null) {
             indexReader.close();
             indexReader = reader;
-            lastModified.set(System.currentTimeMillis());
         }
         return indexReader;
     }
@@ -1271,9 +1271,23 @@ public class TextIndexer {
     }
     
     public SearchResult range (SearchOptions options, String field,
-                               Integer min, Integer max)
-        throws IOException {
-        Query query = NumericRangeQuery.newIntRange
+                               Long min, Long max) throws IOException {
+        Query query = NumericRangeQuery.newLongRange
+            (field, min, max, true /* minInclusive?*/, true/*maxInclusive?*/);
+        
+        Filter filter = null;
+        if (options.kind != null) {
+            filter = new TermFilter
+                (new Term (FIELD_KIND, options.kind.getName()));
+        }
+        
+        return search (getSearcher (), new SearchResult (options, null),
+                       query, filter);
+    }
+
+    public SearchResult range (SearchOptions options, String field,
+                               Double min, Double max) throws IOException {
+        Query query = NumericRangeQuery.newDoubleRange
             (field, min, max, true /* minInclusive?*/, true/*maxInclusive?*/);
         
         Filter filter = null;
@@ -1307,7 +1321,7 @@ public class TextIndexer {
         if (DEBUG (1)) {
             Logger.debug("## Query: "
                          +query+" Filter: "
-                         +(filter!=null?filter.getClass():"none")
+                         +(filter!=null?filter:"none")
                          +" Options:"+options);
         }
         
@@ -1838,6 +1852,7 @@ public class TextIndexer {
     }
 
     public long lastModified () {
+        /*
         try {
             if (!indexReader.isCurrent()) {
                 lastModified.set(System.currentTimeMillis());
@@ -1846,6 +1861,7 @@ public class TextIndexer {
         catch (IOException ex) {
             Logger.error("Can't check IndexReader status", ex);
         }
+        */
         return lastModified.get();
     }
 
@@ -2062,6 +2078,12 @@ public class TextIndexer {
                 ixFields.add(new TermVectorField (facetLabel, facetValue));
                 // all dynamic facets are suggestable???
                 suggestField (facetLabel, facetValue);
+            }
+            else if (Value.class.isAssignableFrom(cls)) {
+                Value v = (Value)entity;
+                path.push(v.getLabel());
+                indexField (ixFields, defaultIndexable, path, v.getValue());
+                path.pop();
             }
             
             Method[] methods = entity.getClass().getMethods();
@@ -2357,6 +2379,33 @@ public class TextIndexer {
         return setFacetsConfig (facetsConfig);
     }
 
+    public JsonNode getIndexFields () throws IOException {
+        ObjectMapper mapper = new ObjectMapper ();
+        ArrayNode json = mapper.createArrayNode();
+        for (AtomicReaderContext ctx : indexReader.leaves()) {
+            AtomicReader reader = ctx.reader();
+            for (Iterator<String> it = reader.fields().iterator();
+                 it.hasNext(); ) {
+                String f = it.next();
+                ObjectNode n = mapper.createObjectNode();
+                n.put("field", f);
+                Terms terms = reader.terms(f);
+                if (terms != null) {
+                    BytesRef ref = terms.getMin();
+                    if (ref != null)
+                        n.put("min", ref.utf8ToString());
+                    ref = terms.getMax();
+                    if (ref != null)
+                        n.put("max", ref.utf8ToString());
+                    n.put("size", terms.size());
+                    n.put("count", terms.getDocCount());
+                }
+                json.add(n);
+            }           
+        }
+        return json;
+    }
+
     static FacetsConfig getFacetsConfig (JsonNode node) {
         if (!node.isContainerNode())
             throw new IllegalArgumentException
@@ -2492,14 +2541,14 @@ public class TextIndexer {
     }
 
     public void flush () {
-        try {
-            if (!indexReader.isCurrent()) {
-                lastModified.set(System.currentTimeMillis());
-            }
-            
+        try {            
             if (indexWriter.hasPendingMerges()) {
                 indexWriter.waitForMerges();
                 indexWriter.commit();
+            }
+
+            if (!indexReader.isCurrent()) {
+                lastModified.set(System.currentTimeMillis());
             }
             
             IndexOutput output = indexDir.createOutput

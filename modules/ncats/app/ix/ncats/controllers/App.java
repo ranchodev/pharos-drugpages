@@ -1021,6 +1021,21 @@ public class App extends Authentication {
         return null;
     }
 
+    public static SearchResult getRangeSearchResult
+        (Class kind, String field, String min,
+         String max, SearchOptions options) throws IOException {
+        Logger.debug("range: field="+field+" min="+min+" max="+max);
+        
+        return min.indexOf('.') >= 0 || max.indexOf('.') >= 0
+            ? _textIndexer.range
+            (options, field, min.equals("")  ? null : Double.parseDouble(min),
+             max.equals("") ? null : Double.parseDouble(max))
+            : _textIndexer.range
+            (options, field, min.equals("")  ? null : Long.parseLong(min),
+             max.equals("") ? null : Long.parseLong(max));
+    }
+    
+
     final static Pattern RangeRe = Pattern.compile
         ("([^:]+):\\[([^,]*),([^\\]]*)\\]");
     public static SearchResult getSearchResult
@@ -1053,10 +1068,6 @@ public class App extends Authentication {
                         final String field = m.group(1);
                         final String min = m.group(2);
                         final String max = m.group(3);
-                        
-                        Logger.debug
-                            ("range: field="+field+" min="+min+" max="+max);
-                        
                         return getOrElse_ (sha1, new Callable<SearchResult> () {
                                 public SearchResult call () throws Exception {
                                     SearchOptions options =
@@ -1067,11 +1078,8 @@ public class App extends Authentication {
                                              : rangeFacets)
                                         options.addFacet(fr);
                                     
-                                    SearchResult result = _textIndexer.range
-                                        (options, field, min.equals("")
-                                         ? null : Integer.parseInt(min),
-                                         max.equals("")
-                                         ? null : Integer.parseInt(max));
+                                    SearchResult result= getRangeSearchResult
+                                        (kind, field, min, max, options);
                                     result.updateCacheWhenComplete(sha1);
                                     return cacheKey (result, sha1, sha1);
                                 }
