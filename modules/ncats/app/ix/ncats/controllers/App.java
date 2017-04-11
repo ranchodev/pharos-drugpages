@@ -1857,7 +1857,7 @@ public class App extends Authentication {
                 final int _rows = rows;
                 final int _count = count;
                 final int[] _pages = pages;
-            
+
                 // result is cached
                 return ok (getOrElse
                            (result.getStopTime(),
