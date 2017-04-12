@@ -14,6 +14,7 @@
         <title>@title</title>
 
 
+
         <link rel="stylesheet"
         href='@routes.WebJarAssets.at(WebJarAssets.locate("bootstrap.min.css"))'>
         <link rel="stylesheet" type="text/css"
@@ -21,7 +22,6 @@
         <link rel="stylesheet" type="text/css"
         href='@routes.Assets.versioned("ncats/css/idg-landing-hex.css")'>
         <link rel="icon" type="image/png" href='@routes.Assets.versioned("images/favicon.png")'>
-	<link type="text/css" rel="stylesheet" href="https://code.highcharts.com/css/highcharts.css"/>
         <style type="text/css">
 
         .lead {
@@ -75,9 +75,10 @@
         <script src='@routes.WebJarAssets.at(WebJarAssets.locate("typeahead.bundle.min.js"))'></script>
         <script src='@routes.WebJarAssets.at(WebJarAssets.locate("handlebars.min.js"))'></script>
         <script src='@routes.WebJarAssets.at(WebJarAssets.locate("bloodhound.min.js"))'></script>
-    <script src="https://code.highcharts.com/highcharts.js"></script>
-    <script src="https://code.highcharts.com/highcharts-more.js"></script>
-    <script src="https://code.highcharts.com/modules/exporting.js"></script>
+        <script src="https://code.highcharts.com/highcharts.js"></script>
+        <script src="https://code.highcharts.com/highcharts-more.js"></script>
+        <script src="https://code.highcharts.com/modules/exporting.js"></script>
+        <link type="text/css" rel="stylesheet" href="https://code.highcharts.com/css/highcharts.css"/>
 
         <script>
         ( function ( i, s, o, g, r, a, m ) { i[ 'GoogleAnalyticsObject' ] = r ; i[ r ] = i[ r ] || function ( ) {
@@ -92,9 +93,11 @@
         <script type='text/javascript'>
 
             var makeBarChart = function(selector, dataset, title, ytitle) {
-                $(selector ).highcharts({
+
+                Highcharts.chart(selector, {
                     chart: {
-                        type: 'bar'
+                        type: 'bar',
+                        height: 300,
                     },
                     credits: { enabled: false },
                     title: {
@@ -115,10 +118,10 @@
                                 else if (obj.kind == 'tfam')
                                     link = '/idg/targets?facet=Data+Source/IMPC&facet=IDG+Target+Family/'+obj.term;
 
-                            return '<a href="'+link+'" target="_top">'+ this.value +'</a>';
+                                return '<a href="'+link+'" target="_top">'+ this.value +'</a>';
                             },
                             useHTML:true,
-                            overflow:'justify',
+                            overflow:'justify'
                         //align: 'center'
                         }
                     },
@@ -130,17 +133,16 @@
                         name:'',
                         data: _.pluck(dataset, 'count')
                     }],
-                    tooltip: {
-                        formatter: function() {
-                            var obj = _.findWhere(dataset, {term:this.x});
-                            if (obj.kind == 'target') {
-                                return '<a href="/idg/targets/'+obj.tid+'"><b>' + this.x + "</b>" ;
-                            } else if (obj.kind == 'phenotype') {
-                                return '<b>' + this.x + "</b>" ;
-                            } else return '<b>' + this.x + "</b>" ;
-                            return 'XXX';
-                        }
-                    },
+//                    tooltip: {
+//                        formatter: function() {
+//                            var obj = _.findWhere(dataset, {term:this.x});
+//                            if (obj.kind == 'target') {
+//                                return '<a href="/idg/targets/'+obj.tid+'"><b>' + this.x + "</b>" ;
+//                            } else if (obj.kind == 'phenotype') {
+//                                return '<b>' + this.x + "</b>" ;
+//                            } else return '<b>' + this.x + "</b>" ;
+//                        }
+//                    },
                     plotOptions:{
                         column: {
                             animation:false
@@ -150,6 +152,7 @@
                         }
                     }
                 });
+
 
             };
 
@@ -182,20 +185,27 @@
         });
 
         var dataset =[
-            @for(key <- termCounts.keySet()) {
-                { term : '@key.term',
-                  count: @termCounts.get(key),
-                  href: '@key.href',
-                  kind: 'phenotype' },
-            }
+           @defining(termCounts.keySet()){keys => 
+                    @for(key <- keys) { 
+                        @key match {
+                            case null => {}
+                            case _    => {
+                            { term : '@if(key.term == null) {""} else {@key.term}',
+                              count: @if(termCounts.get(key) == null) { 0, } else { @termCounts.get(key), }
+                              href: '@if(key.href == null) {""} else {@key.href}', 
+                              kind: 'phenotype' }, 
+                            }
+                        }
+                    } 
+                }
         ] ;
         dataset = _.first(_.chain(dataset ).sortBy('term' ).sortBy ( function(x) { return -1* x.count; } ).value(), 10);
 
 
-        makeBarChart("#hist-term", dataset, 'No. Targets by Phenotype', 'Number of Targets');
-        makeBarChart("#hist-targets", targetset, 'No. Phenotypes by Target', 'Number of phenotypes');
-        makeBarChart("#hist-tdl", tdlset, 'No. Phenotypes by TDL', 'Number of phenotypes');
-        makeBarChart("#hist-tfam", tfamset, 'No. Phenotypes by Target Family', 'Number of phenotypes');
+        makeBarChart("hist-term", dataset, 'No. Targets by Phenotype', 'Number of Targets');
+        makeBarChart("hist-targets", targetset, 'No. Phenotypes by Target', 'Number of phenotypes');
+        makeBarChart("hist-tdl", tdlset, 'No. Phenotypes by TDL', 'Number of phenotypes');
+        makeBarChart("hist-tfam", tfamset, 'No. Phenotypes by Target Family', 'Number of phenotypes');
 
         });
         </script>
