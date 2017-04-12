@@ -710,15 +710,20 @@
         <td><a href="#target-description"
 	       data-toggle="collapse">@target.name</a></td>
         <td style="text-align:right;">
+
+            <!--  Page menu -->
 	  <div role="group">
             <div class="dropdown btn-group pull-right" role="group">
               <button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown">
                 <i class="fa fa-list"></i>
               </button>
               <ul class="dropdown-menu pull-left" id="toc">
-		
               </ul>
             </div>
+
+          <a class="btn btn-default pull-right" href="@HtmlFormat.raw(request.uri)?action=download"><i class="fa fa-download"></i></a>
+          <a class="btn btn-default pull-right" href='@ix.core.controllers.v1.routes.RouteFactory.get("targets", target.id, null)'><i class="fa fa-code"></i></a>
+
             <div class="dropdown btn-group pull-right" role="group">
               <button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown">
                 <i class="fa fa-shopping-cart"></i>&nbsp;<span id="sc-count"></span>
@@ -1755,9 +1760,6 @@ $(document).ready(function () {
     _.each(tocs, function(o, idx, l) {
         $("#toc" ).append("<li><a href='#"+ o.aname+"'>"+ o.tname+"</a></li>");
     });
-    $('#toc').append('<li role="separator" class="divider"></li>');
-    $('#toc').append('<li><a href="@ix.core.controllers.v1.routes.RouteFactory.get("targets", target.id, null)">View JSON</a></li>');
-    $('#toc').append('<li><a class="loader" href="@HtmlFormat.raw(request.uri)?action=download">Download</a></li>');
 
     /* Word cloud for text mined pubs */
     @defining(WordCloud.textHistogram(target, "title", "sqrt")) { counts =>
