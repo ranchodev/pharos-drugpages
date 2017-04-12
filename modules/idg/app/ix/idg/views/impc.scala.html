@@ -80,6 +80,8 @@
         <script src="https://code.highcharts.com/modules/exporting.js"></script>
         <link type="text/css" rel="stylesheet" href="https://code.highcharts.com/css/highcharts.css"/>
 
+        <script type="text/javascript" src='@routes.Assets.versioned("javascripts/viz.js")'></script>
+
         <script>
         ( function ( i, s, o, g, r, a, m ) { i[ 'GoogleAnalyticsObject' ] = r ; i[ r ] = i[ r ] || function ( ) {
         ( i[ r ].q = i[ r ].q ||[ ] ).push ( arguments ) }, i[ r ].l = 1 * new Date ( ) ; a = s.createElement ( o ),
@@ -92,66 +94,72 @@
 
         <script type='text/javascript'>
 
+
+
             var makeBarChart = function(selector, dataset, title, ytitle) {
 
-                Highcharts.chart(selector, {
-                    chart: {
-                        type: 'bar',
-                        height: 300,
-                    },
-                    credits: { enabled: false },
-                    title: {
-                        text: title
-                    },
-                    xAxis: {
-                        categories: _.pluck(dataset, 'term'),
-                        labels: {
-                            formatter: function() {
-                                var obj = _.findWhere(dataset, {term:this.value} );
-                                var link = undefined;
-                                if (obj.kind == 'phenotype')
-                                    link =  '/idg/targets?facet=IMPC+Term/'+this.value.replace(/ /g, "+");
-                                else if (obj.kind == 'target')
-                                    link = '/idg/targets/'+obj.tid;
-                                else if (obj.kind == 'tdl')
-                                    link = '/idg/targets?facet=Data+Source/IMPC&facet=IDG+Development+Level/'+obj.term;
-                                else if (obj.kind == 'tfam')
-                                    link = '/idg/targets?facet=Data+Source/IMPC&facet=IDG+Target+Family/'+obj.term;
 
-                                return '<a href="'+link+'" target="_top">'+ this.value +'</a>';
-                            },
-                            useHTML:true,
-                            overflow:'justify'
-                        //align: 'center'
-                        }
-                    },
-                    yAxis: {
-                        title: {text: ytitle}
-                    },
-                    series: [{
-                        showInLegend: false,
-                        name:'',
-                        data: _.pluck(dataset, 'count')
-                    }],
-//                    tooltip: {
-//                        formatter: function() {
-//                            var obj = _.findWhere(dataset, {term:this.x});
-//                            if (obj.kind == 'target') {
-//                                return '<a href="/idg/targets/'+obj.tid+'"><b>' + this.x + "</b>" ;
-//                            } else if (obj.kind == 'phenotype') {
-//                                return '<b>' + this.x + "</b>" ;
-//                            } else return '<b>' + this.x + "</b>" ;
-//                        }
-//                    },
-                    plotOptions:{
-                        column: {
-                            animation:false
+                    Highcharts.chart(selector, {
+                        chart: {
+                            type: 'bar',
+                            height: 300,
                         },
-                        series: {
-                            animation: false
+                        credits: {enabled: false},
+                        title: {
+                            text: title
+                        },
+                        xAxis: {
+                            categories: _.pluck(dataset, 'term'),
+                            labels: {
+                                formatter: function () {
+                                    var obj = _.findWhere(dataset, {term: this.value});
+                                    var link = undefined;
+                                    if (obj.kind == 'phenotype')
+                                        link = '/idg/targets?facet=IMPC+Term/' + this.value.replace(/ /g, "+");
+                                    else if (obj.kind == 'target')
+                                        link = '/idg/targets/' + obj.tid;
+                                    else if (obj.kind == 'tdl')
+                                        link = '/idg/targets?facet=Data+Source/IMPC&facet=IDG+Development+Level/' + obj.term;
+                                    else if (obj.kind == 'tfam')
+                                        link = '/idg/targets?facet=Data+Source/IMPC&facet=IDG+Target+Family/' + obj.term;
+
+                                    return '<a href="' + link + '" target="_top">' + this.value + '</a>';
+                                },
+                                useHTML: true,
+                                overflow: 'justify'
+                                //align: 'center'
+                            }
+                        },
+                        yAxis: {
+                            title: {text: ytitle}
+                        },
+                        series: [{
+                            showInLegend: false,
+                            name: '',
+                            data: _.pluck(dataset, 'count')
+                        }],
+                        exporting: {
+                            allowHTML: true,
+                            buttons: {
+                                contextButton: {
+                                    enabled: false
+                                },
+                                exportButton: {
+                                    text: '<i class="fa fa-download" style="font-size: 1.5em;"></i>',
+                                    menuItems: Highcharts.getOptions().exporting.buttons.contextButton.menuItems
+                                }
+                            }
+                        },
+                        plotOptions: {
+                            column: {
+                                animation: false
+                            },
+                            series: {
+                                animation: false
+                            }
                         }
-                    }
-                });
+                    });
+
 
 
             };
