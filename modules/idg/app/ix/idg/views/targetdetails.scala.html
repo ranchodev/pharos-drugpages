@@ -1698,6 +1698,7 @@ role="dialog" aria-labelledby="modalLabelFolder" aria-hidden="true">
     <script src="https://code.highcharts.com/highcharts.js"></script>
     <script src="https://code.highcharts.com/highcharts-more.js"></script>
     <script src="https://code.highcharts.com/modules/exporting.js"></script>
+    <script type="text/javascript" src='@routes.Assets.versioned("javascripts/viz.js")'></script>
     <!--<link type="text/css" rel="stylesheet" href="https://code.highcharts.com/css/highcharts.css"></script>-->
 
     <style type="text/css">
@@ -1856,8 +1857,7 @@ $('.tree').treegrid({
         url: '@ix.idg.controllers.routes.IDGApp.targetTissue(IDGApp.getId(target))',
         dataType: "json",
         success: function (data) {
-
-            Highcharts.chart("tissue-specificity-radar", {
+            var config = {
                 chart: {
                     polar: true,
                     type: "line",
@@ -1897,7 +1897,9 @@ $('.tree').treegrid({
                     }),
                     pointPlacement: 'on'
                 }]
-            });
+            };
+            config = _.extend(config, defaultExportConfig);
+            Highcharts.chart("tissue-specificity-radar", config);
         }
     });
 
@@ -1953,57 +1955,59 @@ $('.tree').treegrid({
         success:function(data) {
 	    //console.log('rendering radar in modal...'+JSON.stringify(data));
             $('#modal-radardiv').html('');
-            var chart = Highcharts.chart("modal-radardiv", {
-                      chart: {
-                          polar: true,
-                          type: "line"
-                      },
-                      credits: {
-                          enabled: false
-                      },
-                      title: {
-                          text: null
-                      },
-                      legend: {
-                          enabled: false
-                      },
-                      pane: {
-                          size: "90%"
-                      },
-                      yAxis: {
-                          gridLineInterpolation: 'polygon',
-                          lineWidth: 0,
-                          min: 0,
-                          labels: {
-                              enabled: false
-                          }
-                      },
-                      xAxis: {
-                          categories: _.map(data[0].axes, function (obj) {
-                              return(obj.axis);
-                          }),
-                          tickmarkPlacement: 'on',
-                          lineWidth: 0.5,
-                          autoRotation: true
-                      },
-                      series: [{
-                          name: "Attribute Type",
-                          marker: { enabled: false},
-                          point: {
-                              events: {
-                                  mouseOver: function() {
-                                      var category = this.category;
-                                      showDataSources('#radar-ds-container',
-                                              '@ix.idg.controllers.routes.HarmonogramApp.dataSources(null,null)'+
-                                              '?field=radar-attr_type')({name:category});
-                                  }
-                              }
-                          },
-                          data: _.map(data[0].axes, function (obj) {
-                              return (obj.value);
-                          })
-                    }]
-              });
+            var config = {
+                chart: {
+                    polar: true,
+                    type: "line"
+                },
+                credits: {
+                    enabled: false
+                },
+                title: {
+                    text: null
+                },
+                legend: {
+                    enabled: false
+                },
+                pane: {
+                    size: "90%"
+                },
+                yAxis: {
+                    gridLineInterpolation: 'polygon',
+                    lineWidth: 0,
+                    min: 0,
+                    labels: {
+                        enabled: false
+                    }
+                },
+                xAxis: {
+                    categories: _.map(data[0].axes, function (obj) {
+                        return (obj.axis);
+                    }),
+                    tickmarkPlacement: 'on',
+                    lineWidth: 0.5,
+                    autoRotation: true
+                },
+                series: [{
+                    name: "Attribute Type",
+                    marker: {enabled: false},
+                    point: {
+                        events: {
+                            mouseOver: function () {
+                                var category = this.category;
+                                showDataSources('#radar-ds-container',
+                                        '@ix.idg.controllers.routes.HarmonogramApp.dataSources(null,null)' +
+                                        '?field=radar-attr_type')({name: category});
+                            }
+                        }
+                    },
+                    data: _.map(data[0].axes, function (obj) {
+                        return (obj.value);
+                    })
+                }]
+            };
+            config = _.extend(config, defaultExportConfig);
+            var chart = Highcharts.chart("modal-radardiv", config);
 
 	      $('#modal-radar').on('show.bs.modal', function() {
 	          $('#modal-radardiv').css('visibility', 'hidden');
@@ -2073,113 +2077,119 @@ $('.tree').treegrid({
 
    @if(target.patentCount != null && target.patentCount > 0) {
       var data = @HtmlFormat.raw(IDGApp.getPatents(target).toString);
-      Highcharts.chart('patent-line-plot', {
-          chart: {
-            type: 'line'
-          },
-          credits: {
-            enabled: false
-          },
-          title: {
-             text: null
-          },
-          legend: {
-             enabled: false
-          },
-          xAxis: {
-             categories: _.map(data, function (d) { return d.year; })
-          },
-          yAxis: {
-             title: {
-                text: 'Count'
-             }
-          },
-          tooltip: {
-             shared: true,
-             crosshairs: true
-          },
-          series: [{
-             name: 'Count',
-             marker: {
-               radius: 3
-             },
-             data: _.map(data, function(d) { return parseInt(d.count,10); })
-          }]
-      });
+      var patentCountPlotConfig = {
+                chart: {
+                  type: 'line'
+                },
+                credits: {
+                  enabled: false
+                },
+                title: {
+                   text: null
+                },
+                legend: {
+                   enabled: false
+                },
+                xAxis: {
+                   categories: _.map(data, function (d) { return d.year; })
+                },
+                yAxis: {
+                   title: {
+                      text: 'Count'
+                   }
+                },
+                tooltip: {
+                   shared: true,
+                   crosshairs: true
+                },
+                series: [{
+                   name: 'Count',
+                   marker: {
+                     radius: 3
+                   },
+                   data: _.map(data, function(d) { return parseInt(d.count,10); })
+                }]
+            };
+      patentCountPlotConfig = _.extend(patentCountPlotConfig, defaultExportConfig);
+      Highcharts.chart('patent-line-plot', patentCountPlotConfig);
    }
 
    @if(target.pubTatorScore != null) {
       var data = @HtmlFormat.raw(IDGApp.getPubTator(target).toString);
-      Highcharts.chart('pubtator-plot', {
-          chart: {
-            type: 'line'
-          },
-          credits: {
-            enabled: false
-          },
-          title: {
-             text: null
-          },
-          legend: {
-             enabled: false
-          },
-          xAxis: {
-             categories: _.map(data, function (d) { return d.year; })
-          },
-          yAxis: {
-             title: {
-                text: 'Score'
-             }
-          },
-          tooltip: {
-             shared: true,
-             crosshairs: true
-          },
-          series: [{
-             name: 'PubTator Score',
-             marker: {
-               radius: 3
-             },
-             data: _.map(data, function(d) { return d.score; })
-          }]
-      });
+      var pubtatorPlotConfig = {
+                chart: {
+                  type: 'line'
+                },
+                credits: {
+                  enabled: false
+                },
+                title: {
+                   text: null
+                },
+                legend: {
+                   enabled: false
+                },
+                xAxis: {
+                   categories: _.map(data, function (d) { return d.year; })
+                },
+                yAxis: {
+                   title: {
+                      text: 'Score'
+                   }
+                },
+                tooltip: {
+                   shared: true,
+                   crosshairs: true
+                },
+                series: [{
+                   name: 'PubTator Score',
+                   marker: {
+                     radius: 3
+                   },
+                   data: _.map(data, function(d) { return d.score; })
+                }]
+            };
+            pubtatorPlotConfig = _.extend(pubtatorPlotConfig, defaultExportConfig);
+      Highcharts.chart('pubtator-plot', pubtatorPlotConfig);
    }
 
    @if(target.jensenScore != null) {
       var data = @HtmlFormat.raw(IDGApp.getPubMedScore(target).toString);
-      Highcharts.chart('pubmedscore-plot', {
-          chart: {
-            type: 'line'
-          },
-          credits: {
-            enabled: false
-          },
-          title: {
-             text: null
-          },
-          legend: {
-             enabled: false
-          },
-          xAxis: {
-             categories: _.map(data, function (d) { return d.year; })
-          },
-          yAxis: {
-             title: {
-                text: 'Score'
-             }
-          },
-          tooltip: {
-             shared: true,
-             crosshairs: true
-          },
-          series: [{
-             name: 'PubMed Score',
-             marker: {
-               radius: 3
-             },
-             data: _.map(data, function(d) { return d.score; })
-          }]
-      });
+      var jensenPlotConfig = {
+                chart: {
+                  type: 'line'
+                },
+                credits: {
+                  enabled: false
+                },
+                title: {
+                   text: null
+                },
+                legend: {
+                   enabled: false
+                },
+                xAxis: {
+                   categories: _.map(data, function (d) { return d.year; })
+                },
+                yAxis: {
+                   title: {
+                      text: 'Score'
+                   }
+                },
+                tooltip: {
+                   shared: true,
+                   crosshairs: true
+                },
+                series: [{
+                   name: 'PubMed Score',
+                   marker: {
+                     radius: 3
+                   },
+                   data: _.map(data, function(d) { return d.score; })
+                }]
+            };
+      jensenPlotConfig = _.extend(jensenPlotConfig, defaultExportConfig);
+      Highcharts.chart('pubmedscore-plot', jensenPlotConfig);
    }
 
    $('#pmscore-sparkline').sparkline('html', {width:'100px'});
@@ -2187,7 +2197,7 @@ $('.tree').treegrid({
 });
 
 function plotAAProfile(container) {
-    var chart = Highcharts.chart(container, {
+    var config = {
         chart: {
             type: 'column',
             height: 150
@@ -2218,8 +2228,9 @@ function plotAAProfile(container) {
             enabled: false
         },
         series: @HtmlFormat.raw(IDGApp.getAminoAcidProfile(target).toString)
-})
-    ;
+    };
+    config = _.extend(config, defaultExportConfig);
+    var chart = Highcharts.chart(container, config);
 }
 
 function showLoadModal () {

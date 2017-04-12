@@ -7,3 +7,28 @@
         return proceed.apply(this, [].slice.call(arguments, 1));
     });
 }(Highcharts));
+
+var defaultExportConfig = {
+    navigation: {
+        buttonOptions: {
+            theme: {
+                style: {
+                    useHTML: true
+                },
+                useHTML: true
+            }
+        }
+    },
+    exporting: {
+        allowHTML: true,
+        buttons: {
+            contextButton: {
+                enabled: false
+            },
+            exportButton: {
+                text: '<i class="fa fa-download" aria-hidden="true" style="font-size: 1.5em;" title="">&nbsp;</i>',
+                menuItems: Highcharts.getOptions().exporting.buttons.contextButton.menuItems
+            }
+        }
+    }
+};

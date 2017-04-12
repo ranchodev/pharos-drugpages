@@ -132,6 +132,7 @@ function renderChart(chartData, aggType, container, cfg) {
     if (cfg != undefined) {
        config = _.extend(config, cfg);
     }
+    config = _.extend(config, defaultExportConfig);
     Highcharts.chart(container, config);
 }
 
