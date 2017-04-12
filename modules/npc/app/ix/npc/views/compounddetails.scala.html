@@ -63,9 +63,9 @@
 	  	 </div>
 	       </div>
 	     </div>
-	     <div role="tabpanel" class="tab-pane active" id="strucinfo">
+	     <div role="tabpanel" class="tab-pane" id="strucinfo">
 	       <div class="panel panel-default">
-	         <div class="panel-body" style="height:320px;">
+	         <div class="panel-body" style="height:330px;">
        	           @defining(NPCApp.getStructure(entity)) { struc =>
 	       	     @if(struc != null) {
 	               <table class="table">
@@ -81,6 +81,14 @@
 		           <td>Stereocenters</td>
 		           <td>@struc.definedStereo/@struc.stereoCenters</td>
 		         </tr>
+			 <tr>
+			   <td>E/Z</td>
+			   <td>@struc.ezCenters</td>
+			 </tr>
+			 <tr>
+			   <td>Molecular Weight</td>
+			   <td>@{"%1$.3f da".format(struc.mwt)}</td>
+			 </tr>
 		       </table>
 	             }
 	           }
