@@ -791,7 +791,7 @@ This is TCRD target <a href='@ix.core.controllers.v1.routes.RouteFactory.get("ta
 			title="Radar plot depicting the variety of knowledge obtained by Pharos for a particular target. The more spikes in the plot, the more variety. The longer the length, the higher the quantity of that particular knowledge. Click expansion icon to explore the plot fuller by seeing plot with annotations of the different radii, allowing for aggregation of knowledge radii based on attribution type, group, or data type, as well as overlay plot with other information, and provide download file.">Knowledge Summary</span>
 		  <a href="#" id="modal-radar-btn"
 		     data-toggle="modal" data-target="#modal-radar">
-                    <span class="fa fa-external-link pull-right" aria-hidden="true"></span>
+                    <span class="fa fa-clone fa-flip-horizontal pull-right" aria-hidden="true"></span>
 		  </a>
 		</h3>
               </div>
@@ -1559,7 +1559,7 @@ This is TCRD target <a href='@ix.core.controllers.v1.routes.RouteFactory.get("ta
                      <h3 class="panel-title">
                      <span data-toggle="tooltip" data-html="true"
                      title="<p align='left'>Publications associated with this target, as identified using the JensenLab text mining protocol</p>">
-                    Publication</span>
+                         Text Mined References</span>
                      <span data-toggle="tooltip" data-html="true" title="<p align='left'>NCBI Gene Bibliography</p>">
                          <a href="http://www.ncbi.nlm.nih.gov/pubmed?LinkName=gene_pubmed&from_uid=@for(kw <- target.synonyms) {@if("Entrez Gene".equals(kw.label)) {@kw.term}}"><i class="fa fa-book"></i></a></span>
                          <span data-toggle="tooltip" data-html="true" title="<p align='left'>Search Pubmed with this target</p>">
