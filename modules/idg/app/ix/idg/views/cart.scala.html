@@ -70,6 +70,7 @@
         <div class="row">
           <div class="btn-group pull-right" role="group">
             <a class="btn btn-default"
+               @if(targets.size() == 0 && ligands.size() == 0 && diseases.size() == 0){disabled}
 	       @if(request.uri.indexOf("?") > 0) {
 	       href="@HtmlFormat.raw(request.uri)&action=download"
 	       } else {
@@ -78,8 +79,9 @@
                role="button" style="margin-right : 1px"
                data-toggle="tooltip" title="Download data">
                     <i class="fa fa-download fa-lg "></i></a>
+
                 <a id="compare-selected" class="btn btn-default" href="#" role="button" style="margin-right : 1px ; margin-left : 1px ;"
-                data-toggle="tooltip" title="Target comparison">
+                data-toggle="tooltip" title="Target comparison" @if(targets.size() == 0 && ligands.size() == 0 && diseases.size() == 0){disabled}>
                     <i class="fa fa-exchange fa-lg "></i></a>
 
                 <div class="dropdown pull-right" data-toggle="tooltip" title="Dossier operations">
@@ -97,7 +99,7 @@
 
                 <div class="dropdown pull-right" data-toggle="tooltip" title="Visualization tools">
                     <a type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown"
-                    aria-haspopup="true" aria-expanded="false" style="margin-right : 1px ; margin-left : 1px ;">
+                    aria-haspopup="true" aria-expanded="false" style="margin-right : 1px ; margin-left : 1px ;" @if(targets.size() == 0 && ligands.size() == 0 && diseases.size() == 0){disabled}>
                         <i class="fa fa-eye"></i>
                     </a>
                     <ul class="dropdown-menu pull-left">
@@ -392,6 +394,8 @@ role="dialog" aria-labelledby="hgramModalLabel" aria-hidden="true" >
     <script src="https://code.highcharts.com/modules/exporting.js"></script>
     <link type="text/css" rel="stylesheet" href="https://code.highcharts.com/css/highcharts.css" />
 
+    <script type="text/javascript" src='@routes.Assets.versioned("javascripts/viz.js")'></script>
+
 
 </head>
 
@@ -569,7 +573,7 @@ $("#target-table").on("click", ".radar-div", function () {
             ents = _.map(selectEntities("#target-table input"), function (x) {
                 return x;
             });
-            window.location.href = "@ix.idg.controllers.routes.IDGApp.compareTargets2()?q=" + ents.join();
+            if (ents.length > 0) window.location.href = "@ix.idg.controllers.routes.IDGApp.compareTargets2()?q=" + ents.join();
         }
     });
 
