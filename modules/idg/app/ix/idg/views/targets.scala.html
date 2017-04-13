@@ -57,9 +57,9 @@ facets: Array[FacetDecorator], targets: List[Target], ctx: String )
 @faceturl() = {
     @defining(App.queryString("facet","q","type")) { uri =>
         @if(uri.length > 0) {
-            <a style='width:100%;' class="btn btn-info loader" href='@HtmlFormat.raw(ix.idg.controllers.routes.IDGApp.targetfacets(ctx) + "&"+uri.substring(1))'>All Filters...</a>
+            <a style='width:100%;' class="btn btn-info loader" href='@HtmlFormat.raw(ix.idg.controllers.routes.IDGApp.targetfacets(ctx) + "&"+uri.substring(1))'>Target Filters...</a>
         } else {
-            <a style='width:100%;' class="btn btn-info loader" href='@ix.idg.controllers.routes.IDGApp.targetfacets(ctx)'>All Filters...</a>
+            <a style='width:100%;' class="btn btn-info loader" href='@ix.idg.controllers.routes.IDGApp.targetfacets(ctx)'>Target Filters...</a>
         }
     }
 }
@@ -359,6 +359,7 @@ role="dialog" aria-labelledby="modalLabelFolder" aria-hidden="true">
     <script src="https://code.highcharts.com/highcharts.js"></script>
     <script src="https://code.highcharts.com/highcharts-more.js"></script>
     <script src="https://code.highcharts.com/modules/exporting.js"></script>
+    <script type="text/javascript" src='@routes.Assets.versioned("javascripts/viz.js")'></script>
 
 </head>
 <script>
