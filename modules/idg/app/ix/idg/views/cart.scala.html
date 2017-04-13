@@ -90,6 +90,7 @@
                         <i class="glyphicon glyphicon-tasks"></i>
                     </a>
                     <ul class="dropdown-menu pull-left">
+                        <li><a href="#cartEmptyModal" data-toggle="modal" ><i class="fa fa-trash"></i>&nbsp;Empty </a></li>
                         <li><a href="#cartDeleteModal" data-toggle="modal" ><i class="fa fa-trash"></i>&nbsp;Delete </a></li>
                         <li><a href="#cartCloneModal" data-toggle="modal" ><i class="fa fa-files-o"></i>&nbsp;Copy </a></li>
                         <li><a href="#cartMergeModal" data-toggle="modal"><i class="fa fa-compress"></i>&nbsp;Merge</a></li>
@@ -192,6 +193,30 @@ aria-labelledby="mySmallModalLabel" aria-hidden="true">
 </div>
 
 @modalradar(null, null)
+
+<div class="modal fade" id="cartEmptyModal" tabindex="-1" role="dialog" aria-labelledby="cartEmptyModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-sm">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="cartEmptyModalLabel">Empty current dossier</h4>
+            </div>
+            <form id="form-cart-empty">
+                <div class="modal-body">
+                    <div class="embed-responsive embed-responsive-4by3">
+                        <p>This will empty the dossier named <b>@currentFolder</b>, but the dossier itself will remain available.</p>
+                        <p>Are you sure?</p>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                    <button type="submit" class="btn btn-primary">Empty</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
 
 <div class="modal fade" id="cartDeleteModal" tabindex="-1" role="dialog" aria-labelledby="cartDeleteModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-sm">
@@ -582,6 +607,16 @@ $("#target-table").on("click", ".radar-div", function () {
 // Handle dossier set operations
 //
 /////////////////////////////////////////////
+    $('#form-cart-empty').on('submit', function (e) {
+        e.preventDefault();
+        var f = '@currentFolder';
+        $.get('@ix.idg.controllers.routes.DossierApp.emptyFolder(currentFolder)',
+                function (data, status, xhr) {
+                    $("#cartEmptyModal").modal("hide");
+                    window.location.href = '@ix.idg.controllers.routes.DossierApp.view("")' + f;
+                });
+    });
+
 $('#form-cart-delete').on('submit', function(e){
     e.preventDefault();
     var f = '@currentFolder';

@@ -239,6 +239,19 @@ public class DossierApp extends App implements Commons {
         return ok(String.valueOf(_countEntities()));
     }
 
+    public static Result emptyFolder(String folderName) throws IOException {
+        if (folderName == null || folderName.trim().equals(""))
+            return _badRequest("Invalid folder name");
+        ArrayNode cart = getCartFromSession();
+        ObjectNode folder = getFolderFromCart(cart, folderName);
+        folder.set("entities", mapper.createArrayNode());
+        session().put("cart", mapper.writeValueAsString(cart));
+        ObjectNode ret = mapper.createObjectNode();
+        ret.put("total_entries", _countEntities());
+        ret.put("total_collections", _countFolders());
+        return ok(ret);
+    }
+
     public static Result deleteFolder(String folderName) throws IOException {
         if (folderName == null || folderName.trim().equals(""))
             return _badRequest("Invalid folder name");
