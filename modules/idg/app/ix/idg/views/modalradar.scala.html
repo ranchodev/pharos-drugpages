@@ -12,8 +12,12 @@ role="dialog" aria-labelledby="modalLabelRadar" aria-hidden="true">
                 data-dismiss="modal" aria-label="Close">
                     <span aria-hidden="true">&times;</span></button>
                 <h4 class="modal-title" id="modalLabelRadar">
-                    @Html(title)
+                    @Html(title + "<a class='btn btn-default' role='button' href='@ix.idg.controllers.routes.IDGApp.faq()#collapse5?expand=true' style='margin-right:1px; margin-left:1px;'><i class='fa fa-info-circle fa-lg'></i></a>")
+
                 </h4>
+
+
+
             </div>
             <div class="modal-body">
                 <div class="row">
@@ -64,12 +68,6 @@ role="dialog" aria-labelledby="modalLabelRadar" aria-hidden="true">
                         </div>
                     </div>
                     <div class="col-md-9">
-
-                        <span class="pull-right">
-                        <a class="btn btn-default" href="@ix.idg.controllers.routes.IDGApp.faq()#collapse5?expand=true"
-                           role="button" style="margin-right:1px; margin-left:1px;">
-                            <i class="fa fa-info-circle fa-lg "></i></a></span>
-
                         <span class="pull-right"></span>
                         <div id="modal-radardiv" target=""
                         style="display: inline;"

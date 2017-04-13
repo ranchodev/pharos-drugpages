@@ -1749,6 +1749,8 @@ $(function () {
 $(document).ready(function () {
     $("#diffexptable").stupidtable();
 
+    $("#modal-radardiv" ).attr("target", "@IDGApp.getId(target)");
+
     /* populate TOC menu */
     var tocs = [];
     $("a[tocname]" ).each(function(){
@@ -2009,7 +2011,7 @@ $('.tree').treegrid({
                 }]
             };
             config = _.extend(config, defaultExportConfig);
-            var chart = Highcharts.chart("modal-radardiv", config);
+            chart = Highcharts.chart("modal-radardiv", config);
 
 	      $('#modal-radar').on('show.bs.modal', function() {
 	          $('#modal-radardiv').css('visibility', 'hidden');
@@ -2030,15 +2032,17 @@ $('.tree').treegrid({
         renderChart(chartData, aggType, 'modal-radardiv');
         $("#modalLabelRadar" ).html
            ('<h4><span class="label label-@target.idgTDL.label">@target.idgTDL</span> @target.getName</h4>');
+        $("#modal-radardiv" ).attr("target", "@IDGApp.getId(target)")
         $("#modal-radar" ).modal("show");
     }
 
 
     function _handleModalSelectEvents(aggTypeElem, overlayElem, target) {
+
         var aggType = $(aggTypeElem).val();
         var overlay = $(overlayElem).val();
 
-        var promises = [$.get('@ix.idg.controllers.routes.HarmonogramApp.hgForTarget(null,null,null,null)' + '?q=' + target + '&type=' + aggType)];
+        var promises = [$.get('@ix.idg.controllers.routes.HarmonogramApp.hgForTarget(null,null,null,null)' + '?q=' + target.trim() + '&type=' + aggType)];
         if (overlay == 'none') {
             // promises.push($.Deferred().resolve().promise());
         } else if (overlay.includes("dossier-")) {
@@ -2046,10 +2050,10 @@ $('.tree').treegrid({
             var tids = $(opt).attr("tids").split(",");
             if (tids.length == 0) return;
             _.each(tids, function (x) {
-                promises.push($.get('@ix.idg.controllers.routes.HarmonogramApp.hgForTarget(null, null, null, null)' + '?q=' + x + '&type=' + aggType));
+                promises.push($.get('@ix.idg.controllers.routes.HarmonogramApp.hgForTarget(null, null, null, null)' + '?q=' + x.trim() + '&type=' + aggType));
             });
         } else
-            promises.push($.get('@ix.idg.controllers.routes.HarmonogramApp.hgForTarget(null,null,null,null)' + '?q=' + overlay + '&type=' + aggType));
+            promises.push($.get('@ix.idg.controllers.routes.HarmonogramApp.hgForTarget(null,null,null,null)' + '?q=' + overlay.trim() + '&type=' + aggType));
         $.when.apply($, promises).then(function () {
             // first should be the target in question, the rest will be overlays
             var chartData = _.map(arguments, function (arr) {
@@ -2061,8 +2065,11 @@ $('.tree').treegrid({
             chartData = _.filter(chartData, function (x) {
                 return (x != undefined);
             });
-            renderChart(chartData, "radar-attr_type", 'modal-radardiv', {legend: {enabled: true}});
+            var chart = renderChart(chartData, aggType, 'modal-radardiv', {legend: {enabled: true}});
             $("#modal-radar").modal("show");
+            chart.reflow();
+        }, function(e) {
+            console.log("Promise error: "+e);
         });
     }
 
