@@ -2081,7 +2081,7 @@ public class TextIndexer {
             }
             else if (Value.class.isAssignableFrom(cls)) {
                 Value v = (Value)entity;
-                path.push(v.getLabel());
+                path.push(v.label);
                 indexField (ixFields, defaultIndexable, path, v.getValue());
                 path.pop();
             }
