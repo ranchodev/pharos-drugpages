@@ -5,28 +5,57 @@
 
 @(title: String, termCounts: Map[Keyword,Integer], targetCounts: Map[Target,Integer])
 
-<!DOCTYPE html>
-<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
-    <head>
+@ix.ncats.views.html.main("IMPC Associated Targets") {
+    @impcmenu()
+} {
+    @HtmlFormat.empty
+} {
+
+
+        <div class="jumbotron">
+            <div class="container">
+                <center><h1>IMPC Associated Targets</h1></center>
+            </div>
+        </div>
+
+        <div class="container vertical-center" id="main-box">
+            <div class="row">
+                <p>The <a href="http://www.impc.org/">International Mouse Phenotyping Consortium</a> is a worldwide
+                    consortium that has the capacity to knock-out mice, test mutant mice lines, and provide access to
+                    genotype-phenotype annotation, standard operating protocols, and the development of open source
+                    data analysis tools.</p>
+                <p>This page summarizes the phenotypes associated with the 20,000 targets considered by the IDG program.
+                You can explore all targets associated with IMPC phenotypes
+                <a href="/idg/targets?facet=Data+Source/IMPC">here</a></p>
+            </div>
+
+            <div class="row">
+                <div class="col-md-6" id="hist-term">
+
+                </div>
+                <div class="col-md-6" id="hist-targets">
+
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-md-6" id="hist-tdl">
+
+                </div>
+                <div class="col-md-6" id="hist-tfam">
+
+                </div>
+
+            </div>
+        </div>
+
+<head>
         <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
         <meta http-equiv="X-UA-Compatible" content="IE=edge">
 
         <title>@title</title>
 
-
-
-        <link rel="stylesheet"
-        href='@routes.WebJarAssets.at(WebJarAssets.locate("bootstrap.min.css"))'>
-        <link rel="stylesheet" type="text/css"
-        href='@routes.WebJarAssets.at(WebJarAssets.locate("font-awesome.min.css"))'>
-        <link rel="stylesheet" type="text/css"
-        href='@routes.Assets.versioned("ncats/css/idg-landing-hex.css")'>
-        <link rel="icon" type="image/png" href='@routes.Assets.versioned("images/favicon.png")'>
         <style type="text/css">
 
-        .lead {
-        font-weight : bolder ;
-        }
 
         h5 {
         color : #666666 ;
@@ -40,9 +69,6 @@
         font: 10px sans-serif;
         }
 
-        .title {
-            font: 12px sans-serif bold;
-        }
 
         .axis line,
         .axis path {
@@ -67,19 +93,16 @@
  <a class="ie6expl" href="https://www.google.com/chrome/S">Chrome</a>.</p>
 </div>
 <![endif]-->
-        <script src='@routes.WebJarAssets.at(WebJarAssets.locate("jquery.min.js"))' type='text/javascript'></script>
-
         <script type="text/javascript" src='@routes.Assets.versioned("javascripts/underscore.js")'></script>
         <script type="text/javascript" src='@routes.Assets.versioned("javascripts/underscore.string.js")'></script>
-        <script src='@routes.WebJarAssets.at(WebJarAssets.locate("bootstrap.min.js"))'></script>
-        <script src='@routes.WebJarAssets.at(WebJarAssets.locate("typeahead.bundle.min.js"))'></script>
-        <script src='@routes.WebJarAssets.at(WebJarAssets.locate("handlebars.min.js"))'></script>
-        <script src='@routes.WebJarAssets.at(WebJarAssets.locate("bloodhound.min.js"))'></script>
+        <!--<script src='@routes.WebJarAssets.at(WebJarAssets.locate("bootstrap.min.js"))'></script>-->
+        <!--<script src='@routes.WebJarAssets.at(WebJarAssets.locate("typeahead.bundle.min.js"))'></script>-->
+        <!--<script src='@routes.WebJarAssets.at(WebJarAssets.locate("handlebars.min.js"))'></script>-->
+        <!--<script src='@routes.WebJarAssets.at(WebJarAssets.locate("bloodhound.min.js"))'></script>-->
         <script src="https://code.highcharts.com/highcharts.js"></script>
         <script src="https://code.highcharts.com/highcharts-more.js"></script>
         <script src="https://code.highcharts.com/modules/exporting.js"></script>
         <link type="text/css" rel="stylesheet" href="https://code.highcharts.com/css/highcharts.css"/>
-
         <script type="text/javascript" src='@routes.Assets.versioned("javascripts/viz.js")'></script>
 
         <script>
@@ -203,44 +226,7 @@
         });
         </script>
     </head>
-    <body>
-        <div class="jumbotron">
-            <div class="container">
-                <center><h1>IMPC Associated Targets</h1></center>
-            </div>
-        </div>
-
-        <div class="container vertical-center" id="main-box">
-            <div class="row">
-                <p>The <a href="http://www.impc.org/">International Mouse Phenotyping Consortium</a> is a worldwide
-                    consortium that has the capacity to knock-out mice, test mutant mice lines, and provide access to
-                    genotype-phenotype annotation, standard operating protocols, and the development of open source
-                    data analysis tools.</p>
-                <p>This page summarizes the phenotypes associated with the 20,000 targets considered by the IDG program.
-                You can explore all targets associated with IMPC phenotypes
-                <a href="/idg/targets?facet=Data+Source/IMPC">here</a></p>
-            </div>
-
-            <div class="row">
-                <div class="col-md-6" id="hist-term">
-
-                </div>
-                <div class="col-md-6" id="hist-targets">
-
-                </div>
-            </div>
-            <div class="row">
-                <div class="col-md-6" id="hist-tdl">
-
-                </div>
-                <div class="col-md-6" id="hist-tfam">
-
-                </div>
-
-            </div>
-        </div>
-    </body>
 
 
 
-</html>
+}
