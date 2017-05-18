@@ -14,7 +14,11 @@
   <div class="panel panel-default" id="@Util.sha1(App.encode(f.facet))" >
       <div class="panel-heading">
         <h3 class="panel-title">
-	  <a class="loader" href="@ix.idg.controllers.routes.IDGApp.targetdescriptor(f.facet.getName)"><i class="fa fa-bar-chart"></i></a>
+            <button id='cb-checkall-@Util.sha1(App.encode(f.facet))' alt="Toggle check all"
+            	  	      style="padding: 3px"
+            	  	      class="btn btn-xs btn-default cb-checkall" type="button">
+            	      <i class="fa fa-check"></i></button>
+            <a class="loader" href="@ix.idg.controllers.routes.IDGApp.targetdescriptor(f.facet.getName)"><i class="fa fa-bar-chart"></i></a>
           @f.name
 	  @if(f.url != null) { @HtmlFormat.raw(f.url) }
           @if(f.size() > 6) {  <a id="search" href="#"><i class="fa fa-caret-down" aria-hidden="true"></i></a> }
@@ -220,6 +224,17 @@ $(document).ready(function() {
        $('#'+id).addClass('panel-success');
     }
   }
+
+    // within a given facet, enable user to select all values
+    $(".cb-checkall").click(function (e) {
+        var elemid = $(this).attr("id");
+        var hash = elemid.split("-")[2];
+        var parentDiv = $(this).closest("div#"+hash);
+        $(parentDiv).find("input[type='checkbox']").each(function(o) {
+            $(this).prop("checked", !$(this).prop("checked"));
+            facetToggle(this);
+        });
+    });
 
     $("#facetdivfilter" ).on("input", function() {
        var str = $(this).val( ).toLowerCase();
