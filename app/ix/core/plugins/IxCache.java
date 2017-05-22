@@ -490,6 +490,9 @@ public class IxCache extends Plugin
      * CacheEntryFactory interface
      */
     public Object createEntry (Object key) throws Exception {
+        if (key == null) 
+            return null;
+        
         if (!(key instanceof Serializable)) {
             throw new IllegalArgumentException
                 ("Cache key "+key+" is not serliazable!");

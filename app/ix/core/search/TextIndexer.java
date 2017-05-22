@@ -1203,10 +1203,22 @@ public class TextIndexer {
         if (query != null) {
             Filter f = null;
             if (subset != null) {
-                List<Term> terms = getTerms (subset);
+                Set<String> kinds = new HashSet<>();
+                List<Term> terms = getTerms (subset, kinds);
                 //Logger.debug("Filter terms "+subset.size());
-                if (!terms.isEmpty())
-                    f = new TermsFilter (terms);
+                if (!terms.isEmpty()) {
+                    if (kinds.size() == 1) {
+                        // add an extra security if we have a homogeneous list
+                        f = new ChainedFilter (new Filter[] { 
+                                new TermsFilter (terms), new TermFilter 
+                                (new Term (FIELD_KIND, 
+                                           kinds.iterator().next()))
+                            }, ChainedFilter.AND);
+                    }
+                    else {
+                        f = new TermsFilter (terms);
+                    }
+                }
             }
             else if (options.kind != null) {
                 Set<String> kinds = new TreeSet<String>();
@@ -1231,11 +1243,17 @@ public class TextIndexer {
     }
 
     protected List<Term> getTerms (Collection subset) {
+        return getTerms (subset, null);
+    }
+
+    protected List<Term> getTerms (Collection subset, Set<String> kinds) {
         List<Term> terms = new ArrayList<Term>();
         for (Iterator it = subset.iterator(); it.hasNext(); ) {
             Object obj = it.next();
             Term term = getTerm (obj);
             if (term != null) {
+                if (kinds != null)
+                    kinds.add(obj.getClass().getName());
                 terms.add(term);
             }
         }
