@@ -1,5 +1,5 @@
 @(scheme: String, host: String){
-  "swagger": "2.0",
+  "swagger": "3.0.10",
   "info": {
     "title": "Pharos API",
     "description": "Documentation for the Pharos API",
@@ -11,8 +11,7 @@
     "license": {
       "name": "Apache 2.0",
       "url": "http://www.apache.org/licenses/LICENSE-2.0.html"
-    },
-    "version": "1.0.1"
+    }
   },
   "host": "@host",
   "basePath": "/idg/api/v1",
