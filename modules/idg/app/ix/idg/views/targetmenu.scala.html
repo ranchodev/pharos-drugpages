@@ -11,7 +11,7 @@
 }{
 <ul class="nav navbar-nav navbar-left">
   <li role="presentation"><a href="@ix.idg.controllers.routes.IDGApp.diseases(null,10,1)">Diseases</a></li>
-  <li role="presentation" class="active"><a href="#">Targets</a></li>
+  <li role="presentation" class="active"><a href="@ix.idg.controllers.routes.IDGApp.targets(null, 10, 1)">Targets</a></li>
   <li role="presentation"><a href="@ix.idg.controllers.routes.IDGApp.ligands(null, 16, 1)">Ligands</a></li>
   <li role="presentation"><a href="@ix.idg.controllers.routes.IDGApp.api">API</a></li>
   @helpoptions("")
@@ -41,9 +41,9 @@
   	  <li><a href="@ix.idg.controllers.routes.DTOHier.dto(null)">Explore</a></li>
 	@defining(App.queryString("facet","q","type")) { uri =>
 	  @if(uri.length > 0) {
-	     <li><a href='@HtmlFormat.raw(ix.idg.controllers.routes.IDGApp.targetfacets(ctx) + "&"+uri.substring(1))'>Filters...</a></li>
+	     <li><a href='@HtmlFormat.raw(ix.idg.controllers.routes.IDGApp.targetfacets(ctx) + "&"+uri.substring(1))'>Target Filters...</a></li>
 	  } else {
-	     <li><a href='@ix.idg.controllers.routes.IDGApp.targetfacets(ctx)'>Filters...</a></li>
+	     <li><a href='@ix.idg.controllers.routes.IDGApp.targetfacets(ctx)'>Target Filters...</a></li>
 	  }
 	}
           <li><a href="#sequence-modal" data-toggle="modal">
