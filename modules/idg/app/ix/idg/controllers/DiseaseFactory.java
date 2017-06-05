@@ -3,7 +3,7 @@ package ix.idg.controllers;
 import ix.core.NamedResource;
 import ix.idg.models.Disease;
 import ix.core.controllers.EntityFactory;
-
+import com.avaje.ebean.Expr;
 import play.db.ebean.Model;
 import play.mvc.Result;
 
@@ -38,6 +38,10 @@ public class DiseaseFactory extends EntityFactory {
 
     public static Result get (Long id, String expand) {
         return get (id, expand, finder);
+    }
+
+    public static Result resolve (String name, String expand) {
+        return resolve (Expr.eq("synonyms.term", name), expand, finder);
     }
 
     public static Result field (Long id, String path) {

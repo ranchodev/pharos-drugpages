@@ -61,7 +61,7 @@
           "children" : [ ],
           "size" : 81,
           "url" : "/idg/targets/Q8TE23",
-          "tdl" : "Tbio",
+          "tdl" : "Tchem",
           "fullname" : "Taste receptor type 1 member 2",
           "visible" : true
         } ],
@@ -169,7 +169,7 @@
           "children" : [ ],
           "size" : 81,
           "url" : "/idg/targets/O15303",
-          "tdl" : "Tchem",
+          "tdl" : "Tbio",
           "fullname" : "Metabotropic glutamate receptor 6",
           "visible" : true
         }, {
@@ -256,7 +256,7 @@
         "children" : [ ],
         "size" : 75,
         "url" : "/idg/targets/P32241",
-        "tdl" : "Tbio",
+        "tdl" : "Tchem",
         "fullname" : "Vasoactive intestinal polypeptide receptor 1",
         "visible" : true
       }, {
@@ -376,7 +376,7 @@
           "children" : [ ],
           "size" : 77,
           "url" : "/idg/targets/Q13324",
-          "tdl" : "Tchem",
+          "tdl" : "Tbio",
           "fullname" : "Corticotropin-releasing factor receptor 2",
           "visible" : true
         } ],
@@ -577,7 +577,7 @@
             "children" : [ ],
             "size" : 72,
             "url" : "/idg/targets/P32248",
-            "tdl" : "Tbio",
+            "tdl" : "Tchem",
             "fullname" : "C-C chemokine receptor type 7",
             "visible" : true
           }, {
@@ -586,7 +586,7 @@
             "children" : [ ],
             "size" : 89,
             "url" : "/idg/targets/P46092",
-            "tdl" : "Tbio",
+            "tdl" : "Tchem",
             "fullname" : "C-C chemokine receptor type 10",
             "visible" : true
           }, {
@@ -640,7 +640,7 @@
             "children" : [ ],
             "size" : 78,
             "url" : "/idg/targets/P32302",
-            "tdl" : "Tbio",
+            "tdl" : "Tchem",
             "fullname" : "C-X-C chemokine receptor type 5",
             "visible" : true
           }, {
@@ -1222,7 +1222,7 @@
           "children" : [ ],
           "size" : 104,
           "url" : "/idg/targets/P59551",
-          "tdl" : "Tbio",
+          "tdl" : "Tchem",
           "fullname" : "Taste receptor type 2 member 60",
           "visible" : true
         }, {
@@ -1249,7 +1249,7 @@
           "children" : [ ],
           "size" : 89,
           "url" : "/idg/targets/Q9NYW5",
-          "tdl" : "Tbio",
+          "tdl" : "Tchem",
           "fullname" : "Taste receptor type 2 member 4",
           "visible" : true
         }, {
@@ -1366,7 +1366,7 @@
           "children" : [ ],
           "size" : 104,
           "url" : "/idg/targets/P59536",
-          "tdl" : "Tbio",
+          "tdl" : "Tchem",
           "fullname" : "Taste receptor type 2 member 41",
           "visible" : true
         }, {
@@ -4777,7 +4777,7 @@
           "children" : [ ],
           "size" : 103,
           "url" : "/idg/targets/Q8NHB7",
-          "tdl" : "Tdark",
+          "tdl" : "Tchem",
           "fullname" : "Olfactory receptor 5K1",
           "visible" : true
         }, {
@@ -5223,12 +5223,12 @@
           "visible" : true
         }, {
           "id" : "DTO_02100016",
-          "name" : "ADORA3",
+          "name" : "TMIGD3",
           "children" : [ ],
-          "size" : 77,
-          "url" : "/idg/targets/P0DMS8",
+          "size" : 100,
+          "url" : "/idg/targets/P0DMS9",
           "tdl" : "Tchem",
-          "fullname" : "Adenosine receptor A3",
+          "fullname" : "Transmembrane domain-containing protein TMIGD3",
           "visible" : true
         }, {
           "id" : "DTO_02100014",
@@ -5551,7 +5551,7 @@
           "children" : [ ],
           "size" : 76,
           "url" : "/idg/targets/O15218",
-          "tdl" : "Tbio",
+          "tdl" : "Tchem",
           "fullname" : "G-protein coupled receptor 182",
           "visible" : true
         } ],
@@ -5758,7 +5758,7 @@
           "children" : [ ],
           "size" : 93,
           "url" : "/idg/targets/Q9UJ42",
-          "tdl" : "Tbio",
+          "tdl" : "Tchem",
           "fullname" : "Probable G-protein coupled receptor 160",
           "visible" : true
         }, {
@@ -5902,7 +5902,7 @@
           "children" : [ ],
           "size" : 82,
           "url" : "/idg/targets/O15552",
-          "tdl" : "Tchem",
+          "tdl" : "Tbio",
           "fullname" : "Free fatty acid receptor 2",
           "visible" : true
         } ],
@@ -6109,7 +6109,7 @@
           "children" : [ ],
           "size" : 81,
           "url" : "/idg/targets/Q99788",
-          "tdl" : "Tbio",
+          "tdl" : "Tchem",
           "fullname" : "Chemokine-like receptor 1",
           "visible" : true
         } ],
@@ -6370,7 +6370,7 @@
           "children" : [ ],
           "size" : 81,
           "url" : "/idg/targets/Q9HB89",
-          "tdl" : "Tbio",
+          "tdl" : "Tchem",
           "fullname" : "Neuromedin-U receptor 1",
           "visible" : true
         }, {
@@ -6429,12 +6429,12 @@
           "visible" : true
         }, {
           "id" : "DTO_02100230",
-          "name" : "HRH1",
+          "name" : "DHX8",
           "children" : [ ],
-          "size" : 71,
-          "url" : "/idg/targets/P35367",
-          "tdl" : "Tclin",
-          "fullname" : "Histamine H1 receptor",
+          "size" : 86,
+          "url" : "/idg/targets/Q14562",
+          "tdl" : "Tbio",
+          "fullname" : "ATP-dependent RNA helicase DHX8",
           "visible" : true
         }, {
           "id" : "DTO_02100231",
@@ -6460,7 +6460,7 @@
           "children" : [ ],
           "size" : 89,
           "url" : "/idg/targets/P49019",
-          "tdl" : "Tchem",
+          "tdl" : "Tbio",
           "fullname" : "Hydroxycarboxylic acid receptor 3",
           "visible" : true
         }, {
@@ -6469,7 +6469,7 @@
           "children" : [ ],
           "size" : 88,
           "url" : "/idg/targets/Q9BXC0",
-          "tdl" : "Tbio",
+          "tdl" : "Tchem",
           "fullname" : "Hydroxycarboxylic acid receptor 1",
           "visible" : true
         }, {
@@ -6658,7 +6658,7 @@
           "children" : [ ],
           "size" : 81,
           "url" : "/idg/targets/P04201",
-          "tdl" : "Tbio",
+          "tdl" : "Tchem",
           "fullname" : "Proto-oncogene Mas",
           "visible" : true
         } ],
@@ -6676,7 +6676,7 @@
           "children" : [ ],
           "size" : 89,
           "url" : "/idg/targets/Q9NQS5",
-          "tdl" : "Tbio",
+          "tdl" : "Tchem",
           "fullname" : "G-protein coupled receptor 84",
           "visible" : true
         } ],
@@ -6844,7 +6844,7 @@
         "children" : [ ],
         "size" : 89,
         "url" : "/idg/targets/P49683",
-        "tdl" : "Tbio",
+        "tdl" : "Tchem",
         "fullname" : "Prolactin-releasing peptide receptor",
         "visible" : true
       }, {
@@ -6880,7 +6880,7 @@
         "children" : [ ],
         "size" : 85,
         "url" : "/idg/targets/Q9NSD7",
-        "tdl" : "Tbio",
+        "tdl" : "Tchem",
         "fullname" : "Relaxin-3 receptor 1",
         "visible" : true
       }, {
@@ -7065,12 +7065,12 @@
         "visible" : true
       }, {
         "id" : "DTO_02100722",
-        "name" : "HCRTR2",
+        "name" : "CD200R1",
         "children" : [ ],
-        "size" : 87,
-        "url" : "/idg/targets/O43614",
-        "tdl" : "Tclin",
-        "fullname" : "Orexin receptor type 2",
+        "size" : 83,
+        "url" : "/idg/targets/Q8TD46",
+        "tdl" : "Tbio",
+        "fullname" : "Cell surface glycoprotein CD200 receptor 1",
         "visible" : true
       }, {
         "id" : "DTO_02100723",
@@ -7285,7 +7285,7 @@
         "children" : [ ],
         "size" : 87,
         "url" : "/idg/targets/Q14330",
-        "tdl" : "Tchem",
+        "tdl" : "Tbio",
         "fullname" : "N-arachidonyl glycine receptor",
         "visible" : true
       }, {
@@ -7330,7 +7330,7 @@
         "children" : [ ],
         "size" : 89,
         "url" : "/idg/targets/Q9UPC5",
-        "tdl" : "Tchem",
+        "tdl" : "Tbio",
         "fullname" : "Probable G-protein coupled receptor 34",
         "visible" : true
       }, {
@@ -7519,7 +7519,7 @@
         "children" : [ ],
         "size" : 74,
         "url" : "/idg/targets/Q9UNW8",
-        "tdl" : "Tbio",
+        "tdl" : "Tchem",
         "fullname" : "Probable G-protein coupled receptor 132",
         "visible" : true
       }, {
@@ -7636,7 +7636,7 @@
         "children" : [ ],
         "size" : 91,
         "url" : "/idg/targets/P46095",
-        "tdl" : "Tbio",
+        "tdl" : "Tchem",
         "fullname" : "G-protein coupled receptor 6",
         "visible" : true
       }, {
@@ -7774,7 +7774,7 @@
           "children" : [ ],
           "size" : 82,
           "url" : "/idg/targets/Q14332",
-          "tdl" : "Tbio",
+          "tdl" : "Tchem",
           "fullname" : "Frizzled-2",
           "visible" : true
         }, {
@@ -8341,7 +8341,7 @@
           "children" : [ ],
           "size" : 79,
           "url" : "/idg/targets/P51790",
-          "tdl" : "Tbio",
+          "tdl" : "Tchem",
           "fullname" : "H(+)/Cl(-) exchange transporter 3",
           "visible" : true
         } ],
@@ -8509,7 +8509,7 @@
         "children" : [ ],
         "size" : 97,
         "url" : "/idg/targets/O60359",
-        "tdl" : "Tbio",
+        "tdl" : "Tchem",
         "fullname" : "Voltage-dependent calcium channel gamma-3 subunit",
         "visible" : true
       }, {
@@ -8518,7 +8518,7 @@
         "children" : [ ],
         "size" : 82,
         "url" : "/idg/targets/Q9Y698",
-        "tdl" : "Tbio",
+        "tdl" : "Tchem",
         "fullname" : "Voltage-dependent calcium channel gamma-2 subunit",
         "visible" : true
       }, {
@@ -8527,7 +8527,7 @@
         "children" : [ ],
         "size" : 94,
         "url" : "/idg/targets/Q06432",
-        "tdl" : "Tbio",
+        "tdl" : "Tchem",
         "fullname" : "Voltage-dependent calcium channel gamma-1 subunit",
         "visible" : true
       }, {
@@ -8536,7 +8536,7 @@
         "children" : [ ],
         "size" : 101,
         "url" : "/idg/targets/Q9UF02",
-        "tdl" : "Tdark",
+        "tdl" : "Tchem",
         "fullname" : "Voltage-dependent calcium channel gamma-5 subunit",
         "visible" : true
       }, {
@@ -8545,7 +8545,7 @@
         "children" : [ ],
         "size" : 96,
         "url" : "/idg/targets/P62955",
-        "tdl" : "Tdark",
+        "tdl" : "Tchem",
         "fullname" : "Voltage-dependent calcium channel gamma-7 subunit",
         "visible" : true
       }, {
@@ -8554,7 +8554,7 @@
         "children" : [ ],
         "size" : 103,
         "url" : "/idg/targets/Q9BXT2",
-        "tdl" : "Tdark",
+        "tdl" : "Tchem",
         "fullname" : "Voltage-dependent calcium channel gamma-6 subunit",
         "visible" : true
       }, {
@@ -8563,7 +8563,7 @@
         "children" : [ ],
         "size" : 98,
         "url" : "/idg/targets/Q8WXS5",
-        "tdl" : "Tdark",
+        "tdl" : "Tchem",
         "fullname" : "Voltage-dependent calcium channel gamma-8 subunit",
         "visible" : true
       } ],
@@ -8581,7 +8581,7 @@
         "children" : [ ],
         "size" : 82,
         "url" : "/idg/targets/Q14CN2",
-        "tdl" : "Tbio",
+        "tdl" : "Tchem",
         "fullname" : "Calcium-activated chloride channel regulator 4",
         "visible" : true
       }, {
@@ -8590,7 +8590,7 @@
         "children" : [ ],
         "size" : 100,
         "url" : "/idg/targets/Q9Y6N3",
-        "tdl" : "Tdark",
+        "tdl" : "Tchem",
         "fullname" : "Calcium-activated chloride channel regulator family member 3",
         "visible" : true
       }, {
@@ -8599,7 +8599,7 @@
         "children" : [ ],
         "size" : 81,
         "url" : "/idg/targets/Q9UQC9",
-        "tdl" : "Tbio",
+        "tdl" : "Tchem",
         "fullname" : "Calcium-activated chloride channel regulator 2",
         "visible" : true
       }, {
@@ -8608,7 +8608,7 @@
         "children" : [ ],
         "size" : 80,
         "url" : "/idg/targets/A8K7I4",
-        "tdl" : "Tbio",
+        "tdl" : "Tchem",
         "fullname" : "Calcium-activated chloride channel regulator 1",
         "visible" : true
       } ],
@@ -8869,7 +8869,7 @@
         "children" : [ ],
         "size" : 91,
         "url" : "/idg/targets/Q8IZS8",
-        "tdl" : "Tbio",
+        "tdl" : "Tchem",
         "fullname" : "Voltage-dependent calcium channel subunit alpha-2/delta-3",
         "visible" : true
       }, {
@@ -8896,7 +8896,7 @@
         "children" : [ ],
         "size" : 86,
         "url" : "/idg/targets/Q7Z3S7",
-        "tdl" : "Tbio",
+        "tdl" : "Tchem",
         "fullname" : "Voltage-dependent calcium channel subunit alpha-2/delta-4",
         "visible" : true
       } ],
@@ -8959,7 +8959,7 @@
         "children" : [ ],
         "size" : 87,
         "url" : "/idg/targets/Q08289",
-        "tdl" : "Tbio",
+        "tdl" : "Tchem",
         "fullname" : "Voltage-dependent L-type calcium channel subunit beta-2",
         "visible" : true
       }, {
@@ -8968,7 +8968,7 @@
         "children" : [ ],
         "size" : 92,
         "url" : "/idg/targets/Q02641",
-        "tdl" : "Tbio",
+        "tdl" : "Tchem",
         "fullname" : "Voltage-dependent L-type calcium channel subunit beta-1",
         "visible" : true
       }, {
@@ -8977,7 +8977,7 @@
         "children" : [ ],
         "size" : 90,
         "url" : "/idg/targets/P54284",
-        "tdl" : "Tbio",
+        "tdl" : "Tchem",
         "fullname" : "Voltage-dependent L-type calcium channel subunit beta-3",
         "visible" : true
       }, {
@@ -8986,7 +8986,7 @@
         "children" : [ ],
         "size" : 86,
         "url" : "/idg/targets/O00305",
-        "tdl" : "Tbio",
+        "tdl" : "Tchem",
         "fullname" : "Voltage-dependent L-type calcium channel subunit beta-4",
         "visible" : true
       } ],
@@ -9367,7 +9367,7 @@
           "children" : [ ],
           "size" : 78,
           "url" : "/idg/targets/P48549",
-          "tdl" : "Tbio",
+          "tdl" : "Tchem",
           "fullname" : "G protein-activated inward rectifier potassium channel 1",
           "visible" : true
         } ],
@@ -9457,7 +9457,7 @@
           "children" : [ ],
           "size" : 77,
           "url" : "/idg/targets/P78508",
-          "tdl" : "Tbio",
+          "tdl" : "Tchem",
           "fullname" : "ATP-sensitive inward rectifier potassium channel 10",
           "visible" : true
         } ],
@@ -9520,7 +9520,7 @@
           "children" : [ ],
           "size" : 78,
           "url" : "/idg/targets/P63252",
-          "tdl" : "Tbio",
+          "tdl" : "Tchem",
           "fullname" : "Inward rectifier potassium channel 2",
           "visible" : true
         } ],
@@ -9556,7 +9556,7 @@
           "children" : [ ],
           "size" : 87,
           "url" : "/idg/targets/Q92806",
-          "tdl" : "Tbio",
+          "tdl" : "Tchem",
           "fullname" : "G protein-activated inward rectifier potassium channel 3",
           "visible" : true
         } ],
@@ -9574,7 +9574,7 @@
           "children" : [ ],
           "size" : 79,
           "url" : "/idg/targets/P48544",
-          "tdl" : "Tbio",
+          "tdl" : "Tchem",
           "fullname" : "G protein-activated inward rectifier potassium channel 4",
           "visible" : true
         } ],
@@ -9853,7 +9853,7 @@
           "children" : [ ],
           "size" : 83,
           "url" : "/idg/targets/P29973",
-          "tdl" : "Tbio",
+          "tdl" : "Tchem",
           "fullname" : "cGMP-gated cation channel alpha-1",
           "visible" : true
         } ],
@@ -10270,7 +10270,7 @@
             "children" : [ ],
             "size" : 92,
             "url" : "/idg/targets/Q9UGM1",
-            "tdl" : "Tbio",
+            "tdl" : "Tchem",
             "fullname" : "Neuronal acetylcholine receptor subunit alpha-9",
             "visible" : true
           } ],
@@ -10306,7 +10306,7 @@
             "children" : [ ],
             "size" : 80,
             "url" : "/idg/targets/P30532",
-            "tdl" : "Tbio",
+            "tdl" : "Tchem",
             "fullname" : "Neuronal acetylcholine receptor subunit alpha-5",
             "visible" : true
           } ],
@@ -10378,7 +10378,7 @@
             "children" : [ ],
             "size" : 95,
             "url" : "/idg/targets/Q9GZZ6",
-            "tdl" : "Tbio",
+            "tdl" : "Tchem",
             "fullname" : "Neuronal acetylcholine receptor subunit alpha-10",
             "visible" : true
           } ],
@@ -10990,7 +10990,7 @@
             "children" : [ ],
             "size" : 84,
             "url" : "/idg/targets/A8MPY1",
-            "tdl" : "Tdark",
+            "tdl" : "Tchem",
             "fullname" : "Gamma-aminobutyric acid receptor subunit rho-3",
             "visible" : true
           } ],
@@ -11026,7 +11026,7 @@
             "children" : [ ],
             "size" : 84,
             "url" : "/idg/targets/P28476",
-            "tdl" : "Tbio",
+            "tdl" : "Tchem",
             "fullname" : "Gamma-aminobutyric acid receptor subunit rho-2",
             "visible" : true
           } ],
@@ -11209,7 +11209,7 @@
         "children" : [ ],
         "size" : 86,
         "url" : "/idg/targets/O15547",
-        "tdl" : "Tbio",
+        "tdl" : "Tchem",
         "fullname" : "P2X purinoceptor 6",
         "visible" : true
       }, {
@@ -11218,7 +11218,7 @@
         "children" : [ ],
         "size" : 86,
         "url" : "/idg/targets/Q93086",
-        "tdl" : "Tbio",
+        "tdl" : "Tchem",
         "fullname" : "P2X purinoceptor 5",
         "visible" : true
       }, {
@@ -11305,7 +11305,7 @@
             "children" : [ ],
             "size" : 89,
             "url" : "/idg/targets/Q8TDD5",
-            "tdl" : "Tbio",
+            "tdl" : "Tchem",
             "fullname" : "Mucolipin-3",
             "visible" : true
           } ],
@@ -11328,12 +11328,12 @@
           "name" : "TRPM2 sub-subfamily",
           "children" : [ {
             "id" : "DTO_01100327",
-            "name" : "TRPM2",
+            "name" : "CLU",
             "children" : [ ],
-            "size" : 89,
-            "url" : "/idg/targets/O94759",
-            "tdl" : "Tchem",
-            "fullname" : "Transient receptor potential cation channel subfamily M member 2",
+            "size" : 69,
+            "url" : "/idg/targets/P10909",
+            "tdl" : "Tbio",
+            "fullname" : "Clusterin",
             "visible" : true
           } ],
           "size" : null,
@@ -11422,7 +11422,7 @@
             "children" : [ ],
             "size" : 76,
             "url" : "/idg/targets/Q96QT4",
-            "tdl" : "Tbio",
+            "tdl" : "Tchem",
             "fullname" : "Transient receptor potential cation channel subfamily M member 7",
             "visible" : true
           } ],
@@ -11440,7 +11440,7 @@
             "children" : [ ],
             "size" : 82,
             "url" : "/idg/targets/Q9NZQ8",
-            "tdl" : "Tbio",
+            "tdl" : "Tchem",
             "fullname" : "Transient receptor potential cation channel subfamily M member 5",
             "visible" : true
           } ],
@@ -11620,7 +11620,7 @@
             "children" : [ ],
             "size" : 78,
             "url" : "/idg/targets/Q9H1D0",
-            "tdl" : "Tbio",
+            "tdl" : "Tchem",
             "fullname" : "Transient receptor potential cation channel subfamily V member 6",
             "visible" : true
           } ],
@@ -11656,7 +11656,7 @@
             "children" : [ ],
             "size" : 79,
             "url" : "/idg/targets/Q9Y5S1",
-            "tdl" : "Tbio",
+            "tdl" : "Tchem",
             "fullname" : "Transient receptor potential cation channel subfamily V member 2",
             "visible" : true
           } ],
@@ -11896,7 +11896,7 @@
           "children" : [ ],
           "size" : 82,
           "url" : "/idg/targets/Q16558",
-          "tdl" : "Tbio",
+          "tdl" : "Tchem",
           "fullname" : "Calcium-activated potassium channel subunit beta-1",
           "visible" : true
         } ],
@@ -12169,7 +12169,7 @@
             "children" : [ ],
             "size" : 88,
             "url" : "/idg/targets/Q6UVM3",
-            "tdl" : "Tbio",
+            "tdl" : "Tchem",
             "fullname" : "Potassium channel subfamily T member 2",
             "visible" : true
           } ],
@@ -12928,7 +12928,7 @@
         "children" : [ ],
         "size" : 82,
         "url" : "/idg/targets/Q14571",
-        "tdl" : "Tbio",
+        "tdl" : "Tchem",
         "fullname" : "Inositol 1,4,5-trisphosphate receptor type 2",
         "visible" : true
       }, {
@@ -13027,7 +13027,7 @@
         "children" : [ ],
         "size" : 84,
         "url" : "/idg/targets/Q14722",
-        "tdl" : "Tbio",
+        "tdl" : "Tchem",
         "fullname" : "Voltage-gated potassium channel subunit beta-1",
         "visible" : true
       }, {
@@ -13504,7 +13504,7 @@
         "children" : [ ],
         "size" : 76,
         "url" : "/idg/targets/Q96RD7",
-        "tdl" : "Tbio",
+        "tdl" : "Tchem",
         "fullname" : "Pannexin-1",
         "visible" : true
       } ],
@@ -13594,7 +13594,7 @@
         "children" : [ ],
         "size" : 74,
         "url" : "/idg/targets/Q13563",
-        "tdl" : "Tchem",
+        "tdl" : "Tbio",
         "fullname" : "Polycystin-2",
         "visible" : true
       } ],
@@ -13675,7 +13675,7 @@
         "children" : [ ],
         "size" : 82,
         "url" : "/idg/targets/Q15750",
-        "tdl" : "Tchem",
+        "tdl" : "Tbio",
         "fullname" : "TGF-beta-activated kinase 1 and MAP3K7-binding protein 1",
         "visible" : true
       } ],
@@ -13693,7 +13693,7 @@
         "children" : [ ],
         "size" : 71,
         "url" : "/idg/targets/Q9Y6K9",
-        "tdl" : "Tbio",
+        "tdl" : "Tchem",
         "fullname" : "NF-kappa-B essential modulator",
         "visible" : true
       }, {
@@ -13705,7 +13705,7 @@
           "children" : [ ],
           "size" : 89,
           "url" : "/idg/targets/P46020",
-          "tdl" : "Tbio",
+          "tdl" : "Tchem",
           "fullname" : "Phosphorylase b kinase regulatory subunit alpha, skeletal muscle isoform",
           "visible" : true
         }, {
@@ -13767,12 +13767,12 @@
           "name" : "PIM family",
           "children" : [ {
             "id" : "DTO_03100417",
-            "name" : "PIM1",
+            "name" : "LONP1",
             "children" : [ ],
-            "size" : 73,
-            "url" : "/idg/targets/P11309",
-            "tdl" : "Tchem",
-            "fullname" : "Serine/threonine-protein kinase pim-1",
+            "size" : 79,
+            "url" : "/idg/targets/P36776",
+            "tdl" : "Tbio",
+            "fullname" : "Lon protease homolog, mitochondrial",
             "visible" : true
           }, {
             "id" : "DTO_03100418",
@@ -13870,7 +13870,7 @@
             "children" : [ ],
             "size" : 91,
             "url" : "/idg/targets/Q96PF2",
-            "tdl" : "Tchem",
+            "tdl" : "Tbio",
             "fullname" : "Testis-specific serine/threonine-protein kinase 2",
             "visible" : true
           }, {
@@ -13879,7 +13879,7 @@
             "children" : [ ],
             "size" : 96,
             "url" : "/idg/targets/Q96PN8",
-            "tdl" : "Tchem",
+            "tdl" : "Tbio",
             "fullname" : "Testis-specific serine/threonine-protein kinase 3",
             "visible" : true
           }, {
@@ -13897,7 +13897,7 @@
             "children" : [ ],
             "size" : 88,
             "url" : "/idg/targets/Q9BXA6",
-            "tdl" : "Tbio",
+            "tdl" : "Tchem",
             "fullname" : "Testis-specific serine/threonine-protein kinase 6",
             "visible" : true
           } ],
@@ -14170,7 +14170,7 @@
               "children" : [ ],
               "size" : 85,
               "url" : "/idg/targets/Q9NRH2",
-              "tdl" : "Tchem",
+              "tdl" : "Tbio",
               "fullname" : "SNF-related serine/threonine-protein kinase",
               "visible" : true
             } ],
@@ -14188,7 +14188,7 @@
               "children" : [ ],
               "size" : 88,
               "url" : "/idg/targets/Q8IY84",
-              "tdl" : "Tchem",
+              "tdl" : "Tbio",
               "fullname" : "Serine/threonine-protein kinase NIM1",
               "visible" : true
             } ],
@@ -14203,7 +14203,7 @@
             "children" : [ ],
             "size" : 87,
             "url" : "/idg/targets/Q9Y478",
-            "tdl" : "Tchem",
+            "tdl" : "Tbio",
             "fullname" : "5'-AMP-activated protein kinase subunit beta-1",
             "visible" : true
           }, {
@@ -14428,7 +14428,7 @@
             "children" : [ ],
             "size" : 80,
             "url" : "/idg/targets/Q16566",
-            "tdl" : "Tchem",
+            "tdl" : "Tbio",
             "fullname" : "Calcium/calmodulin-dependent protein kinase type IV",
             "visible" : true
           }, {
@@ -14539,7 +14539,7 @@
               "children" : [ ],
               "size" : 84,
               "url" : "/idg/targets/Q16644",
-              "tdl" : "Tchem",
+              "tdl" : "Tbio",
               "fullname" : "MAP kinase-activated protein kinase 3",
               "visible" : true
             }, {
@@ -14599,7 +14599,7 @@
             "children" : [ ],
             "size" : 84,
             "url" : "/idg/targets/Q9H1R3",
-            "tdl" : "Tchem",
+            "tdl" : "Tbio",
             "fullname" : "Myosin light chain kinase 2, skeletal/cardiac muscle",
             "visible" : true
           }, {
@@ -15040,7 +15040,7 @@
             "children" : [ ],
             "size" : 72,
             "url" : "/idg/targets/P42679",
-            "tdl" : "Tchem",
+            "tdl" : "Tbio",
             "fullname" : "Megakaryocyte-associated tyrosine-protein kinase",
             "visible" : true
           }, {
@@ -15396,12 +15396,12 @@
             "visible" : true
           }, {
             "id" : "DTO_03100519",
-            "name" : "TEC",
+            "name" : "RHBDF2",
             "children" : [ ],
-            "size" : 94,
-            "url" : "/idg/targets/P42680",
-            "tdl" : "Tchem",
-            "fullname" : "Tyrosine-protein kinase Tec",
+            "size" : 88,
+            "url" : "/idg/targets/Q6PJF5",
+            "tdl" : "Tbio",
+            "fullname" : "Inactive rhomboid protein 2",
             "visible" : true
           }, {
             "id" : "DTO_03100548",
@@ -15841,7 +15841,7 @@
             "children" : [ ],
             "size" : 86,
             "url" : "/idg/targets/Q9H792",
-            "tdl" : "Tbio",
+            "tdl" : "Tchem",
             "fullname" : "Pseudopodium-enriched atypical kinase 1",
             "visible" : true
           }, {
@@ -15895,7 +15895,7 @@
             "children" : [ ],
             "size" : 74,
             "url" : "/idg/targets/Q9BXM7",
-            "tdl" : "Tbio",
+            "tdl" : "Tchem",
             "fullname" : "Serine/threonine-protein kinase PINK1, mitochondrial",
             "visible" : true
           } ],
@@ -16003,7 +16003,7 @@
             "children" : [ ],
             "size" : 98,
             "url" : "/idg/targets/Q9NRP7",
-            "tdl" : "Tchem",
+            "tdl" : "Tbio",
             "fullname" : "Serine/threonine-protein kinase 36",
             "visible" : true
           }, {
@@ -16138,7 +16138,7 @@
             "children" : [ ],
             "size" : 90,
             "url" : "/idg/targets/P0C1S8",
-            "tdl" : "Tchem",
+            "tdl" : "Tbio",
             "fullname" : "Wee1-like protein kinase 2",
             "visible" : true
           } ],
@@ -16255,7 +16255,7 @@
             "children" : [ ],
             "size" : 90,
             "url" : "/idg/targets/Q9BYP7",
-            "tdl" : "Tchem",
+            "tdl" : "Tbio",
             "fullname" : "Serine/threonine-protein kinase WNK3",
             "visible" : true
           } ],
@@ -16534,7 +16534,7 @@
             "children" : [ ],
             "size" : 82,
             "url" : "/idg/targets/P19525",
-            "tdl" : "Tchem",
+            "tdl" : "Tbio",
             "fullname" : "Interferon-induced, double-stranded RNA-activated protein kinase",
             "visible" : true
           } ],
@@ -16705,7 +16705,7 @@
             "children" : [ ],
             "size" : 85,
             "url" : "/idg/targets/Q8TF76",
-            "tdl" : "Tchem",
+            "tdl" : "Tbio",
             "fullname" : "Serine/threonine-protein kinase haspin",
             "visible" : true
           } ],
@@ -16719,12 +16719,12 @@
           "name" : "MOS family",
           "children" : [ {
             "id" : "DTO_03100333",
-            "name" : "MOS",
+            "name" : "MOCOS",
             "children" : [ ],
             "size" : 90,
-            "url" : "/idg/targets/P00540",
+            "url" : "/idg/targets/Q96EN8",
             "tdl" : "Tbio",
-            "fullname" : "Proto-oncogene serine/threonine-protein kinase mos",
+            "fullname" : "Molybdenum cofactor sulfurase",
             "visible" : true
           } ],
           "size" : null,
@@ -16777,7 +16777,7 @@
             "children" : [ ],
             "size" : 91,
             "url" : "/idg/targets/P51957",
-            "tdl" : "Tchem",
+            "tdl" : "Tbio",
             "fullname" : "Serine/threonine-protein kinase Nek4",
             "visible" : true
           }, {
@@ -16795,7 +16795,7 @@
             "children" : [ ],
             "size" : 97,
             "url" : "/idg/targets/Q6ZWH5",
-            "tdl" : "Tdark",
+            "tdl" : "Tchem",
             "fullname" : "Serine/threonine-protein kinase Nek10",
             "visible" : true
           }, {
@@ -16804,7 +16804,7 @@
             "children" : [ ],
             "size" : 94,
             "url" : "/idg/targets/Q8NG66",
-            "tdl" : "Tchem",
+            "tdl" : "Tbio",
             "fullname" : "Serine/threonine-protein kinase Nek11",
             "visible" : true
           }, {
@@ -16831,7 +16831,7 @@
             "children" : [ ],
             "size" : 92,
             "url" : "/idg/targets/P51956",
-            "tdl" : "Tchem",
+            "tdl" : "Tbio",
             "fullname" : "Serine/threonine-protein kinase Nek3",
             "visible" : true
           } ],
@@ -16881,21 +16881,21 @@
             "visible" : true
           }, {
             "id" : "DTO_03100383",
-            "name" : "SCYL3",
+            "name" : "CCL15",
             "children" : [ ],
-            "size" : 96,
-            "url" : "/idg/targets/Q8IZE3",
-            "tdl" : "Tdark",
-            "fullname" : "Protein-associating with the carboxyl-terminal domain of ezrin",
+            "size" : 82,
+            "url" : "/idg/targets/Q16663",
+            "tdl" : "Tbio",
+            "fullname" : "C-C motif chemokine 15",
             "visible" : true
           }, {
             "id" : "DTO_03100467",
-            "name" : "SCYL2",
+            "name" : "CCL14",
             "children" : [ ],
-            "size" : 97,
-            "url" : "/idg/targets/Q6P3W7",
+            "size" : 100,
+            "url" : "/idg/targets/Q16627",
             "tdl" : "Tbio",
-            "fullname" : "SCY1-like protein 2",
+            "fullname" : "C-C motif chemokine 14",
             "visible" : true
           } ],
           "size" : null,
@@ -16984,7 +16984,7 @@
             "children" : [ ],
             "size" : 85,
             "url" : "/idg/targets/Q86UX6",
-            "tdl" : "Tchem",
+            "tdl" : "Tbio",
             "fullname" : "Serine/threonine-protein kinase 32C",
             "visible" : true
           } ],
@@ -17011,7 +17011,7 @@
             "children" : [ ],
             "size" : 93,
             "url" : "/idg/targets/Q9HBY8",
-            "tdl" : "Tchem",
+            "tdl" : "Tbio",
             "fullname" : "Serine/threonine-protein kinase Sgk2",
             "visible" : true
           }, {
@@ -17056,7 +17056,7 @@
             "children" : [ ],
             "size" : 90,
             "url" : "/idg/targets/Q6P5Z2",
-            "tdl" : "Tbio",
+            "tdl" : "Tchem",
             "fullname" : "Serine/threonine-protein kinase N3",
             "visible" : true
           } ],
@@ -17167,7 +17167,7 @@
               "children" : [ ],
               "size" : 83,
               "url" : "/idg/targets/P34947",
-              "tdl" : "Tchem",
+              "tdl" : "Tbio",
               "fullname" : "G protein-coupled receptor kinase 5",
               "visible" : true
             }, {
@@ -17176,7 +17176,7 @@
               "children" : [ ],
               "size" : 87,
               "url" : "/idg/targets/P43250",
-              "tdl" : "Tchem",
+              "tdl" : "Tbio",
               "fullname" : "G protein-coupled receptor kinase 6",
               "visible" : true
             } ],
@@ -17239,7 +17239,7 @@
               "children" : [ ],
               "size" : 95,
               "url" : "/idg/targets/Q9Y5S2",
-              "tdl" : "Tchem",
+              "tdl" : "Tbio",
               "fullname" : "Serine/threonine-protein kinase MRCK beta",
               "visible" : true
             }, {
@@ -17248,7 +17248,7 @@
               "children" : [ ],
               "size" : 96,
               "url" : "/idg/targets/Q6DT37",
-              "tdl" : "Tchem",
+              "tdl" : "Tbio",
               "fullname" : "Serine/threonine-protein kinase MRCK gamma",
               "visible" : true
             }, {
@@ -17268,12 +17268,12 @@
             "visible" : true
           }, {
             "id" : "DTO_03100097",
-            "name" : "CIT",
+            "name" : "DHDDS",
             "children" : [ ],
-            "size" : 93,
-            "url" : "/idg/targets/O14578",
-            "tdl" : "Tchem",
-            "fullname" : "Citron Rho-interacting kinase",
+            "size" : 73,
+            "url" : "/idg/targets/Q86SQ9",
+            "tdl" : "Tbio",
+            "fullname" : "Dehydrodolichyl diphosphate synthase complex subunit DHDDS",
             "visible" : true
           } ],
           "size" : null,
@@ -17506,7 +17506,7 @@
             "children" : [ ],
             "size" : 88,
             "url" : "/idg/targets/Q6P0Q8",
-            "tdl" : "Tbio",
+            "tdl" : "Tchem",
             "fullname" : "Microtubule-associated serine/threonine-protein kinase 2",
             "visible" : true
           }, {
@@ -17515,7 +17515,7 @@
             "children" : [ ],
             "size" : 93,
             "url" : "/idg/targets/O60307",
-            "tdl" : "Tchem",
+            "tdl" : "Tbio",
             "fullname" : "Microtubule-associated serine/threonine-protein kinase 3",
             "visible" : true
           }, {
@@ -17635,7 +17635,7 @@
               "children" : [ ],
               "size" : 81,
               "url" : "/idg/targets/Q9UBS0",
-              "tdl" : "Tchem",
+              "tdl" : "Tbio",
               "fullname" : "Ribosomal protein S6 kinase beta-2",
               "visible" : true
             } ],
@@ -17686,7 +17686,7 @@
             "children" : [ ],
             "size" : 79,
             "url" : "/idg/targets/O95835",
-            "tdl" : "Tchem",
+            "tdl" : "Tbio",
             "fullname" : "Serine/threonine-protein kinase LATS1",
             "visible" : true
           }, {
@@ -17713,7 +17713,7 @@
             "children" : [ ],
             "size" : 89,
             "url" : "/idg/targets/Q15208",
-            "tdl" : "Tchem",
+            "tdl" : "Tbio",
             "fullname" : "Serine/threonine-protein kinase 38",
             "visible" : true
           } ],
@@ -17758,7 +17758,7 @@
             "children" : [ ],
             "size" : 80,
             "url" : "/idg/targets/Q9Y572",
-            "tdl" : "Tbio",
+            "tdl" : "Tchem",
             "fullname" : "Receptor-interacting serine/threonine-protein kinase 3",
             "visible" : true
           }, {
@@ -17776,7 +17776,7 @@
             "children" : [ ],
             "size" : 81,
             "url" : "/idg/targets/Q8NFD2",
-            "tdl" : "Tchem",
+            "tdl" : "Tbio",
             "fullname" : "Ankyrin repeat and protein kinase domain-containing protein 1",
             "visible" : true
           } ],
@@ -18172,7 +18172,7 @@
             "children" : [ ],
             "size" : 74,
             "url" : "/idg/targets/Q8NB16",
-            "tdl" : "Tbio",
+            "tdl" : "Tchem",
             "fullname" : "Mixed lineage kinase domain-like protein",
             "visible" : true
           } ],
@@ -18193,7 +18193,7 @@
               "children" : [ ],
               "size" : 90,
               "url" : "/idg/targets/Q15569",
-              "tdl" : "Tchem",
+              "tdl" : "Tbio",
               "fullname" : "Dual specificity testis-specific protein kinase 1",
               "visible" : true
             } ],
@@ -18235,7 +18235,7 @@
             "children" : [ ],
             "size" : 101,
             "url" : "/idg/targets/Q96S53",
-            "tdl" : "Tchem",
+            "tdl" : "Tdark",
             "fullname" : "Dual specificity testis-specific protein kinase 2",
             "visible" : true
           } ],
@@ -18292,7 +18292,7 @@
               "children" : [ ],
               "size" : 90,
               "url" : "/idg/targets/Q9BVS4",
-              "tdl" : "Tchem",
+              "tdl" : "Tbio",
               "fullname" : "Serine/threonine-protein kinase RIO2",
               "visible" : true
             } ],
@@ -18352,7 +18352,7 @@
             "children" : [ ],
             "size" : 75,
             "url" : "/idg/targets/P21675",
-            "tdl" : "Tchem",
+            "tdl" : "Tbio",
             "fullname" : "Transcription initiation factor TFIID subunit 1",
             "visible" : true
           } ],
@@ -18391,7 +18391,7 @@
               "children" : [ ],
               "size" : 90,
               "url" : "/idg/targets/O00418",
-              "tdl" : "Tchem",
+              "tdl" : "Tbio",
               "fullname" : "Eukaryotic elongation factor 2 kinase",
               "visible" : true
             } ],
@@ -18459,12 +18459,12 @@
             "name" : "ATR subfamily",
             "children" : [ {
               "id" : "DTO_03100034",
-              "name" : "ATR",
+              "name" : "SERPINA2",
               "children" : [ ],
-              "size" : 73,
-              "url" : "/idg/targets/Q13535",
-              "tdl" : "Tchem",
-              "fullname" : "Serine/threonine-protein kinase ATR",
+              "size" : 100,
+              "url" : "/idg/targets/P20848",
+              "tdl" : "Tdark",
+              "fullname" : "Putative alpha-1-antitrypsin-related protein",
               "visible" : true
             } ],
             "size" : null,
@@ -18607,7 +18607,7 @@
               "children" : [ ],
               "size" : 86,
               "url" : "/idg/targets/Q8NI60",
-              "tdl" : "Tchem",
+              "tdl" : "Tbio",
               "fullname" : "Atypical kinase COQ8A, mitochondrial",
               "visible" : true
             }, {
@@ -18703,7 +18703,7 @@
             "children" : [ ],
             "size" : 89,
             "url" : "/idg/targets/Q86Y07",
-            "tdl" : "Tchem",
+            "tdl" : "Tbio",
             "fullname" : "Serine/threonine-protein kinase VRK2",
             "visible" : true
           }, {
@@ -18730,7 +18730,7 @@
             "children" : [ ],
             "size" : 91,
             "url" : "/idg/targets/Q5TCY1",
-            "tdl" : "Tbio",
+            "tdl" : "Tchem",
             "fullname" : "Tau-tubulin kinase 1",
             "visible" : true
           }, {
@@ -18766,7 +18766,7 @@
             "children" : [ ],
             "size" : 96,
             "url" : "/idg/targets/Q9HCP0",
-            "tdl" : "Tchem",
+            "tdl" : "Tbio",
             "fullname" : "Casein kinase I isoform gamma-1",
             "visible" : true
           }, {
@@ -18784,7 +18784,7 @@
             "children" : [ ],
             "size" : 91,
             "url" : "/idg/targets/Q9Y6M4",
-            "tdl" : "Tchem",
+            "tdl" : "Tbio",
             "fullname" : "Casein kinase I isoform gamma-3",
             "visible" : true
           }, {
@@ -18793,7 +18793,7 @@
             "children" : [ ],
             "size" : 110,
             "url" : "/idg/targets/Q8N752",
-            "tdl" : "Tchem",
+            "tdl" : "Tdark",
             "fullname" : "Casein kinase I isoform alpha-like",
             "visible" : true
           }, {
@@ -18855,12 +18855,12 @@
               "visible" : true
             }, {
               "id" : "DTO_03100386",
-              "name" : "PAK3",
+              "name" : "ARHGEF7",
               "children" : [ ],
-              "size" : 88,
-              "url" : "/idg/targets/O75914",
-              "tdl" : "Tchem",
-              "fullname" : "Serine/threonine-protein kinase PAK 3",
+              "size" : 80,
+              "url" : "/idg/targets/Q14155",
+              "tdl" : "Tbio",
+              "fullname" : "Rho guanine nucleotide exchange factor 7",
               "visible" : true
             } ],
             "size" : null,
@@ -18913,7 +18913,7 @@
               "children" : [ ],
               "size" : 92,
               "url" : "/idg/targets/O95747",
-              "tdl" : "Tchem",
+              "tdl" : "Tbio",
               "fullname" : "Serine/threonine-protein kinase OSR1",
               "visible" : true
             }, {
@@ -18922,7 +18922,7 @@
               "children" : [ ],
               "size" : 81,
               "url" : "/idg/targets/Q9UEW8",
-              "tdl" : "Tchem",
+              "tdl" : "Tbio",
               "fullname" : "STE20/SPS1-related proline-alanine-rich protein kinase",
               "visible" : true
             } ],
@@ -19156,7 +19156,7 @@
               "children" : [ ],
               "size" : 88,
               "url" : "/idg/targets/Q8NEV4",
-              "tdl" : "Tchem",
+              "tdl" : "Tbio",
               "fullname" : "Myosin-IIIa",
               "visible" : true
             }, {
@@ -19165,7 +19165,7 @@
               "children" : [ ],
               "size" : 94,
               "url" : "/idg/targets/Q8WXR4",
-              "tdl" : "Tchem",
+              "tdl" : "Tbio",
               "fullname" : "Myosin-IIIb",
               "visible" : true
             } ],
@@ -19324,7 +19324,7 @@
             "children" : [ ],
             "size" : 86,
             "url" : "/idg/targets/Q9Y6R4",
-            "tdl" : "Tchem",
+            "tdl" : "Tbio",
             "fullname" : "Mitogen-activated protein kinase kinase kinase 4",
             "visible" : true
           }, {
@@ -19342,7 +19342,7 @@
             "children" : [ ],
             "size" : 90,
             "url" : "/idg/targets/O95382",
-            "tdl" : "Tchem",
+            "tdl" : "Tbio",
             "fullname" : "Mitogen-activated protein kinase kinase kinase 6",
             "visible" : true
           }, {
@@ -19369,7 +19369,7 @@
             "children" : [ ],
             "size" : 80,
             "url" : "/idg/targets/Q13233",
-            "tdl" : "Tchem",
+            "tdl" : "Tbio",
             "fullname" : "Mitogen-activated protein kinase kinase kinase 1",
             "visible" : true
           } ],
@@ -19405,7 +19405,7 @@
             "children" : [ ],
             "size" : 80,
             "url" : "/idg/targets/P20594",
-            "tdl" : "Tbio",
+            "tdl" : "Tchem",
             "fullname" : "Atrial natriuretic peptide receptor 2",
             "visible" : true
           }, {
@@ -19534,7 +19534,7 @@
               "children" : [ ],
               "size" : 97,
               "url" : "/idg/targets/Q9NR20",
-              "tdl" : "Tchem",
+              "tdl" : "Tdark",
               "fullname" : "Dual specificity tyrosine-phosphorylation-regulated kinase 4",
               "visible" : true
             }, {
@@ -19579,7 +19579,7 @@
               "children" : [ ],
               "size" : 95,
               "url" : "/idg/targets/Q86Z02",
-              "tdl" : "Tchem",
+              "tdl" : "Tbio",
               "fullname" : "Homeodomain-interacting protein kinase 1",
               "visible" : true
             }, {
@@ -19990,7 +19990,7 @@
             "children" : [ ],
             "size" : 74,
             "url" : "/idg/targets/P67870",
-            "tdl" : "Tbio",
+            "tdl" : "Tchem",
             "fullname" : "Casein kinase II subunit beta",
             "visible" : true
           } ],
@@ -20124,12 +20124,12 @@
             "name" : "NMO subfamily",
             "children" : [ {
               "id" : "DTO_03100366",
-              "name" : "NLK",
+              "name" : "GPI",
               "children" : [ ],
-              "size" : 84,
-              "url" : "/idg/targets/Q9UBE8",
-              "tdl" : "Tchem",
-              "fullname" : "Serine/threonine-protein kinase NLK",
+              "size" : 73,
+              "url" : "/idg/targets/P06744",
+              "tdl" : "Tbio",
+              "fullname" : "Glucose-6-phosphate isomerase",
               "visible" : true
             } ],
             "size" : null,
@@ -20173,7 +20173,7 @@
               "children" : [ ],
               "size" : 86,
               "url" : "/idg/targets/Q16659",
-              "tdl" : "Tchem",
+              "tdl" : "Tbio",
               "fullname" : "Mitogen-activated protein kinase 6",
               "visible" : true
             }, {
@@ -20182,7 +20182,7 @@
               "children" : [ ],
               "size" : 77,
               "url" : "/idg/targets/Q13164",
-              "tdl" : "Tchem",
+              "tdl" : "Tbio",
               "fullname" : "Mitogen-activated protein kinase 7",
               "visible" : true
             } ],
@@ -20419,7 +20419,7 @@
           "children" : [ ],
           "size" : 88,
           "url" : "/idg/targets/P16118",
-          "tdl" : "Tchem",
+          "tdl" : "Tbio",
           "fullname" : "6-phosphofructo-2-kinase/fructose-2,6-bisphosphatase 1",
           "visible" : true
         }, {
@@ -20476,7 +20476,7 @@
             "children" : [ ],
             "size" : 76,
             "url" : "/idg/targets/P19367",
-            "tdl" : "Tbio",
+            "tdl" : "Tchem",
             "fullname" : "Hexokinase-1",
             "visible" : true
           }, {
@@ -20542,7 +20542,7 @@
               "children" : [ ],
               "size" : 78,
               "url" : "/idg/targets/P00568",
-              "tdl" : "Tbio",
+              "tdl" : "Tchem",
               "fullname" : "Adenylate kinase isoenzyme 1",
               "visible" : true
             } ],
@@ -20574,12 +20574,12 @@
             "name" : "AK3 subfamily",
             "children" : [ {
               "id" : "DTO_03100202",
-              "name" : "AK3",
+              "name" : "AK4",
               "children" : [ ],
-              "size" : 88,
-              "url" : "/idg/targets/Q9UIJ7",
-              "tdl" : "Tbio",
-              "fullname" : "GTP:AMP phosphotransferase AK3, mitochondrial",
+              "size" : 83,
+              "url" : "/idg/targets/P27144",
+              "tdl" : "Tchem",
+              "fullname" : "Adenylate kinase 4, mitochondrial",
               "visible" : true
             } ],
             "size" : null,
@@ -20932,7 +20932,7 @@
           "children" : [ ],
           "size" : 94,
           "url" : "/idg/targets/Q99755",
-          "tdl" : "Tchem",
+          "tdl" : "Tbio",
           "fullname" : "Phosphatidylinositol 4-phosphate 5-kinase type-1 alpha",
           "visible" : true
         }, {
@@ -20977,7 +20977,7 @@
           "children" : [ ],
           "size" : 79,
           "url" : "/idg/targets/Q9Y2I7",
-          "tdl" : "Tbio",
+          "tdl" : "Tchem",
           "fullname" : "1-phosphatidylinositol 3-phosphate 5-kinase",
           "visible" : true
         } ],
@@ -21034,7 +21034,7 @@
             "children" : [ ],
             "size" : 73,
             "url" : "/idg/targets/P00558",
-            "tdl" : "Tbio",
+            "tdl" : "Tchem",
             "fullname" : "Phosphoglycerate kinase 1",
             "visible" : true
           } ],
@@ -21187,7 +21187,7 @@
             "children" : [ ],
             "size" : 79,
             "url" : "/idg/targets/Q9BZ23",
-            "tdl" : "Tchem",
+            "tdl" : "Tbio",
             "fullname" : "Pantothenate kinase 2, mitochondrial",
             "visible" : true
           }, {
@@ -21196,7 +21196,7 @@
             "children" : [ ],
             "size" : 82,
             "url" : "/idg/targets/Q8TE04",
-            "tdl" : "Tchem",
+            "tdl" : "Tbio",
             "fullname" : "Pantothenate kinase 1",
             "visible" : true
           } ],
@@ -21262,7 +21262,7 @@
         "children" : [ ],
         "size" : 92,
         "url" : "/idg/targets/Q14541",
-        "tdl" : "Tbio",
+        "tdl" : "Tchem",
         "fullname" : "Hepatocyte nuclear factor 4-gamma",
         "visible" : true
       }, {
@@ -21271,7 +21271,7 @@
         "children" : [ ],
         "size" : 69,
         "url" : "/idg/targets/P41235",
-        "tdl" : "Tbio",
+        "tdl" : "Tchem",
         "fullname" : "Hepatocyte nuclear factor 4-alpha",
         "visible" : true
       } ],
@@ -21397,7 +21397,7 @@
         "children" : [ ],
         "size" : 84,
         "url" : "/idg/targets/Q14995",
-        "tdl" : "Tchem",
+        "tdl" : "Tbio",
         "fullname" : "Nuclear receptor subfamily 1 group D member 2",
         "visible" : true
       }, {
@@ -21532,7 +21532,7 @@
         "children" : [ ],
         "size" : 74,
         "url" : "/idg/targets/P51843",
-        "tdl" : "Tbio",
+        "tdl" : "Tchem",
         "fullname" : "Nuclear receptor subfamily 0 group B member 1",
         "visible" : true
       }, {
@@ -21541,7 +21541,7 @@
         "children" : [ ],
         "size" : 74,
         "url" : "/idg/targets/Q15466",
-        "tdl" : "Tchem",
+        "tdl" : "Tbio",
         "fullname" : "Nuclear receptor subfamily 0 group B member 2",
         "visible" : true
       } ],
@@ -21559,7 +21559,7 @@
         "children" : [ ],
         "size" : 85,
         "url" : "/idg/targets/Q9Y466",
-        "tdl" : "Tbio",
+        "tdl" : "Tchem",
         "fullname" : "Nuclear receptor subfamily 2 group E member 1",
         "visible" : true
       }, {
@@ -21568,7 +21568,7 @@
         "children" : [ ],
         "size" : 100,
         "url" : "/idg/targets/Q9Y5X4",
-        "tdl" : "Tbio",
+        "tdl" : "Tchem",
         "fullname" : "Photoreceptor-specific nuclear receptor",
         "visible" : true
       } ],
@@ -21604,7 +21604,7 @@
         "children" : [ ],
         "size" : 80,
         "url" : "/idg/targets/P24468",
-        "tdl" : "Tbio",
+        "tdl" : "Tchem",
         "fullname" : "COUP transcription factor 2",
         "visible" : true
       } ],
@@ -21690,12 +21690,12 @@
         "visible" : true
       }, {
         "id" : "DTO_00117516",
-        "name" : "AR",
+        "name" : "FDXR",
         "children" : [ ],
-        "size" : 63,
-        "url" : "/idg/targets/P10275",
-        "tdl" : "Tclin",
-        "fullname" : "Androgen receptor",
+        "size" : 75,
+        "url" : "/idg/targets/P22570",
+        "tdl" : "Tbio",
+        "fullname" : "NADPH:adrenodoxin oxidoreductase, mitochondrial",
         "visible" : true
       } ],
       "size" : null,
@@ -21712,7 +21712,7 @@
         "children" : [ ],
         "size" : 81,
         "url" : "/idg/targets/Q92570",
-        "tdl" : "Tbio",
+        "tdl" : "Tchem",
         "fullname" : "Nuclear receptor subfamily 4 group A member 3",
         "visible" : true
       }, {
@@ -21721,7 +21721,7 @@
         "children" : [ ],
         "size" : 73,
         "url" : "/idg/targets/P22736",
-        "tdl" : "Tchem",
+        "tdl" : "Tbio",
         "fullname" : "Nuclear receptor subfamily 4 group A member 1",
         "visible" : true
       }, {

@@ -6,7 +6,7 @@ import play.*;
 import play.db.ebean.*;
 import play.data.*;
 import play.mvc.*;
-
+import com.avaje.ebean.Expr;
 import ix.core.NamedResource;
 import ix.idg.models.Ligand;
 import ix.core.controllers.EntityFactory;
@@ -40,6 +40,10 @@ public class LigandFactory extends EntityFactory {
 
     public static Result get (Long id, String expand) {
         return get (id, expand, finder);
+    }
+
+    public static Result resolve (String name, String expand) {
+        return resolve (Expr.eq("synonyms.term", name), expand, finder);
     }
 
     public static Result field (Long id, String path) {

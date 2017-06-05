@@ -185,6 +185,21 @@ public class RouteFactory extends Controller {
         return badRequest ("Unknown Context: \""+context+"\"");
     }
 
+    public static Result resolve (String context, String name, String expand) {
+        try {
+            Method m = getMethod (context, "resolve", 
+                                  String.class, String.class);
+            if (m != null)
+                return (Result)m.invoke(null, name, expand);
+        }
+        catch (Exception ex) {
+            Logger.trace("["+context+"]", ex);
+            return internalServerError (context);
+        }
+        Logger.warn("Context {} has no method resolve(String,String)",context);
+        return badRequest ("Unknown Context: \""+context+"\"");
+    }
+
     public static Result doc (String context, Long id) {
         try {
             Method m = getMethod (context, "doc", Long.class);

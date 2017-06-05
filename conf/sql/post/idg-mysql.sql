@@ -1,8 +1,9 @@
 ALTER TABLE ix_core_xref
 ADD INDEX xref_refid_index (refid ASC),
 ADD INDEX xref_kind_index (kind ASC),
-add index refid_kind_index (refid asc, kind asc)
-add index id_refid_index (id asc, refid asc);
+add index refid_kind_index (refid asc, kind asc),
+add index id_refid_index (id asc, refid asc)
+;
 
 ALTER TABLE ix_core_value
 ADD INDEX value_label_index (label ASC),

@@ -661,6 +661,9 @@ public class IDGApp extends App implements Commons {
         COMPARTMENT_GOTERM,
         COMPARTMENT_EVIDENCE,
         COMPARTMENT_TYPE,
+
+        "Localization Location",
+        "Localization Signal",
         
         "KEGG Pathway",
         "Reactome Pathway",
@@ -2951,73 +2954,19 @@ public class IDGApp extends App implements Commons {
         return mapper.valueToTree(root);
     }
 
-    public static String getSequence (Target target) {
-        return getSequence (target, 70);
-    }
-    
-    public static String getSequence (Target target, int wrap) {
-        Value val = target.getProperty(UNIPROT_SEQUENCE);
-        if (val == null) {
-            return null;
+    public static Sequence getSequence (final Target target) {
+        try {
+            return getOrElse ("targets/"+target.id+"/sequence", 
+                              new Callable<Sequence> () {
+                                  public Sequence call () throws Exception {
+                                      return new Sequence (target);
+                                  }
+                              });
         }
-        
-        String text = ((Text)val).text;
-        return formatSequence (text, wrap);
-    }
-
-    static final char[] AA = {
-        'A', // Ala
-        'R', // Arg
-        'N', // Asn
-        'D', // Asp
-        'C', // Cys
-        'E', // Glu
-        'Q', // Gln
-        'G', // Gly
-        'H', // His
-        'I', // Ile
-        'L', // Leu
-        'K', // Lys
-        'M', // Met
-        'F', // Phe
-        'P', // Pro
-        'S', // Ser
-        'T', // Thr
-        'W', // Trp
-        'Y', // Tyr
-        'V'  // Val
-    };
-    public static JsonNode getAminoAcidProfile (Target target) {
-        Value val = target.getProperty(UNIPROT_SEQUENCE);
-        JsonNode json = null;
-        if (val != null) {
-            String text = ((Text)val).text;
-            Map<Character, Integer> aa = new TreeMap<Character, Integer>();
-            for (int i = 0; i < text.length(); ++i) {
-                char ch = text.charAt(i);
-                Integer c = aa.get(ch);
-                aa.put(ch, c == null ? 1 : (c+1));
-            }
-            ObjectMapper mapper = new ObjectMapper ();              
-            ArrayNode node = mapper.createArrayNode();
-            for (int i = 0; i < AA.length; ++i) {
-                Integer c = aa.get(AA[i]);
-                ObjectNode n = mapper.createObjectNode();
-                n.put("name", ""+AA[i]);
-                ArrayNode a = mapper.createArrayNode();
-                a.add(c != null ? c : 0);
-                n.put("data", a);
-                ObjectNode l = mapper.createObjectNode();
-                l.put("enabled", true);
-                l.put("rotation", -90);
-                l.put("y",-20);
-                l.put("format", "<b>{point.series.name}</b>: {point.y}");
-                n.put("dataLabels", l);
-                node.add(n);
-            }
-            json = node;
+        catch (Exception ex) {
+            Logger.error("Can't retrieve sequence for target "+target.id, ex);
         }
-        return json;
+        return null;
     }
 
     public static SequenceIndexer.Result
@@ -3032,27 +2981,6 @@ public class IDGApp extends App implements Commons {
         return r;
     }
     
-
-    public static String formatSequence (String text, int wrap) {
-        StringBuilder seq = new StringBuilder ();
-        int j = 1, len = text.length();
-        for (int i = 1; i <= len; ++i) {
-            seq.append(text.charAt(i-1));           
-            if (i % wrap == 0) {
-                seq.append(String.format("%1$7d - %2$d\n", j, i));
-                j = i+1;
-            }
-        }
-        
-        int r = wrap - (len % wrap);
-        if (r > 0 && j < len) {
-            seq.append(String.format
-                       ("%1$"+(r+7)+"d - %2$d\n", j, len));
-        }
-        seq.append("//");        
-        return seq.toString();
-    }
-
     public static String getTargetTableHeader (String name, String field) {
         String order = request().getQueryString("order");
         String sort = "";

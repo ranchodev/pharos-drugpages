@@ -32,15 +32,15 @@
     },
     {
 	"name": "target",
-	"description": "API pertaining to target entity"
+	"description": "API pertaining to target entities"
     },
     {
 	"name": "ligand",
-	"description": "API pertaining to ligand entity"
+	"description": "API pertaining to ligand entities"
     },
     {
 	"name": "disease",
-	"description": "API pertaining to disease entity"
+	"description": "API pertaining to disease entities"
     },
     {
 	"name": "assay",
