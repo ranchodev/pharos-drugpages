@@ -711,15 +711,20 @@
         <td><a href="#target-description"
 	       data-toggle="collapse">@target.name</a></td>
         <td style="text-align:right;">
+
+            <!--  Page menu -->
 	  <div role="group">
             <div class="dropdown btn-group pull-right" role="group">
               <button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown">
                 <i class="fa fa-list"></i>
               </button>
               <ul class="dropdown-menu pull-left" id="toc">
-		
               </ul>
             </div>
+
+          <a class="btn btn-default pull-right" href="@HtmlFormat.raw(request.uri)?action=download"><i class="fa fa-download"></i></a>
+          <a class="btn btn-default pull-right" href='@ix.core.controllers.v1.routes.RouteFactory.get("targets", target.id, null)'><i class="fa fa-code"></i></a>
+
             <div class="dropdown btn-group pull-right" role="group">
               <button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown">
                 <i class="fa fa-shopping-cart"></i>&nbsp;<span id="sc-count"></span>
@@ -753,7 +758,7 @@
 }
 	  
 @ix.ncats.views.html.main(target.name){
-@targetmenu(null)
+@targetmenu(null,"")
 }{
 <ol class="breadcrumb" style="margin-top:60px;">
   <li><a href="@ix.idg.controllers.routes.IDGApp.index()"><span class="fa fa-home"></span> Home</a></li>
@@ -792,7 +797,7 @@ This is TCRD target <a href='@ix.core.controllers.v1.routes.RouteFactory.get("ta
 			title="Radar plot depicting the variety of knowledge obtained by Pharos for a particular target. The more spikes in the plot, the more variety. The longer the length, the higher the quantity of that particular knowledge. Click expansion icon to explore the plot fuller by seeing plot with annotations of the different radii, allowing for aggregation of knowledge radii based on attribution type, group, or data type, as well as overlay plot with other information, and provide download file.">Knowledge Summary</span>
 		  <a href="#" id="modal-radar-btn"
 		     data-toggle="modal" data-target="#modal-radar">
-                    <span class="fa fa-external-link pull-right" aria-hidden="true"></span>
+                    <span class="fa fa-clone fa-flip-horizontal pull-right" aria-hidden="true"></span>
 		  </a>
 		</h3>
               </div>
@@ -1542,7 +1547,7 @@ This is TCRD target <a href='@ix.core.controllers.v1.routes.RouteFactory.get("ta
                </div>
                <div class="panel-body">
 		 <div id="aa-profile" style="max-height:200px; width:100%;"></div>
-                 <pre class="pre-scrollable">@seq</pre>
+                 <pre class="pre-scrollable">@seq.sequence</pre>
                </div>
              </div>
            </div>
@@ -1560,7 +1565,7 @@ This is TCRD target <a href='@ix.core.controllers.v1.routes.RouteFactory.get("ta
                      <h3 class="panel-title">
                      <span data-toggle="tooltip" data-html="true"
                      title="<p align='left'>Publications associated with this target, as identified using the JensenLab text mining protocol</p>">
-                    Publication</span>
+                         Text Mined References</span>
                      <span data-toggle="tooltip" data-html="true" title="<p align='left'>NCBI Gene Bibliography</p>">
                          <a href="http://www.ncbi.nlm.nih.gov/pubmed?LinkName=gene_pubmed&from_uid=@for(kw <- target.synonyms) {@if("Entrez Gene".equals(kw.label)) {@kw.term}}"><i class="fa fa-book"></i></a></span>
                          <span data-toggle="tooltip" data-html="true" title="<p align='left'>Search Pubmed with this target</p>">
@@ -1699,6 +1704,7 @@ role="dialog" aria-labelledby="modalLabelFolder" aria-hidden="true">
     <script src="https://code.highcharts.com/highcharts.js"></script>
     <script src="https://code.highcharts.com/highcharts-more.js"></script>
     <script src="https://code.highcharts.com/modules/exporting.js"></script>
+    <script type="text/javascript" src='@routes.Assets.versioned("javascripts/viz.js")'></script>
     <!--<link type="text/css" rel="stylesheet" href="https://code.highcharts.com/css/highcharts.css"></script>-->
 
     <style type="text/css">
@@ -1744,6 +1750,8 @@ $(function () {
 $(document).ready(function () {
     $("#diffexptable").stupidtable();
 
+    $("#modal-radardiv" ).attr("target", "@IDGApp.getId(target)");
+
     /* populate TOC menu */
     var tocs = [];
     $("a[tocname]" ).each(function(){
@@ -1755,9 +1763,6 @@ $(document).ready(function () {
     _.each(tocs, function(o, idx, l) {
         $("#toc" ).append("<li><a href='#"+ o.aname+"'>"+ o.tname+"</a></li>");
     });
-    $('#toc').append('<li role="separator" class="divider"></li>');
-    $('#toc').append('<li><a href="@ix.core.controllers.v1.routes.RouteFactory.get("targets", target.id, null)">View JSON</a></li>');
-    $('#toc').append('<li><a class="loader" href="@HtmlFormat.raw(request.uri)?action=download">Download</a></li>');
 
     /* Word cloud for text mined pubs */
     @defining(WordCloud.textHistogram(target, "title", "sqrt")) { counts =>
@@ -1857,8 +1862,7 @@ $('.tree').treegrid({
         url: '@ix.idg.controllers.routes.IDGApp.targetTissue(IDGApp.getId(target))',
         dataType: "json",
         success: function (data) {
-
-            Highcharts.chart("tissue-specificity-radar", {
+            var config = {
                 chart: {
                     polar: true,
                     type: "line",
@@ -1898,7 +1902,9 @@ $('.tree').treegrid({
                     }),
                     pointPlacement: 'on'
                 }]
-            });
+            };
+            config = _.extend(config, defaultExportConfig);
+            Highcharts.chart("tissue-specificity-radar", config);
         }
     });
 
@@ -1954,57 +1960,59 @@ $('.tree').treegrid({
         success:function(data) {
 	    //console.log('rendering radar in modal...'+JSON.stringify(data));
             $('#modal-radardiv').html('');
-            var chart = Highcharts.chart("modal-radardiv", {
-                      chart: {
-                          polar: true,
-                          type: "line"
-                      },
-                      credits: {
-                          enabled: false
-                      },
-                      title: {
-                          text: null
-                      },
-                      legend: {
-                          enabled: false
-                      },
-                      pane: {
-                          size: "90%"
-                      },
-                      yAxis: {
-                          gridLineInterpolation: 'polygon',
-                          lineWidth: 0,
-                          min: 0,
-                          labels: {
-                              enabled: false
-                          }
-                      },
-                      xAxis: {
-                          categories: _.map(data[0].axes, function (obj) {
-                              return(obj.axis);
-                          }),
-                          tickmarkPlacement: 'on',
-                          lineWidth: 0.5,
-                          autoRotation: true
-                      },
-                      series: [{
-                          name: "Attribute Type",
-                          marker: { enabled: false},
-                          point: {
-                              events: {
-                                  mouseOver: function() {
-                                      var category = this.category;
-                                      showDataSources('#radar-ds-container',
-                                              '@ix.idg.controllers.routes.HarmonogramApp.dataSources(null,null)'+
-                                              '?field=radar-attr_type')({name:category});
-                                  }
-                              }
-                          },
-                          data: _.map(data[0].axes, function (obj) {
-                              return (obj.value);
-                          })
-                    }]
-              });
+            var config = {
+                chart: {
+                    polar: true,
+                    type: "line"
+                },
+                credits: {
+                    enabled: false
+                },
+                title: {
+                    text: null
+                },
+                legend: {
+                    enabled: false
+                },
+                pane: {
+                    size: "90%"
+                },
+                yAxis: {
+                    gridLineInterpolation: 'polygon',
+                    lineWidth: 0,
+                    min: 0,
+                    labels: {
+                        enabled: false
+                    }
+                },
+                xAxis: {
+                    categories: _.map(data[0].axes, function (obj) {
+                        return (obj.axis);
+                    }),
+                    tickmarkPlacement: 'on',
+                    lineWidth: 0.5,
+                    autoRotation: true
+                },
+                series: [{
+                    name: "Attribute Type",
+                    marker: {enabled: false},
+                    point: {
+                        events: {
+                            mouseOver: function () {
+                                var category = this.category;
+                                showDataSources('#radar-ds-container',
+                                        '@ix.idg.controllers.routes.HarmonogramApp.dataSources(null,null)' +
+                                        '?field=radar-attr_type')({name: category});
+                            }
+                        }
+                    },
+                    data: _.map(data[0].axes, function (obj) {
+                        return (obj.value);
+                    })
+                }]
+            };
+            config = _.extend(config, defaultExportConfig);
+            chart = Highcharts.chart("modal-radardiv", config);
 
 	      $('#modal-radar').on('show.bs.modal', function() {
 	          $('#modal-radardiv').css('visibility', 'hidden');
@@ -2025,15 +2033,17 @@ $('.tree').treegrid({
         renderChart(chartData, aggType, 'modal-radardiv');
         $("#modalLabelRadar" ).html
            ('<h4><span class="label label-@target.idgTDL.label">@target.idgTDL</span> @target.getName</h4>');
+        $("#modal-radardiv" ).attr("target", "@IDGApp.getId(target)")
         $("#modal-radar" ).modal("show");
     }
 
 
     function _handleModalSelectEvents(aggTypeElem, overlayElem, target) {
+
         var aggType = $(aggTypeElem).val();
         var overlay = $(overlayElem).val();
 
-        var promises = [$.get('@ix.idg.controllers.routes.HarmonogramApp.hgForTarget(null,null,null,null)' + '?q=' + target + '&type=' + aggType)];
+        var promises = [$.get('@ix.idg.controllers.routes.HarmonogramApp.hgForTarget(null,null,null,null)' + '?q=' + target.trim() + '&type=' + aggType)];
         if (overlay == 'none') {
             // promises.push($.Deferred().resolve().promise());
         } else if (overlay.includes("dossier-")) {
@@ -2041,10 +2051,10 @@ $('.tree').treegrid({
             var tids = $(opt).attr("tids").split(",");
             if (tids.length == 0) return;
             _.each(tids, function (x) {
-                promises.push($.get('@ix.idg.controllers.routes.HarmonogramApp.hgForTarget(null, null, null, null)' + '?q=' + x + '&type=' + aggType));
+                promises.push($.get('@ix.idg.controllers.routes.HarmonogramApp.hgForTarget(null, null, null, null)' + '?q=' + x.trim() + '&type=' + aggType));
             });
         } else
-            promises.push($.get('@ix.idg.controllers.routes.HarmonogramApp.hgForTarget(null,null,null,null)' + '?q=' + overlay + '&type=' + aggType));
+            promises.push($.get('@ix.idg.controllers.routes.HarmonogramApp.hgForTarget(null,null,null,null)' + '?q=' + overlay.trim() + '&type=' + aggType));
         $.when.apply($, promises).then(function () {
             // first should be the target in question, the rest will be overlays
             var chartData = _.map(arguments, function (arr) {
@@ -2056,8 +2066,11 @@ $('.tree').treegrid({
             chartData = _.filter(chartData, function (x) {
                 return (x != undefined);
             });
-            renderChart(chartData, "radar-attr_type", 'modal-radardiv', {legend: {enabled: true}});
+            var chart = renderChart(chartData, aggType, 'modal-radardiv', {legend: {enabled: true}});
             $("#modal-radar").modal("show");
+            chart.reflow();
+        }, function(e) {
+            console.log("Promise error: "+e);
         });
     }
 
@@ -2074,113 +2087,119 @@ $('.tree').treegrid({
 
    @if(target.patentCount != null && target.patentCount > 0) {
       var data = @HtmlFormat.raw(IDGApp.getPatents(target).toString);
-      Highcharts.chart('patent-line-plot', {
-          chart: {
-            type: 'line'
-          },
-          credits: {
-            enabled: false
-          },
-          title: {
-             text: null
-          },
-          legend: {
-             enabled: false
-          },
-          xAxis: {
-             categories: _.map(data, function (d) { return d.year; })
-          },
-          yAxis: {
-             title: {
-                text: 'Count'
-             }
-          },
-          tooltip: {
-             shared: true,
-             crosshairs: true
-          },
-          series: [{
-             name: 'Count',
-             marker: {
-               radius: 3
-             },
-             data: _.map(data, function(d) { return parseInt(d.count,10); })
-          }]
-      });
+      var patentCountPlotConfig = {
+                chart: {
+                  type: 'line'
+                },
+                credits: {
+                  enabled: false
+                },
+                title: {
+                   text: null
+                },
+                legend: {
+                   enabled: false
+                },
+                xAxis: {
+                   categories: _.map(data, function (d) { return d.year; })
+                },
+                yAxis: {
+                   title: {
+                      text: 'Count'
+                   }
+                },
+                tooltip: {
+                   shared: true,
+                   crosshairs: true
+                },
+                series: [{
+                   name: 'Count',
+                   marker: {
+                     radius: 3
+                   },
+                   data: _.map(data, function(d) { return parseInt(d.count,10); })
+                }]
+            };
+      patentCountPlotConfig = _.extend(patentCountPlotConfig, defaultExportConfig);
+      Highcharts.chart('patent-line-plot', patentCountPlotConfig);
    }
 
    @if(target.pubTatorScore != null) {
       var data = @HtmlFormat.raw(IDGApp.getPubTator(target).toString);
-      Highcharts.chart('pubtator-plot', {
-          chart: {
-            type: 'line'
-          },
-          credits: {
-            enabled: false
-          },
-          title: {
-             text: null
-          },
-          legend: {
-             enabled: false
-          },
-          xAxis: {
-             categories: _.map(data, function (d) { return d.year; })
-          },
-          yAxis: {
-             title: {
-                text: 'Score'
-             }
-          },
-          tooltip: {
-             shared: true,
-             crosshairs: true
-          },
-          series: [{
-             name: 'PubTator Score',
-             marker: {
-               radius: 3
-             },
-             data: _.map(data, function(d) { return d.score; })
-          }]
-      });
+      var pubtatorPlotConfig = {
+                chart: {
+                  type: 'line'
+                },
+                credits: {
+                  enabled: false
+                },
+                title: {
+                   text: null
+                },
+                legend: {
+                   enabled: false
+                },
+                xAxis: {
+                   categories: _.map(data, function (d) { return d.year; })
+                },
+                yAxis: {
+                   title: {
+                      text: 'Score'
+                   }
+                },
+                tooltip: {
+                   shared: true,
+                   crosshairs: true
+                },
+                series: [{
+                   name: 'PubTator Score',
+                   marker: {
+                     radius: 3
+                   },
+                   data: _.map(data, function(d) { return d.score; })
+                }]
+            };
+            pubtatorPlotConfig = _.extend(pubtatorPlotConfig, defaultExportConfig);
+      Highcharts.chart('pubtator-plot', pubtatorPlotConfig);
    }
 
    @if(target.jensenScore != null) {
       var data = @HtmlFormat.raw(IDGApp.getPubMedScore(target).toString);
-      Highcharts.chart('pubmedscore-plot', {
-          chart: {
-            type: 'line'
-          },
-          credits: {
-            enabled: false
-          },
-          title: {
-             text: null
-          },
-          legend: {
-             enabled: false
-          },
-          xAxis: {
-             categories: _.map(data, function (d) { return d.year; })
-          },
-          yAxis: {
-             title: {
-                text: 'Score'
-             }
-          },
-          tooltip: {
-             shared: true,
-             crosshairs: true
-          },
-          series: [{
-             name: 'PubMed Score',
-             marker: {
-               radius: 3
-             },
-             data: _.map(data, function(d) { return d.score; })
-          }]
-      });
+      var jensenPlotConfig = {
+                chart: {
+                  type: 'line'
+                },
+                credits: {
+                  enabled: false
+                },
+                title: {
+                   text: null
+                },
+                legend: {
+                   enabled: false
+                },
+                xAxis: {
+                   categories: _.map(data, function (d) { return d.year; })
+                },
+                yAxis: {
+                   title: {
+                      text: 'Score'
+                   }
+                },
+                tooltip: {
+                   shared: true,
+                   crosshairs: true
+                },
+                series: [{
+                   name: 'PubMed Score',
+                   marker: {
+                     radius: 3
+                   },
+                   data: _.map(data, function(d) { return d.score; })
+                }]
+            };
+      jensenPlotConfig = _.extend(jensenPlotConfig, defaultExportConfig);
+      Highcharts.chart('pubmedscore-plot', jensenPlotConfig);
    }
 
    $('#pmscore-sparkline').sparkline('html', {width:'100px'});
@@ -2188,7 +2207,7 @@ $('.tree').treegrid({
 });
 
 function plotAAProfile(container) {
-    var chart = Highcharts.chart(container, {
+    var config = {
         chart: {
             type: 'column',
             height: 150
@@ -2218,9 +2237,10 @@ function plotAAProfile(container) {
         legend: {
             enabled: false
         },
-        series: @HtmlFormat.raw(IDGApp.getAminoAcidProfile(target).toString)
-})
-    ;
+        series: @HtmlFormat.raw(IDGApp.getSequence(target).profile.toString)
+    };
+    config = _.extend(config, defaultExportConfig);
+    var chart = Highcharts.chart(container, config);
 }
 
 function showLoadModal () {

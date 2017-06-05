@@ -9,8 +9,8 @@
 @*
 This is updated by cloning the swagger directory, making changes : Hide topbar, hide version number button, break work on path, then rebuilding
 *@
-    <script src='@routes.Assets.versioned("swagger-ui/dist/swagger-ui-bundle.js")'></script>
-    <script src='@routes.Assets.versioned("swagger-ui/dist/swagger-ui-standalone-preset.js")'></script>
+    <script src='@routes.WebJarAssets.at(WebJarAssets.locate("swagger-ui-bundle.js"))'></script>
+    <script src='@routes.WebJarAssets.at(WebJarAssets.locate("swagger-ui-standalone-preset.js"))'></script>
 
 
     <script type="text/javascript">
@@ -33,7 +33,6 @@ This is updated by cloning the swagger directory, making changes : Hide topbar, 
                         window.ui = ui
                     }
                     </script>
-
 }
 
 @ix.ncats.views.html.main(title, scripts) {

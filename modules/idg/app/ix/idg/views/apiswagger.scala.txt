@@ -1,5 +1,5 @@
 @(scheme: String, host: String){
-  "swagger": "2.0",
+  "swagger": "3.0.10",
   "info": {
     "title": "Pharos API",
     "description": "Documentation for the Pharos API",
@@ -11,8 +11,7 @@
     "license": {
       "name": "Apache 2.0",
       "url": "http://www.apache.org/licenses/LICENSE-2.0.html"
-    },
-    "version": "1.0.1"
+    }
   },
   "host": "@host",
   "basePath": "/idg/api/v1",
@@ -33,15 +32,15 @@
     },
     {
 	"name": "target",
-	"description": "API pertaining to target entity"
+	"description": "API pertaining to target entities"
     },
     {
 	"name": "ligand",
-	"description": "API pertaining to ligand entity"
+	"description": "API pertaining to ligand entities"
     },
     {
 	"name": "disease",
-	"description": "API pertaining to disease entity"
+	"description": "API pertaining to disease entities"
     },
     {
 	"name": "assay",
@@ -135,7 +134,7 @@
             "description": "The id of the target",
             "in": "path",
             "type": "string",
-            "required": "true",
+            "required": true,
             "default": "1"
           }
         ],
@@ -162,7 +161,7 @@
             "description": "The id of the target",
             "in": "path",
             "type": "string",
-            "required": "true",
+            "required": true,
             "default": "1"
           }
         ],
@@ -189,7 +188,7 @@
             "description": "The id of the target",
             "in": "path",
             "type": "string",
-            "required": "true",
+            "required": true,
             "default": "1"
           }
         ],
@@ -216,7 +215,7 @@
             "description": "The id of the target",
             "type": "string",
             "in": "path",
-            "required": "true",
+            "required": true,
             "default": "1"
           }
         ],
@@ -243,7 +242,7 @@
             "description": "The id of the target",
             "type": "string",
             "in": "path",
-            "required": "true",
+            "required": true,
             "default": "1"
           }
         ],
@@ -270,7 +269,7 @@
             "description": "The id of the target",
             "in": "path",
             "type": "string",
-            "required": "true",
+            "required": true,
             "default": "1"
           }
         ],
@@ -297,7 +296,7 @@
             "description": "The id of the target",
             "type": "string",
             "in": "path",
-            "required": "true",
+            "required": true,
             "default": "1"
           }
         ],
@@ -397,7 +396,7 @@
             "description": "The id of the ligand",
             "in": "path",
             "type": "string",
-            "required": "true",
+            "required": true,
             "default": "1"
           }
         ],
@@ -424,7 +423,7 @@
             "description": "The id of the ligand",
             "in": "path",
             "type": "string",
-            "required": "true",
+            "required": true,
             "default": "1"
           }
         ],
@@ -451,7 +450,7 @@
             "description": "The id of the ligand",
             "in": "path",
             "type": "string",
-            "required": "true",
+            "required": true,
             "default": "1"
           }
         ],
@@ -478,7 +477,7 @@
             "description": "The id of the ligand",
             "type": "string",
             "in": "path",
-            "required": "true",
+            "required": true,
             "default": "1"
           }
         ],
@@ -505,7 +504,7 @@
             "description": "The id of the ligand",
             "in": "path",
             "type": "string",
-            "required": "true",
+            "required": true,
             "default": "1"
           }
         ],
@@ -532,7 +531,7 @@
             "description": "The id of the ligand",
             "type": "string",
             "in": "path",
-            "required": "true",
+            "required": true,
             "default": "1"
           }
         ],
@@ -544,6 +543,79 @@
             "description": "Bad request"
           }
         }
+      }
+    },
+    "/diseases": {
+      "get": {
+         "tags": [
+             "browse","disease"
+          ],
+          "summary": "Browse diseases by page",
+          "description": "Paging through the diseases",
+          "parameters": [
+             {
+                "name": "top",
+                "description": "Specify the number of diseases per page",
+                "in": "query",
+		"type": "integer",
+                "default": 10
+             },
+	     {
+		 "name": "skip",
+		 "description": "Specify the number of diseases to skip",
+		 "in": "query",
+		 "type": "integer",
+		 "default": 0
+             }
+          ],
+          "responses": {
+              "200": {
+		  "description": "Successful response"
+              },
+              "404": {
+		  "description": "Bad request"
+              }
+          }
+       }
+    },
+    "/diseases/search": {
+      "get": {
+         "tags": [
+             "search","disease"
+         ],
+         "summary": "Search diseases",
+         "description": "Search diseases",
+         "parameters": [
+             {
+                "name": "q",
+                "description": "Search term",
+                "in": "query",
+                "type": "string",
+		"default": ""
+             },
+             {
+                "name": "top",
+                "description": "Specify the number of diseases per page",
+                "in": "query",
+		"type": "integer",
+                "default": 10
+             },
+	     {
+		 "name": "skip",
+		 "description": "Specify the number of diseases to skip",
+		 "in": "query",
+		 "type": "integer",
+		 "default": 0
+             }
+         ],
+         "responses": {
+              "200": {
+		  "description": "Successful response"
+              },
+              "404": {
+		  "description": "Bad request"
+              }
+         }
       }
     },
     "/diseases({id})": {
@@ -559,7 +631,7 @@
             "description": "The id of the disease",
             "in": "path",
             "type": "string",
-            "required": "true",
+            "required": true,
             "default": "1"
           }
         ],
@@ -586,7 +658,7 @@
             "description": "The id of the disease",
             "in": "path",
             "type": "string",
-            "required": "true",
+            "required": true,
             "default": "1"
           }
         ],
@@ -613,7 +685,7 @@
             "description": "The id of the disease",
             "in": "path",
             "type": "string",
-            "required": "true",
+            "required": true,
             "default": "1"
           }
         ],
@@ -640,7 +712,7 @@
             "description": "The id of the disease",
             "type": "string",
             "in": "path",
-            "required": "true",
+            "required": true,
             "default": "1"
           }
         ],
@@ -667,7 +739,7 @@
             "description": "The id of the disease",
             "in": "path",
             "type": "string",
-            "required": "true",
+            "required": true,
             "default": "1"
           }
         ],
@@ -694,7 +766,7 @@
             "description": "The id of the disease",
             "type": "string",
             "in": "path",
-            "required": "true",
+            "required": true,
             "default": "1"
           }
         ],
@@ -721,7 +793,7 @@
             "description": "The id of the assay",
             "in": "path",
             "type": "string",
-            "required": "true",
+            "required": true,
             "default": "1"
           }
         ],
@@ -748,7 +820,7 @@
             "description": "The id of the assay",
             "in": "path",
             "type": "string",
-            "required": "true",
+            "required": true,
             "default": "1"
           }
         ],
@@ -775,7 +847,7 @@
             "description": "The id of the assay",
             "in": "path",
             "type": "string",
-            "required": "true",
+            "required": true,
             "default": "1"
           }
         ],
@@ -802,7 +874,7 @@
             "description": "The id of the assay",
             "in": "path",
             "type": "string",
-            "required": "true",
+            "required": true,
             "default": "1"
           }
         ],
@@ -829,7 +901,7 @@
             "description": "The id of the assay",
             "type": "string",
             "in": "path",
-            "required": "true",
+            "required": true,
             "default": "1"
           }
         ],
@@ -856,7 +928,7 @@
             "description": "The id of the structure",
             "in": "path",
             "type": "string",
-            "required": "true",
+            "required": true,
             "default": "00003d26-3142-478b-b0b6-abcf8ff955d4"
           }
         ],
@@ -883,7 +955,7 @@
             "description": "The id of the structure",
             "in": "path",
             "type": "string",
-            "required": "true",
+            "required": true,
             "default": "00003d26-3142-478b-b0b6-abcf8ff955d4"
           }
         ],
@@ -910,7 +982,7 @@
             "description": "The id of the structure",
             "in": "path",
             "type": "string",
-            "required": "true",
+            "required": true,
             "default": "00003d26-3142-478b-b0b6-abcf8ff955d4"
           }
         ],
@@ -937,7 +1009,7 @@
             "description": "The id of the structure",
             "in": "path",
             "type": "string",
-            "required": "true",
+            "required": true,
             "default": "00003d26-3142-478b-b0b6-abcf8ff955d4"
           }
         ],
@@ -964,7 +1036,7 @@
             "description": "The id of the structure",
             "type": "string",
             "in": "path",
-            "required": "true",
+            "required": true,
             "default": "00003d26-3142-478b-b0b6-abcf8ff955d4"
           }
         ],

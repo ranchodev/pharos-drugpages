@@ -576,6 +576,36 @@ public class EntityFactory extends Controller {
         return notFound ("Bad request: "+request().uri());
     }
 
+    protected static <K,T> Result resolve (Expression filter, String expand,
+                                           Model.Finder<K,T> finder) {
+        ObjectMapper mapper = getEntityMapper ();
+        if (expand != null && !"".equals(expand)) {
+            Query<T> query = finder.query();
+            Logger.debug(request().uri()+": expand="+expand);
+
+            StringBuilder path = new StringBuilder ();
+            for (String p : expand.split("\\.")) {
+                if (path.length() > 0)
+                    path.append('.');
+                path.append(p);
+                Logger.debug("  -> fetch "+path);
+                query = query.fetch(path.toString());
+            }
+
+            T inst = query.where(filter).setMaxRows(1).findUnique();
+            if (inst != null) {
+                return ok ((JsonNode)mapper.valueToTree(inst));
+            }
+        }
+        else {
+            T inst = finder.where(filter).setMaxRows(1).findUnique();
+            if (inst != null) {
+                return ok ((JsonNode)mapper.valueToTree(inst));
+            }
+        }
+        return notFound ("Bad request: "+request().uri());      
+    }
+
     protected static <K,T> Result count (Model.Finder<K, T> finder) {
         try {
             return ok (String.valueOf(getCount (finder)));

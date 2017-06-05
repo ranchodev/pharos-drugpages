@@ -70,6 +70,7 @@
         <div class="row">
           <div class="btn-group pull-right" role="group">
             <a class="btn btn-default"
+               @if(targets.size() == 0 && ligands.size() == 0 && diseases.size() == 0){disabled}
 	       @if(request.uri.indexOf("?") > 0) {
 	       href="@HtmlFormat.raw(request.uri)&action=download"
 	       } else {
@@ -78,8 +79,9 @@
                role="button" style="margin-right : 1px"
                data-toggle="tooltip" title="Download data">
                     <i class="fa fa-download fa-lg "></i></a>
+
                 <a id="compare-selected" class="btn btn-default" href="#" role="button" style="margin-right : 1px ; margin-left : 1px ;"
-                data-toggle="tooltip" title="Target comparison">
+                data-toggle="tooltip" title="Target comparison" @if(targets.size() == 0 && ligands.size() == 0 && diseases.size() == 0){disabled}>
                     <i class="fa fa-exchange fa-lg "></i></a>
 
                 <div class="dropdown pull-right" data-toggle="tooltip" title="Dossier operations">
@@ -88,6 +90,7 @@
                         <i class="glyphicon glyphicon-tasks"></i>
                     </a>
                     <ul class="dropdown-menu pull-left">
+                        <li><a href="#cartEmptyModal" data-toggle="modal" ><i class="fa fa-trash"></i>&nbsp;Empty </a></li>
                         <li><a href="#cartDeleteModal" data-toggle="modal" ><i class="fa fa-trash"></i>&nbsp;Delete </a></li>
                         <li><a href="#cartCloneModal" data-toggle="modal" ><i class="fa fa-files-o"></i>&nbsp;Copy </a></li>
                         <li><a href="#cartMergeModal" data-toggle="modal"><i class="fa fa-compress"></i>&nbsp;Merge</a></li>
@@ -97,7 +100,7 @@
 
                 <div class="dropdown pull-right" data-toggle="tooltip" title="Visualization tools">
                     <a type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown"
-                    aria-haspopup="true" aria-expanded="false" style="margin-right : 1px ; margin-left : 1px ;">
+                    aria-haspopup="true" aria-expanded="false" style="margin-right : 1px ; margin-left : 1px ;" @if(targets.size() == 0 && ligands.size() == 0 && diseases.size() == 0){disabled}>
                         <i class="fa fa-eye"></i>
                     </a>
                     <ul class="dropdown-menu pull-left">
@@ -190,6 +193,30 @@ aria-labelledby="mySmallModalLabel" aria-hidden="true">
 </div>
 
 @modalradar(null, null)
+
+<div class="modal fade" id="cartEmptyModal" tabindex="-1" role="dialog" aria-labelledby="cartEmptyModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-sm">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="cartEmptyModalLabel">Empty current dossier</h4>
+            </div>
+            <form id="form-cart-empty">
+                <div class="modal-body">
+                    <div class="embed-responsive embed-responsive-4by3">
+                        <p>This will empty the dossier named <b>@currentFolder</b>, but the dossier itself will remain available.</p>
+                        <p>Are you sure?</p>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                    <button type="submit" class="btn btn-primary">Empty</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
 
 <div class="modal fade" id="cartDeleteModal" tabindex="-1" role="dialog" aria-labelledby="cartDeleteModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-sm">
@@ -392,6 +419,8 @@ role="dialog" aria-labelledby="hgramModalLabel" aria-hidden="true" >
     <script src="https://code.highcharts.com/modules/exporting.js"></script>
     <link type="text/css" rel="stylesheet" href="https://code.highcharts.com/css/highcharts.css" />
 
+    <script type="text/javascript" src='@routes.Assets.versioned("javascripts/viz.js")'></script>
+
 
 </head>
 
@@ -569,7 +598,7 @@ $("#target-table").on("click", ".radar-div", function () {
             ents = _.map(selectEntities("#target-table input"), function (x) {
                 return x;
             });
-            window.location.href = "@ix.idg.controllers.routes.IDGApp.compareTargets2()?q=" + ents.join();
+            if (ents.length > 0) window.location.href = "@ix.idg.controllers.routes.IDGApp.compareTargets2()?q=" + ents.join();
         }
     });
 
@@ -578,6 +607,16 @@ $("#target-table").on("click", ".radar-div", function () {
 // Handle dossier set operations
 //
 /////////////////////////////////////////////
+    $('#form-cart-empty').on('submit', function (e) {
+        e.preventDefault();
+        var f = '@currentFolder';
+        $.get('@ix.idg.controllers.routes.DossierApp.emptyFolder(currentFolder)',
+                function (data, status, xhr) {
+                    $("#cartEmptyModal").modal("hide");
+                    window.location.href = '@ix.idg.controllers.routes.DossierApp.view("")' + f;
+                });
+    });
+
 $('#form-cart-delete').on('submit', function(e){
     e.preventDefault();
     var f = '@currentFolder';

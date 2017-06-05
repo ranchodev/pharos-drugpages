@@ -157,7 +157,8 @@ public class TcrdRegistry extends Controller implements Commons {
             pstm11, pstm12, pstm13, pstm14, pstm15,
             pstm16, pstm17, pstm18, pstm19, pstm20,
             pstm21, pstm22, pstm23, pstm24, pstm25,
-            pstm26, pstm27, pstm28, pstm29, pstm30;
+            pstm26, pstm27, pstm28, pstm29, pstm30,
+            pstm31;
         Map<String, Keyword> datasources = new HashMap<String, Keyword>();
 
         // xrefs for the current target
@@ -290,8 +291,9 @@ public class TcrdRegistry extends Controller implements Commons {
                 ("select * from ptscore where protein_id = ?");
 
             pstm30 = con.prepareStatement
-                ("select type,count(*) as count from feature where protein_id = ? "
-                 +"group by type order by count desc");
+                ("select * from feature where protein_id = ? ");
+            pstm31 = con.prepareStatement
+                ("select * from locsig where protein_id = ?");
         }
 
         Keyword getTdlKw (Target.TDL tdl) {
@@ -409,6 +411,7 @@ public class TcrdRegistry extends Controller implements Commons {
             pstm28.close();
             pstm29.close();
             pstm30.close();
+            pstm31.close();
         }
 
         void instrument (Target target, TcrdTarget t) throws Exception {
@@ -2176,6 +2179,57 @@ public class TcrdRegistry extends Controller implements Commons {
             }
         }
 
+        void addLocalization (Target target, long protein) throws Exception {
+            pstm31.setLong(1, protein);
+            ResultSet rset = pstm31.executeQuery();
+            try {
+                int count = 0;
+                long start= System.currentTimeMillis();
+                while (rset.next()) {
+                    Keyword signal = KeywordFactory.registerIfAbsent
+                        ("Localization Signal", rset.getString("signal"),
+                         "http://genome.unmc.edu/LocSigDB");
+                    XRef ref = new XRef (signal);
+                    String location = rset.getString("location");
+                    if (location != null) {
+                        Keyword loc = KeywordFactory.registerIfAbsent
+                            ("Localization Location", location, null);
+                        ref.properties.add(loc);
+                    }
+                    String pubs = rset.getString("pmids");
+                    if (pubs != null) {
+                        for (String p : pubs.split("\\|")) {
+                            try {
+                                ref.properties.add
+                                    (new VInt ("Localization Publication", 
+                                               Long.parseLong(p)));
+                            }
+                            catch (NumberFormatException ex) {
+                                Logger.warn("Bogus PMID "+p+" for localization");
+                            }
+                        }
+                    }
+                    try {
+                        ref.save();
+                        target.properties.add(signal);
+                        target.links.add(ref);
+                        ++count;
+                    }
+                    catch (Exception ex) {
+                        Logger.error("Can't persist localization for protein "
+                                     +protein, ex);
+                    }
+                }
+                Logger.debug("Target "+target.id+" has "
+                             +count+" localization..."
+                             +String.format("%1$dms!",
+                                            System.currentTimeMillis()-start));
+            }
+            finally {
+                rset.close();
+            }
+        }
+
         void addPublication (Target target, long protein) throws Exception {
             pstm22.setLong(1, protein);
             ResultSet rset = pstm22.executeQuery();
@@ -2229,15 +2283,33 @@ public class TcrdRegistry extends Controller implements Commons {
             pstm30.setLong(1, protein);
             ResultSet rset = pstm30.executeQuery();
             try {
-                Map<String, Long> features = new TreeMap<>();
+                Timeline features = new Timeline ("Protein Features");
+                Map<String, Long> counts = new TreeMap<>();
                 while (rset.next()) {
                     String t = rset.getString("type");
-                    long count = rset.getInt("count");
-                    features.put(t, count);
-                    target.properties.add(new VInt ("Feature: "+t, count));
-                    target.addIfAbsent((Value)getKeyword (PROTEIN_FEATURE, t));
+                    Long c = counts.get(t);
+                    counts.put(t, c==null ? 1 : c+1);
+                    long start = rset.getLong("begin");
+                    if (!rset.wasNull()) {
+                        Event ev = new Event (t);
+                        ev.start = start;
+                        ev.end = rset.getLong("end");
+                        ev.description = rset.getString("description");
+                        features.events.add(ev);
+                    }
                 }
-                Logger.debug("Target "+target.id+" protein features "+features);
+                features.save();
+
+                XRef ref = new XRef (features);
+                for (Map.Entry<String, Long> f : counts.entrySet()) {
+                    ref.properties.add
+                        (new VInt ("Feature: "+f.getKey(), f.getValue()));
+                    ref.properties.add
+                        (getKeyword (PROTEIN_FEATURE, f.getKey()));
+                }
+                ref.save();
+                target.links.add(ref);
+                Logger.debug("Target "+target.id+" protein features "+counts);
             }
             finally {
                 rset.close();
@@ -2343,6 +2415,7 @@ public class TcrdRegistry extends Controller implements Commons {
                 addTINX (target, t.id);
                 addPublication (target, t.protein);
                 addCompartment (target, t.protein);
+                addLocalization (target, t.protein);
                 addTechdev (target, t.protein);
                 addFeatures (target, t.protein);
             }

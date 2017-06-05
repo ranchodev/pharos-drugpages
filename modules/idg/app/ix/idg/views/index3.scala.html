@@ -157,13 +157,13 @@ ga('send', 'pageview');
 		  </form>
 		  <ol class="breadcrumb pull-right" style="background:white">
 		    <li><a class="navbar-link"
-			   href="@ix.idg.controllers.routes.DTOHier.dto(null)">Explore</a>
+			   href="@ix.idg.controllers.routes.IDGApp.diseases(null, 10, 1)">Diseases</a>
 		    <li><a class="navbar-link"
-			   href="@ix.idg.controllers.routes.IDGApp.targets(null, 10, 1)">Browse</a></li>		    
+			   href="@ix.idg.controllers.routes.IDGApp.targets(null, 10, 1)">Targets</a></li>
+			  <li><a class="navbar-link"
+					 href="@ix.idg.controllers.routes.IDGApp.ligands(null, 10, 1)">Ligands</a></li>
 		    <li><a class="navbar-link"
-			   href="@ix.idg.controllers.routes.IDGApp.targetfacets(null)">Filters</a></li>
-		    <li><a class="navbar-link"
-			   href="@ix.idg.controllers.routes.IDGApp.about()">About</a></li>
+			   href="@ix.idg.controllers.routes.IDGApp.api">API</a></li>
 		    <li><a class="navbar-link"
 			   data-trigger="click"
 			   data-target="#help-panel"
@@ -179,8 +179,6 @@ ga('send', 'pageview');
 		    <a class="list-group-item" href="@ix.idg.controllers.routes.IDGApp.faq">Frequently asked questions</a>
 		    <a class="list-group-item" href="https://www.youtube.com/channel/UCr5BtMcSjL7C4jwCEJOCKGg" target="_blank">Video tutorials</a>
 		    <a class="list-group-item" href="@ix.idg.controllers.routes.IDGApp.about">About</a>
-			<a class="list-group-item" href="@ix.idg.controllers.routes.IDGApp.api">API</a>
-
 		  </div>
 		</div>
 	      </div>

@@ -132,22 +132,9 @@ function renderChart(chartData, aggType, container, cfg) {
     if (cfg != undefined) {
        config = _.extend(config, cfg);
     }
-    Highcharts.chart(container, config);
-}
-
-
-function renderChart_old(chartData, chartConfig, show) {
-    var chart = RadarChart.chart();
-    chart.config(chartConfig);
-    $("#modal-radardiv").empty();
-    $("#radar-ds-container").empty();
-    var svg = d3.select("#modal-radardiv").append('svg')
-            .attr("width", chartConfig.w)
-            .attr("height", chartConfig.h)
-            .append('g').classed('focus', 1).datum(chartData).call(chart);
-    if (show != undefined && !show) {
-    }
-    else $("#modal-radar").modal("show");
+    if (!('exporting' in config))
+        config = _.extend(config, defaultExportConfig);
+    return Highcharts.chart(container, config);
 }
 
 
