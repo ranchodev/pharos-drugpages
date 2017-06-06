@@ -86,7 +86,8 @@
 
                 <div class="dropdown pull-right" data-toggle="tooltip" title="Dossier operations">
                     <a type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown"
-                    aria-haspopup="true" aria-expanded="false" style="margin-right : 1px ; margin-left : 1px ;">
+                    aria-haspopup="true" aria-expanded="false" style="margin-right : 1px ; margin-left : 1px ;"
+                    @if(targets.size() == 0 && ligands.size() == 0 && diseases.size() == 0){disabled}>
                         <i class="glyphicon glyphicon-tasks"></i>
                     </a>
                     <ul class="dropdown-menu pull-left">
