@@ -33,10 +33,16 @@ public class Expression extends play.db.ebean.Model
     @Indexable(facet=true,name="Qualitiative Expression Levels")
     public String qualValue;
 
+    @Column(nullable = true)
+    @Indexable(facet=true,sortable=true,name="Cell Type")
+    public String cellType;
+
     public String evidence;
 
     public Expression() {
     }
+
+    public String getCellType() { return cellType; }
 
     public Long getProteinId() {
         return proteinId;

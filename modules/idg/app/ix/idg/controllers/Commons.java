@@ -62,6 +62,7 @@ public interface Commons {
     public static final String HPA_RNA_TISSUE = "HPA RNA Tissue";
     public static final String HPA_RNA_EXPR = "HPA RNA Expression";
     public static final String HPA_PROTEIN_TISSUE = "HPA Protein Tissue";
+    public static final String HPA_PROTEIN_CELL_TYPE = "HPA Protein Cell Type";
     public static final String HPA_PROTEIN_EXPR = "HPA Protein Expression";
     public static final String JENSEN_TM_EXPR = "Jensen-TM Expression";
     public static final String JENSEN_TM_TISSUE = "Jensen-TM Tissue";

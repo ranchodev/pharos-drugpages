@@ -956,6 +956,14 @@ public class TcrdRegistry extends Controller implements Commons {
                     tissue = KeywordFactory.registerIfAbsent
                         (expr.source+" Tissue", expr.tissue, null);
                     target.addIfAbsent((Value)tissue);
+
+                    String toks[] = expr.tissue.split("-");
+                    if (toks.length == 2) {
+                        expr.cellType = toks[1].trim();
+                        Keyword cellType = KeywordFactory.registerIfAbsent(expr.source+" Cell Type",
+                                expr.cellType, null);
+                        target.addIfAbsent((Value)cellType);
+                    }
                 }
                 else if (expr.source.startsWith("JensenLab Experiment")) {
                     sourceUrl = "http://tissues.jensenlab.org";

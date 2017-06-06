@@ -648,6 +648,7 @@ public class IDGApp extends App implements Commons {
         HPM_TISSUE,
         HPA_RNA_TISSUE,
         HPA_PROTEIN_TISSUE,
+        HPA_PROTEIN_CELL_TYPE,
         
         GWAS_TRAIT,
         IMPC_TERM,
